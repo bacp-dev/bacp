@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/negotiation-session.json",
   "title": "NegotiationSession",
-  "description": "Authoritative full-state view of one bilateral negotiation (one buyer, one seller, one transaction_id), as returned by the gateway (ACP full-state pattern, brief v0 section 2.2). RFQs and auctions own several sessions.",
+  "description": "Authoritative full-state view of one bilateral negotiation (one buyer, one seller, one transaction_id), as returned by the gateway (ACP full-state pattern). RFQs and auctions own several sessions.",
   "type": "object",
   "required": [
     "negotiation_id",
@@ -137,7 +137,7 @@
         "min_offer_validity",
         "sig_algs"
       ],
-      "description": "bacp.negotiation capability advert and the session intersection (NEG-101).",
+      "description": "bacp.negotiation capability advert and the session intersection.",
       "additionalProperties": false
     },
     "mandate_ref": {
@@ -154,12 +154,12 @@
         "id",
         "hash"
       ],
-      "description": "The separate BACP negotiation mandate (NEG-138).",
+      "description": "The separate BACP negotiation mandate.",
       "additionalProperties": false
     },
     "checkout_mandate_ref": {
       "type": "string",
-      "description": "Linked AP2-compatible open checkout mandate (v0 section 4.3)."
+      "description": "Linked AP2-compatible open checkout mandate."
     },
     "presence": {
       "$ref": "common.json#/$defs/Presence"
@@ -263,7 +263,7 @@
         "principal_outstanding_firm",
         "counted_against"
       ],
-      "description": "NEG-137: outstanding firm counters and accepts across all of the principal's concurrent negotiations. Amounts only, never the bound.",
+      "description": "Outstanding firm counters and accepts across all of the principal's concurrent negotiations. Amounts only, never the bound.",
       "additionalProperties": false
     },
     "live_offer": {
@@ -299,7 +299,7 @@
             "needs_escalation",
             "not_evaluated"
           ],
-          "description": "Only the verdict reaches the agent LLM (NEG-142)."
+          "description": "Only the verdict reaches the agent LLM."
         }
       },
       "required": [
@@ -355,7 +355,7 @@
         ],
         "additionalProperties": false
       },
-      "description": "Hash-chained via the InstructionLog stage negotiation (NEG-183)."
+      "description": "Hash-chained via the InstructionLog stage negotiation."
     },
     "guard_verdicts": {
       "type": "array",
@@ -387,7 +387,7 @@
             "items": {
               "type": "string"
             },
-            "description": "IDs only, never values (NEG section 5.13)."
+            "description": "IDs only, never values."
           }
         },
         "required": [
@@ -454,7 +454,7 @@
     },
     "step_up": {
       "type": "object",
-      "description": "v0 StepUp object (OpenAPI components.schemas.StepUp) with reason negotiation_out_of_mandate and a diff card.",
+      "description": "StepUp object (OpenAPI components.schemas.StepUp) with reason negotiation_out_of_mandate and a diff card.",
       "properties": {
         "step_up_id": {
           "type": "string"
@@ -514,7 +514,7 @@
     "session_id": {
       "type": "string",
       "pattern": "^ses_[A-Za-z0-9]{8,40}$",
-      "description": "v0 checkout session opened after BOUND"
+      "description": "Checkout session opened after BOUND"
     },
     "order_id": {
       "type": "string"
@@ -571,7 +571,7 @@
           }
         }
       },
-      "description": "v0 Message model (brief v0 section 5.4)."
+      "description": "Message model (OpenAPI components.schemas.Message)."
     },
     "created_at": {
       "type": "string",
@@ -653,7 +653,7 @@
         "min_offer_validity",
         "sig_algs"
       ],
-      "description": "bacp.negotiation capability advert and the session intersection (NEG-101).",
+      "description": "bacp.negotiation capability advert and the session intersection.",
       "additionalProperties": false
     },
     "AuctionSpec": {
@@ -764,7 +764,7 @@
             ],
             "additionalProperties": false
           },
-          "description": "Dutch: non-increasing price ticks (NEG-153)."
+          "description": "Dutch: non-increasing price ticks."
         },
         "opens_at": {
           "type": "string",
@@ -802,7 +802,7 @@
             "price_only",
             "open"
           ],
-          "description": "reverse_l1 shows the current L1 price without bidder identity (TRADE-103)."
+          "description": "reverse_l1 shows the current L1 price without bidder identity."
         },
         "tie_break": {
           "enum": [
@@ -843,7 +843,7 @@
             "instrument",
             "forfeit_on"
           ],
-          "description": "Required for sealed (commit-reveal) modes (NEG-151).",
+          "description": "Required for sealed (commit-reveal) modes.",
           "additionalProperties": false
         },
         "retraction_rule": {
@@ -893,7 +893,7 @@
         },
         "procurement_mode_reason": {
           "type": "string",
-          "description": "Why this mode was chosen, e.g. value threshold (TRADE-129)."
+          "description": "Why this mode was chosen, e.g. value threshold."
         },
         "signature": {
           "$ref": "common.json#/$defs/Signature"
@@ -914,7 +914,7 @@
         "retraction_rule",
         "signature"
       ],
-      "description": "Signed before the first bid. Rules MUST NOT change after it (NEG-150).",
+      "description": "Signed before the first bid. Rules MUST NOT change after it.",
       "additionalProperties": false,
       "allOf": [
         {
@@ -1007,12 +1007,12 @@
         "response_by": {
           "type": "string",
           "format": "date-time",
-          "description": "Award before this time is rejected unless all invitees responded (NEG-152)."
+          "description": "Award before this time is rejected unless all invitees responded."
         },
         "min_responses": {
           "type": "integer",
           "minimum": 1,
-          "description": "e.g. 3 for an L1 purchase (TRD section 6)."
+          "description": "e.g. 3 for an L1 purchase."
         },
         "award_rule": {
           "enum": [
@@ -1070,7 +1070,7 @@
             ],
             "additionalProperties": false
           },
-          "description": "Normalised to landed cost (TRADE-128). Kept for audit (TRADE-146)."
+          "description": "Normalised to landed cost. Kept for audit."
         },
         "awarded": {
           "type": "object",
@@ -1096,7 +1096,7 @@
         "response_by",
         "award_rule"
       ],
-      "description": "Structured RFQ replacing ONDC BUYER_TERMS free text (NEG section 5.10).",
+      "description": "Structured RFQ replacing ONDC BUYER_TERMS free text.",
       "additionalProperties": false
     },
     "AuctionState": {
@@ -1148,7 +1148,7 @@
         "state",
         "closes_at"
       ],
-      "description": "Bidder view. Never shows other bidders' identities or sealed bids (NEG-151, NEG-180).",
+      "description": "Bidder view. Never shows other bidders' identities or sealed bids.",
       "additionalProperties": false
     }
   }

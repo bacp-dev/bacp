@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/offer.json",
   "title": "Negotiation messages (Offer, CounterOffer, Accept, Reject, Withdraw, Terminate, RequestExtension, AcceptRevoke, BidCommit, BidReveal, BidRetract)",
-  "description": "Structured, signed and expiring negotiation messages (NEG section 5.4-5.5; NEG-110..124). Only these are binding. Discriminated by type.",
+  "description": "Structured, signed and expiring negotiation messages. Only these are binding. Discriminated by type.",
   "oneOf": [
     {
       "$ref": "#/$defs/Offer"
@@ -57,7 +57,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -129,11 +129,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -151,23 +151,23 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "in_reply_to": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "offer_hash of the live offer this counters. Required for counter_offer (NEG-110)."
+          "description": "offer_hash of the live offer this counters. Required for counter_offer."
         },
         "mode": {
           "$ref": "negotiation-session.json#/$defs/Mode"
         },
         "firm": {
           "type": "boolean",
-          "description": "true = binding if accepted before expires_at. false = indicative quote, an invitation to treat (NEG section 5.5)."
+          "description": "true = binding if accepted before expires_at. false = indicative quote, an invitation to treat."
         },
         "subject_to_principal_approval": {
           "type": "boolean",
-          "description": "Required true when the emitting agent's guard returned escalate. Forces firm=false (NEG section 5.6)."
+          "description": "Required true when the emitting agent's guard returned escalate. Forces firm=false."
         },
         "term_sheet": {
           "$ref": "termsheet.json"
@@ -183,7 +183,7 @@
         "expires_at": {
           "type": "string",
           "format": "date-time",
-          "description": "Absolute expiry (not a relative ttl). expires_at - valid_from >= min_offer_validity (NEG-123)."
+          "description": "Absolute expiry (not a relative ttl). expires_at - valid_from >= min_offer_validity."
         },
         "inventory_hold_until": {
           "type": "string",
@@ -199,7 +199,7 @@
             "allowed_until_receipt"
           ],
           "default": "waived",
-          "description": "ICA s.5 lets an acceptor revoke until the acceptance reaches the proposer. waived = expressly excluded by protocol terms (default, A-14). allowed_until_receipt = accept_revoke is honoured if received before the ACCEPT."
+          "description": "ICA s.5 lets an acceptor revoke until the acceptance reaches the proposer. waived = expressly excluded by protocol terms (default). allowed_until_receipt = accept_revoke is honoured if received before the ACCEPT."
         },
         "extends": {
           "$ref": "common.json#/$defs/Hash",
@@ -208,18 +208,18 @@
         "rfq_parent_id": {
           "type": "string",
           "pattern": "^rfq_[A-Za-z0-9]{8,40}$",
-          "description": "Parent RFQ for exposure counting across sessions (NEG-137)."
+          "description": "Parent RFQ for exposure counting across sessions."
         },
         "bid_deposit_ref": {
           "type": "string",
-          "description": "Deposit or EMD reference required for sealed bids. Forfeited if the bid is not revealed (NEG-151)."
+          "description": "Deposit or EMD reference required for sealed bids. Forfeited if the bid is not revealed."
         },
         "agreed_issues": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "JSON Pointers of issues in Agree. Narrows, does not bind (NEG section 5.4)."
+          "description": "JSON Pointers of issues in Agree. Narrows, does not bind."
         },
         "auction_id": {
           "type": "string",
@@ -329,7 +329,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -401,11 +401,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -423,12 +423,12 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "offer_hash": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "sha-256 over JCS(offer minus signatures, counter_signature). Acceptance must mirror it exactly (ICA s.7, NEG-111)."
+          "description": "sha-256 over JCS(offer minus signatures, counter_signature). Acceptance must mirror it exactly (ICA s.7)."
         },
         "negotiation_mandate_ref": {
           "type": "object",
@@ -444,7 +444,7 @@
             "id",
             "hash"
           ],
-          "description": "The separate BACP negotiation mandate (NEG-138). Its contents are never disclosed to the counterparty.",
+          "description": "The separate BACP negotiation mandate. Its contents are never disclosed to the counterparty.",
           "additionalProperties": false
         },
         "legal_effect": {
@@ -459,7 +459,7 @@
         },
         "step_up_id": {
           "type": "string",
-          "description": "Present when the principal approved an out-of-mandate deal on the Trusted Surface (NEG-134)."
+          "description": "Present when the principal approved an out-of-mandate deal on the Trusted Surface."
         }
       },
       "required": [
@@ -509,7 +509,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -581,11 +581,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -603,7 +603,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "offer_hash": {
@@ -623,11 +623,11 @@
             "incoterm_not_supported",
             "other"
           ],
-          "description": "Typed reasons (NEG-163). Never carries the reservation value (NEG-140)."
+          "description": "Typed reasons. Never carries the reservation value."
         },
         "ondc_error_code": {
           "type": "string",
-          "description": "e.g. 50005 Incoterm not supported (NEG section 1.4)."
+          "description": "e.g. 50005 Incoterm not supported."
         },
         "final": {
           "type": "boolean",
@@ -651,7 +651,7 @@
     },
     "Withdraw": {
       "type": "object",
-      "description": "Revocation by the offeror before acceptance is complete as against it (ICA s.5, NEG-112).",
+      "description": "Revocation by the offeror before acceptance is complete as against it (ICA s.5).",
       "properties": {
         "type": {
           "const": "withdraw"
@@ -666,7 +666,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -738,11 +738,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -760,7 +760,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "offer_hash": {
@@ -807,7 +807,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -879,11 +879,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -901,7 +901,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "reason": {
@@ -931,7 +931,7 @@
     },
     "RequestExtension": {
       "type": "object",
-      "description": "Asks the offeror to extend expiry. Silence means no extension (NEG section 5.8).",
+      "description": "Asks the offeror to extend expiry. Silence means no extension.",
       "properties": {
         "type": {
           "const": "request_extension"
@@ -946,7 +946,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -1018,11 +1018,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -1040,7 +1040,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "offer_hash": {
@@ -1082,7 +1082,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -1154,11 +1154,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -1176,7 +1176,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "accept_msg_hash": {
@@ -1213,7 +1213,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -1285,11 +1285,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -1307,7 +1307,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "auction_id": {
@@ -1316,7 +1316,7 @@
         },
         "commit_hash": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "sha-256(JCS(bid) || salt). Sealed until close (NEG-151)."
+          "description": "sha-256(JCS(bid) || salt). Sealed until close."
         },
         "bid_deposit_ref": {
           "type": "string"
@@ -1354,7 +1354,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -1426,11 +1426,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -1448,7 +1448,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "auction_id": {
@@ -1495,7 +1495,7 @@
         },
         "transaction_id": {
           "type": "string",
-          "description": "Beckn context.transaction_id (REQ-115)."
+          "description": "Beckn context.transaction_id."
         },
         "round": {
           "type": "integer",
@@ -1567,11 +1567,11 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
         },
         "advisory": {
           "type": "object",
@@ -1589,7 +1589,7 @@
           "required": [
             "binding"
           ],
-          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "description": "Free text is advisory, logged, never binding.",
           "additionalProperties": false
         },
         "auction_id": {
@@ -1656,7 +1656,7 @@
         "iat",
         "signature"
       ],
-      "description": "within_bounds attestation from the buyer credential provider, which itself re-verifies the closed mandate against the open and negotiation mandates. The seller BPP verifies ONLY this attestation and never sees the reservation price (NEG-133, NEG-141).",
+      "description": "within_bounds attestation from the buyer credential provider, which itself re-verifies the closed mandate against the open and negotiation mandates. The seller BPP verifies ONLY this attestation and never sees the reservation price.",
       "additionalProperties": false
     }
   }

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/receipt.json",
   "title": "Receipt (rail-anchored)",
-  "description": "Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). Payment and refund receipts MUST carry the UPI RRN and UTR. v1: non-UPI handlers carry rail.evidence instead of RRN/UTR (SC-16).",
+  "description": "Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). Payment and refund receipts MUST carry the UPI RRN and UTR. Non-UPI handlers carry rail.evidence instead of RRN/UTR.",
   "type": "object",
   "required": [
     "receipt_id",
@@ -58,7 +58,7 @@
     },
     "transaction_id": {
       "type": "string",
-      "description": "Beckn context.transaction_id, end to end (REQ-115)"
+      "description": "Beckn context.transaction_id, end to end"
     },
     "order_id": {
       "type": "string"
@@ -97,7 +97,7 @@
               "$ref": "common.json#/$defs/HandlerRef"
             }
           ],
-          "description": "v0 RailType, or (v1 delta) any HandlerRef: v1 in.* id or a v0 alias."
+          "description": "Legacy RailType, or any HandlerRef: a canonical in.* id or a legacy alias."
         },
         "rail_ref": {
           "type": "string"
@@ -126,19 +126,19 @@
         },
         "original_rrn": {
           "type": "string",
-          "description": "Refund receipts: RRN of the debit being refunded (REQ-306)"
+          "description": "Refund receipts: RRN of the debit being refunded"
         },
         "evidence": {
           "type": "object",
           "additionalProperties": {
             "type": "string"
           },
-          "description": "v1: settlement evidence for non-UPI handlers (handler-descriptor settlement.evidence_refs), e.g. arn, auth_code, utr, umrn, voucher_id, bconnect_txn_id, ledger_entry_id, awb."
+          "description": "Settlement evidence for non-UPI handlers (handler-descriptor settlement.evidence_refs), e.g. arn, auth_code, utr, umrn, voucher_id, bconnect_txn_id, ledger_entry_id, awb."
         }
       },
       "allOf": [
         {
-          "description": "UPI-family rails (RE-2, E-ED-1): RRN is mandatory; UTR is mandatory unless the handler descriptor's settlement.evidence_refs lists RRN only (generated from examples/payment-handlers.registry.json).",
+          "description": "UPI-family rails: RRN is mandatory; UTR is mandatory unless the handler descriptor's settlement.evidence_refs lists RRN only (generated from handlers/registry.json).",
           "if": {
             "properties": {
               "type": {
@@ -203,7 +203,7 @@
         "refunded_to_source",
         "adjusted_against_dues"
       ],
-      "description": "v1 delta (PAYC 2.8, PAY-106, TRD 17.3). adjusted_against_dues and refunded_to_source are prototype additions (SC-17)."
+      "description": "Refund lifecycle state, including credit-card refund consent and adjustment against B2B dues."
     },
     "fx": {
       "type": "object",
@@ -215,7 +215,7 @@
         "inr_total"
       ],
       "additionalProperties": false,
-      "description": "REQ-405 / TRADE-144 (L7-compliance C-5): foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+      "description": "Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
       "properties": {
         "currency": {
           "type": "string",
@@ -276,7 +276,7 @@
       }
     },
     {
-      "description": "E-ED-7 / SC-2: budget_after MUST NOT appear in a PSP-signed receipt; the gateway returns it unsigned in session.payment.budget_after.",
+      "description": "budget_after MUST NOT appear in a PSP-signed receipt; the gateway returns it unsigned in session.payment.budget_after.",
       "not": {
         "required": [
           "budget_after"

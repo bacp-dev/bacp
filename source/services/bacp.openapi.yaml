@@ -38,7 +38,7 @@ tags:
 - name: trusted-surface
   description: Callbacks from Mandate Manager / payer PSP (Trusted Surface). Never callable by agents.
 - name: negotiation
-  description: Bilateral negotiation sessions (design brief v1 section 12)
+  description: Bilateral negotiation sessions
 - name: rfq
   description: Structured RFQ with sealed commit-reveal quotations
 - name: auction
@@ -123,7 +123,7 @@ paths:
                   max_wait_ms: 4000
       responses:
         '200':
-          description: Aggregated on_search results within max_wait_ms, with ranking explanation (REQ-315)
+          description: Aggregated on_search results within max_wait_ms, with ranking explanation
           content:
             application/json:
               schema:
@@ -541,7 +541,7 @@ paths:
 
         On mandate.revoked or rail.safety_switch the gateway MUST stop all in-flight sessions under the mandate and notify
 
-        the agent (webhook mandate.status_changed) within 60 s (REQ-107).
+        the agent (webhook mandate.status_changed) within 60 s.
 
         '
       security:
@@ -616,7 +616,7 @@ paths:
         required: false
         schema:
           type: string
-        description: Seller subscriber id; needed only when the order id is ambiguous across BPPs (SC-63).
+        description: Seller subscriber id; needed only when the order id is ambiguous across BPPs.
       responses:
         '200':
           description: Order
@@ -760,7 +760,7 @@ paths:
         required: false
         schema:
           type: string
-        description: Seller subscriber id; needed only when the order id is ambiguous across BPPs (SC-63).
+        description: Seller subscriber id; needed only when the order id is ambiguous across BPPs.
   /issues:
     post:
       tags:
@@ -909,11 +909,11 @@ paths:
       - negotiation
       operationId: openNegotiation
       summary: Open a negotiation with one seller (Beckn select with bacp.negotiation capability tag)
-      description: 'Intersects BAP and BPP `bacp.negotiation` capabilities (NEG-101). If the intersection of modes is empty the
+      description: 'Intersects BAP and BPP `bacp.negotiation` capabilities. If the intersection of modes is empty the
 
         response is 200 with message `capabilities_incompatible`. The negotiation mandate must be ACTIVE and linked to an
 
-        ACTIVE open checkout mandate (NEG-138). Returns the first seller offer if one arrives within `max_wait_ms`.
+        ACTIVE open checkout mandate. Returns the first seller offer if one arrives within `max_wait_ms`.
 
         '
       parameters:
@@ -1016,10 +1016,10 @@ paths:
       summary: Send offer, counter_offer, reject, withdraw, terminate, request_extension or accept_revoke
       description: "The agent submits an unsigned draft. The gateway runs guard N-1..N-11 and validators V-01..V-14, signs with the\nBAP registry\
         \ key and the agent key, and sends Beckn select (buyer) carrying a bacp.neg TagGroup.\n- A firm counter outside the negotiation mandate\
-        \ is never sent. The response is 200 with `requires_escalation`\n  (NEG-131, NEG-134), or the agent may resend with subject_to_principal_approval\
-        \ true (forces firm false).\n- A counter that cites a non-live offer returns 409 NEG_STALE_OFFER. A counter on an expired offer returns\
-        \ 200\n  message NEG_OFFER_EXPIRED (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt.\
-        \ The crossing rule (earlier CounterSignature timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n"
+        \ is never sent. The response is 200 with `requires_escalation`, or the agent may resend with subject_to_principal_approval true (forces\
+        \ firm false).\n- A counter that cites a non-live offer returns 409 NEG_STALE_OFFER. A counter on an expired offer returns 200\n  message\
+        \ NEG_OFFER_EXPIRED (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt. The crossing\
+        \ rule (earlier CounterSignature timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n"
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -1086,13 +1086,13 @@ paths:
 
         closed mandate against the open checkout mandate and the negotiation mandate) and sends Beckn init carrying
 
-        bacp.neg.accept. The seller BPP receives only the attestation (NEG-133). Accept of a firm offer gives
+        bacp.neg.accept. The seller BPP receives only the attestation. Accept of a firm offer gives
 
         legal_effect acceptance (state ACCEPT_PENDING then AGREED). Accept of a non-firm offer gives purchase_offer
 
-        (state PURCHASE_OFFERED). on_init with the identical term hash moves to BOUND and opens or updates the v0
+        (state PURCHASE_OFFERED). on_init with the identical term hash moves to BOUND and opens or updates the
 
-        checkout session, whose checkout_hash is the hash of the BPP-signed quote (not the offer hash, NEG-138).
+        checkout session, whose checkout_hash is the hash of the BPP-signed quote (not the offer hash).
 
         Outside the mandate: 200 with requires_escalation, then retry with step_up_id after approval.
 
@@ -1140,11 +1140,11 @@ paths:
       - rfq
       operationId: createRfq
       summary: Publish a structured RFQ to invitees or by broadcast (one Beckn select per BPP, parent rfq_id)
-      description: 'Requires response_by and min_responses (NEG-152). rfq_sealed requires a bid deposit in term_sheet_draft.deposit
+      description: 'Requires response_by and min_responses. rfq_sealed requires a bid deposit in term_sheet_draft.deposit
 
-        or the RFQ policy (NEG-151). One negotiation session is created per responding seller, each carrying the parent
+        or the RFQ policy. One negotiation session is created per responding seller, each carrying the parent
 
-        rfq_id for cross-session exposure (NEG-137).
+        rfq_id for cross-session exposure.
 
         '
       parameters:
@@ -1258,9 +1258,8 @@ paths:
       summary: Host a reverse (L1) or sealed auction through a neutral auctioneer, or register to join one
       description: 'The AuctionSpec must name a neutral auctioneer (affiliated_with_any_seller false), a mandatory anti-sniping
 
-        extension_rule, a retraction_rule and, for sealed visibility, a bid_deposit. Rules are frozen at the first bid
-
-        (NEG-150). Seller-hosted auctions are refused.
+        extension_rule, a retraction_rule and, for sealed visibility, a bid_deposit. Rules are frozen at the first bid. Seller-hosted auctions
+        are refused.
 
         '
       parameters:
@@ -1484,7 +1483,7 @@ paths:
     - name: handler_id
       in: path
       required: true
-      description: v1 id or a v0/PAYB alias (resolved to the canonical descriptor)
+      description: Canonical id or a legacy alias (resolved to the canonical descriptor)
       schema:
         type: string
     get:
@@ -1611,7 +1610,7 @@ paths:
                       $ref: '#/components/schemas/Message'
                   comparison:
                     type: array
-                    description: Every option and its all-in total (PAY-132 selection log)
+                    description: Every option and its all-in total (selection log)
                     items:
                       type: object
                       properties:
@@ -1729,7 +1728,8 @@ webhooks:
           description: Acknowledged
   pre_debit.notice:
     post:
-      summary: Issuer pre-debit notice (upi.autopay, at least 24 h ahead). The agent MUST relay it to the user and MUST NOT dismiss it (REQ-304).
+      summary: Issuer pre-debit notice (upi.autopay, at least 24 h ahead, RBI E-mandate Framework 2026). The agent MUST relay it to the user and
+        MUST NOT dismiss it.
       requestBody:
         content:
           application/json:
@@ -1942,7 +1942,7 @@ components:
                 code: bpp_timeout
                 message: on_select not received within 5000 ms
     StaleOffer:
-      description: The message cites an offer that is not LIVE (NEG-110). GET the negotiation and respond to the live offer.
+      description: The message cites an offer that is not LIVE. GET the negotiation and respond to the live offer.
       content:
         application/json:
           schema:
@@ -1955,19 +1955,19 @@ components:
                 message: in_reply_to is not the live offer
                 param: $.in_reply_to
     BppNack:
-      description: The seller NACKed the Beckn request (v0 contract gap, also used by v1).
+      description: The seller NACKed the Beckn request.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     RequestTooLarge:
-      description: Request body above the gateway limit; refused before signature verification (request_too_large, E-FIX-3).
+      description: Request body above the gateway limit; refused before signature verification (request_too_large).
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
     QuotaExceeded:
-      description: Per-agent idempotency-key quota exhausted (quota_exceeded, E-FIX-3).
+      description: Per-agent idempotency-key quota exhausted (quota_exceeded).
       content:
         application/json:
           schema:
@@ -2078,7 +2078,7 @@ components:
       - erupee
       - bbps
       - cod
-      description: BACP payment handler ids (REQ-401). upi.uap.* is reserved and validated by RailType.
+      description: Legacy BACP payment handler ids. upi.uap.* is reserved and validated by RailType.
     AgentCredential:
       title: AgentCredential
       description: Claims of an SD-JWT VC (vct in.bacp.agent.1) issued by a registry-accredited issuer to an agent operated by a registered legal
@@ -2111,7 +2111,7 @@ components:
           type: integer
         exp:
           type: integer
-          description: <= iat + 180 days (REQ-116 rotation)
+          description: <= iat + 180 days (key rotation)
         operator:
           type: object
           required:
@@ -2253,9 +2253,9 @@ components:
                   type: integer
                   minimum: 0
     Mandate:
-      title: Mandate (bacp.AgentMandate, AMA)
+      title: Mandate
       description: AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status,
-        usage and signatures is signed and immutable (REQ-103).
+        usage and signatures is signed and immutable.
       type: object
       required:
       - vct
@@ -2325,7 +2325,7 @@ components:
           properties:
             ref:
               type: string
-              description: Pairwise pseudonymous user id at the Mandate Manager. Never an Aadhaar number (REQ-204).
+              description: Pairwise pseudonymous user id at the Mandate Manager. Never an Aadhaar number.
             assurance:
               enum:
               - vpa_pin
@@ -2467,10 +2467,10 @@ components:
             cod_max_open_orders:
               type: integer
               minimum: 0
-              description: 'PAY-131: open COD orders an agent may hold HNP (L7-compliance C-2).'
+              description: Open COD orders an agent may hold HNP.
             credit_funding_allowed:
               type: boolean
-              description: 'PAY-107: credit-funded handlers allowed (L7-compliance C-2).'
+              description: Credit-funded handlers allowed.
           additionalProperties: false
         checkout_hash:
           $ref: '#/components/schemas/Hash'
@@ -2526,13 +2526,13 @@ components:
               - unknown
               - bacp_policy_24h
               - post_debit_notice
-          description: 'OPEN payment mandates only (P-03 as narrowed by L5): binding to a live UPI standing-authority primitive. upi.uap.* reserved.'
+          description: 'OPEN payment mandates only: binding to a live standing-authority primitive enforced by the rail. upi.uap.* reserved.'
         auth_binding:
           type: object
           required:
           - type
           description: 'CLOSED payment mandates only: how this single payment is authorised. Either it executes under the parent open mandate''s
-            rail_binding (HNP), or it carries a per-transaction user 2FA reference (HP) or another REQ-401 instrument.'
+            rail_binding (HNP), or it carries a per-transaction user 2FA reference (HP) or another closed-class instrument.'
           properties:
             type:
               enum:
@@ -2679,8 +2679,7 @@ components:
           not:
             required:
             - rail_binding
-      - description: 'REQ-102 (L7-compliance C-3): an open mandate carries data scopes, an audit URI, a retention period and at least one frequency
-          bound.'
+      - description: An open mandate carries data scopes, an audit URI, a retention period and at least one frequency bound.
         if:
           properties:
             form:
@@ -2733,7 +2732,7 @@ components:
           type:
           - string
           - 'null'
-          description: DPDP Board registration of the Consent Manager (REQ-211, from ~13 Nov 2026)
+          description: DPDP Board registration of the Consent Manager (DPDP Rules 2025, Rule 4, from ~13 Nov 2026)
         issued_at:
           type: string
           format: date-time
@@ -2925,7 +2924,7 @@ components:
           type: string
         transaction_id:
           type: string
-          description: Beckn context.transaction_id, end to end (REQ-115)
+          description: Beckn context.transaction_id, end to end
         order_id:
           type: string
         checkout_hash:
@@ -2970,15 +2969,15 @@ components:
               - REVERSED
             original_rrn:
               type: string
-              description: 'Refund receipts: RRN of the debit being refunded (REQ-306)'
+              description: 'Refund receipts: RRN of the debit being refunded'
             evidence:
               type: object
               additionalProperties:
                 type: string
-              description: v1 non-UPI settlement evidence (SC-16)
+              description: Settlement evidence for non-UPI handlers
           allOf:
-          - description: 'UPI-family rails (RE-2, E-ED-1): RRN is mandatory; UTR is mandatory unless the handler descriptor''s settlement.evidence_refs
-              lists RRN only (generated from examples/payment-handlers.registry.json).'
+          - description: 'UPI-family rails: RRN is mandatory; UTR is mandatory unless the handler descriptor''s settlement.evidence_refs lists
+              RRN only (generated from handlers/registry.json).'
             if:
               properties:
                 type:
@@ -3015,7 +3014,7 @@ components:
           - credit_note_issued
           - refunded_to_source
           - adjusted_against_dues
-          description: v1 delta (PAYC 2.8, PAY-106, TRD 17.3). adjusted_against_dues and refunded_to_source are prototype additions (SC-17).
+          description: Refund lifecycle state, including credit-card refund consent and adjustment against B2B dues.
         fx:
           $ref: ../schemas/fx.json
       allOf:
@@ -3548,7 +3547,7 @@ components:
             $ref: '#/components/schemas/TaxLine'
         preticked_addon:
           type: boolean
-          description: Set by BPP. The gateway strips such items (REQ-311).
+          description: Set by BPP. The gateway strips such items.
     TaxLine:
       type: object
       required:
@@ -3586,7 +3585,7 @@ components:
           $ref: '#/components/schemas/Amount'
     Disclosures:
       type: object
-      description: Mandatory pre-commit disclosures as given by the BPP (REQ-314), hashed into accepted_disclosures_hash
+      description: Mandatory pre-commit disclosures as given by the BPP, hashed into accepted_disclosures_hash
       required:
       - seller_name
       - total_price
@@ -3712,11 +3711,10 @@ components:
         reversal_deadline:
           type: string
           format: date-time
-          description: T+5 for UPI P2M debited-not-confirmed (REQ-307)
+          description: T+5 for UPI P2M debited-not-confirmed
         budget_after:
           type: array
-          description: Unsigned, computed by the gateway from its mandate ledger after applying the PSP-signed receipt (M-3, E-SC-2). Never part
-            of the receipt.
+          description: Unsigned, computed by the gateway from its mandate ledger after applying the PSP-signed receipt. Never part of the receipt.
           items:
             type: object
             required:
@@ -4517,7 +4515,7 @@ components:
       - receipt_id
       - receipt_hash
       - result
-      description: Webhook-scoped receipt reference (L7-I5). GET the resource for the full signed receipt.
+      description: Webhook-scoped receipt reference. GET the resource for the full signed receipt.
       properties:
         receipt_id:
           type: string

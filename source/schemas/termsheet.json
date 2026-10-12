@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/termsheet.json",
   "title": "TermSheet",
-  "description": "Multi-issue term sheet carried in every binding Offer (NEG section 5.3; TRD section 17.2; TRADE-104, TRADE-107). Every issue carries {value, negotiable, status}. Reservation values never appear here (NEG-140). Issues not listed are fixed (NEG section 5.2).",
+  "description": "Multi-issue term sheet carried in every binding Offer. Every issue carries {value, negotiable, status}. Reservation values never appear here. Issues not listed are fixed.",
   "type": "object",
   "required": [
     "term_sheet_id",
@@ -34,7 +34,7 @@
         "scheme",
         "posted_dynamic"
       ],
-      "description": "NEG-171. Device/OS-based pricing is prohibited regardless of basis."
+      "description": "Device/OS-based pricing is prohibited regardless of basis."
     },
     "personalisation_factors": {
       "type": "array",
@@ -78,7 +78,7 @@
         "buyer",
         "seller"
       ],
-      "description": "TRADE-101: orderer, consignee and payer may differ.",
+      "description": "Orderer, consignee and payer may differ.",
       "additionalProperties": false
     },
     "lines": {
@@ -188,7 +188,7 @@
               "value"
             ],
             "unevaluatedProperties": false,
-            "description": "GeM-style +/- quantity option (TRD section 6)."
+            "description": "GeM-style +/- quantity option."
           },
           "unit_price": {
             "allOf": [
@@ -217,11 +217,11 @@
           "mrp": {
             "$ref": "common.json#/$defs/Amount",
             "readOnly": true,
-            "description": "From catalog price.maximum_value. Read-only, never negotiable (NEG section 5.11)."
+            "description": "From catalog price.maximum_value. Read-only, never negotiable."
           },
           "retail_package_mrp_required": {
             "type": "boolean",
-            "description": "True only for a retail package that must bear MRP. LM(PC) Rules r.18(2) ceiling applies. Rule 3 exemptions (industrial/institutional consumer packs, over 25 kg) are false (to be verified; NEG-170)."
+            "description": "True only for a retail package that must bear MRP. LM(PC) Rules r.18(2) ceiling applies. Rule 3 exemptions (industrial/institutional consumer packs, over 25 kg) are false (to be verified)."
           },
           "price_breaks": {
             "type": "array",
@@ -248,7 +248,7 @@
           },
           "asserted_by_buyer": {
             "type": "boolean",
-            "description": "False for seller-added lines. A counter may not add unasserted lines (anti basket-sneaking, NEG section 5.12)."
+            "description": "False for seller-added lines. A counter may not add unasserted lines (anti basket-sneaking)."
           },
           "quality": {
             "$ref": "#/$defs/Quality"
@@ -311,7 +311,7 @@
           "first_disclosed_round": {
             "type": "integer",
             "minimum": 1,
-            "description": "Round in which the fee first appeared. A fee first disclosed after round 1 forces re-consent (TRADE-121)."
+            "description": "Round in which the fee first appeared. A fee first disclosed after round 1 forces re-consent."
           }
         },
         "required": [
@@ -324,7 +324,7 @@
     },
     "all_in_total": {
       "$ref": "common.json#/$defs/Amount",
-      "description": "Every mandatory charge incl. tax. REQUIRED from round 1 (NEG-122). Must equal Beckn quote.price."
+      "description": "Every mandatory charge incl. tax. REQUIRED from round 1. Must equal Beckn quote.price."
     },
     "delivery": {
       "type": "object",
@@ -447,7 +447,7 @@
             "value"
           ],
           "unevaluatedProperties": false,
-          "description": "FOR_DESTINATION is Indian domestic practice, not an Incoterm (TRD section 5)."
+          "description": "FOR_DESTINATION is Indian domestic practice, not an Incoterm."
         },
         "named_place": {
           "allOf": [
@@ -574,7 +574,7 @@
               "timing",
               "all_in_total"
             ],
-            "description": "One payment alternative with its own all-in total, so COD vs prepaid prices are visible from round 1 (PAY-132, NEG-122).",
+            "description": "One payment alternative with its own all-in total, so COD vs prepaid prices are visible from round 1.",
             "additionalProperties": false
           }
         },
@@ -625,7 +625,7 @@
                       "milestone",
                       "date"
                     ],
-                    "description": "Beckn timing vocabulary (NEG section 1.1) plus acceptance events: GRN for MSMED, CRAC for GeM."
+                    "description": "Beckn timing vocabulary plus acceptance events: GRN for MSMED, CRAC for GeM."
                   },
                   "offset_days": {
                     "type": "integer",
@@ -681,7 +681,7 @@
               }
             ]
           },
-          "description": "Tranches, e.g. 30% on_order + 70% on_acceptance+45 (TRADE-107 test)."
+          "description": "Tranches, e.g. 30% on_order + 70% on_acceptance+45."
         },
         "advance_pct": {
           "allOf": [
@@ -789,7 +789,7 @@
             "value"
           ],
           "unevaluatedProperties": false,
-          "description": "ONDC BPP_TERMS.DELAY_INTEREST (NEG section 1.4)."
+          "description": "ONDC BPP_TERMS.DELAY_INTEREST."
         },
         "emi": {
           "allOf": [
@@ -849,7 +849,7 @@
             "value"
           ],
           "unevaluatedProperties": false,
-          "description": "PAY-117, PAY-125. no_cost MUST be false when interest_amount > 0."
+          "description": "Equated monthly instalments. no_cost MUST be false when interest_amount > 0."
         },
         "collected_by": {
           "allOf": [
@@ -1238,7 +1238,7 @@
             "value"
           ],
           "unevaluatedProperties": false,
-          "description": "Performance bank guarantee (TRD section 5)."
+          "description": "Performance bank guarantee."
         },
         "retention_pct": {
           "allOf": [
@@ -1404,7 +1404,7 @@
             "value"
           ],
           "unevaluatedProperties": false,
-          "description": "Two-phase service pricing (TRADE-132)."
+          "description": "Two-phase service pricing."
         },
         "inspection_fee": {
           "allOf": [
@@ -1531,7 +1531,7 @@
           },
           "deducted_at_source": {
             "type": "boolean",
-            "description": "e.g. arhtiya commission or interlocked loan repayment shown as a separate line (TRADE-150)."
+            "description": "e.g. arhtiya commission or interlocked loan repayment shown as a separate line."
           },
           "status": {
             "$ref": "common.json#/$defs/IssueStatus"
@@ -1700,7 +1700,7 @@
           }
         ]
       },
-      "description": "Namespaced extra issues. Guards fail closed on any extension issue not in Agree (NEG-132)."
+      "description": "Namespaced extra issues. Guards fail closed on any extension issue not in Agree."
     },
     "fx": {
       "type": "object",
@@ -1712,7 +1712,7 @@
         "inr_total"
       ],
       "additionalProperties": false,
-      "description": "REQ-405 / TRADE-144 (L7-compliance C-5): foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+      "description": "Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
       "properties": {
         "currency": {
           "type": "string",
@@ -1955,7 +1955,7 @@
         },
         "conditional": {
           "type": "boolean",
-          "description": "Conditional/deferred cashback MUST NOT be counted in all_in_total (PAYC section 7)."
+          "description": "Conditional/deferred cashback MUST NOT be counted in all_in_total."
         },
         "claim_lifecycle": {
           "enum": [
@@ -1981,7 +1981,7 @@
   },
   "allOf": [
     {
-      "description": "MSMED s.15 cap: a manufacturing or services micro/small seller may not be given more than 45 days from acceptance or deemed acceptance (NEG-162, TRADE-108). Traders are excluded pending verification.",
+      "description": "MSMED Act s.15 cap: a manufacturing or services micro/small seller may not be given more than 45 days from acceptance or deemed acceptance. Traders are excluded pending verification.",
       "if": {
         "properties": {
           "parties": {
@@ -2053,7 +2053,7 @@
       }
     },
     {
-      "description": "An interest-bearing EMI cannot be described as no-cost (PAY-117).",
+      "description": "An interest-bearing EMI cannot be described as no-cost.",
       "if": {
         "properties": {
           "payment": {

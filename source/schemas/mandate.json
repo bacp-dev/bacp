@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/mandate.json",
-  "title": "Mandate (bacp.AgentMandate, AMA)",
-  "description": "AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status, usage and signatures is signed and immutable (REQ-103).",
+  "title": "Mandate",
+  "description": "AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status, usage and signatures is signed and immutable.",
   "type": "object",
   "required": [
     "vct",
@@ -90,7 +90,7 @@
       "properties": {
         "ref": {
           "type": "string",
-          "description": "Pairwise pseudonymous user id at the Mandate Manager. Never an Aadhaar number (REQ-204)."
+          "description": "Pairwise pseudonymous user id at the Mandate Manager. Never an Aadhaar number."
         },
         "assurance": {
           "enum": [
@@ -290,11 +290,11 @@
         "cod_max_open_orders": {
           "type": "integer",
           "minimum": 0,
-          "description": "PAY-131: open COD orders an agent may hold HNP (L7-compliance C-2)."
+          "description": "Open COD orders an agent may hold HNP."
         },
         "credit_funding_allowed": {
           "type": "boolean",
-          "description": "PAY-107: credit-funded handlers allowed (L7-compliance C-2)."
+          "description": "Credit-funded handlers allowed."
         }
       },
       "additionalProperties": false
@@ -336,7 +336,7 @@
               "$ref": "common.json#/$defs/RailTypeV1"
             }
           ],
-          "description": "Any class-O handler (v1 section 13.3, B-1; RailTypeV1) or a v0 RailType alias. Class C/A/D/N ids never validate here (L7-compliance C-1)."
+          "description": "Any class-O handler (binding rule B-1; RailTypeV1) or a legacy RailType alias. Class C/A/D/N ids never validate here."
         },
         "rail_ref": {
           "type": "string",
@@ -380,14 +380,14 @@
           ]
         }
       },
-      "description": "OPEN payment mandates only (P-03 as narrowed by L5): binding to a live UPI standing-authority primitive. upi.uap.* reserved."
+      "description": "OPEN payment mandates only: binding to a live standing-authority primitive enforced by the rail. upi.uap.* reserved."
     },
     "auth_binding": {
       "type": "object",
       "required": [
         "type"
       ],
-      "description": "CLOSED payment mandates only: how this single payment is authorised. Either it executes under the parent open mandate's rail_binding (HNP), or it carries a per-transaction user 2FA reference (HP) or another REQ-401 instrument.",
+      "description": "CLOSED payment mandates only: how this single payment is authorised. Either it executes under the parent open mandate's rail_binding (HNP), or it carries a per-transaction user 2FA reference (HP) or another closed-class instrument.",
       "properties": {
         "type": {
           "enum": [
@@ -623,7 +623,7 @@
       }
     },
     {
-      "description": "REQ-102 (L7-compliance C-3): an open mandate carries data scopes, an audit URI, a retention period and at least one frequency bound.",
+      "description": "An open mandate carries data scopes, an audit URI, a retention period and at least one frequency bound.",
       "if": {
         "properties": {
           "form": {

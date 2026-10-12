@@ -1,4 +1,736 @@
 # Mandates and Consent
 
 !!! warning "Draft"
-    This page is being written.
+    This page is part of the `draft` specification. Rules marked **Proposed** depend on an
+    open question and may change before the first dated release.
+
+A **mandate** is the signed, immutable statement of what a principal (the person or business on
+whose behalf an agent acts) has authorised the agent to do. Every BACP commitment that moves
+money, shares personal data or binds the principal is evaluated against a mandate by
+deterministic, non-LLM code at the gateway. A **ConsentReceipt** is the DPDP record of the notice
+the principal saw and the personal data they agreed to release to a named recipient.
+
+| Artefact | Schema | Signed by |
+|---|---|---|
+| Mandate (`bacp.AgentMandate`) | [`mandate.json`](https://bacp.dev/schemas/mandate.json) | Principal and Mandate Manager (open); agent `cnf` key or principal (closed) |
+| ConsentReceipt (DPDP) | [`consent-receipt.json`](https://bacp.dev/schemas/consent-receipt.json) | Mandate Manager |
+
+Negotiation bounds (reservation price, walk-away terms) are **not** carried by this mandate. They
+live in a separate negotiation mandate, described in [Negotiation](negotiation/index.md), so that
+verifiers that only understand checkout and payment mandates never meet a constraint they do not
+know.
+
+## Mandate kinds and forms
+
+One schema covers four mandate types: the AP2 matrix of open/closed × Checkout/Payment. The
+`vct` and the wire-compatible `ap2_vct` name the type.
+
+| | **Checkout** (`kind: checkout`) | **Payment** (`kind: payment`) |
+|---|---|---|
+| **Open** (`form: open`) | `in.bacp.mandate.checkout.open.1`: what the agent may buy, where, how much, with what data | `in.bacp.mandate.payment.open.1`: the standing payment authority, bound to a rail primitive through `rail_binding` |
+| **Closed** (`form: closed`) | `in.bacp.mandate.checkout.1`: one exact basket (`checkout_hash`) and `amount` | `in.bacp.mandate.payment.1`: one exact payment, authorised through `auth_binding` |
+
+- An **open** mandate is long-lived. It carries `constraints` and the agent key (`cnf`) that is
+  allowed to close it. It is created only through the Mandate Manager and the Trusted Surface
+  ([Issuance](#issuance)).
+- A **closed** mandate narrows one open mandate to a single transaction. It names its parent in
+  `parent_mandate_id` and carries `checkout_hash` and `amount`; the schema requires all three for
+  `form: closed`.
+- The closed **Checkout Mandate** goes to the seller (BPP). The closed **Payment Mandate** goes to
+  the payer PSP. The PSP never sees the basket and the seller never sees the instrument: the
+  payment leg carries only payee, amount, mandate reference and `checkout_hash`.
+- Every Payment Mandate, open or closed, **MUST** carry `checkout_mandate_ref`, the Checkout
+  Mandate it pays for.
+- An open Payment Mandate **MUST** carry `rail_binding`. A closed Payment Mandate **MUST** carry
+  `auth_binding` and **MUST NOT** carry `rail_binding`.
+
+### Required content of an open mandate {#open-mandate-requirements}
+
+Besides the fields the schema requires of every mandate (`vct`, `mandate_id`, `kind`, `form`,
+`iss`, `iat`, `valid_from`, `valid_until`, `principal`, `agent`, `purpose`, `action_scope`,
+`presence_allowed`, `constraints`, `revocation`, `signatures`), an **open** mandate **MUST**
+carry:
+
+- `cnf`, the agent key that may close it;
+- `data_scopes` (it MAY be empty);
+- `audit_uri`, where every use is reported;
+- `dpdp.data_retention`, the ISO 8601 retention period imposed on recipients;
+- at least one frequency bound: `constraints.budgets` or `constraints.max_executions`.
+
+A closed mandate inherits these from its parent and need not repeat them.
+
+### Immutability and delegation
+
+Everything in a mandate except `status`, `usage` and `signatures` is signed and immutable. The
+mandate hash, used as `Receipt.reference` (see [Evidence](evidence.md#receipts)), is `sha-256`
+over the JCS (RFC 8785) form of the mandate minus those three fields. An edit to any signed field,
+such as a raised cap, makes every signature fail, and the gateway returns
+`403 mandate_invalid_signature`.
+
+`parent_mandate_id` chains (a closed mandate, or a sub-agent delegation requested with
+`parent_mandate_id` on `POST /mandates`) **MUST** only narrow: the child's scope, constraints and
+validity are each a subset of the parent's. A closed mandate's `valid_until` **MUST NOT** be later
+than its parent's.
+
+### Example: open Payment Mandate
+
+```json
+{
+  "vct": "in.bacp.mandate.payment.open.1",
+  "ap2_vct": "mandate.payment.open.1",
+  "mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "parent_mandate_id": null,
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "kind": "payment",
+  "form": "open",
+  "iss": "mm.psp.example.in",
+  "iat": 1791763200,
+  "valid_from": "2026-10-12T10:00:00+05:30",
+  "valid_until": "2026-11-11T10:00:00+05:30",
+  "principal": {"ref": "pp_9f2c1e", "assurance": "vpa_pin"},
+  "agent": {
+    "id": "did:web:agents.vaani.example.in:sakhi",
+    "credential_hash": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM"
+  },
+  "purpose": {
+    "code": "P-GRO-01",
+    "text": {"hi-IN": "Ghar ka kirana saman", "en-IN": "Household grocery replenishment"}
+  },
+  "action_scope": ["DISCOVER", "QUOTE", "ORDER", "PAY", "CANCEL", "RETURN", "RAISE_ISSUE", "SHARE_DATA"],
+  "data_scopes": ["NAME", "PHONE", "DELIVERY_ADDRESS"],
+  "presence_allowed": ["HNP", "HP"],
+  "constraints": {
+    "amount_per_txn": {"value": 150000, "currency": "INR"},
+    "budgets": [{"period": "P1M", "max": {"value": 300000, "currency": "INR"}}],
+    "categories_allow": ["ONDC:RET10"],
+    "delivery_pincodes": ["560034"],
+    "step_up": {
+      "above_amount": {"value": 120000, "currency": "INR"},
+      "new_merchant": false,
+      "outside_categories": true
+    },
+    "reject_preticked_addons": true,
+    "cod_allowed": false
+  },
+  "payee": {"bap_id": "bap.vaani.example.in", "vpa": "vaani.collect@examplebank"},
+  "rail_binding": {
+    "type": "upi.reservepay.block",
+    "rail_ref": "SBMD-HDFX-000123456",
+    "psp_id": "psp.example.in",
+    "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl",
+    "rail_limits": {
+      "block_amount": {"value": 300000, "currency": "INR"},
+      "expires_at": "2026-11-11T10:00:00+05:30"
+    },
+    "pre_debit_notice": "unknown"
+  },
+  "dpdp": {"consent_receipts": ["cr_A1B2C3D4E5F6G7"], "data_retention": "P1Y"},
+  "revocation": {
+    "status_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/status",
+    "notify_sla_seconds": 60
+  },
+  "audit_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/audit",
+  "cnf": {
+    "jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+      "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+      "kid": "sakhi-2026-10"
+    }
+  },
+  "signatures": [
+    {"role": "principal", "kid": "device:pp_9f2c1e#k1", "alg": "ES256",
+     "value": "eyJhbGciOiJFUzI1NiJ9.eyJtIjoxfQ.c2ln"},
+    {"role": "mandate_manager", "kid": "mm.psp.example.in|ukid-2|es256", "alg": "ES256",
+     "value": "eyJhbGciOiJFUzI1NiJ9.eyJtIjoyfQ.c2ln"}
+  ],
+  "status": "ACTIVE",
+  "usage": {
+    "count": 0,
+    "spent": [{"period": "P1M", "amount": {"value": 0, "currency": "INR"},
+               "window_start": "2026-10-12T10:00:00+05:30"}]
+  }
+}
+```
+
+Amounts are integer paise: `150000` is ₹1,500 per order, `300000` is ₹3,000 per calendar month,
+and step-up applies above ₹1,200.
+
+## Issuance {#issuance}
+
+An agent never signs or activates an open mandate. It **requests** one. The principal approves it
+on a **Trusted Surface** (the payer PSP's app, or a Mandate Manager app), and the **Mandate
+Manager** (MM) issues it.
+
+1. The agent calls `POST /mandates` (tag `bacp-browse`) with a `MandateRequest`:
+   `purpose_code`, `rail`, `presence_allowed`, `proposed_constraints`, `data_scopes`,
+   `action_scope`, `validity` (an ISO 8601 duration), `language` and `webhook_url`. The gateway
+   **MUST** accept `webhook_url`, so that `mandate.status_changed` can reach the agent before any
+   session exists.
+2. Before anything reaches the Trusted Surface, the gateway or the MM **MUST** reject the request:
+    - with `403 constraint_unknown` if `proposed_constraints` has a key this page does not define
+      (see [Fail-closed handling](#unknown-constraints));
+    - with `403 mandate_scope_mismatch` if it has no `amount_per_txn`; has no periodic budget; has
+      no `categories_allow`, or one outside the purpose's categories; asks for a longer validity
+      than the purpose allows; exceeds any per-transaction or per-period bound of the purpose
+      ([Purpose bounds](#purpose-bounds)); asks for a data scope the purpose does not allow; or
+      exceeds the static limits of the requested rail.
+3. Otherwise the gateway returns `202` with a `MandateHandle` in `PENDING`, carrying a
+   `trusted_surface_url` deep link. The link expires after at most 15 minutes.
+4. The principal opens the link. The Trusted Surface shows the notice in the principal's language
+   (English or a language of the Eighth Schedule): limits, categories, data items, recipient class,
+   withdrawal route and grievance route. The principal approves with an explicit action and the
+   rail's own authentication (for UPI, the UPI PIN).
+5. The payer PSP creates or links the rail primitive (for example a Reserve Pay block, a UPI Circle
+   delegation or an AutoPay mandate) and signs a rail **attestation**: a JWS over
+   `{rail_ref, type, limits, expiry, payee}`.
+6. The MM checks that every BACP constraint is at or below the attested rail limits, then builds
+   the open Checkout and open Payment Mandates. The **principal** signs both
+   (`signatures[].role: principal`) and the **MM countersigns** both
+   (`role: mandate_manager`). The MM allocates a status-list entry per mandate and issues the
+   ConsentReceipt.
+7. The MM sends a signed `mandate.activated` event to the gateway's `/trusted-surface/events`
+   (tag `bacp-ts`, registry key of role MM or PSP). The gateway records an InstructionLog entry at
+   stage `mandate` and sends the webhook `mandate.status_changed` (`ACTIVE`) to the agent.
+
+A verifier **MUST** accept an open mandate only if a principal signature and an MM signature both
+verify against registry-resolvable keys of those roles, and the rail attestation verifies against
+a key of role PSP and matches `rail_binding.rail_ref` and `rail_binding.type`.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Principal
+    participant A as Agent
+    participant G as BACP Gateway
+    participant MM as Mandate Manager
+    participant TS as Trusted Surface (payer PSP app)
+    participant N as NPCI and issuer
+    U->>A: Order my groceries every month, up to 3000 rupees
+    A->>G: POST /mandates with purpose, rail, constraints, data scopes, webhook_url
+    G->>G: Check unknown constraints, schema, purpose bounds, rail static caps
+    G->>MM: Mandate request with the agent cnf key
+    MM-->>G: PENDING request id and Trusted Surface link (15 min)
+    G-->>A: 202 PENDING with trusted_surface_url
+    A->>U: Please approve in your UPI app
+    U->>TS: Open link, read notice, approve with UPI PIN
+    TS->>N: Create rail primitive (block, delegation or mandate)
+    N-->>TS: rail_ref
+    TS->>MM: Approval with device signature and PSP rail attestation
+    MM->>MM: Check constraints are within rail limits
+    MM->>MM: Principal and MM sign open Checkout and Payment Mandates
+    MM->>MM: Issue ConsentReceipt and status-list entries
+    MM->>G: Signed event mandate.activated
+    G->>G: InstructionLog entry at stage mandate
+    G-->>A: Webhook mandate.status_changed ACTIVE
+```
+
+### Purpose bounds {#purpose-bounds}
+
+`purpose.code` comes from a purpose-code registry. Each purpose carries bounds that the gateway or
+MM enforces at `POST /mandates`. The values below are **provisional** but normative for
+conformance. Who governs the registry and its values is open ([Q-47](open-questions.md#q-47)).
+Amounts are in rupees.
+
+| Purpose | Text | Per txn | P1D | P7D | P1M | FIRST_24H | LIFETIME | Categories | Max validity | Data scopes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| `P-GRO-01` | Household grocery replenishment | 20,000 | 20,000 | 25,000 | 25,000 | 20,000 | 1,00,000 | `ONDC:RET10` | 90 days | NAME, PHONE, DELIVERY_ADDRESS, EMAIL |
+| `P-FAS-01` | Clothing and handloom | 50,000 | 50,000 | 50,000 | 1,00,000 | 50,000 | 5,00,000 | `ONDC:RET12` | 90 days | NAME, PHONE, DELIVERY_ADDRESS, EMAIL |
+| `P-PRC-01` | Business and public procurement | 1,00,00,000 | 1,00,00,000 | 2,00,00,000 | 5,00,00,000 | 1,00,00,000 | 50,00,00,000 | `ONDC:RET10`, `ONDC:RET12`, `ONDC:RET14` | 180 days | NAME, PHONE, DELIVERY_ADDRESS, EMAIL, GSTIN |
+
+Rail limits apply on top of purpose bounds. A Circle binding caps `amount_per_txn` at ₹5,000 and
+P1M at ₹15,000. An AutoPay binding caps `amount_per_txn` at the ₹15,000 AFA limit. See
+[Rail Bindings](payments/rails.md).
+
+## Constraints {#constraints}
+
+`constraints` is a closed object. Every key below is a **known constraint key**. Amounts are
+`Amount` objects in integer paise. All checks run in the gateway against the BPP-signed quote,
+never against agent claims.
+
+| Key | Type | Semantics | Failure |
+|---|---|---|---|
+| `amount_per_txn` | Amount | The payable amount of one order **MUST NOT** exceed it. | `403 mandate_scope_mismatch` |
+| `budgets[]` | `{period, max}` | Exposure in the window plus this amount **MUST NOT** exceed `max` ([Budgets](#budgets)). | `403 mandate_exhausted` |
+| `max_executions` | integer ≥ 1 | Settled plus in-flight payments under the mandate **MUST** stay below it. When settled payments reach it, the mandate becomes `EXHAUSTED`. | `403 mandate_exhausted` |
+| `categories_allow` | string[] | ONDC domain or category codes (e.g. `ONDC:RET10`, `RET10-Staples`). Every category in the order **MUST** be listed, unless `step_up.outside_categories` is `true`; then an order outside the list escalates instead of failing. | `403 mandate_scope_mismatch`, or step-up |
+| `categories_deny` | string[] | No category in the order may be listed. Deny wins over allow. | `403 mandate_scope_mismatch` |
+| `merchants_allow[]` | `{bpp_id, provider_id?}` | The seller's `bpp_id` **MUST** match an entry, and so must its `provider_id` when the entry names one. | `403 mandate_scope_mismatch` |
+| `delivery_pincodes` | string[] (6-digit PIN code) | The fulfilment PIN code **MUST** be listed. | `403 mandate_scope_mismatch` |
+| `line_items[]` | `{item_id, qty_max}` | Every ordered item **MUST** be listed, with quantity ≤ `qty_max`. This bounds basket changes injected through catalogue text. | `403 mandate_scope_mismatch` |
+| `step_up` | object | Thresholds that force a human confirmation ([Step-up](#step-up)). Its keys are `above_amount`, `new_merchant`, `outside_categories` and `first_order`. | step-up |
+| `reject_preticked_addons` | `true` | The gateway declines every pre-ticked add-on the seller offers and re-quotes without it, reporting `preticked_addon_removed`. | message |
+| `cod_allowed` | boolean | Cash-on-delivery orders are allowed HNP only when `true`. | `403 cod_not_allowed` |
+| `cod_max_open_orders` | integer ≥ 0 | Maximum open COD orders the agent may hold HNP. Where a negotiation mandate also sets a cap, the stricter wins. | `403 cod_open_orders_cap` |
+| `credit_funding_allowed` | boolean | A credit-funded handler (BNPL, cardless EMI, a credit line) is refused unless this is `true`. | `403 credit_funding_not_allowed` |
+
+COD and credit funding are described in [Credit and Split Tender](payments/credit-and-split-tender.md).
+
+### Budgets {#budgets}
+
+Each `budgets[]` entry names a `period` and a `max`. A mandate MAY carry several, and every one
+applies.
+
+| Period | Window at evaluation time *t* |
+|---|---|
+| `P1D` | Rolling: payments at times in (*t* − 24 h, *t*]. |
+| `P7D` | Rolling: payments at times in (*t* − 7 days, *t*]. |
+| `P1M` | The **calendar month in IST** (Asia/Kolkata) that contains *t*. It resets at 00:00 IST on the first of the month. |
+| `FIRST_24H` | [`valid_from`, `valid_from` + 24 h). After this window the budget no longer applies. |
+| `LIFETIME` | Every payment over the life of the mandate. |
+
+Rail-side "per month" caps, such as the Circle monthly cap and the AFA period, are also evaluated
+per calendar month in IST.
+
+The check is `exposure(window) + amount ≤ max`, where **exposure** is settled spend plus
+in-flight reservations in that window ([Usage ledger](#usage-ledger)). A breach returns
+`403 mandate_exhausted` with `resolution: requires_buyer_input` and moves no money.
+
+### Fail-closed handling of unknown constraints {#unknown-constraints}
+
+The set of constraint keys in the table above, and the set of `step_up` keys, is closed.
+
+- A gateway, MM or verifier that meets a constraint key or `step_up` key it does not know **MUST**
+  refuse the mandate with `403 constraint_unknown` (`unrecoverable`). It **MUST NOT** ignore the
+  key, and **MUST NOT** evaluate the remaining keys and proceed.
+- This applies at `POST /mandates` (to `proposed_constraints`) and at every evaluation.
+- This is the one exception to BACP's rule that readers ignore unknown fields. New constraint
+  types arrive as new mandate types (as the negotiation mandate does), never as new keys that an
+  older verifier would skip.
+- Any other malformed mandate fails closed: `400 mandate_schema_invalid` for a schema failure,
+  `403 mandate_invalid` for unparseable or inconsistent content.
+
+## Presence (HP and HNP) {#presence}
+
+`presence` is `HP` (human present) or `HNP` (human not present). It is declared on every session
+and every post-order write, and travels on the network in `context.bacp.presence`.
+
+- The presence of a request **MUST** be in the open mandate's `presence_allowed`. Otherwise the
+  gateway returns `403 presence_not_allowed` (`requires_buyer_review`).
+- **HNP.** The agent closes the open mandates itself with its `cnf` key ([Closing](#closing)).
+  The closed Payment Mandate's `auth_binding.type` is `parent_rail_binding`: the debit runs under
+  the open mandate's rail binding. Only class-O handlers may back an HNP payment
+  ([Handler binding](#handler-binding)).
+- **HP.** The principal signs the closed mandates on the Trusted Surface and authorises the payment
+  with a fresh per-transaction factor (`auth_binding.type` is `upi.pin`, `upi.biometric`,
+  `card.3ds` or `instrument`). A one-off UPI payment authorised by PIN is identified as handler
+  `in.upi.intent` with `auth_binding.type: upi.pin`. An HP payment does not draw on the open
+  mandate's rail binding.
+- An HP step-up payment counts toward `usage.count` but not toward the open mandate's budgets.
+- Accepting a credit offer (a loan, BNPL) is always HP. An agent attempt returns
+  `403 credit_acceptance_requires_hp`.
+- Returns, and accepting or rejecting an IGM resolution, are HP
+  ([Post-order gate](checkout/post-order.md#post-order-gate)).
+
+## Closing an open mandate {#closing}
+
+To pay HNP, the agent turns the open Checkout and Payment Mandates into closed ones bound to the
+exact quote that the gateway returned in `ready_for_complete`.
+
+The agent **MUST** produce:
+
+| Field | Closed Checkout Mandate | Closed Payment Mandate |
+|---|---|---|
+| `vct` | `in.bacp.mandate.checkout.1` | `in.bacp.mandate.payment.1` |
+| `parent_mandate_id` | the open Checkout Mandate | the open Payment Mandate |
+| `checkout_hash` | `session.quote.checkout_hash` | the same |
+| `amount` | exactly the quote total | the same |
+| `checkout_mandate_ref` | n/a | the closed Checkout Mandate's `mandate_id` |
+| `payee` | n/a | the collecting party's VPA |
+| `auth_binding` | n/a | `{type: parent_rail_binding, handler, ref: rail_ref, psp_id}` |
+| Validity | within the parent's, typically minutes | the same |
+
+**Key binding.** Each closed mandate **MUST** carry an inner signature with `role: agent` made by
+the open mandate's `cnf` key. It **MUST** be sent as an attached compact JWS whose payload is the
+mandate JSON (including that inner signature) and whose header `kid` is the `cnf` key id. The same
+key signs the agent's RFC 9421 requests, so a mandate closed under one agent's key cannot be
+presented by another ([Identity and Request Signing](identity-and-signing.md)). An HP closed
+mandate is instead signed, inside and outside, by the principal key that signed the parent.
+
+The agent **MAY** also send a key-binding JWT (`kb_jwt`) on `complete`. If present it **MUST** be
+signed by the `cnf` key with `aud` set to the seller's `bpp_id` and `nonce` set to the Beckn
+`message_id` of the `confirm` that the gateway will send. The gateway derives that `message_id` as
+`UUIDv5(message_id_namespace, agent_id | idempotency_key | "confirm")` and publishes
+`message_id_namespace` in `/.well-known/bacp`. The gateway forwards the `kb_jwt` to the BPP in
+`context.bacp.mandate_ref.kb_jwt`.
+
+!!! note "Encoding"
+    The attached-JWS closing above is the interoperable form for this draft. Whether BACP moves to
+    an SD-JWT / KB-JWT selective-disclosure encoding for closing is open
+    ([Q-41](open-questions.md#q-41)). The mandatory signature algorithm is also open
+    ([Q-42](open-questions.md#q-42)).
+
+A closed Payment Mandate is single use. The gateway and the PSP adapter **MUST** allow at most one
+debit per closed Payment Mandate `mandate_id` and at most one per `checkout_hash`. Presenting a
+used one returns `403 mandate_scope_mismatch`.
+
+## Handler binding of open mandates {#handler-binding}
+
+An open Payment Mandate's `rail_binding.type` names the payment handler that backs it. Handlers are
+grouped into binding classes in the [Handler Registry](payments/handler-registry.md).
+
+- `rail_binding.type` **MUST** validate against the class-O id pattern (`RailTypeV1`) or a legacy
+  alias of one. Ids of class C, A, D or N handlers fail schema validation and are refused.
+- Schema validity is not eligibility. After alias resolution the handler's descriptor **MUST**
+  have `open_eligible: true` and `status: live`, or `status: pilot` only where the gateway's
+  conformance attestation lists that pilot. A `reserved` or `deprecated` descriptor (for example
+  the reserved `in.upi.uap.*`) **MUST NOT** back a mandate.
+- BACP constraints **MUST** be at or below the descriptor's rail limits. The MM rejects a mandate
+  that exceeds its binding. The rail is authoritative for its own limits, but **MUST NOT** be
+  relied on to enforce BACP budgets ([Usage ledger](#usage-ledger)).
+- A Reserve Pay block is payable to one seller. Multi-seller HNP shopping needs one open Payment
+  Mandate per seller block under one open Checkout Mandate whose budgets cap the total, or an
+  any-merchant primitive such as UPI Circle, or HP.
+
+!!! warning "Proposed"
+    Binding an open mandate to **every** class-O handler (card e-mandates, agentic card tokens,
+    eNACH debit, PPI e-mandates, gift PPIs, store credit, loyalty, `bacp.credit_ledger` and the
+    rest of class O) is Proposed and awaits an owner decision; see
+    [Proposed design choice (a)](open-questions.md#proposed-a) and, for agentic card tokens,
+    [Q-39](open-questions.md#q-39). The UPI standing authorities (Reserve Pay, Circle, AutoPay)
+    are the baseline.
+
+## Step-up {#step-up}
+
+A step-up hands the decision back to the human. It is never only an error: the session moves to
+`requires_escalation`, carries a `step_up` object, and its `messages[]` includes
+`step_up_required` with `resolution: requires_buyer_review`.
+
+There are two kinds.
+
+| `kind` | Meaning | Triggers (`reason`) |
+|---|---|---|
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `constraint_unresolved`: `step_up.first_order` on the first order, missing disclosures, drip pricing, or any check the gateway cannot resolve. |
+| `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
+
+Any other rail cap (per-transaction, per-period, remaining block, first 24 hours, channel caps)
+does **not** escalate. It returns `403 rail_limit_exceeded` with
+`resolution: requires_buyer_review`, `step_up_kind: rail_auth`, and `reasons[]` listing every
+local and rail reason.
+
+**Flow.**
+
+1. The gateway creates a `step_up` with a `step_up_id`, a `trusted_surface_url` and an
+   `expires_at` at most 15 minutes ahead, and sends `session.updated`.
+2. The principal approves or declines on the Trusted Surface. The MM or PSP posts
+   `step_up.approved` or `step_up.declined` to `/trusted-surface/events`. The agent cannot post
+   these events (`403 trusted_surface_only`).
+3. On a **confirm-only approval** the session returns to `ready_for_complete` with message
+   `step_up_approved`. The agent calls `complete` again with `step_up_id`, still under the open
+   mandate and its budgets.
+4. On an **HP payment approval** the event carries principal-signed closed mandates
+   (`auth_binding.type: upi.pin`) and the PSP-signed receipt. The gateway verifies them and
+   confirms the order without drawing on the open mandate's binding.
+5. On decline, or once `expires_at` passes, the session becomes `canceled` with
+   `step_up_declined` or `step_up_expired`, and no money moves.
+
+**Split-order detection.** To stop an agent splitting one purchase into several orders that each
+stay under `step_up.above_amount`, the gateway **MUST** escalate (`confirm`,
+`above_step_up_threshold`, with message `split_order_suspected`) any order where the other orders
+under the same open mandate **to the same BPP**, completed or in flight within the previous 10
+minutes, plus this order, exceed `above_amount`. The check runs inside the atomic section
+([Usage ledger](#usage-ledger)) and before rail caps. Velocity across different sellers is bounded
+only by the budgets; a cross-seller signal is open ([Q-50](open-questions.md#q-50)).
+
+## Deterministic evaluation {#evaluation}
+
+The gateway evaluates mandates in non-LLM code. It runs the evaluation as an advisory pre-check on
+`PUT /sessions/{id}` and authoritatively on `POST /sessions/{id}/complete`. Evaluation is
+deterministic and fails closed. The **first** failing step decides the result, and any exception
+or unexpected input is a failure (`403 mandate_invalid`), never a pass.
+
+Before evaluation, the transport layer has already verified the request signature, the
+AgentCredential and its status, the signature tag (`bacp-pay` for `complete`), the replay cache and
+the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
+
+0. **Positive amount.** The payable amount **MUST** be an integer number of paise greater than
+   zero; a boolean is not an integer. Otherwise `403 amount_not_positive` (`unrecoverable`),
+   before any other step and before any reservation.
+1. **Structure.** Unknown constraint keys give `403 constraint_unknown`. A schema failure gives
+   `400 mandate_schema_invalid`. A rail binding that is not open-eligible is refused.
+2. **Open mandate.** The principal and MM signatures verify (`403 mandate_invalid_signature`).
+   The rail attestation verifies and matches the binding. The status list does not mark the
+   mandate revoked (`403 mandate_revoked`). `status` is `ACTIVE` (otherwise `mandate_revoked`,
+   `mandate_paused`, `mandate_exhausted`, `mandate_expired`, or `mandate_required` for `PENDING`
+   and `REJECTED`). The current time is within `valid_from` to `valid_until`
+   (`mandate_expired`). The action is in `action_scope` (`mandate_scope_mismatch`).
+3. **Presence.** `presence` is in `presence_allowed` (`403 presence_not_allowed`).
+4. **Closed mandates.** They are signed by the parent's `cnf` key (HNP) or principal (HP)
+   (`mandate_invalid_signature`). `parent_mandate_id` binds. Validity is narrowed and current.
+   `checkout_hash` equals the hash of the BPP-signed quote. `amount` equals the quote total. The
+   payee matches. `checkout_mandate_ref` links the pair. An HNP `auth_binding.type` is
+   `parent_rail_binding`. The closed Payment Mandate has not been used. Any mismatch gives
+   `403 mandate_scope_mismatch`.
+5. **Constraints.** In order: `categories_deny`, `categories_allow`, `merchants_allow`,
+   `delivery_pincodes`, `line_items`, `amount_per_txn` (`mandate_scope_mismatch`); then each
+   `budgets[]` entry and `max_executions` against exposure (`mandate_exhausted`).
+6. **Split-order detection**, as in [Step-up](#step-up): a `confirm` step-up.
+7. **Rail caps.** AFA thresholds give a `rail_auth` step-up. Every other local or rail cap
+   (attested `rail_limits`, remaining block, period and first-24-hour caps, binding expiry, and
+   the PSP's own pre-check) gives `403 rail_limit_exceeded` with all reasons.
+8. **Step-up thresholds.** `above_amount`, `new_merchant`, `outside_categories` and
+   `first_order` give a `confirm` step-up. This step is skipped once the session's step-up has
+   been approved.
+9. **Disclosures and dark patterns.** Mandatory disclosures are present and hashed, pre-ticked
+   add-ons are removed and drip pricing is flagged (see
+   [Sessions and Checkout](checkout/index.md#update)).
+10. **Data.** Shared fields are within `data_scopes` and covered by an active ConsentReceipt
+    ([Consent](#consent)).
+11. **Evidence.** The session's InstructionLog chain verifies and its head matches
+    (`403 log_chain_invalid`; see [Evidence](evidence.md#chain-verification)).
+12. **Collector.** On `complete`, the party in `collected_by` is an RBI-authorised payment
+    aggregator or a bank, according to its registry attribute (`403 collector_not_authorised`).
+13. **Commit.** Consume the closed Payment Mandate (one use), create the budget reservation, move
+    the session to `complete_in_progress`, increment `usage.count` and report the use to
+    `audit_uri`.
+
+Steps 9 and 10 are checked when the session is updated and re-checked before `complete`. A gateway
+MAY run steps 9 to 12 before it enters the atomic section, since they do not depend on the ledger.
+Steps 5 to 8 and 13 **MUST** run inside it.
+
+## Usage ledger, reservations and concurrency {#usage-ledger}
+
+The gateway's **mandate ledger** is the source of truth for usage. The `usage` object on a mandate
+is a read-only view of it.
+
+- **Settled spend comes only from PSP-signed receipts.** A budget decrements only when the gateway
+  applies a successful payment Receipt whose signature verifies against a registry key of role PSP
+  and whose `open_mandate_ref` (or `mandate_ref`) is this mandate. Agent claims never change
+  usage. A receipt that fails these checks is refused (`400 receipt_invalid`).
+- **Reservations.** For every open Payment Mandate the ledger also holds in-flight reservations,
+  keyed by closed Payment Mandate id, each with an amount and a time. Exposure is settled spend
+  plus reservations. Budgets, `max_executions`, every rail-cap pre-check and split-order detection
+  **MUST** count reservations as spent.
+- **Atomic section.** For `complete`, steps 5 to 8 and 13 of
+  [Deterministic evaluation](#evaluation) **MUST** run as one atomic, linearizable operation per
+  open mandate id: mutual exclusion keyed on `mandate_id`, or compare-and-reserve on a store with
+  equivalent guarantees. The rail debit **MUST** run after the atomic section, never inside it.
+- **Resolution.** A reservation becomes settled spend only when a PSP-signed success receipt is
+  applied. It is released on a PSP-signed failure receipt or a refused debit. While a payment is
+  `in_doubt` its reservation is kept until reconciliation resolves it. When every payment on a
+  mandate has resolved, no reservation remains.
+- **Pre-checks never reserve.** The `PUT` pre-check is advisory and **MUST NOT** create a
+  reservation. A step-up or reject outcome **MUST NOT** create one either.
+- **The rail is not the backstop.** A gateway **MUST NOT** rely on rail-enforced limits to bound
+  BACP budgets. A rail authority can be far larger than the budget.
+- **Replicas.** A gateway that runs as several instances **MUST** share the ledger and keep it
+  linearizable per mandate (a single writer or a transactional store). A per-process lock is not
+  enough. Keeping budgets atomic across gateways, for a principal with two BAPs, is open
+  ([Q-36](open-questions.md#q-36)).
+
+**Conformance.** N concurrent `complete` calls on one open mandate **MUST NOT** settle more than any
+`budgets[].max` allows, even when the rail authority is far larger than the budget, and **MUST
+NOT** leave reservations behind.
+
+**Positive amounts only.** Every payable amount (a closed mandate `amount`, a payment Receipt
+`amount`, a split-plan tender) **MUST** be greater than zero. Direction is never carried by sign.
+`Amount.value` keeps `minimum: 0` in the schemas for values that may legitimately be zero, such as
+a free line or a remaining budget.
+
+**Refunds do not restore budget.** A refund, whether from a cancellation, a return or a failed
+confirmation, **MUST NOT** reduce settled spend or restore any budget or `max_executions` count.
+This is fail-safe: an agent cannot cycle purchases and returns to exceed its authority.
+
+**`budget_after`.** After applying a receipt the gateway computes the remaining amount of each
+budget from its ledger and returns it, unsigned, as `session.payment.budget_after` and as an `info`
+message `budget_after`. It is never part of a signed Receipt.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant A as Agent
+    participant G as BACP Gateway
+    participant L as Mandate ledger
+    participant P as Payer PSP
+    participant S as Seller (BPP)
+    A->>A: Close open mandates with cnf key for checkout_hash and exact amount
+    A->>G: POST complete with closed Checkout and Payment Mandates (tag bacp-pay)
+    G->>G: Steps 0 to 4 and 9 to 12
+    G->>L: Lock the open mandate id
+    L-->>G: Exposure (settled spend plus reservations)
+    G->>G: Constraints, split order, rail caps, step-up thresholds
+    G->>L: Consume closed Payment Mandate and reserve the amount
+    G->>L: Release the lock
+    G->>P: Debit with payee, amount, mandate ref and checkout_hash only
+    P-->>G: PSP-signed payment Receipt
+    G->>L: Apply receipt, reservation becomes settled spend
+    L-->>G: budget_after
+    G->>S: confirm with payment PAID and mandate_ref
+    S-->>G: on_confirm with order id
+    G-->>A: completed with order, receipt and budget_after
+```
+
+## Revocation, pause and expiry {#revocation}
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: agent requests mandate
+    PENDING --> ACTIVE: principal approves on Trusted Surface
+    PENDING --> REJECTED: principal declines or request expires
+    ACTIVE --> PAUSED: principal pauses
+    PAUSED --> ACTIVE: principal resumes
+    ACTIVE --> EXHAUSTED: budget, block or max_executions used up
+    ACTIVE --> REVOKED: principal, safety switch, rail or agent relinquish
+    PAUSED --> REVOKED: principal revokes
+    EXHAUSTED --> REVOKED: principal revokes
+    ACTIVE --> EXPIRED: valid_until or rail expiry
+    REVOKED --> [*]
+    EXPIRED --> [*]
+    REJECTED --> [*]
+```
+
+- Principals revoke, pause and resume only on the Trusted Surface, or with the rail's own controls
+  such as a UPI safety switch. The agent can give up its own authority with
+  `POST /mandates/{id}/relinquish`, which makes the mandate `REVOKED`.
+- On revocation the MM marks the mandate in its status list and sends a signed `mandate.revoked`
+  (or `rail.safety_switch`) event to the gateway. `revocation.notify_sla_seconds` **MUST** be 60
+  or less, and the gateway **MUST** notify the agent (webhook `mandate.status_changed`, with
+  `affected_sessions`) within that time.
+- The gateway **MUST** then cancel every open session under the mandate (`incomplete`,
+  `ready_for_complete`, `requires_escalation`) with message `mandate_revoked`, and refuse every new
+  commitment: `complete` returns `403 mandate_revoked`. Pause and expiry behave the same way with
+  `mandate_paused` and `mandate_expired`.
+- Revocation stops **new** commitments only. Cancel, return and issue on orders already placed
+  under the mandate stay allowed as protective actions, with `presence: HP`
+  ([Post-order gate](checkout/post-order.md#post-order-gate)).
+- If a debit races a revocation, the rail rejects it, because the Trusted Surface revokes the rail
+  primitive first.
+- A mandate becomes `EXPIRED` after `valid_until`, or when its rail binding expires
+  (`rail_limits.expires_at`). Validity is bounded by the purpose's maximum validity.
+
+## DPDP consent and data minimisation {#consent}
+
+### ConsentReceipt
+
+Every merchant that receives personal data is a separate Data Fiduciary. The MM, acting as or for a
+DPDP Consent Manager, issues one ConsentReceipt **per recipient per mandate**, signed with its
+registry key. The receipt records:
+
+- the itemised `data_items` (`field`, and `form`: `plain`, `masked`, `selective_disclosure_vc`
+  or `token`);
+- the `purpose` and the goods or services;
+- the `recipient` (`fiduciary_name`, `bpp_id`, `provider_id`, `dpo_contact`);
+- the `notice` (`language`, `hash`, `uri`, and `translation_model` for translated notices);
+- `captured_via`: the Trusted Surface (never the agent), the principal's affirmative action and a
+  device signature; a voice capture adds audio and transcript hashes and the translation model;
+- the `withdrawal` route (as easy as giving consent; `erasure_signal: true`) and the `grievance`
+  route;
+- `retention`: `recipient_max` and `legal_minimum` (default `P1Y`, DPDP Rule 8(3));
+- the `legal_basis`: `legitimate_use_s7a` only for delivery data the principal voluntarily provided
+  for that order, and `consent_s6` for everything else.
+
+In HNP shopping the seller is often unknown when the mandate is set up. The MM then issues a
+**class receipt** with `recipient.bpp_id: "*"`, scoped to the mandate's categories, and a
+per-seller receipt is minted when data is released at `init`.
+
+!!! warning "Proposed"
+    A per-seller ConsentReceipt minted at `init`, before any personal data reaches that seller, is
+    Proposed as a **MUST**; the class receipt would then only pre-authorise. Whether a class receipt
+    alone meets DPDP Rule 3 is open ([Q-12](open-questions.md#q-12)).
+
+!!! warning "Proposed"
+    `cm_registration_no` is Proposed as required on receipts issued on or after 2026-11-13, when
+    DPDP Rule 4 on Consent Managers is expected to commence. How the MM relates to a registered
+    Consent Manager is open ([Q-16](open-questions.md#q-16)).
+
+```json
+{
+  "receipt_id": "cr_A1B2C3D4E5F6G7",
+  "iss": "mm.psp.example.in",
+  "cm_registration_no": null,
+  "issued_at": "2026-10-12T10:00:05+05:30",
+  "principal_ref": "pp_9f2c1e",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "recipient": {
+    "fiduciary_name": "Any ONDC:RET10 seller selected under this mandate",
+    "bpp_id": "*",
+    "dpo_contact": "per seller on_init"
+  },
+  "data_items": [
+    {"field": "NAME", "form": "plain"},
+    {"field": "PHONE", "form": "masked"},
+    {"field": "DELIVERY_ADDRESS", "form": "plain"}
+  ],
+  "purpose": {
+    "code": "P-GRO-01",
+    "text": {"hi-IN": "Order delivery ke liye", "en-IN": "To deliver grocery orders"},
+    "goods_or_services": "Grocery delivery"
+  },
+  "legal_basis": "consent_s6",
+  "notice": {
+    "language": "hi-IN",
+    "hash": "sha-256:Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5",
+    "uri": "https://mm.psp.example.in/notices/n-551"
+  },
+  "captured_via": {
+    "surface": "psp.example.in/app",
+    "user_action": "upi_pin",
+    "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJjIjoxfQ.c2ln"
+  },
+  "withdrawal": {
+    "uri": "https://mm.psp.example.in/consents/cr_A1B2C3D4E5F6G7/withdraw",
+    "erasure_signal": true
+  },
+  "grievance": {
+    "contact": "dpo@psp.example.in",
+    "board_complaint_uri": "https://dpb.example.gov.in/complaints"
+  },
+  "retention": {"recipient_max": "P1Y", "legal_minimum": "P1Y"},
+  "status": "ACTIVE",
+  "signature": {
+    "role": "mandate_manager",
+    "kid": "mm.psp.example.in|ukid-2|es256",
+    "alg": "ES256",
+    "value": "eyJhbGciOiJFUzI1NiJ9.eyJjciI6MX0.c2ln"
+  }
+}
+```
+
+### Data minimisation
+
+- `principal.ref` is a pairwise pseudonymous id at the MM. It is never an Aadhaar number, and no
+  BACP artefact carries one.
+- `data_scopes` lists the only personal data fields the agent may release: `NAME`, `PHONE`,
+  `DELIVERY_ADDRESS`, `EMAIL`, `AGE_OVER_18`, `GSTIN`. The purpose limits which scopes may be
+  requested.
+- When a session update shares data (`data_share`), the gateway **MUST** check that `SHARE_DATA`
+  is in `action_scope`, that every field is in `data_scopes`, and that `consent_receipt_ref` names
+  an active, not withdrawn, ConsentReceipt of this mandate. Otherwise it returns
+  `403 mandate_scope_mismatch` at `$.data_share.fields` or `$.data_share.consent_receipt_ref`,
+  before anything is sent to the seller.
+- No personal data travels through the Beckn gateway in `search`. Delivery data goes only to the
+  chosen seller, at `init`.
+- The payment leg is basket-blind: the PSP receives payee, amount, mandate reference and
+  `checkout_hash` only.
+- Webhooks **MUST NOT** carry personal data outside the receiving agent's `data_scopes`.
+- The MM is data-blind: it holds mandates, notices, consent records and usage, never order or
+  payment payloads.
+- When the principal withdraws consent on the Trusted Surface (`consent.withdrawn`), the receipt
+  becomes `WITHDRAWN` and further data release under it is refused.
+
+The MM keeps mandate, notice, consent and sharing records for at least 7 years in machine-readable
+form. The export interface and the full retention schedule are open
+([Q-16](open-questions.md#q-16), [Q-17](open-questions.md#q-17)). See also
+[Evidence: retention](evidence.md#retention) and [Security and Privacy](security-and-privacy.md).
+
+## Error codes
+
+| Code | HTTP | Resolution |
+|---|---|---|
+| `mandate_required` | 403 | requires_buyer_input |
+| `mandate_invalid_signature` | 403 | unrecoverable |
+| `mandate_invalid` | 403 | unrecoverable |
+| `mandate_schema_invalid` | 400 | unrecoverable |
+| `constraint_unknown` | 403 | unrecoverable |
+| `mandate_expired`, `mandate_revoked`, `mandate_paused`, `mandate_exhausted` | 403 | requires_buyer_input |
+| `mandate_scope_mismatch` | 403 | requires_buyer_review |
+| `amount_not_positive` | 403 | unrecoverable |
+| `presence_not_allowed` | 403 | requires_buyer_review |
+| `rail_limit_exceeded` | 403, with `reasons[]` and `step_up_kind` | requires_buyer_review |
+| `log_chain_invalid` | 403 | unrecoverable |
+| `collector_not_authorised` | 403 | unrecoverable |
+| `receipt_invalid` | 400 | unrecoverable |
+| `trusted_surface_only` | 403 | unrecoverable |
+
+The full registry is in [Errors](errors.md).

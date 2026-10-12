@@ -1,4 +1,341 @@
 # Orders and Post-order
 
 !!! warning "Draft"
-    This page is being written.
+    This page is part of the `draft` specification. Rules marked **Proposed** depend on an
+    open question and may change before the first dated release.
+
+Once `complete` succeeds, the seller (BPP) owns an **order**. The order's state stays Beckn's
+authoritative state machine; the gateway mirrors it and adds an append-only `adjustments[]` read
+model. Every write after the order exists (cancel, return, raising and acting on an issue) is
+**mandate-scoped**: it passes the same deterministic gate as checkout, with its own signature tag
+`bacp-post-order`.
+
+These are the paths that agentic checkout protocols generally leave out: cancelling, returning and
+complaining on behalf of a principal.
+
+## Orders {#orders}
+
+### Order addressing {#order-addressing}
+
+Beckn order ids are unique only within the BPP that issued them. The gateway therefore keys every
+order by the pair **(`bpp_id`, `order_id`)**.
+
+- When an agent holds only one order with a given `order_id`, it MAY address the order by
+  `order_id` alone.
+- When the agent holds the same `order_id` from two or more BPPs, every order-scoped request
+  **MUST** name the BPP:
+    - in the request body as `bpp_id` on cancel (`POST /orders/{order_id}/cancel`), return
+      (`POST /orders/{order_id}/returns`) and issue (`POST /issues`) requests;
+    - as the query parameter `?bpp_id=` on `GET /orders/{order_id}` and
+      `GET /orders/{order_id}/returns/{return_id}`.
+- If the order is ambiguous and `bpp_id` is missing, the gateway **MUST** return
+  `400 invalid_request` with `param: $.bpp_id`. It **MUST NOT** pick one of the orders.
+- A `bpp_id` that matches none of the agent's orders with that id returns `404 not_found`.
+- The query string is covered by the request signature: whenever the target URI has a query
+  component, the RFC 9421 signature **MUST** cover `@query`
+  ([Identity and Request Signing](../identity-and-signing.md)).
+
+For example, `GET /orders/ORD-KIR-88231?bpp_id=bpp.kirana.example.in` is signed with `@query`
+in its covered components, so the `bpp_id` cannot be changed in transit.
+
+### Order state and tracking {#order-state}
+
+`GET /orders/{order_id}` returns the `Order`: `state`, `fulfilment_state`, `line_items`,
+`totals`, `invoice`, `adjustments[]`, `return_window_ends`, `payment` and `mandate_ref`.
+
+- `state` is the Beckn order state: `Created`, `Accepted`, `In-progress`, `Completed`,
+  `Cancelled`.
+- `fulfilment_state` is the ONDC fulfilment state code (for example `Order-delivered`).
+- `adjustments[]` is append-only: `cancellation`, `return`, `refund`, `replacement` and `dispute`
+  entries, each with `status`, `at`, and where relevant `amount` and `receipt_id`. Nothing is
+  rewritten.
+- `return_window_ends` comes from the seller's `@ondc/org/return_window`.
+
+The seller pushes changes as unsolicited `on_status`, `on_update` and `on_cancel` callbacks. The
+gateway accepts a callback only if it verifies against the BPP's registry key, is addressed to this
+BAP, and names an order it knows by (`bpp_id`, `order_id`); anything else is ignored and logged.
+It then sends the agent a webhook:
+
+| Webhook | When | Body |
+|---|---|---|
+| `order.updated` | Every order state or fulfilment change (`on_status`, `on_cancel`, `on_update`) | Full order snapshot |
+| `return.updated` | Every return or refund state change | `{order_id, return}` |
+| `payment.receipt` | A payment or refund receipt is issued | `ReceiptRef`, never the signed receipt |
+| `issue.updated` | A respondent action on an IGM issue | Full issue snapshot |
+
+Tracking uses the same model: fulfilment progress arrives as `order.updated` with the new
+`fulfilment_state`. Beckn `track` → `on_track` maps to the `bacp.order.track` verb.
+
+```json
+{
+  "id": "ORD-KIR-88231",
+  "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
+  "bpp_id": "bpp.kirana.example.in",
+  "provider_id": "P-112",
+  "state": "Completed",
+  "fulfilment_state": "Order-delivered",
+  "line_items": [
+    {"id": "I-MILK-1L", "quantity": 1,
+     "unit_price": {"value": 6800, "currency": "INR"},
+     "total": {"value": 6800, "currency": "INR"}}
+  ],
+  "totals": [{"type": "total", "amount": {"value": 30200, "currency": "INR"}}],
+  "adjustments": [],
+  "return_window_ends": "2026-10-22T21:00:00+05:30",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3"
+}
+```
+
+## The post-order mandate gate {#post-order-gate}
+
+Every post-order write (cancel, return, raise issue, issue action) **MUST** pass this gate before
+any Beckn message is sent:
+
+1. **Tag and idempotency.** The request is signed with tag `bacp-post-order` and carries an
+   `Idempotency-Key`.
+2. **Mandate.** If the request names a `mandate_ref`, it **MUST** be the mandate the order was
+   placed under (`403 mandate_scope_mismatch` otherwise).
+3. **Scope.** The action (`CANCEL`, `RETURN` or `RAISE_ISSUE`) **MUST** be in the mandate's
+   `action_scope` (`403 mandate_scope_mismatch`).
+4. **Status.** The mandate **MUST** be `ACTIVE`, or `REVOKED` with `presence: HP`. A write on a
+   revoked mandate without HP returns `403 presence_not_allowed`. Any other status returns its
+   mandate error (`mandate_paused`, `mandate_expired`, `mandate_exhausted`).
+5. **Presence.** `presence` **MUST** be in the mandate's `presence_allowed`
+   (`403 presence_not_allowed`), plus the per-action presence rules below.
+
+**Revocation does not strand an order.** Revoking a mandate stops new commitments only. Cancel,
+return and issue on orders already placed under it stay allowed, with the principal present,
+because they protect the principal and the seller's take-back and refund duties continue.
+
+## Cancel {#cancel}
+
+`POST /orders/{order_id}/cancel`:
+
+```json
+{
+  "reason_code": "001",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "presence": "HP",
+  "note": {"hi-IN": "Galti se order ho gaya"},
+  "bpp_id": "bpp.kirana.example.in"
+}
+```
+
+- `reason_code` comes from the seller's Beckn `get_cancellation_reasons`.
+- An HNP cancel is allowed only when the order amount is within the mandate's
+  `step_up.above_amount`; above it the cancel **MUST** be `presence: HP`
+  (`403 presence_not_allowed`).
+- The gateway sends Beckn `cancel {order_id, cancellation_reason_id}` and waits for `on_cancel`.
+  If the seller refuses under its cancellation terms (`@ondc/org/cancellable`,
+  `cancellation_terms`), the gateway returns `403 cancel_not_allowed`
+  (`requires_buyer_review`) with the seller's error.
+- On success the order becomes `Cancelled`, a `cancellation` adjustment is appended, and the
+  gateway refunds the amount to the original method ([Refunds](#refunds)). Cancelling an
+  already-cancelled order returns its current state.
+- A seller-side cancel arrives as an unsolicited `on_cancel`. The gateway appends a
+  `cancellation` adjustment with status `SELLER_CANCELLED` and refunds in the same way.
+
+## Returns {#returns}
+
+`POST /orders/{order_id}/returns`:
+
+```json
+{
+  "items": [{"id": "I-MILK-1L", "quantity": 1}],
+  "reason_code": "002",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "presence": "HP",
+  "evidence": [
+    {"type": "image",
+     "hash": "sha-256:aW1hZ2UtZGFtYWdlZC1taWxrLXBhY2tldC0wMDAwMDE",
+     "uri": "https://agents.vaani.example.in/e/1.jpg"}
+  ],
+  "refund_to": "original_method"
+}
+```
+
+- Returns are **`presence: HP`**: the principal confirms (by voice or on screen) and the
+  confirmation is logged. An HNP return gets `403 presence_not_allowed`.
+- The request **MUST** be made before `return_window_ends`. After it, the gateway returns
+  `403 return_not_allowed`.
+- **Partial quantities** are allowed. Each item **MUST** be on the order, and for each item the
+  quantity in this request plus the quantities in earlier returns on the same order **MUST NOT**
+  exceed the ordered quantity. Otherwise `403 return_not_allowed` at `$.items[i]`.
+- The refund amount is the item's unit price times the returned quantity.
+- `reason_code` comes from the seller's `get_return_reasons`. Evidence is carried as hashes and
+  URIs; the media stays with the agent operator.
+- The gateway sends Beckn `update` with `update_target: item` and returns `202` with a
+  `ReturnRecord` in `RETURN_INITIATED`.
+
+```json
+{
+  "return_id": "ret_01HZXC",
+  "order_id": "ORD-KIR-88231",
+  "status": "RETURN_INITIATED",
+  "items": [{"id": "I-MILK-1L", "quantity": 1}],
+  "refund": {"status": "PENDING", "amount": {"value": 6800, "currency": "INR"}, "to": "original_method"}
+}
+```
+
+The seller moves the return through `on_update`:
+
+```mermaid
+stateDiagram-v2
+    [*] --> RETURN_INITIATED: update sent
+    RETURN_INITIATED --> RETURN_APPROVED: on_update Return_Approved
+    RETURN_INITIATED --> RETURN_REJECTED: on_update Return_Rejected
+    RETURN_APPROVED --> RETURN_PICKED: on_update Return_Picked
+    RETURN_APPROVED --> LIQUIDATED: on_update Liquidated (no pickup)
+    RETURN_PICKED --> RETURN_DELIVERED: on_update Return_Delivered
+    RETURN_DELIVERED --> [*]
+    LIQUIDATED --> [*]
+    RETURN_REJECTED --> [*]
+```
+
+The return refund **MUST** be issued **exactly once**, on the first of `Liquidated` or
+`Return_Delivered`. `refund.status` then moves `PENDING` → `INITIATED` → `SUCCESS` (with the refund
+receipt) or `FAILED`. A rejected return sets `refund.status: FAILED`. Each change appends a
+`return` adjustment and sends `return.updated`.
+
+## Refunds to the original method {#refunds}
+
+- A refund **MUST** go back to the instrument that paid (`refund_to: original_method`), through the
+  same handler, as a credit referencing the original payment.
+- The refund Receipt is PSP-signed and **MUST** identify the original payment (`original_rrn`,
+  `original_utr`, or an `original_*` key in `rail.evidence`) and carry a `refund_state`. The
+  default for a completed refund to source is `refunded_to_source`.
+- Card, UPI and net-banking payments are **never** refunded into a prepaid wallet (PPI), even on
+  request (`403 refund_to_ppi_forbidden`). A refund to another payer-owned mode needs the payer's
+  explicit instruction (`403 refund_not_to_source` otherwise).
+- Card refunds, split-tender allocation and credit-funded refunds have handler-specific states such
+  as `pending_cardholder_consent` and `adjusted_against_dues`; see
+  [Payments](../payments/index.md) and [Credit and Split Tender](../payments/credit-and-split-tender.md).
+- A refund **MUST NOT** restore any mandate budget ([Mandates](../mandates.md#usage-ledger)).
+- Every refund appends a `refund` adjustment with its `receipt_id` and sends `payment.receipt` with a
+  `ReceiptRef`. A failed refund appends a `refund` adjustment with a `FAILED` status.
+
+## Issues and grievances (IGM) {#igm}
+
+BACP raises complaints through the ONDC Issue and Grievance Management (IGM) flow, with the agent as
+an `AI_AGENT` complainant acting on behalf of the principal, and with a signed, verifiable evidence
+bundle attached.
+
+### Raising an issue
+
+`POST /issues` (tag `bacp-post-order`, `RAISE_ISSUE` in scope):
+
+```json
+{
+  "order_id": "ORD-KIR-88231",
+  "category": "PAYMENT",
+  "sub_category": "PMT02",
+  "description": {
+    "hi-IN": "Doodh wapas kiya par refund nahi aaya",
+    "en-IN": "Returned milk, refund not received"
+  },
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "rrn": "629318004417",
+  "bpp_id": "bpp.kirana.example.in"
+}
+```
+
+1. The gateway passes the [post-order gate](#post-order-gate).
+2. It assembles the transaction's **evidence bundle** and runs the five-step verification and the
+   InstructionLog chain check ([Evidence bundle](../evidence.md#bundle)). If the bundle does not
+   verify fully, it returns `422 evidence_unverifiable` and sends nothing.
+3. It sends Beckn IGM `issue` with `complainant_info.actor_type: AI_AGENT`, the agent id and
+   operator, `on_behalf_of` set to the principal's pseudonymous `principal_ref`, the
+   `mandate_ref`, the payment references (RRN or UTR), the `evidence_bundle_ref` URI and the
+   `evidence_bundle_hash`, and mirrors `actor_type` in a `bacp` tag group.
+4. For a `PAYMENT` issue with an RRN, the gateway also lets the payer PSP pick the complaint up
+   through UPI's dispute channel (UDIR), cross-referenced by RRN and the IGM issue id.
+5. It returns `201` with the `Issue` in status `OPEN` and level `ISSUE`. The seller's `on_issue` is
+   only an acknowledgement; `PROCESSING` arrives later as an unsolicited `on_issue`.
+
+Whether ONDC registers `AI_AGENT` as a complainant type is open
+([Q-11](../open-questions.md#q-11)); until then it is a namespaced extension value mirrored in tags.
+
+### Status, actions and levels
+
+`Issue.status` is one of `OPEN`, `PROCESSING`, `RESOLVED`, `CLOSED`. Everything the parties *do*
+is an entry in `actions[]` (with `actor_type` and time), never a status: `OPEN`, `PROCESSING`,
+`INFO_REQUESTED`, `INFO_PROVIDED`, `INFO_NOT_AVAILABLE`, `RESOLUTION_PROPOSED`,
+`RESOLUTION_ACCEPTED`, `RESOLUTION_REJECTED`, `RESOLUTION_CASCADED`, `CASCADED`, `ESCALATED`,
+`RESOLVED`, `CLOSED`. A proposed remedy is carried in `resolution` (`action_triggered`: `REFUND`,
+`REPLACEMENT`, `RETURN`, `CANCEL`, `NO-ACTION`, and `refund_amount`).
+
+| Respondent action (`on_issue`) | Effect on `status` |
+|---|---|
+| `PROCESSING`, `INFO_REQUESTED`, `RESOLUTION_PROPOSED`, `CASCADED` | `PROCESSING` |
+| `RESOLVED` | `RESOLVED` |
+
+The agent acts with `POST /issues/{issue_id}/actions` (`INFO_PROVIDED`, `RESOLUTION_ACCEPTED`,
+`RESOLUTION_REJECTED`, `ESCALATED`, `CLOSED`), through the same gate:
+
+- `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED` **MUST** be `presence: HP`: only the principal
+  accepts or rejects a remedy. `RESOLUTION_ACCEPTED` is followed by `CLOSED`, and the issue becomes
+  `CLOSED`.
+- Acting on a `CLOSED` issue returns `409 session_state_conflict`.
+- `ESCALATED` moves the issue from level `ISSUE` to level `GRIEVANCE`, handled by the grievance
+  redressal officer (GRO). The escalation carries the **same** evidence bundle, identified by its
+  hash.
+
+IGM in its current version has no dispute level. Online dispute resolution (ODR) is referenced out
+of protocol as `odr_reference` ([Q-06](../open-questions.md#q-06)).
+
+### Timelines
+
+On opening, the gateway sets `expected_response_by` to 48 hours after the issue is raised and
+`expected_resolution_by` to 30 days after it. If the respondent misses `expected_response_by`, the
+agent SHOULD offer the principal an escalation to `GRIEVANCE`.
+
+!!! warning "Proposed"
+    The 48-hour response and 30-day resolution clocks, and whether the gateway escalates
+    automatically when a clock is missed, follow the IGM service levels as currently understood and
+    are not yet confirmed against the ONDC policy ([Q-57](../open-questions.md#q-57)).
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor U as Principal
+    participant A as Agent
+    participant G as BACP Gateway (interfacing NP)
+    participant S as Seller (counterparty NP)
+    participant GRO as GRO
+    participant P as Payer PSP (UDIR)
+    U->>A: My refund has not arrived
+    A->>G: POST /issues with category PAYMENT, RRN, mandate_ref
+    G->>G: Post-order gate, assemble and verify evidence bundle
+    G->>S: IGM issue with actor_type AI_AGENT and evidence_bundle_ref
+    S-->>G: on_issue ACK
+    G->>P: UDIR complaint keyed by RRN with the issue id
+    G-->>A: 201 issue OPEN, response due in 48 h
+    S-->>G: on_issue PROCESSING then INFO_REQUESTED
+    G-->>A: Webhook issue.updated
+    A->>G: POST action INFO_PROVIDED
+    S-->>G: on_issue RESOLUTION_PROPOSED refund 68 rupees
+    A->>U: The seller will refund again. Accept?
+    U->>A: Yes
+    A->>G: POST action RESOLUTION_ACCEPTED with presence HP
+    G->>S: issue with RESOLUTION_ACCEPTED and CLOSED
+    alt No response by expected_response_by
+        A->>G: POST action ESCALATED with presence HP
+        G->>GRO: Grievance with the same evidence bundle
+    end
+```
+
+## Error responses
+
+| Status | Codes |
+|---|---|
+| 400 | `invalid_request` (including an ambiguous order without `bpp_id`, at `$.bpp_id`), `idempotency_key_required` |
+| 401 | `signature_invalid`, `replay_detected`, `agent_unregistered`, `agent_credential_revoked` |
+| 403 | `mandate_scope_mismatch`, `presence_not_allowed`, mandate status errors, `cancel_not_allowed`, `return_not_allowed`, `refund_to_ppi_forbidden`, `refund_not_to_source` |
+| 404 | `not_found` |
+| 409 | `idempotency_in_flight`, `session_state_conflict` |
+| 413 | `request_too_large` |
+| 422 | `idempotency_conflict`, `evidence_unverifiable` |
+| 429 | `quota_exceeded` |
+| 504 | `bpp_timeout` |
+
+See [Errors](../errors.md) for the full registry.

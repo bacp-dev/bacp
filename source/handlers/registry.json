@@ -302,7 +302,7 @@
     "label": "NPCI"
    }
   ],
-  "notes": "Static QR is refused for agent carts because it breaks order binding (PAY-104)."
+  "notes": "Static QR is refused for agent carts because it breaks order binding."
  },
  {
   "handler_id": "in.upi.collect",
@@ -637,7 +637,7 @@
    "closed_auth": [
     "upi.pin"
    ],
-   "open_requires": "One block per seller (DECISIONS 2026-10-12, A-10 rejected)."
+   "open_requires": "One block per seller."
   },
   "mandate_primitives": [
    {
@@ -693,7 +693,7 @@
     "value": 10000,
     "currency": "INR"
    },
-   "notes": "Whether a refund restores the block is unverified. A-5: mandate budget is not restored."
+   "notes": "Whether a refund restores the block is unverified. The mandate budget is not restored."
   },
   "dispute": {
    "channels": [
@@ -925,7 +925,7 @@
     "section": "9"
    }
   ],
-  "notes": "PAYC section 9 marks agent HNP use as CUG pilot."
+  "notes": "Agent HNP use is a closed-user-group pilot."
  },
  {
   "handler_id": "in.upi.autopay",
@@ -1672,7 +1672,7 @@
      "value": 1000000,
      "currency": "INR"
     },
-    "conflict_note": "RBI Rs 10,000 [V] (TRD section 1) vs older NPCI FAQ Rs 5,000 P2M (OQ-5). v0 default Rs 5,000."
+    "conflict_note": "RBI Rs 10,000 vs older NPCI FAQ Rs 5,000 P2M. Default Rs 5,000 until resolved."
    }
   ],
   "afa": {
@@ -2009,7 +2009,7 @@
     "section": "2.8"
    }
   ],
-  "notes": "Token is bound to card + token requestor + merchant, so it cannot be reused across merchants (PAY-110). New cards have CNP and international use disabled by default (RBI 2020): handle outcome card_not_enabled_for_cnp, no silent fallback (PAY-113)."
+  "notes": "Token is bound to card + token requestor + merchant, so it cannot be reused across merchants. New cards have CNP and international use disabled by default (RBI 2020): handle outcome card_not_enabled_for_cnp, no silent fallback."
  },
  {
   "handler_id": "in.card.mandate",
@@ -2206,7 +2206,7 @@
     "card.passkey",
     "card.3ds"
    ],
-   "open_requires": "Only where the network intent object covers basket, amount limit and validity (PAY-114, PAY-115)."
+   "open_requires": "Only where the network intent object covers basket, amount limit and validity."
   },
   "mandate_primitives": [
    {
@@ -4786,7 +4786,7 @@
    "closed_auth": [
     "cash_at_door"
    ],
-   "open_requires": "Order may be placed HNP only if the mandate has cod_allowed and cod_max_open_orders (PAY-131)."
+   "open_requires": "Order may be placed HNP only if the mandate has cod_allowed and cod_max_open_orders."
   },
   "mandate_primitives": [
    {
@@ -5684,7 +5684,7 @@
     "upi.pin",
     "card.otp"
    ],
-   "open_requires": "Inherits the limits of the underlying UMN or UMRN (PAY-211)."
+   "open_requires": "Inherits the limits of the underlying UMN or UMRN."
   },
   "mandate_primitives": [
    {
@@ -6017,7 +6017,7 @@
     "section": "5"
    }
   ],
-  "notes": "Offline e-rupee is excluded from autonomous agent initiation (PAY-215)."
+  "notes": "Offline e-rupee is excluded from autonomous agent initiation."
  },
  {
   "handler_id": "in.cbdc.programmed",
@@ -6052,7 +6052,7 @@
    "closed_auth": [
     "wallet_pin"
    ],
-   "open_requires": "Rule set must equal the mandate constraints (PAY-214)."
+   "open_requires": "Rule set must equal the mandate constraints."
   },
   "mandate_primitives": [
    {
@@ -6457,7 +6457,7 @@
     "section": "8a"
    }
   ],
-  "notes": "After discounting, the ledger payee becomes the financier (TRADE-110)."
+  "notes": "After discounting, the ledger payee becomes the financier."
  },
  {
   "handler_id": "in.fin.lc",
@@ -7406,6 +7406,6 @@
     "section": "18 TRADE-111"
    }
   ],
-  "notes": "A-17: interest-free seller credit is not digital lending. Any third-party financier moves it to in.fin.* or in.credit.*."
+  "notes": "Interest-free seller credit is not digital lending. Any third-party financier moves it to in.fin.* or in.credit.*."
  }
 ]

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/handler-descriptor.json",
   "title": "HandlerDescriptor",
-  "description": "One entry of the BACP payment-handler registry (PAY-101; design brief v1 section 13.1). Descriptors are data: limits and rules are configuration, not code (PAY-213).",
+  "description": "One entry of the BACP payment-handler registry. Descriptors are data: limits and rules are configuration, not code.",
   "type": "object",
   "required": [
     "handler_id",
@@ -33,7 +33,7 @@
       "items": {
         "type": "string"
       },
-      "description": "v0 ids and ids proposed in PAYC/PAYB."
+      "description": "Legacy and previously proposed ids that resolve to this handler."
     },
     "name": {
       "$ref": "common.json#/$defs/LangText"
@@ -132,7 +132,7 @@
             "mandate",
             "none"
           ],
-          "description": "PAY-101 vocabulary."
+          "description": "required = human 2FA per payment; mandate = may run under a standing mandate; none = no payer authentication."
         },
         "hp": {
           "type": "boolean"

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/credit-ledger-entry.json",
   "title": "CreditLedgerEntry",
-  "description": "One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger (TRD section 17.3; TRADE-109, TRADE-111). Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler (TRADE-115).",
+  "description": "One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger. Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler.",
   "type": "object",
   "required": [
     "entry_id",
@@ -130,7 +130,7 @@
             "s43B_h_disallowed",
             "s37_2_g_disallowed"
           ],
-          "description": "IT Act s.43B(h), now s.37(2)(g) of IT Act 2025 (PAYB section 8a)."
+          "description": "IT Act s.43B(h), now s.37(2)(g) of IT Act 2025."
         }
       },
       "required": [
@@ -168,7 +168,7 @@
         ],
         "additionalProperties": false
       },
-      "description": "payment / credit_note entries list the sale entries they close (TRADE-111)."
+      "description": "payment / credit_note entries list the sale entries they close."
     },
     "settlement_evidence": {
       "type": "object",
@@ -193,7 +193,7 @@
           "$ref": "common.json#/$defs/Party"
         }
       },
-      "description": "Rail-anchored proof. Screenshots never count (TRADE-115). new_payee is set after TReDS discounting (TRADE-110).",
+      "description": "Rail-anchored proof. Screenshots never count. new_payee is set after TReDS discounting.",
       "additionalProperties": false
     },
     "ledger_after": {
@@ -279,7 +279,7 @@
         "overdue",
         "written_off"
       ],
-      "description": "An entry unacknowledged by the counterparty past its ack window becomes disputed (TRADE-111)."
+      "description": "An entry unacknowledged by the counterparty past its ack window becomes disputed."
     },
     "dispute_ref": {
       "type": "string"

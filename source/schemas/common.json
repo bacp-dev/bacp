@@ -143,7 +143,7 @@
         "bbps",
         "cod"
       ],
-      "description": "BACP payment handler ids (REQ-401). upi.uap.* is reserved and validated by RailType."
+      "description": "Legacy BACP payment handler ids. upi.uap.* is reserved and validated by RailType."
     },
     "Duration": {
       "type": "string",
@@ -165,7 +165,7 @@
         "negotiable": {
           "type": "boolean",
           "default": false,
-          "description": "False = fixed issue. A counter that changes a fixed issue is rejected with NEG_ISSUE_NOT_NEGOTIABLE (NEG-101)."
+          "description": "False = fixed issue. A counter that changes a fixed issue is rejected with NEG_ISSUE_NOT_NEGOTIABLE."
         },
         "status": {
           "$ref": "#/$defs/IssueStatus"
@@ -186,7 +186,7 @@
     "HandlerId": {
       "type": "string",
       "pattern": "^(in\\.[a-z0-9_]+(\\.[a-z0-9_]+){0,3}|bacp\\.[a-z0-9_]+(\\.[a-z0-9_]+){0,2})$",
-      "description": "v1 canonical payment-handler id (design brief v1 section 13.2). in.* = Indian rail or instrument, bacp.* = BACP-native construct."
+      "description": "Canonical payment-handler id. in.* = Indian rail or instrument, bacp.* = BACP-native construct."
     },
     "HandlerRef": {
       "anyOf": [
@@ -200,11 +200,11 @@
           "$ref": "common.json#/$defs/RailType"
         }
       ],
-      "description": "v1 id, or a v0 alias kept for one deprecation window (A-13)."
+      "description": "Canonical handler id, or a legacy alias kept for one deprecation window."
     },
     "RailTypeV1": {
       "type": "string",
-      "description": "Handlers that may back an OPEN (HNP) payment mandate (section 13.3 class O). Supersedes v0 RailType.",
+      "description": "Handlers that may back an OPEN (HNP) payment mandate (binding class O). Supersedes the legacy RailType.",
       "pattern": "^(in\\.upi\\.(reservepay|circle|autopay|otm)|in\\.card\\.(mandate|agentic)|in\\.nach\\.debit|in\\.ppi\\.(wallet|gift|netc_topup|ncmc_topup)|in\\.store_credit|in\\.loyalty|in\\.erupi|in\\.cbdc\\.programmed|in\\.bbps\\.upms|bacp\\.credit_ledger|in\\.upi\\.uap\\.[a-z0-9_.]+|upi\\.circle\\.delegate|upi\\.reservepay\\.block|upi\\.autopay|upi\\.uap\\.[a-z0-9_.]+)$"
     },
     "UdyamCategory": {
@@ -215,7 +215,7 @@
         "none",
         "undeclared"
       ],
-      "description": "MSMED Act s.15 applies to micro and small only (TRD section 5; PAYB section 8a)."
+      "description": "MSMED Act s.15 applies to micro and small enterprises only."
     },
     "Party": {
       "type": "object",
@@ -240,7 +240,7 @@
         },
         "id": {
           "type": "string",
-          "description": "Beckn subscriber id, provider id, or pairwise pseudonymous principal ref. Never an Aadhaar number (REQ-204)."
+          "description": "Beckn subscriber id, provider id, or pairwise pseudonymous principal ref. Never an Aadhaar number."
         },
         "legal_name": {
           "type": "string"
@@ -264,7 +264,7 @@
                 "services",
                 "trading"
               ],
-              "description": "MSMED s.15 applies to manufacturing and services micro/small units. Traders are likely excluded (2 Jul 2021 OM, to be verified; NEG section 3)."
+              "description": "MSMED s.15 applies to manufacturing and services micro/small units. Traders are likely excluded (2 Jul 2021 OM, to be verified)."
             },
             "declared_at": {
               "type": "string",
@@ -286,22 +286,22 @@
             "gte_10cr",
             "unknown"
           ],
-          "description": "Drives e-invoice IRN rules (TRADE-124)."
+          "description": "Drives GST e-invoice (IRN) rules."
         },
         "kind": {
           "enum": [
             "agent",
             "human"
           ],
-          "description": "offeror_kind disclosure (NEG-184)."
+          "description": "offeror_kind disclosure."
         },
         "acts_for": {
           "type": "string",
-          "description": "Role or party id this intermediary acts for (TRD section 17.1)."
+          "description": "Role or party id this intermediary acts for."
         },
         "pricing_ai_vendor": {
           "type": "string",
-          "description": "Third-party pricing or negotiation AI vendor (NEG-181)."
+          "description": "Third-party pricing or negotiation AI vendor."
         }
       },
       "required": [
@@ -355,7 +355,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Typed document graph (TRADE-123): e.g. GRN -> PO, invoice -> PO."
+          "description": "Typed document graph: e.g. GRN -> PO, invoice -> PO."
         },
         "issuer": {
           "type": "string"

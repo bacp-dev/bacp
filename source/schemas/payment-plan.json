@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/payment-plan.json",
   "title": "PaymentPlan (split and multi-tender)",
-  "description": "How one accepted all_in_total is paid: several tenders now (gift card + UPI) and/or tranches over time (token advance + loan + balance). One closed payment mandate and one Receipt per tender (brief v0 M-1). Step-up and AFA are evaluated on the plan total, never per tender (section 13.5).",
+  "description": "How one accepted all_in_total is paid: several tenders now (gift card + UPI) and/or tranches over time (token advance + loan + balance). One closed payment mandate and one Receipt per tender. Step-up and AFA are evaluated on the plan total, never per tender.",
   "type": "object",
   "required": [
     "plan_id",
@@ -43,7 +43,7 @@
           "sequence": {
             "type": "integer",
             "minimum": 1,
-            "description": "Capture order. Stored-value tenders first (A-15)."
+            "description": "Capture order. Stored-value tenders first."
           },
           "tranche_id": {
             "type": "string",

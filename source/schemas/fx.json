@@ -11,7 +11,7 @@
     "inr_total"
   ],
   "additionalProperties": false,
-  "description": "REQ-405 / TRADE-144 (L7-compliance C-5): foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+  "description": "Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
   "properties": {
     "currency": {
       "type": "string",

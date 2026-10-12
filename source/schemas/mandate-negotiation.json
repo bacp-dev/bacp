@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/mandate-negotiation.json",
   "title": "NegotiationMandate (separate BACP negotiation mandate)",
-  "description": "A separate BACP mandate that carries the bacp.neg.* constraints, so that legacy AP2/VI verifiers, which fail closed on unknown constraint types, still accept the AP2-compatible checkout and payment mandates (NEG-138). Same envelope conventions as v0 section 4.3 (SD-JWT over JCS, MM + principal signatures, status list). Verified only by the buyer's guard and credential provider, never by the seller.",
+  "description": "A separate BACP mandate that carries the bacp.neg.* constraints, so that legacy AP2/VI verifiers, which fail closed on unknown constraint types, still accept the AP2-compatible checkout and payment mandates. Same envelope conventions as mandate.json (SD-JWT over JCS, MM + principal signatures, status list). Verified only by the buyer's guard and credential provider, never by the seller.",
   "type": "object",
   "required": [
     "vct",
@@ -94,7 +94,7 @@
       "type": "object",
       "properties": {
         "negotiation": {
-          "description": "constraints.negotiation: per-issue bounds evaluated fail-closed by the deterministic guard (NEG section 5.6; NEG-130..137). reservation is an SD-JWT selectively disclosable claim that is NEVER disclosed to a counterparty, a seller verifier, a gateway log, or the agent LLM context (NEG-140..142).",
+          "description": "constraints.negotiation: per-issue bounds evaluated fail-closed by the deterministic guard. reservation is an SD-JWT selectively disclosable claim that is NEVER disclosed to a counterparty, a seller verifier, a gateway log, or the agent LLM context.",
           "type": "object",
           "required": [
             "role",
@@ -197,7 +197,7 @@
                   "type": "number",
                   "minimum": 0,
                   "maximum": 100,
-                  "description": "Drip-pricing tripwire, default 0 for B2C (NEG-135)."
+                  "description": "Drip-pricing tripwire, default 0 for B2C."
                 }
               },
               "additionalProperties": false
@@ -301,7 +301,7 @@
                 },
                 "credit_funding_allowed": {
                   "type": "boolean",
-                  "description": "Consent to credit-funded handlers (PAY-107). Loan acceptance itself is always HP (PAY-127)."
+                  "description": "Consent to credit-funded handlers. Loan acceptance itself is always HP."
                 },
                 "cod_allowed": {
                   "type": "boolean"
@@ -309,7 +309,7 @@
                 "cod_max_open_orders": {
                   "type": "integer",
                   "minimum": 0,
-                  "description": "PAY-131"
+                  "description": "Maximum number of open cash-on-delivery orders the agent may hold without the human present."
                 },
                 "collected_by_allowed": {
                   "type": "array",
@@ -489,7 +489,7 @@
               "properties": {
                 "any_violation": {
                   "const": true,
-                  "description": "Always: any out-of-bounds deal needs step-up (NEG-134)."
+                  "description": "Always: any out-of-bounds deal needs step-up."
                 },
                 "between_reservation_and_max": {
                   "const": true
@@ -614,7 +614,7 @@
   "additionalProperties": false,
   "$defs": {
     "NegotiationConstraints": {
-      "description": "constraints.negotiation: per-issue bounds evaluated fail-closed by the deterministic guard (NEG section 5.6; NEG-130..137). reservation is an SD-JWT selectively disclosable claim that is NEVER disclosed to a counterparty, a seller verifier, a gateway log, or the agent LLM context (NEG-140..142).",
+      "description": "constraints.negotiation: per-issue bounds evaluated fail-closed by the deterministic guard. reservation is an SD-JWT selectively disclosable claim that is NEVER disclosed to a counterparty, a seller verifier, a gateway log, or the agent LLM context.",
       "type": "object",
       "required": [
         "role",
@@ -717,7 +717,7 @@
               "type": "number",
               "minimum": 0,
               "maximum": 100,
-              "description": "Drip-pricing tripwire, default 0 for B2C (NEG-135)."
+              "description": "Drip-pricing tripwire, default 0 for B2C."
             }
           },
           "additionalProperties": false
@@ -821,7 +821,7 @@
             },
             "credit_funding_allowed": {
               "type": "boolean",
-              "description": "Consent to credit-funded handlers (PAY-107). Loan acceptance itself is always HP (PAY-127)."
+              "description": "Consent to credit-funded handlers. Loan acceptance itself is always HP."
             },
             "cod_allowed": {
               "type": "boolean"
@@ -829,7 +829,7 @@
             "cod_max_open_orders": {
               "type": "integer",
               "minimum": 0,
-              "description": "PAY-131"
+              "description": "Maximum number of open cash-on-delivery orders the agent may hold without the human present."
             },
             "collected_by_allowed": {
               "type": "array",
@@ -1009,7 +1009,7 @@
           "properties": {
             "any_violation": {
               "const": true,
-              "description": "Always: any out-of-bounds deal needs step-up (NEG-134)."
+              "description": "Always: any out-of-bounds deal needs step-up."
             },
             "between_reservation_and_max": {
               "const": true
