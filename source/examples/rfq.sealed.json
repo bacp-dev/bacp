@@ -154,6 +154,12 @@
           "is_credit": true
         }
       ],
+      "advance_pct": {
+        "value": 0,
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
       "credit_days": {
         "value": 30,
         "status": "Agree",
@@ -194,6 +200,23 @@
         "status": "Agree",
         "negotiable": false
       }
+    },
+    "deposit": {
+      "value": {
+        "type": "emd",
+        "amount": {
+          "value": 800000,
+          "currency": "INR"
+        },
+        "refundable": true,
+        "refund_conditions": {
+          "en-IN": "Returned to every bidder that reveals, and to the winner on award. Forfeited by a bidder that commits but does not reveal."
+        },
+        "held_by": "pa_escrow"
+      },
+      "status": "Agree",
+      "negotiable": false,
+      "proposed_by": "buyer"
     },
     "returns": {
       "return_type": {
@@ -237,7 +260,8 @@
   "issues_negotiable": [
     "/lines/0/unit_price",
     "/payment/credit_days",
-    "/delivery/deliver_by"
+    "/delivery/deliver_by",
+    "/payment/advance_pct"
   ],
   "invitees": [
     {

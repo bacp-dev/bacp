@@ -116,10 +116,9 @@ first dated release.
 !!! note
     This draft does not define how an agent names the selected version on an
     individual REST request when a gateway supports more than one, so a
-    gateway SHOULD list only one version until it does. The current OpenAPI
-    document and the `context.bacp` schema still
-    carry the placeholder version string `0.1`; it is replaced by the release
-    date at the first dated release.
+    gateway SHOULD list only one version until it does. Version strings are a
+    release date (`YYYY-MM-DD`) or `draft`, as defined by
+    [`ProtocolVersion`](https://bacp.dev/schemas/common.json).
 
 ## Capabilities
 

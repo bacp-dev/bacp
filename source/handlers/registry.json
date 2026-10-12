@@ -1,7 +1,10 @@
 [
  {
   "handler_id": "in.upi.intent",
-  "aliases": [],
+  "aliases": [
+   "upi.pin",
+   "upi.uap.pin"
+  ],
   "name": {
    "en-IN": "UPI intent"
   },
@@ -46,8 +49,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI UPI Procedural Guidelines",
+     "section": "whole instrument",
+     "label": "UNVERIFIED"
     },
     "verification": "secondary",
     "configurable": true,
@@ -60,8 +64,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "section": "whole instrument",
+     "label": "PRESS"
     },
     "verification": "secondary",
     "configurable": true,
@@ -76,16 +81,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.1",
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "0",
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
     "label": "RBI"
    },
    "failed_txn_tat": "P5D",
@@ -141,8 +146,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.1",
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   ],
@@ -202,8 +207,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI UPI Procedural Guidelines",
+     "section": "whole instrument",
+     "label": "UNVERIFIED"
     },
     "verification": "secondary",
     "configurable": true,
@@ -216,8 +222,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "section": "whole instrument",
+     "label": "PRESS"
     },
     "verification": "secondary",
     "configurable": true,
@@ -232,16 +239,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.1",
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "0",
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
     "label": "RBI"
    },
    "failed_txn_tat": "P5D",
@@ -297,8 +304,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.1",
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   ],
@@ -351,8 +358,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI UPI Procedural Guidelines",
+     "section": "whole instrument",
+     "label": "UNVERIFIED"
     },
     "verification": "secondary",
     "configurable": true,
@@ -365,8 +373,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "section": "whole instrument",
+     "label": "PRESS"
     },
     "verification": "secondary",
     "configurable": true,
@@ -381,16 +390,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.1",
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "0",
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
     "label": "RBI"
    },
    "failed_txn_tat": "P5D",
@@ -446,8 +455,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.1",
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   ],
@@ -502,8 +511,9 @@
    {
     "name": "block_amount",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.2"
+     "file": "Pine Labs One-Time Mandate FAQs, https://www.pinelabs.com/docs/online-payments/one-time-mandate/faqs",
+     "section": "whole instrument",
+     "label": "VENDOR"
     },
     "verification": "vendor",
     "configurable": true,
@@ -516,8 +526,9 @@
    {
     "name": "validity",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.2"
+     "file": "Pine Labs One-Time Mandate FAQs, https://www.pinelabs.com/docs/online-payments/one-time-mandate/faqs",
+     "section": "whole instrument",
+     "label": "VENDOR"
     },
     "verification": "conflict",
     "configurable": true,
@@ -529,16 +540,16 @@
    "model": "at_block_creation",
    "pre_debit_notice": "unknown",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.2",
+    "file": "Pine Labs One-Time Mandate FAQs, https://www.pinelabs.com/docs/online-payments/one-time-mandate/faqs",
+    "section": "whole instrument",
     "label": "VENDOR"
    }
   },
   "refund": {
    "route": "release_block_or_source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.2",
+    "file": "Pine Labs One-Time Mandate FAQs, https://www.pinelabs.com/docs/online-payments/one-time-mandate/faqs",
+    "section": "whole instrument",
     "label": "VENDOR"
    },
    "failed_txn_tat": "P5D",
@@ -592,8 +603,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.2",
+    "file": "Pine Labs One-Time Mandate FAQs, https://www.pinelabs.com/docs/online-payments/one-time-mandate/faqs",
+    "section": "whole instrument",
     "label": "VENDOR"
    }
   ],
@@ -602,8 +613,7 @@
  {
   "handler_id": "in.upi.reservepay",
   "aliases": [
-   "upi.reservepay.block",
-   "in.upi.reservepay"
+   "upi.reservepay.block"
   ],
   "name": {
    "en-IN": "UPI Reserve Pay (SBMD block)"
@@ -652,8 +662,9 @@
    {
     "name": "block_amount",
     "source": {
-     "file": "bacp/design-brief.md",
-     "section": "2.2"
+     "file": "Pine Labs UPI Reserve Pay docs, https://www.pinelabs.com/docs/online-payments/upi-reserve-pay",
+     "section": "whole instrument",
+     "label": "VENDOR"
     },
     "verification": "vendor",
     "configurable": true,
@@ -666,8 +677,9 @@
    {
     "name": "validity",
     "source": {
-     "file": "bacp/design-brief.md",
-     "section": "2.2"
+     "file": "Pine Labs UPI Reserve Pay docs, https://www.pinelabs.com/docs/online-payments/upi-reserve-pay",
+     "section": "whole instrument",
+     "label": "VENDOR"
     },
     "verification": "vendor",
     "configurable": true,
@@ -678,15 +690,17 @@
    "model": "at_block_creation",
    "pre_debit_notice": "unknown",
    "source": {
-    "file": "bacp/design-brief.md",
-    "section": "10.1 OQ-3"
+    "file": "https://bacp.dev/specification/open-questions/",
+    "section": "Q-03",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "bacp/design-brief.md",
-    "section": "6(d)"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 10(f)",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -741,21 +755,21 @@
   ],
   "sources": [
    {
-    "file": "bacp/design-brief.md",
-    "section": "2.2",
+    "file": "Pine Labs UPI Reserve Pay docs, https://www.pinelabs.com/docs/online-payments/upi-reserve-pay",
+    "section": "whole instrument",
     "label": "VENDOR"
    },
    {
-    "file": "DECISIONS.md",
-    "section": "2026-10-12 (user)"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Reserve Pay (single-block-multiple-debit)",
+    "label": "ANALYSIS"
    }
   ]
  },
  {
   "handler_id": "in.upi.circle",
   "aliases": [
-   "upi.circle.delegate",
-   "in.upi.circle"
+   "upi.circle.delegate"
   ],
   "name": {
    "en-IN": "UPI Circle delegate (IoT or software secondary)"
@@ -799,8 +813,8 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "bacp/design-brief.md",
-     "section": "2.2",
+     "file": "NPCI UPI Circle product page, https://www.npci.org.in/product/upi-circle",
+     "section": "whole instrument",
      "label": "NPCI"
     },
     "verification": "verified",
@@ -813,8 +827,8 @@
    {
     "name": "per_month",
     "source": {
-     "file": "bacp/design-brief.md",
-     "section": "2.2",
+     "file": "NPCI UPI Circle product page, https://www.npci.org.in/product/upi-circle",
+     "section": "whole instrument",
      "label": "NPCI"
     },
     "verification": "verified",
@@ -827,8 +841,8 @@
    {
     "name": "first_24h",
     "source": {
-     "file": "bacp/design-brief.md",
-     "section": "2.2",
+     "file": "NPCI UPI Circle product page, https://www.npci.org.in/product/upi-circle",
+     "section": "whole instrument",
      "label": "NPCI"
     },
     "verification": "verified",
@@ -841,8 +855,8 @@
    {
     "name": "devices",
     "source": {
-     "file": "bacp/design-brief.md",
-     "section": "2.2",
+     "file": "NPCI UPI Circle product page, https://www.npci.org.in/product/upi-circle",
+     "section": "whole instrument",
      "label": "NPCI"
     },
     "verification": "verified",
@@ -854,16 +868,17 @@
    "model": "at_registration_only",
    "pre_debit_notice": "unknown",
    "source": {
-    "file": "bacp/design-brief.md",
-    "section": "2.2",
+    "file": "NPCI UPI Circle product page, https://www.npci.org.in/product/upi-circle",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "bacp/design-brief.md",
-    "section": "6(d)"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 10(f)",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -916,13 +931,14 @@
   ],
   "sources": [
    {
-    "file": "bacp/design-brief.md",
-    "section": "2.2",
+    "file": "NPCI UPI Circle product page, https://www.npci.org.in/product/upi-circle",
+    "section": "whole instrument",
     "label": "NPCI"
    },
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "9"
+    "file": "NPCI UPI Circle product page, https://www.npci.org.in/product/upi-circle",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   ],
   "notes": "Agent HNP use is a closed-user-group pilot."
@@ -930,8 +946,7 @@
  {
   "handler_id": "in.upi.autopay",
   "aliases": [
-   "upi.autopay",
-   "in.upi.autopay"
+   "upi.autopay"
   ],
   "name": {
    "en-IN": "UPI AutoPay (recurring e-mandate)"
@@ -979,8 +994,8 @@
    {
     "name": "no_afa_debit",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "0",
+     "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+     "section": "para 8",
      "label": "RBI"
     },
     "verification": "verified",
@@ -993,8 +1008,8 @@
    {
     "name": "no_afa_debit_special_categories",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "0",
+     "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+     "section": "para 8",
      "label": "RBI"
     },
     "verification": "verified",
@@ -1010,8 +1025,8 @@
    "model": "at_registration_and_first_debit",
    "pre_debit_notice": "required_24h",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "0",
+    "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+    "section": "whole instrument",
     "label": "RBI"
    },
    "threshold": {
@@ -1026,8 +1041,8 @@
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "0",
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
     "label": "RBI"
    },
    "failed_txn_tat": "P5D",
@@ -1083,13 +1098,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "0",
+    "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+    "section": "whole instrument",
     "label": "RBI"
    },
    {
-    "file": "bacp/design-brief.md",
-    "section": "2.2"
+    "file": "NPCI UPI AutoPay Brand Guidelines, https://www.npci.org.in/uploads/UPI_Auto_Pay_Brand_Guidelines_bcabed7282.pdf",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   ]
  },
@@ -1140,8 +1156,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.3"
+     "file": "RBI circular on pre-sanctioned credit lines through UPI (RBI/2023-24/58, CO.DPSS.POLC.No.S-567/02-23-001/2023-2024)",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "unverified",
     "configurable": true,
@@ -1152,16 +1169,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.3",
+    "file": "RBI circular on pre-sanctioned credit lines through UPI (RBI/2023-24/58, CO.DPSS.POLC.No.S-567/02-23-001/2023-2024)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.3"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 10(f)",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -1214,8 +1232,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.3",
+    "file": "RBI circular on pre-sanctioned credit lines through UPI (RBI/2023-24/58, CO.DPSS.POLC.No.S-567/02-23-001/2023-2024)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -1267,8 +1285,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.4"
+     "file": "https://bacp.dev/specification/payments/rails/",
+     "section": "UPI",
+     "label": "UNVERIFIED"
     },
     "verification": "unverified",
     "configurable": true,
@@ -1279,15 +1298,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.4"
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   },
   "refund": {
    "route": "source_with_card_credit_consent",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.4",
+    "file": "RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 (RBI/2022-23/92)",
+    "section": "para 10(h)",
     "label": "RBI"
    },
    "failed_txn_tat": "P5D",
@@ -1342,8 +1362,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.4"
+    "file": "RBI Statement on Developmental and Regulatory Policies (2022-06-08), as reported by Business Today",
+    "section": "whole instrument",
+    "label": "PRESS"
    }
   ]
  },
@@ -1401,8 +1422,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.5"
+     "file": "https://bacp.dev/specification/payments/rails/",
+     "section": "UPI international",
+     "label": "UNVERIFIED"
     },
     "verification": "unverified",
     "configurable": true,
@@ -1413,15 +1435,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.5"
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   },
   "refund": {
    "route": "unverified",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.5"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "UPI international",
+    "label": "UNVERIFIED"
    }
   },
   "dispute": {
@@ -1468,12 +1492,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.5"
+    "file": "NIPL UPI interoperability page, https://www.nipl.com/how-it-works/interoperability/upi",
+    "section": "whole instrument",
+    "label": "NPCI"
    },
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "9"
+    "file": "NPCI Foreign Inward Remittance (FIR) on UPI product page",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   ]
  },
@@ -1521,8 +1547,8 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.6",
+     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (2024-12-04), https://website.rbi.org.in/web/rbi/-/amendment-to-framework-for-facilitating-small-value-digital-payments-in-offline-mode",
+     "section": "whole instrument",
      "label": "RBI"
     },
     "verification": "secondary",
@@ -1536,8 +1562,9 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.6"
+     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (2024-12-04), https://website.rbi.org.in/web/rbi/-/amendment-to-framework-for-facilitating-small-value-digital-payments-in-offline-mode",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -1552,16 +1579,17 @@
    "model": "exempt",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.6",
+    "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (2024-12-04), https://website.rbi.org.in/web/rbi/-/amendment-to-framework-for-facilitating-small-value-digital-payments-in-offline-mode",
+    "section": "whole instrument",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "same_balance",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.6"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "UPI Lite",
+    "label": "UNVERIFIED"
    },
    "notes": "Unverified."
   },
@@ -1610,8 +1638,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "1.6"
+    "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (2024-12-04), https://website.rbi.org.in/web/rbi/-/amendment-to-framework-for-facilitating-small-value-digital-payments-in-offline-mode",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -1663,8 +1692,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/trade-models/summary.md",
-     "section": "1"
+     "file": "RBI Statement on Developmental and Regulatory Policies (2024-10-09), https://www.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "conflict",
     "configurable": true,
@@ -1679,15 +1709,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/trade-models/summary.md",
-    "section": "1"
+    "file": "NPCI UPI 123PAY product page, https://www.npci.org.in/product/upi-123pay",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "0",
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
     "label": "RBI"
    },
    "failed_txn_tat": "P5D",
@@ -1742,13 +1773,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/trade-models/summary.md",
-    "section": "1",
-    "label": "V"
+    "file": "RBI Statement on Developmental and Regulatory Policies (2024-10-09), https://www.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
+    "section": "whole instrument",
+    "label": "RBI"
    },
    {
-    "file": "bacp/design-brief.md",
-    "section": "10.1 OQ-5"
+    "file": "https://bacp.dev/specification/open-questions/",
+    "section": "Q-05",
+    "label": "ANALYSIS"
    }
   ]
  },
@@ -1783,7 +1815,7 @@
   "binding": {
    "class": "O",
    "open_eligible": false,
-   "open_requires": "Reserved until NPCI publishes UAP (DECISIONS 2026-10-12)."
+   "open_requires": "Reserved until NPCI publishes a UAP specification or circular. A reference that resolves to in.upi.uap is schema-valid but MUST NOT back a payment while the status is reserved."
   },
   "mandate_primitives": [
    {
@@ -1796,15 +1828,17 @@
    "model": "n_a",
    "pre_debit_notice": "unknown",
    "source": {
-    "file": "DECISIONS.md",
-    "section": "2026-10-12"
+    "file": "https://bacp.dev/specification/payments/",
+    "section": "NPCI UAP: the reserved slot",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "unverified",
    "source": {
-    "file": "DECISIONS.md",
-    "section": "2026-10-12"
+    "file": "https://bacp.dev/specification/payments/",
+    "section": "NPCI UAP: the reserved slot",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -1846,8 +1880,9 @@
   "requirements": [],
   "sources": [
    {
-    "file": "DECISIONS.md",
-    "section": "2026-10-12"
+    "file": "https://bacp.dev/specification/payments/",
+    "section": "NPCI UAP: the reserved slot",
+    "label": "ANALYSIS"
    }
   ]
  },
@@ -1916,8 +1951,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "2.8"
+     "file": "RBI Enhancing Security of Card Transactions circular (RBI/2019-20/142)",
+     "section": "para 1(a)–(c)",
+     "label": "RBI"
     },
     "verification": "verified",
     "configurable": true,
@@ -1928,16 +1964,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.4",
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "source_with_card_credit_consent",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.8",
+    "file": "RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 (RBI/2022-23/92)",
+    "section": "paras 10(g) and 10(h)",
     "label": "RBI"
    },
    "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or Rs 5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. CNP failed-txn TAT row did not render (UNVERIFIED T+5). Never refunded to a PPI (PPI MD 14.3(2))."
@@ -2000,13 +2036,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.2",
+    "file": "RBI Card-on-File Tokenisation circular (RBI/2021-22/96, CO.DPSS.POLC.No.S-516/02-14-003/2021-22)",
+    "section": "whole instrument",
     "label": "RBI"
    },
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.8"
+    "file": "RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 (RBI/2022-23/92)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ],
   "notes": "Token is bound to card + token requestor + merchant, so it cannot be reused across merchants. New cards have CNP and international use disabled by default (RBI 2020): handle outcome card_not_enabled_for_cnp, no silent fallback."
@@ -2058,8 +2095,8 @@
    {
     "name": "no_afa_debit",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "2.3",
+     "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+     "section": "para 8",
      "label": "RBI"
     },
     "verification": "verified",
@@ -2072,8 +2109,8 @@
    {
     "name": "no_afa_debit_special_categories",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "2.3",
+     "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+     "section": "para 8",
      "label": "RBI"
     },
     "verification": "verified",
@@ -2089,8 +2126,8 @@
    "model": "at_registration_and_first_debit",
    "pre_debit_notice": "required_24h",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.3",
+    "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+    "section": "whole instrument",
     "label": "RBI"
    },
    "threshold": {
@@ -2105,8 +2142,8 @@
   "refund": {
    "route": "source_with_card_credit_consent",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.8",
+    "file": "RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 (RBI/2022-23/92)",
+    "section": "paras 10(g) and 10(h)",
     "label": "RBI"
    },
    "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or Rs 5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. CNP failed-txn TAT row did not render (UNVERIFIED T+5). Never refunded to a PPI (PPI MD 14.3(2))."
@@ -2164,8 +2201,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.3",
+    "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -2221,8 +2258,9 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "2.7"
+     "file": "Mastercard Agentic Commerce Framework, https://www.mastercard.com/in/en/news-and-trends/stories/2025/agentic-commerce-framework.html",
+     "section": "whole instrument",
+     "label": "NET"
     },
     "verification": "vendor",
     "configurable": true,
@@ -2233,16 +2271,16 @@
    "model": "at_provisioning",
    "pre_debit_notice": "unknown",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.7",
+    "file": "Mastercard press release on first authenticated agentic commerce transaction in India (Feb 2026), https://www.mastercard.com/news/ap/en-in/newsroom/press-releases/en-in/2026/february/mastercard-demonstrates-readiness-for-a-new-era-of-ai-powered-payments-in-india-with-its-first-authenticated-agentic-commerce-transaction/",
+    "section": "whole instrument",
     "label": "NET"
    }
   },
   "refund": {
    "route": "source_with_card_credit_consent",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.8",
+    "file": "RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 (RBI/2022-23/92)",
+    "section": "paras 10(g) and 10(h)",
     "label": "RBI"
    },
    "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or Rs 5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. CNP failed-txn TAT row did not render (UNVERIFIED T+5). Never refunded to a PPI (PPI MD 14.3(2))."
@@ -2300,8 +2338,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.7",
+    "file": "Mastercard press release on first authenticated agentic commerce transaction in India (Feb 2026), https://www.mastercard.com/news/ap/en-in/newsroom/press-releases/en-in/2026/february/mastercard-demonstrates-readiness-for-a-new-era-of-ai-powered-payments-in-india-with-its-first-authenticated-agentic-commerce-transaction/",
+    "section": "whole instrument",
     "label": "NET"
    }
   ],
@@ -2362,16 +2400,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.6",
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "lender",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.6"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Card EMI and card-present",
+    "label": "UNVERIFIED"
    },
    "notes": "Loan adjusted."
   },
@@ -2427,8 +2466,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.6",
+    "file": "RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 (RBI/2022-23/92)",
+    "section": "para 6(b)(iii)",
     "label": "RBI"
    }
   ]
@@ -2475,8 +2514,8 @@
    {
     "name": "no_afa_debit",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "2.1",
+     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+     "section": "Annexure-1",
      "label": "RBI"
     },
     "verification": "verified",
@@ -2492,8 +2531,8 @@
    "model": "exempt_below_threshold",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.1",
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "Annexure-1",
     "label": "RBI"
    },
    "threshold": {
@@ -2504,8 +2543,9 @@
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.5"
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex, row 2b",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -2564,8 +2604,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "2.5"
+    "file": "RBI Enhancing Security of Card Transactions circular (RBI/2019-20/142)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -2611,8 +2652,9 @@
    {
     "name": "no_afa_debit",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "8"
+     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+     "section": "Annexure-1",
+     "label": "RBI"
     },
     "verification": "secondary",
     "configurable": false,
@@ -2626,8 +2668,9 @@
    "model": "exempt_below_threshold",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "8"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "Annexure-1",
+    "label": "RBI"
    },
    "threshold": {
     "value": 500000,
@@ -2637,8 +2680,9 @@
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "8"
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -2691,8 +2735,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "8"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "Annexure-1",
+    "label": "RBI"
    }
   ]
  },
@@ -2739,8 +2784,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI UPI Procedural Guidelines",
+     "section": "whole instrument",
+     "label": "UNVERIFIED"
     },
     "verification": "secondary",
     "configurable": true,
@@ -2755,15 +2801,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "8"
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "8"
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -2817,8 +2865,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "8"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ],
   "notes": "Transaction reference = BACP order id. Static QR disallowed for agent carts."
@@ -2869,8 +2918,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "3.1"
+     "file": "https://bacp.dev/specification/payments/rails/",
+     "section": "Net banking",
+     "label": "UNVERIFIED"
     },
     "verification": "unverified",
     "configurable": true,
@@ -2881,15 +2931,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "3.1"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "3.1"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 10(f)",
+    "label": "RBI"
    },
    "notes": "No TAT row in 2019 circular. Vendor 5-7 business days (UNVERIFIED)."
   },
@@ -2937,8 +2989,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "3.1"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ],
   "notes": "Redirect only. Agents never touch credentials."
@@ -2999,8 +3052,9 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "2"
+     "file": "NPCI NACH Circular 010 (2020-07-15)",
+     "section": "whole instrument",
+     "label": "NPCI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -3013,8 +3067,9 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "2"
+     "file": "NPCI NACH Circular 010 (2020-07-15)",
+     "section": "whole instrument",
+     "label": "NPCI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -3027,8 +3082,9 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "2"
+     "file": "NPCI NACH Circular FY2023-24/003 (2023-08-01)",
+     "section": "whole instrument",
+     "label": "UNVERIFIED"
     },
     "verification": "unverified",
     "configurable": true,
@@ -3044,15 +3100,17 @@
    "model": "at_registration_only",
    "pre_debit_notice": "bacp_policy_24h",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "2"
+    "file": "NPCI NACH product page, https://www.npci.org.in/product/nach",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   },
   "refund": {
    "route": "new_credit_push",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "2"
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex, row 7b",
+    "label": "RBI"
    },
    "failed_txn_tat": "P1D",
    "compensation_per_day": {
@@ -3110,13 +3168,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "2",
+    "file": "NPCI NACH product page, https://www.npci.org.in/product/nach",
+    "section": "whole instrument",
     "label": "NPCI"
    },
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "3.2"
+    "file": "NPCI NACH product page, https://www.npci.org.in/product/nach",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   ]
  },
@@ -3165,15 +3224,17 @@
    "model": "maker_checker",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "2"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "NACH and eNACH",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "2"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "NACH and eNACH",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -3218,8 +3279,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "2",
+    "file": "NPCI NACH product page, https://www.npci.org.in/product/nach",
+    "section": "whole instrument",
     "label": "NPCI"
    }
   ]
@@ -3281,8 +3342,8 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "4",
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 9.1",
      "label": "RBI"
     },
     "verification": "verified",
@@ -3296,8 +3357,8 @@
    {
     "name": "per_month",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "4",
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 9.1",
      "label": "RBI"
     },
     "verification": "verified",
@@ -3311,8 +3372,8 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "4",
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 9.2",
      "label": "RBI"
     },
     "verification": "verified",
@@ -3328,16 +3389,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "required_24h",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 15.3(3)",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "same_ppi",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 14.3(1)",
     "label": "RBI"
    },
    "failed_txn_tat": "P1D",
@@ -3393,8 +3454,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -3446,8 +3507,8 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "4",
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 9.2",
      "label": "RBI"
     },
     "verification": "verified",
@@ -3463,16 +3524,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 15.3(3)",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "same_ppi",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 14.3(1)",
     "label": "RBI"
    },
    "failed_txn_tat": "P1D",
@@ -3528,8 +3589,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -3580,8 +3641,8 @@
    {
     "name": "voucher_max",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "7",
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 10.1",
      "label": "RBI"
     },
     "verification": "verified",
@@ -3594,8 +3655,8 @@
    {
     "name": "validity",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "7",
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 13",
      "label": "RBI"
     },
     "verification": "verified",
@@ -3607,16 +3668,16 @@
    "model": "exempt",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 15.3(5)",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "same_ppi",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 14.3(1)",
     "label": "RBI"
    },
    "failed_txn_tat": "P1D",
@@ -3669,8 +3730,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7",
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 10.1",
     "label": "RBI"
    }
   ]
@@ -3718,8 +3779,9 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "7"
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 2.1",
+     "label": "RBI"
     },
     "verification": "verified",
     "configurable": true,
@@ -3730,15 +3792,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7"
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 2.1",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "same_balance",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7"
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 2.1",
+    "label": "RBI"
    }
   },
   "dispute": {
@@ -3784,8 +3848,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7"
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 2.1",
+    "label": "RBI"
    }
   ]
  },
@@ -3830,15 +3895,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Gift cards, store credit and loyalty",
+    "label": "UNVERIFIED"
    }
   },
   "refund": {
    "route": "same_balance",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Gift cards, store credit and loyalty",
+    "label": "UNVERIFIED"
    }
   },
   "dispute": {
@@ -3881,8 +3948,8 @@
   "requirements": [],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "7",
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Gift cards, store credit and loyalty",
     "label": "UNVERIFIED"
    }
   ],
@@ -3941,8 +4008,9 @@
    {
     "name": "block_amount",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "7"
+     "file": "NPCI NETC FAQ (FASTag Annual Pass)",
+     "section": "whole instrument",
+     "label": "NPCI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -3957,16 +4025,16 @@
    "model": "exempt",
    "pre_debit_notice": "exempt",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7",
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "Annexure-1",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "issuer_or_sponsor",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "FASTag, NCMC and transit"
    }
   },
   "dispute": {
@@ -4012,8 +4080,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7"
+    "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+    "section": "para 6",
+    "label": "RBI"
    }
   ]
  },
@@ -4070,8 +4139,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "7"
+     "file": "RBI circular on small-value digital payments in offline mode (RBI/2023-24/57, 2023-08-24)",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -4084,8 +4154,9 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "7"
+     "file": "RBI circular on small-value digital payments in offline mode (RBI/2023-24/57, 2023-08-24)",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -4100,16 +4171,16 @@
    "model": "exempt",
    "pre_debit_notice": "exempt",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7",
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "Annexure-1",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "issuer_or_sponsor",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "FASTag, NCMC and transit"
    }
   },
   "dispute": {
@@ -4156,8 +4227,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7"
+    "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+    "section": "para 6",
+    "label": "RBI"
    }
   ]
  },
@@ -4205,8 +4277,8 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "7",
+     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+     "section": "para 10.2(4)–(8)",
      "label": "RBI"
     },
     "verification": "verified",
@@ -4222,15 +4294,17 @@
    "model": "exempt",
    "pre_debit_notice": "exempt",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "Annexure-1",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "same_ppi",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4"
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 14.3(1)",
+    "label": "RBI"
    }
   },
   "dispute": {
@@ -4276,12 +4350,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "7"
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 10.2",
+    "label": "RBI"
    },
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "4"
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "para 10.2",
+    "label": "RBI"
    }
   ]
  },
@@ -4332,8 +4408,9 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "5"
+     "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "verified",
     "configurable": true,
@@ -4344,16 +4421,17 @@
    "model": "loan_acceptance",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "5",
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "para 8(i)",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "lender",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "5"
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "para 9(i)",
+    "label": "RBI"
    },
    "notes": "Merchant refund reduces the loan (UNVERIFIED). Cooling-off >= 1 day is separate. DL para 9(i) has no merchant-disbursal exception: checkout BNPL must fit the specific-end-use exception with disbursal direct to the end-beneficiary bank account. Multi-lender display must be unbiased (para 6)."
   },
@@ -4405,8 +4483,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "5",
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -4456,8 +4534,9 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "5"
+     "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "verified",
     "configurable": true,
@@ -4468,16 +4547,17 @@
    "model": "loan_acceptance",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "5",
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "para 8(i)",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "lender",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "5"
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "para 9(i)",
+    "label": "RBI"
    },
    "notes": "Merchant refund reduces the loan (UNVERIFIED). Cooling-off >= 1 day is separate. DL para 9(i) has no merchant-disbursal exception: checkout BNPL must fit the specific-end-use exception with disbursal direct to the end-beneficiary bank account. Multi-lender display must be unbiased (para 6)."
   },
@@ -4529,8 +4609,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "5",
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -4586,15 +4666,17 @@
    "model": "loan_acceptance",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8b"
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "para 8(i)",
+    "label": "UNVERIFIED"
    }
   },
   "refund": {
    "route": "lender",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8b"
+    "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
+    "section": "whole instrument",
+    "label": "UNVERIFIED"
    }
   },
   "dispute": {
@@ -4640,8 +4722,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8b"
+    "file": "OCEN 4.0 framework (iSPIRT), https://ocen.dev",
+    "section": "whole instrument",
+    "label": "VENDOR"
    }
   ]
  },
@@ -4692,15 +4775,17 @@
    "model": "maker_checker",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8c"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "Trade credit, TReDS and GeM",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "lender",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8c"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "Trade credit, TReDS and GeM",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -4746,8 +4831,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8c",
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "Trade credit, TReDS and GeM",
     "label": "ANALYSIS"
    }
   ]
@@ -4798,8 +4883,8 @@
    {
     "name": "cash_threshold",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "12",
+     "file": "Income-tax Act 1961",
+     "section": "s.269ST",
      "label": "STATUTE"
     },
     "verification": "verified",
@@ -4815,16 +4900,16 @@
    "model": "none_cash",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "6",
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 4(a)",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "user_elected_account",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "6",
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Cash on delivery",
     "label": "ANALYSIS"
    },
    "notes": "Cash cannot go back to source. Refund by UPI or bank transfer the user chooses, store credit only on election."
@@ -4875,13 +4960,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "6",
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 4(a), 18(b)",
     "label": "RBI"
    },
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "12"
+    "file": "Income-tax Act 1961",
+    "section": "s.269ST",
+    "label": "STATUTE"
    }
   ]
  },
@@ -4927,8 +5013,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/consumer.md",
-     "section": "1.1"
+     "file": "NPCI UPI Procedural Guidelines",
+     "section": "whole instrument",
+     "label": "UNVERIFIED"
     },
     "verification": "secondary",
     "configurable": true,
@@ -4943,15 +5030,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "6"
+    "file": "NPCI UPI product page, https://www.npci.org.in/product/upi",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "6"
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -5006,8 +5095,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/consumer.md",
-    "section": "6",
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Cash on delivery",
     "label": "ANALYSIS"
    }
   ]
@@ -5063,8 +5152,8 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "1",
+     "file": "NPCI IMPS product page, https://www.npci.org.in/product/imps",
+     "section": "whole instrument",
      "label": "NPCI"
     },
     "verification": "verified",
@@ -5079,15 +5168,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "new_credit_push",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1",
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex",
     "label": "RBI"
    },
    "failed_txn_tat": "P1D",
@@ -5147,8 +5237,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1"
+    "file": "NPCI IMPS product page, https://www.npci.org.in/product/imps",
+    "section": "whole instrument",
+    "label": "NPCI"
    }
   ]
  },
@@ -5203,8 +5294,8 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "1",
+     "file": "RBI NEFT FAQ, https://www.rbi.org.in/Scripts/FAQView.aspx?Id=60",
+     "section": "whole instrument",
      "label": "RBI"
     },
     "verification": "verified",
@@ -5216,15 +5307,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "new_credit_push",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1",
+    "file": "RBI NEFT FAQ, https://www.rbi.org.in/Scripts/FAQView.aspx?Id=60",
+    "section": "whole instrument",
     "label": "RBI"
    },
    "failed_txn_tat": "PT2H",
@@ -5279,8 +5371,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1"
+    "file": "RBI NEFT FAQ, https://www.rbi.org.in/Scripts/FAQView.aspx?Id=60",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -5335,8 +5428,8 @@
    {
     "name": "per_txn_min",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "1",
+     "file": "RBI RTGS FAQ, https://www.rbi.org.in/Scripts/FAQView.aspx?Id=65",
+     "section": "whole instrument",
      "label": "RBI"
     },
     "verification": "verified",
@@ -5352,15 +5445,16 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "new_credit_push",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1",
+    "file": "RBI RTGS FAQ, https://www.rbi.org.in/Scripts/FAQView.aspx?Id=65",
+    "section": "whole instrument",
     "label": "RBI"
    },
    "failed_txn_tat": "PT1H",
@@ -5415,8 +5509,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "1"
+    "file": "RBI RTGS FAQ, https://www.rbi.org.in/Scripts/FAQView.aspx?Id=65",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -5468,8 +5563,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "3"
+     "file": "NBBL Bharat Connect website, https://www.bharat-connect.com",
+     "section": "whole instrument",
+     "label": "NBBL"
     },
     "verification": "verified",
     "configurable": true,
@@ -5480,15 +5576,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3"
+    "file": "NBBL Bharat Connect website, https://www.bharat-connect.com",
+    "section": "whole instrument",
+    "label": "NBBL"
    }
   },
   "dispute": {
@@ -5536,8 +5634,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3",
+    "file": "NBBL Bharat Connect website, https://www.bharat-connect.com",
+    "section": "whole instrument",
     "label": "NBBL"
    }
   ],
@@ -5590,15 +5688,17 @@
    "model": "maker_checker",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "BBPS (Bharat Connect)",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3"
+    "file": "NBBL Bharat Connect website, https://www.bharat-connect.com",
+    "section": "whole instrument",
+    "label": "NBBL"
    }
   },
   "dispute": {
@@ -5644,8 +5744,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3",
+    "file": "NBBL press release on Bharat Connect for Business (Feb 2026), https://www.bharat-connect.com/strapi/uploads/NBBL_s_Bharat_Connect_for_Business_Paves_Way_for_Seamless_and_Interoperable_B2_B_Connectivity_Across_Gujarat_s_43_Lakh_MSM_Es_654710dadb.pdf",
+    "section": "whole instrument",
     "label": "NBBL"
    }
   ]
@@ -5700,15 +5800,17 @@
    "model": "at_registration_and_first_debit",
    "pre_debit_notice": "required_24h",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3"
+    "file": "RBI E-mandate Framework 2026 (RBI/DPSS/2026-27/396)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3"
+    "file": "NBBL Bharat Connect website, https://www.bharat-connect.com",
+    "section": "whole instrument",
+    "label": "NBBL"
    }
   },
   "dispute": {
@@ -5755,8 +5857,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "3",
+    "file": "NBBL Bharat Connect website, https://www.bharat-connect.com",
+    "section": "whole instrument",
     "label": "UNVERIFIED"
    }
   ]
@@ -5810,8 +5912,9 @@
    {
     "name": "voucher_max",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "4"
+     "file": "RBI Statement on Developmental and Regulatory Policies (2022-02-10), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -5824,8 +5927,9 @@
    {
     "name": "voucher_max",
     "source": {
-     "file": "bacp/design-brief.md",
-     "section": "2"
+     "file": "RBI Statement on Developmental and Regulatory Policies (2022-02-10), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
+     "section": "whole instrument",
+     "label": "RBI"
     },
     "verification": "secondary",
     "configurable": true,
@@ -5840,15 +5944,16 @@
    "model": "voucher_code",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "4"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e-RUPI"
    }
   },
   "refund": {
    "route": "issuer_or_sponsor",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "4"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e-RUPI",
+    "label": "UNVERIFIED"
    },
    "notes": "Unredeemed value returns to sponsor. Post-redemption refunds UNVERIFIED."
   },
@@ -5898,8 +6003,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "4"
+    "file": "RBI Statement on Developmental and Regulatory Policies (2022-02-10), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -5948,8 +6054,9 @@
    {
     "name": "balance",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "5"
+     "file": "https://bacp.dev/specification/payments/rails/",
+     "section": "e₹ (CBDC)",
+     "label": "UNVERIFIED"
     },
     "verification": "unverified",
     "configurable": true,
@@ -5960,15 +6067,15 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e₹ (CBDC)"
    }
   },
   "refund": {
    "route": "new_credit_push",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e₹ (CBDC)"
    }
   },
   "dispute": {
@@ -6013,8 +6120,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "RBI e₹ FAQ, https://www.rbi.org.in/commonman/English/scripts/FAQs.aspx?Id=3686",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ],
   "notes": "Offline e-rupee is excluded from autonomous agent initiation."
@@ -6068,15 +6176,17 @@
    "model": "at_registration_only",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e₹ (CBDC)",
+    "label": "UNVERIFIED"
    }
   },
   "refund": {
    "route": "issuer_or_sponsor",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e₹ (CBDC)",
+    "label": "UNVERIFIED"
    }
   },
   "dispute": {
@@ -6121,8 +6231,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "RBI e₹ FAQ, https://www.rbi.org.in/commonman/English/scripts/FAQs.aspx?Id=3686",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -6168,15 +6279,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e₹ (CBDC)",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "e₹ (CBDC)",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -6218,8 +6331,9 @@
   "requirements": [],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "5"
+    "file": "RBI Concept Note on Central Bank Digital Currency, https://rbidocs.rbi.org.in/rdocs/PublicationReport/Pdfs/CONCEPTNOTEACB531172E0B4DFC9A6E506C2C24FFB6.PDF",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -6268,8 +6382,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "6"
+     "file": "NPCI AePS Circular NPCI/2021-22/AEPS/002 (2021-08-18)",
+     "section": "whole instrument",
+     "label": "NPCI"
     },
     "verification": "unverified",
     "configurable": true,
@@ -6284,16 +6399,17 @@
    "model": "biometric_assisted",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "6",
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "6"
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67)",
+    "section": "Annex, row 5a",
+    "label": "RBI"
    },
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
@@ -6346,8 +6462,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "6",
+    "file": "RBI Directions on Due Diligence of AePS Touchpoint Operators (2025-06-27), https://www.rbi.org.in/Scripts/BS_PressReleaseDisplay.aspx?prid=60734",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -6396,15 +6512,17 @@
    "model": "maker_checker",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8a"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "TReDS",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8a"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "TReDS",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -6453,8 +6571,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8a"
+    "file": "RBI TReDS Guidelines (2014), https://website.rbi.org.in/web/rbi/payment-and-settlements/other-links/information-useful-to-banks-fis/guidelines",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ],
   "notes": "After discounting, the ledger payee becomes the financier."
@@ -6506,15 +6625,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8d"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8d"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -6562,8 +6683,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8d"
+    "file": "ICC Uniform Customs and Practice for Documentary Credits (UCP 600)",
+    "section": "whole instrument"
    }
   ]
  },
@@ -6614,15 +6735,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8d"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8d"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -6669,8 +6792,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "8d"
+    "file": "NeSL Circular NeSL/DDE/2026/235 (2026-05-05)",
+    "section": "whole instrument",
+    "label": "SECONDARY"
    }
   ]
  },
@@ -6723,8 +6847,8 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "9",
+     "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+     "section": "para 11(d)",
      "label": "RBI"
     },
     "verification": "verified",
@@ -6739,15 +6863,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "9"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "para 10(1)",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "9"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 10(f)",
+    "label": "RBI"
    }
   },
   "dispute": {
@@ -6796,8 +6922,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "9"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 11(d)",
+    "label": "RBI"
    }
   ]
  },
@@ -6840,8 +6967,8 @@
    {
     "name": "validity",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "9",
+     "file": "RBI FEMA 23(R)/(1)/2026-RB (2026-09-22) amending FEMA 23(R)/2026-RB",
+     "section": "Reg 5(1)",
      "label": "RBI"
     },
     "verification": "verified",
@@ -6854,15 +6981,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "9"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "9"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -6909,8 +7038,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "9",
+    "file": "RBI Foreign Exchange Management (Export and Import of Goods and Services) Regulations 2026 (FEMA 23(R)/2026-RB)",
+    "section": "whole instrument",
     "label": "RBI"
    }
   ]
@@ -6959,8 +7088,9 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "10"
+     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "section": "whole instrument",
+     "label": "SECONDARY"
     },
     "verification": "secondary",
     "configurable": true,
@@ -6973,8 +7103,8 @@
    {
     "name": "validity",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "10",
+     "file": "DoE Office Memorandum of 2020-07-03 on GeM payment timelines",
+     "section": "whole instrument",
      "label": "GeM/DoE"
     },
     "verification": "verified",
@@ -6987,15 +7117,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "10"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "Trade credit, TReDS and GeM",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "10"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "Trade credit, TReDS and GeM",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -7045,8 +7177,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "10",
+    "file": "General Financial Rules 2017",
+    "section": "Rule 149",
     "label": "GeM/DoE"
    }
   ]
@@ -7094,15 +7226,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "11"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "source",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "11"
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 10(f)",
+    "label": "RBI"
    },
    "notes": "Refunds via escrow to original method (PA MD 10(f))."
   },
@@ -7150,8 +7284,8 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "11",
+    "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+    "section": "para 16(a), Table 1",
     "label": "RBI"
    }
   ]
@@ -7202,8 +7336,8 @@
    {
     "name": "pps_threshold",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "12",
+     "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 2020-09-25)",
+     "section": "whole instrument",
      "label": "RBI"
     },
     "verification": "verified",
@@ -7217,8 +7351,8 @@
    {
     "name": "pps_threshold",
     "source": {
-     "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-     "section": "12",
+     "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 2020-09-25)",
+     "section": "whole instrument",
      "label": "RBI"
     },
     "verification": "verified",
@@ -7234,15 +7368,17 @@
    "model": "per_txn_2fa",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "12"
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   },
   "refund": {
    "route": "n_a",
    "source": {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "12"
+    "file": "https://bacp.dev/specification/payments/rails/",
+    "section": "Other B2B and cross-border rails",
+    "label": "ANALYSIS"
    }
   },
   "dispute": {
@@ -7288,8 +7424,9 @@
   ],
   "sources": [
    {
-    "file": "india-stack/payment-modes/b2b-govt-programmable.md",
-    "section": "12"
+    "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 2020-09-25)",
+    "section": "whole instrument",
+    "label": "RBI"
    }
   ]
  },
@@ -7337,15 +7474,17 @@
    "model": "n_a",
    "pre_debit_notice": "not_applicable",
    "source": {
-    "file": "india-stack/trade-models/summary.md",
-    "section": "17.3"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "The khata credit ledger",
+    "label": "ANALYSIS"
    }
   },
   "refund": {
    "route": "ledger_credit_note",
    "source": {
-    "file": "india-stack/trade-models/summary.md",
-    "section": "17.3"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "The khata credit ledger",
+    "label": "ANALYSIS"
    },
    "notes": "Unpaid: credit note entry. Paid: refund to the settling instrument."
   },
@@ -7398,12 +7537,14 @@
   ],
   "sources": [
    {
-    "file": "india-stack/trade-models/summary.md",
-    "section": "17.3"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "The khata credit ledger",
+    "label": "ANALYSIS"
    },
    {
-    "file": "india-stack/trade-models/summary.md",
-    "section": "18 TRADE-111"
+    "file": "https://bacp.dev/specification/payments/credit-and-split-tender/",
+    "section": "The khata credit ledger",
+    "label": "ANALYSIS"
    }
   ],
   "notes": "Interest-free seller credit is not digital lending. Any third-party financier moves it to in.fin.* or in.credit.*."

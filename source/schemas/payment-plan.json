@@ -18,7 +18,7 @@
     },
     "checkout_hash": {
       "$ref": "common.json#/$defs/Hash",
-      "description": "Same checkout_hash (= accepted offer_hash) for every tender."
+      "description": "Hash of the BPP-signed quote (the checkout), the same for every tender. It is not the accepted offer_hash."
     },
     "all_in_total": {
       "$ref": "common.json#/$defs/Amount"
@@ -38,7 +38,8 @@
             "$ref": "common.json#/$defs/HandlerRef"
           },
           "amount": {
-            "$ref": "common.json#/$defs/Amount"
+            "$ref": "common.json#/$defs/PositiveAmount",
+            "description": "Greater than zero, even when the tenders sum to the total."
           },
           "sequence": {
             "type": "integer",

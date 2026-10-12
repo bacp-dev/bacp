@@ -41,9 +41,9 @@ with `vct: in.bacp.agent.1`. Its claims are defined by
 registry. It MUST be `null` or absent until such a registry is published.
 
 `conformance` MUST carry `levels[]`, the ids of the
-[conformance levels](conformance.md#conformance-levels) passed, plus the
-attestation. The published schema still defines a single `level` field; it is
-replaced by `levels[]`.
+[conformance levels](conformance.md#conformance-levels) passed (`bacp.core.1`,
+`bacp.pay.upi.1`, `bacp.pay.all.1`, `bacp.neg.1`, `bacp.b2b.1`,
+`bacp.auction.1`), plus the signed `attestation`.
 
 !!! warning "Proposed"
     The credential and the registry record SHOULD also carry a
@@ -58,8 +58,7 @@ replaced by `levels[]`.
   request except the unsigned `GET /.well-known/bacp` and
   `GET /payment-handlers` calls.
 - A gateway MAY also accept the header name `BACP-Agent-Credential` until the
-  first dated release, and MUST NOT accept it afterwards. The current OpenAPI
-  document still names `BACP-Agent-Credential`.
+  first dated release, and MUST NOT accept it afterwards.
 - The credential header is a [covered component](#covered-components) of the
   request signature, so it cannot be swapped.
 

@@ -428,7 +428,7 @@ Response (`200`, abridged):
       "order_id": "ORD-KIR-88231",
       "checkout_hash": "sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl",
       "amount": {"value": 30200, "currency": "INR"},
-      "payee": {"vpa": "vaani.collect@examplebank", "name": "Vaani Voice Commerce Pvt Ltd"},
+      "payee": {"vpa": "ganeshkirana@examplebank", "name": "Shree Ganesh Kirana"},
       "rail": {
         "type": "upi.reservepay.block",
         "rail_ref": "SBMD-HDFX-000123456",

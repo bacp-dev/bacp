@@ -112,7 +112,7 @@ than its parent's.
     "reject_preticked_addons": true,
     "cod_allowed": false
   },
-  "payee": {"bap_id": "bap.vaani.example.in", "vpa": "vaani.collect@examplebank"},
+  "payee": {"vpa": "ganeshkirana@examplebank"},
   "rail_binding": {
     "type": "upi.reservepay.block",
     "rail_ref": "SBMD-HDFX-000123456",
@@ -401,7 +401,7 @@ There are two kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
-| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `constraint_unresolved`: `step_up.first_order` on the first order, missing disclosures, drip pricing, or any check the gateway cannot resolve. |
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, or any check the gateway cannot resolve. |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
 
 Any other rail cap (per-transaction, per-period, remaining block, first 24 hours, channel caps)

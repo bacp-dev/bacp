@@ -81,7 +81,7 @@
       "description": "Current InstructionLog head at send time"
     },
     "version": {
-      "const": "0.1"
+      "$ref": "common.json#/$defs/ProtocolVersion"
     }
   },
   "additionalProperties": false

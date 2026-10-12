@@ -114,7 +114,7 @@ A **handler reference** (`HandlerRef`) is a canonical id, an exact alias, or a s
 7. **Resolution is not eligibility.** After resolution, the binding rules still apply: a `reserved` or `deprecated` descriptor MUST NOT back a payment, and a `pilot` descriptor only when attested.
 8. **Deprecation window.** Legacy aliases are accepted for one deprecation window. The registry SHOULD publish each alias's end date (a proposed descriptor field `aliases_deprecated_after`, not yet in the schema).
 
-In addition to the aliases declared in the registry (listed after the [registry table](#registry-table)), two exact aliases resolve to `in.upi.intent` for the deprecation window: `upi.pin` and `upi.uap.pin`. They identify a human-present one-off UPI payment authorised by UPI PIN. `auth_binding.type` stays `upi.pin`.
+The registry declares two exact aliases of `in.upi.intent` for the deprecation window: `upi.pin` and `upi.uap.pin` (listed after the [registry table](#registry-table)). They identify a human-present one-off UPI payment authorised by UPI PIN. `auth_binding.type` stays `upi.pin`.
 
 ## Proposing a new handler
 
@@ -196,10 +196,11 @@ The table below is generated from `source/handlers/registry.json`. "Presence all
 
 ### Declared aliases
 
-Generated from the `aliases` field of the same file. Self-referencing entries (a descriptor listing its own canonical id) are omitted.
+Generated from the `aliases` field of the same file. No descriptor lists a canonical id as an alias.
 
 | Handler id | Legacy aliases |
 |---|---|
+| `in.upi.intent` | `upi.pin`, `upi.uap.pin` |
 | `in.upi.reservepay` | `upi.reservepay.block` |
 | `in.upi.circle` | `upi.circle.delegate` |
 | `in.upi.autopay` | `upi.autopay` |

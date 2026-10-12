@@ -14,7 +14,6 @@
     "valid_until",
     "principal",
     "agent",
-    "checkout_mandate_ref",
     "presence_allowed",
     "constraints",
     "revocation",
@@ -40,7 +39,7 @@
     },
     "checkout_mandate_ref": {
       "type": "string",
-      "description": "The open AP2-compatible checkout mandate whose budgets and allow-lists also apply. The stricter bound wins."
+      "description": "The open AP2-compatible checkout mandate whose budgets and allow-lists also apply; the stricter bound wins. Required when constraints.negotiation.role is buyer. MUST be absent when role is seller, because a seller (a reverse-auction bidder, a farmer selling a lot) has no checkout mandate."
     },
     "iss": {
       "type": "string"
@@ -570,7 +569,7 @@
         },
         "on_revoke": {
           "const": "withdraw_live_firm_offers",
-          "description": "Gateway sends WITHDRAW for every live firm offer of the principal (section 12.5)."
+          "description": "Gateway sends WITHDRAW for every live firm offer of the principal."
         }
       },
       "required": [
@@ -612,6 +611,72 @@
     }
   },
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "constraints": {
+            "properties": {
+              "negotiation": {
+                "properties": {
+                  "role": {
+                    "const": "buyer"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            },
+            "required": [
+              "negotiation"
+            ]
+          }
+        },
+        "required": [
+          "constraints"
+        ]
+      },
+      "then": {
+        "required": [
+          "checkout_mandate_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "constraints": {
+            "properties": {
+              "negotiation": {
+                "properties": {
+                  "role": {
+                    "const": "seller"
+                  }
+                },
+                "required": [
+                  "role"
+                ]
+              }
+            },
+            "required": [
+              "negotiation"
+            ]
+          }
+        },
+        "required": [
+          "constraints"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "checkout_mandate_ref"
+          ]
+        }
+      }
+    }
+  ],
   "$defs": {
     "NegotiationConstraints": {
       "description": "constraints.negotiation: per-issue bounds evaluated fail-closed by the deterministic guard. reservation is an SD-JWT selectively disclosable claim that is NEVER disclosed to a counterparty, a seller verifier, a gateway log, or the agent LLM context.",

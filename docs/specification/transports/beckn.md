@@ -112,7 +112,7 @@ No other keys are allowed (`additionalProperties: false`).
   "language": "hi-IN",
   "ai_disclosure": true,
   "log_head": "sha-256:LCa0a2j_xo_5m0U8HTBBNBNCLXBkg7-g-YpeiGJm564",
-  "version": "0.1"
+  "version": "draft"
 }
 ```
 

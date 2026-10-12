@@ -89,7 +89,7 @@
       {
         "option_id": "prepaid",
         "handlers": [
-          "in.upi.reservepay",
+          "in.upi.circle",
           "in.upi.intent"
         ],
         "timing": "ON-ORDER",
@@ -129,7 +129,7 @@
           "event": "on_order"
         },
         "handlers_allowed": [
-          "in.upi.reservepay",
+          "in.upi.circle",
           "in.upi.intent"
         ]
       }

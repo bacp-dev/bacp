@@ -304,8 +304,8 @@
       "description": "Closed mandates only: hash of the BPP-signed quote / checkout (AP2 checkout_hash)"
     },
     "amount": {
-      "$ref": "common.json#/$defs/Amount",
-      "description": "Closed mandates only: exact amount"
+      "$ref": "common.json#/$defs/PositiveAmount",
+      "description": "Closed mandates only: exact payable amount, greater than zero"
     },
     "payee": {
       "type": "object",

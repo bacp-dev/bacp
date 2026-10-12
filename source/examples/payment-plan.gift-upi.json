@@ -23,7 +23,7 @@
     },
     {
       "tender_id": "tdr_upi001",
-      "handler": "in.upi.reservepay",
+      "handler": "in.upi.circle",
       "amount": {
         "value": 116000,
         "currency": "INR"
@@ -33,7 +33,7 @@
       "funding": "debit",
       "closed_payment_mandate_ref": "mdt_PAYUPI00000001",
       "auth_binding_type": "parent_rail_binding",
-      "rail_ref": "SBMD-88231",
+      "rail_ref": "CIRCLE-DLG-40917",
       "status": "captured",
       "receipt_id": "rcpt_UPI0000000001"
     }

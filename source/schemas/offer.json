@@ -66,7 +66,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -129,7 +129,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -314,7 +314,7 @@
     },
     "Accept": {
       "type": "object",
-      "description": "Absolute, unqualified acceptance of exactly one live offer. Carries no terms.",
+      "description": "Absolute, unqualified acceptance of exactly one live offer. Carries no terms, and no step-up id or other field that reveals that the deal needed the principal's approval.",
       "properties": {
         "type": {
           "const": "accept"
@@ -338,7 +338,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -401,7 +401,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -428,7 +428,7 @@
         },
         "offer_hash": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "sha-256 over JCS(offer minus signatures, counter_signature). Acceptance must mirror it exactly (ICA s.7)."
+          "description": "sha-256 over JCS of the offer minus signatures, counter_signature and received_at, so the hash does not change on receipt. Acceptance must mirror it exactly (ICA s.7)."
         },
         "negotiation_mandate_ref": {
           "type": "object",
@@ -456,10 +456,6 @@
         },
         "bound_attestation": {
           "$ref": "#/$defs/BoundAttestation"
-        },
-        "step_up_id": {
-          "type": "string",
-          "description": "Present when the principal approved an out-of-mandate deal on the Trusted Surface."
         }
       },
       "required": [
@@ -518,7 +514,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -581,7 +577,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -675,7 +671,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -738,7 +734,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -816,7 +812,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -879,7 +875,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -955,7 +951,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -1018,7 +1014,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -1091,7 +1087,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -1154,7 +1150,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -1222,7 +1218,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -1285,7 +1281,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -1363,7 +1359,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -1426,7 +1422,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
@@ -1480,7 +1476,7 @@
     },
     "BidRetract": {
       "type": "object",
-      "description": "Retraction of an open-outcry bid before close and outside the anti-sniping window (section 12.9). The previous best bid does not revive.",
+      "description": "Retraction of an open-outcry bid before close and outside the anti-sniping window. The previous best bid does not revive.",
       "properties": {
         "type": {
           "const": "bid_retract"
@@ -1504,7 +1500,7 @@
         "dispatched_at": {
           "type": "string",
           "format": "date-time",
-          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew."
         },
         "received_at": {
           "type": "string",
@@ -1567,7 +1563,7 @@
           "items": {
             "$ref": "common.json#/$defs/Signature"
           },
-          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted."
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",

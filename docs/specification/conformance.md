@@ -62,7 +62,9 @@ proves little. So:
 
 - A participant declares the levels it claims in its
   [profile](discovery.md#profile-document) and carries them in its conformance
-  credential. An AgentCredential carries them in `conformance.levels[]`.
+  credential. An AgentCredential carries them in `conformance.levels[]`, using
+  the level ids above, with the signed attestation in `conformance.attestation`
+  (see [Identity and Request Signing](identity-and-signing.md#agentcredential)).
 - A participant that claims a level MUST pass every case of that level **and**
   of every level it requires.
 - A gateway MAY offer a payment handler whose registry status is `pilot` only

@@ -21,6 +21,24 @@
       },
       "additionalProperties": false
     },
+    "PositiveAmount": {
+      "type": "object",
+      "description": "A payable amount: integer minor units (paise), greater than zero. Used for a closed mandate's amount, a payment or refund Receipt's amount and a payment-plan tender's amount. Amount (minimum 0) stays in use for values that may legitimately be zero, such as a zero-priced free-goods line or a remaining budget.",
+      "required": [
+        "value",
+        "currency"
+      ],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "currency": {
+          "const": "INR"
+        }
+      },
+      "additionalProperties": false
+    },
     "Hash": {
       "type": "string",
       "description": "Multihash-style 'alg:base64url'. sha-256 is mandatory, blake2b-512 allowed for Beckn digests.",
@@ -141,7 +159,8 @@
         "erupi",
         "erupee",
         "bbps",
-        "cod"
+        "cod",
+        "upi.pin"
       ],
       "description": "Legacy BACP payment handler ids. upi.uap.* is reserved and validated by RailType."
     },
@@ -157,7 +176,7 @@
         "Disagree",
         "Terminate"
       ],
-      "description": "Per-issue status generalised from ONDC *_status (NEG section 1.3, 5.3)."
+      "description": "Per-issue status generalised from ONDC *_status."
     },
     "IssueMeta": {
       "type": "object",
@@ -425,6 +444,11 @@
         "section"
       ],
       "additionalProperties": false
+    },
+    "ProtocolVersion": {
+      "type": "string",
+      "pattern": "^(\\d{4}-\\d{2}-\\d{2}|draft)$",
+      "description": "BACP protocol version: a release date (YYYY-MM-DD) or \"draft\"."
     }
   }
 }

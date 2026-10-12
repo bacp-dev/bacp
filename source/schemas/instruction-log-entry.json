@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/instruction-log-entry.json",
   "title": "InstructionLogEntry",
-  "description": "Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment (UAP section 5 item 3). entry_hash = sha-256(JCS(entry minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.",
+  "description": "Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment. entry_hash = sha-256(JCS(entry minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.",
   "type": "object",
   "required": [
     "seq",

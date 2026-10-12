@@ -40,7 +40,7 @@
       },
       "payment": {
         "handlers_allowed": [
-          "in.upi.reservepay",
+          "in.upi.circle",
           "in.upi.intent",
           "in.card.token"
         ],
@@ -62,7 +62,7 @@
         "any_violation": true,
         "between_reservation_and_max": true,
         "new_counterparty_above": {
-          "value": 150000,
+          "value": 250000,
           "currency": "INR"
         },
         "drip_pct": 0,

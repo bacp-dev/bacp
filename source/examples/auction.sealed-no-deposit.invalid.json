@@ -42,7 +42,7 @@
   },
   "award_rule": "l1",
   "retraction_rule": "no_retraction",
-  "procurement_mode_reason": "Value above direct and L1 purchase ceilings (TRADE-129)",
+  "procurement_mode_reason": "Value above direct and L1 purchase ceilings",
   "signature": {
     "role": "operator",
     "kid": "ra.gem-like.example.gov.in|k1",

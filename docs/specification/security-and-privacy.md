@@ -155,8 +155,9 @@ allows, even when the rail authority is far larger than the budget, and MUST NOT
 - Every tender in a payment plan MUST be greater than zero, even when the tenders sum correctly.
 - Every value-bearing credit-ledger posting MUST be greater than zero; direction is carried by the entry type, never
   by the sign.
-- Schemas keep `minimum: 0` where zero is legitimate (a free-goods line, a remaining budget). Payable amounts use a
-  positive-amount definition (`minimum: 1`).
+- Schemas keep `Amount` (`minimum: 0`) where zero is legitimate (a free-goods line, a remaining budget). Payable
+  amounts (a closed mandate's `amount`, a payment or refund Receipt's `amount`, a payment-plan tender's `amount`) use
+  `PositiveAmount` from `common.json` (`value` `minimum: 1`).
 
 ### Data minimisation and over-sharing {#data-minimisation}
 

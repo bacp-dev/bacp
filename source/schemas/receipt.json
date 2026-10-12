@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/receipt.json",
   "title": "Receipt (rail-anchored)",
-  "description": "Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). Payment and refund receipts MUST carry the UPI RRN and UTR. Non-UPI handlers carry rail.evidence instead of RRN/UTR.",
+  "description": "Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family handler (upi.*, in.upi.*, in.cod.upi, in.pos.tap, in.pos.dynamic_qr) MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists utr. Any other successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence.",
   "type": "object",
   "required": [
     "receipt_id",
@@ -67,7 +67,7 @@
       "$ref": "common.json#/$defs/Hash"
     },
     "amount": {
-      "$ref": "common.json#/$defs/Amount"
+      "$ref": "common.json#/$defs/PositiveAmount"
     },
     "payee": {
       "type": "object",
@@ -138,7 +138,7 @@
       },
       "allOf": [
         {
-          "description": "UPI-family rails: RRN is mandatory; UTR is mandatory unless the handler descriptor's settlement.evidence_refs lists RRN only (generated from handlers/registry.json).",
+          "description": "UPI-family handlers: RRN is always required. UTR is required only when the handler descriptor's settlement.evidence_refs lists utr; the RRN-only pattern below is generated from handlers/registry.json (upi.uap.pin resolves to in.upi.intent and needs a UTR). Other handlers: at least one of rrn, utr or evidence.",
           "if": {
             "properties": {
               "type": {

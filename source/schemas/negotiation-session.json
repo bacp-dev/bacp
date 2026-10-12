@@ -178,7 +178,7 @@
     },
     "offers": {
       "type": "array",
-      "description": "Offer state is tracked per offer, separately from the negotiation state (section 12.6).",
+      "description": "Offer state is tracked per offer, separately from the negotiation state.",
       "items": {
         "type": "object",
         "properties": {
@@ -698,7 +698,7 @@
             "affiliated_with_any_seller",
             "clock_source"
           ],
-          "description": "Bid clock run by a neutral auctioneer, never the seller BPP (shill and conflict risk, section 12.9).",
+          "description": "Bid clock run by a neutral auctioneer, never the seller BPP (shill and conflict risk).",
           "additionalProperties": false
         },
         "lots": {
@@ -811,7 +811,7 @@
             "msme_preference",
             "make_in_india_preference"
           ],
-          "description": "Dutch: always earliest auctioneer receipt timestamp, then earliest dispatch, then lowest msg_hash (section 12.9)."
+          "description": "Dutch: always earliest auctioneer receipt timestamp, then earliest dispatch, then lowest msg_hash."
         },
         "bid_deposit": {
           "type": "object",
@@ -896,7 +896,8 @@
           "description": "Why this mode was chosen, e.g. value threshold."
         },
         "signature": {
-          "$ref": "common.json#/$defs/Signature"
+          "$ref": "common.json#/$defs/Signature",
+          "description": "The neutral auctioneer's signature over the published spec, made before the first bid; rules MUST NOT change after it. Optional in a create request, where any signature is the requester's own and is not relied on. Required in the published spec (PublishedAuctionSpec)."
         }
       },
       "required": [
@@ -911,8 +912,7 @@
         "visibility",
         "tie_break",
         "award_rule",
-        "retraction_rule",
-        "signature"
+        "retraction_rule"
       ],
       "description": "Signed before the first bid. Rules MUST NOT change after it.",
       "additionalProperties": false,
@@ -950,6 +950,17 @@
             }
           }
         }
+      ]
+    },
+    "PublishedAuctionSpec": {
+      "description": "An AuctionSpec as published by the neutral auctioneer: signed by the auctioneer, with its spec_hash frozen and authoritative.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/AuctionSpec"
+        }
+      ],
+      "required": [
+        "signature"
       ]
     },
     "Rfq": {
@@ -1012,7 +1023,7 @@
         "min_responses": {
           "type": "integer",
           "minimum": 1,
-          "description": "e.g. 3 for an L1 purchase."
+          "description": "Minimum number of valid quotations before award, e.g. 3 for an L1 purchase. Required: a request without it is refused with 400 invalid_request."
         },
         "award_rule": {
           "enum": [
@@ -1094,6 +1105,7 @@
         "mode",
         "term_sheet_draft",
         "response_by",
+        "min_responses",
         "award_rule"
       ],
       "description": "Structured RFQ replacing ONDC BUYER_TERMS free text.",

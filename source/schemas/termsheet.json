@@ -1026,7 +1026,7 @@
             "value"
           ],
           "unevaluatedProperties": false,
-          "description": "Settle via bacp.credit_ledger (section 13.6)."
+          "description": "Settle via bacp.credit_ledger."
         }
       },
       "required": [
@@ -1590,7 +1590,7 @@
             },
             "linked_agreement_ref": {
               "type": "string",
-              "description": "e.g. registered RERA agreement for sale, required above 10% (TRADE-118)."
+              "description": "e.g. registered RERA agreement for sale, required above 10%."
             }
           },
           "required": [
@@ -1686,7 +1686,7 @@
           "rera_agreement_registered"
         ]
       },
-      "description": "ICA s.6: offer lapses if a condition precedent fails (section 12.5)."
+      "description": "ICA s.6: offer lapses if a condition precedent fails."
     },
     "extensions": {
       "type": "object",
