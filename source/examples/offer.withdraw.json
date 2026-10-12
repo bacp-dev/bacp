@@ -1,0 +1,23 @@
+{
+  "type": "withdraw",
+  "msg_id": "nmsg_S4wdr1Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:12+05:30",
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in",
+    "offeror_kind": "agent"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "reason": "stock_change"
+}

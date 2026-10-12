@@ -1,0 +1,287 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/receipt.json",
+  "title": "Receipt (rail-anchored)",
+  "description": "Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). Payment and refund receipts MUST carry the UPI RRN and UTR. v1: non-UPI handlers carry rail.evidence instead of RRN/UTR (SC-16).",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "receipt_type",
+    "iss",
+    "issued_at",
+    "result",
+    "reference",
+    "mandate_ref",
+    "transaction_id",
+    "signature"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^rcpt_[A-Za-z0-9]{12,40}$"
+    },
+    "receipt_type": {
+      "enum": [
+        "mandate",
+        "checkout",
+        "payment",
+        "refund"
+      ]
+    },
+    "iss": {
+      "type": "string",
+      "description": "Verifier: Mandate Manager, BPP, payer PSP"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "result": {
+      "enum": [
+        "success",
+        "failure",
+        "in_doubt"
+      ]
+    },
+    "error": {
+      "type": "string"
+    },
+    "reference": {
+      "$ref": "common.json#/$defs/Hash",
+      "description": "Hash of the presented (closed) mandate, AP2 Receipt.reference"
+    },
+    "mandate_ref": {
+      "type": "string"
+    },
+    "open_mandate_ref": {
+      "type": "string"
+    },
+    "transaction_id": {
+      "type": "string",
+      "description": "Beckn context.transaction_id, end to end (REQ-115)"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "checkout_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "amount": {
+      "$ref": "common.json#/$defs/Amount"
+    },
+    "payee": {
+      "type": "object",
+      "properties": {
+        "vpa": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "rail": {
+      "type": "object",
+      "required": [
+        "type",
+        "rail_ref",
+        "status"
+      ],
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "common.json#/$defs/RailType"
+            },
+            {
+              "$ref": "common.json#/$defs/HandlerRef"
+            }
+          ],
+          "description": "v0 RailType, or (v1 delta) any HandlerRef: v1 in.* id or a v0 alias."
+        },
+        "rail_ref": {
+          "type": "string"
+        },
+        "rrn": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "utr": {
+          "type": "string"
+        },
+        "npci_txn_id": {
+          "type": "string"
+        },
+        "psp_confirmation_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "SUCCESS",
+            "FAILURE",
+            "PENDING",
+            "DEEMED",
+            "REVERSED"
+          ]
+        },
+        "original_rrn": {
+          "type": "string",
+          "description": "Refund receipts: RRN of the debit being refunded (REQ-306)"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "v1: settlement evidence for non-UPI handlers (handler-descriptor settlement.evidence_refs), e.g. arn, auth_code, utr, umrn, voucher_id, bconnect_txn_id, ledger_entry_id, awb."
+        }
+      },
+      "allOf": [
+        {
+          "description": "UPI-family rails (RE-2, E-ED-1): RRN is mandatory; UTR is mandatory unless the handler descriptor's settlement.evidence_refs lists RRN only (generated from examples/payment-handlers.registry.json).",
+          "if": {
+            "properties": {
+              "type": {
+                "pattern": "^(upi\\.|in\\.upi\\.|in\\.cod\\.upi$|in\\.pos\\.(tap|dynamic_qr)$)"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "rrn"
+            ],
+            "if": {
+              "properties": {
+                "type": {
+                  "pattern": "^(in\\.upi\\.intl|in\\.upi\\.lite|in\\.upi\\.uap|in\\.upi\\.uap\\..+|upi\\.lite|upi\\.uap\\.(?!pin$).+)$"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "else": {
+              "required": [
+                "utr"
+              ]
+            }
+          },
+          "else": {
+            "anyOf": [
+              {
+                "required": [
+                  "rrn"
+                ]
+              },
+              {
+                "required": [
+                  "utr"
+                ]
+              },
+              {
+                "required": [
+                  "evidence"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "signature": {
+      "$ref": "common.json#/$defs/Signature"
+    },
+    "refund_state": {
+      "enum": [
+        "pending_cardholder_consent",
+        "reversed_to_bank_account",
+        "released_block",
+        "credit_note_issued",
+        "refunded_to_source",
+        "adjusted_against_dues"
+      ],
+      "description": "v1 delta (PAYC 2.8, PAY-106, TRD 17.3). adjusted_against_dues and refunded_to_source are prototype additions (SC-17)."
+    },
+    "fx": {
+      "type": "object",
+      "required": [
+        "currency",
+        "foreign_amount",
+        "rate",
+        "markup_bps",
+        "inr_total"
+      ],
+      "additionalProperties": false,
+      "description": "REQ-405 / TRADE-144 (L7-compliance C-5): foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "pattern": "^(?!INR)[A-Z]{3}$"
+        },
+        "foreign_amount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "minor units of currency"
+        },
+        "rate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "INR per 1 unit of currency"
+        },
+        "markup_bps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inr_total": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "rate_source": {
+          "type": "string"
+        },
+        "quoted_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "receipt_type": {
+            "enum": [
+              "payment",
+              "refund"
+            ]
+          },
+          "result": {
+            "const": "success"
+          }
+        },
+        "required": [
+          "receipt_type",
+          "result"
+        ]
+      },
+      "then": {
+        "required": [
+          "rail",
+          "amount",
+          "checkout_hash"
+        ]
+      }
+    },
+    {
+      "description": "E-ED-7 / SC-2: budget_after MUST NOT appear in a PSP-signed receipt; the gateway returns it unsigned in session.payment.budget_after.",
+      "not": {
+        "required": [
+          "budget_after"
+        ]
+      }
+    }
+  ]
+}

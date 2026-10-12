@@ -1,0 +1,173 @@
+{
+  "term_sheet_id": "ts_saree_r2",
+  "version": "1",
+  "currency": "INR",
+  "pricing_basis": "negotiated",
+  "parties": {
+    "buyer": {
+      "role": "buyer",
+      "id": "pp_9f2c1e",
+      "kind": "agent"
+    },
+    "seller": {
+      "role": "seller",
+      "id": "bpp.bunkar.example.in|P2",
+      "kind": "agent",
+      "udyam": {
+        "category": "micro",
+        "activity": "manufacturing"
+      }
+    }
+  },
+  "lines": [
+    {
+      "line_id": "L1",
+      "item_id": "CHND-SILK-112",
+      "name": {
+        "hi-IN": "Chanderi silk saree",
+        "en-IN": "Chanderi silk saree"
+      },
+      "hsn": "5007",
+      "unit": "each",
+      "quantity": {
+        "value": 1,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "unit_price": {
+        "value": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "seller"
+      },
+      "tax_inclusive": true,
+      "gst_rate_pct": 5,
+      "retail_package_mrp_required": false,
+      "line_total": {
+        "value": 210000,
+        "currency": "INR"
+      },
+      "asserted_by_buyer": true
+    }
+  ],
+  "charges": [
+    {
+      "code": "delivery",
+      "amount": {
+        "value": {
+          "value": 6000,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": false
+      },
+      "mandatory": true,
+      "first_disclosed_round": 1
+    }
+  ],
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "delivery": {
+    "fulfilment_type": {
+      "value": "delivery",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "deliver_by": {
+      "value": "2026-10-18T20:00:00+05:30",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "payment": {
+    "options": [
+      {
+        "option_id": "prepaid",
+        "handlers": [
+          "in.upi.reservepay",
+          "in.upi.intent"
+        ],
+        "timing": "ON-ORDER",
+        "all_in_total": {
+          "value": 216000,
+          "currency": "INR"
+        }
+      },
+      {
+        "option_id": "cod",
+        "handlers": [
+          "in.cod",
+          "in.cod.upi"
+        ],
+        "timing": "ON-FULFILLMENT",
+        "method_fee": {
+          "value": 4000,
+          "currency": "INR"
+        },
+        "all_in_total": {
+          "value": 220000,
+          "currency": "INR"
+        }
+      }
+    ],
+    "selected_option_id": {
+      "value": "prepaid",
+      "status": "Assert",
+      "negotiable": true,
+      "proposed_by": "buyer"
+    },
+    "schedule": [
+      {
+        "tranche_id": "T1",
+        "pct": 100,
+        "due": {
+          "event": "on_order"
+        },
+        "handlers_allowed": [
+          "in.upi.reservepay",
+          "in.upi.intent"
+        ]
+      }
+    ],
+    "collected_by": {
+      "value": "BPP",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "emi": {
+      "value": {
+        "tenor_months": 3,
+        "apr_pct": 16,
+        "lender": "nbfc.example.in",
+        "kfs_ref": "https://nbfc.example.in/kfs/1",
+        "interest_amount": {
+          "value": 5700,
+          "currency": "INR"
+        },
+        "no_cost": true
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "returns": {
+    "return_window": {
+      "value": "P7D",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "return_type": {
+      "value": "exchange_only",
+      "status": "Agree",
+      "negotiable": true
+    }
+  },
+  "conditions_precedent": [
+    "payment_on_order"
+  ]
+}

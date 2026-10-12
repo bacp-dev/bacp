@@ -1,0 +1,168 @@
+---
+# Copyright 2026 BACP Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+site_name: Bharat Agentic Commerce Protocol (BACP)
+site_url: !ENV [SITE_URL, "https://bacp.dev/"]
+site_description: >-
+  BACP is an open protocol that lets AI agents discover, negotiate, buy, pay
+  for, and resolve issues with Indian commerce on behalf of people and
+  businesses, natively on India's digital public infrastructure: ONDC/Beckn,
+  UPI, Account Aggregator consent, and the DPDP Act.
+site_dir: site
+repo_name: bacp-dev/bacp
+repo_url: https://github.com/bacp-dev/bacp
+edit_uri: edit/main/docs/
+
+copyright: >-
+  Copyright 2026 BACP Authors. Licensed under the <a
+  href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License,
+  Version 2.0</a>.
+
+nav:
+  - Overview:
+      - Home: index.md
+      - Core Concepts: documentation/core-concepts.md
+      - Specification: !ENV [SPEC_URL, "https://bacp.dev/latest/specification/overview/"]
+      - BACP and India's DPI: documentation/india-dpi.md
+      - BACP and other protocols: documentation/other-protocols.md
+      - Status and Roadmap: documentation/roadmap.md
+      - Versioning: versioning.md
+  - Specification:
+      - Overview: specification/overview/index.md
+      - Getting Started: specification/getting-started.md
+      - Glossary: specification/glossary.md
+      - Discovery and Profiles: specification/discovery.md
+      - Identity and Request Signing: specification/identity-and-signing.md
+      - Mandates and Consent: specification/mandates.md
+      - Checkout:
+          - Sessions and Checkout: specification/checkout/index.md
+          - Orders and Post-order: specification/checkout/post-order.md
+      - Negotiation:
+          - Overview: specification/negotiation/index.md
+          - RFQ and Auctions: specification/negotiation/rfq-and-auctions.md
+      - Payments:
+          - Overview: specification/payments/index.md
+          - Handler Registry: specification/payments/handler-registry.md
+          - Rail Bindings: specification/payments/rails.md
+          - Credit and Split Tender: specification/payments/credit-and-split-tender.md
+      - Evidence and Instruction Log: specification/evidence.md
+      - Trade Profiles: specification/trade-profiles.md
+      - Errors: specification/errors.md
+      - Security and Privacy: specification/security-and-privacy.md
+      - Regulatory Mapping: specification/regulatory-mapping.md
+      - Conformance: specification/conformance.md
+      - Transports:
+          - REST: specification/transports/rest.md
+          - Beckn / ONDC Binding: specification/transports/beckn.md
+          - MCP and A2A: specification/transports/mcp-a2a.md
+      - Reference: specification/reference.md
+      - Open Questions: specification/open-questions.md
+
+theme:
+  name: material
+  logo: assets/bacp-mark.svg
+  favicon: assets/bacp-mark.svg
+  font:
+    text: Noto Sans
+    code: Noto Sans Mono
+  icon:
+    repo: fontawesome/brands/github
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: white
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    - content.tabs.link
+    - content.tooltips
+    - navigation.footer
+    - navigation.top
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - search.highlight
+    - toc.follow
+
+extra_css:
+  - stylesheets/custom.css
+
+extra:
+  bacp_version: !ENV [BACP_BUILD_VERSION, "draft"]
+  bacp_url: https://bacp.dev
+  version:
+    provider: mike
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/bacp-dev
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - meta
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: .
+      check_paths: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+
+hooks:
+  - hooks.py
+
+plugins:
+  - search
+  - llmstxt:
+      full_output: llms-full.txt
+      markdown_description: >-
+        BACP (Bharat Agentic Commerce Protocol) is an open protocol for AI
+        agents to transact in Indian commerce on ONDC/Beckn, UPI and other
+        Indian payment rails, with mandate-bound authority, DPDP-compliant
+        consent, signed requests and verifiable evidence.
+      sections:
+        Overview:
+          - index.md
+          - documentation/core-concepts.md
+        Specification:
+          - specification/overview/index.md
+          - specification/*.md
+          - specification/**/*.md

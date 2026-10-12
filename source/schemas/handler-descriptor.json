@@ -1,0 +1,665 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/handler-descriptor.json",
+  "title": "HandlerDescriptor",
+  "description": "One entry of the BACP payment-handler registry (PAY-101; design brief v1 section 13.1). Descriptors are data: limits and rules are configuration, not code (PAY-213).",
+  "type": "object",
+  "required": [
+    "handler_id",
+    "name",
+    "family",
+    "kind",
+    "status",
+    "rail",
+    "regulator",
+    "presence",
+    "binding",
+    "mandate_primitives",
+    "limits",
+    "afa",
+    "refund",
+    "dispute",
+    "settlement",
+    "data_minimisation",
+    "funding",
+    "sources"
+  ],
+  "properties": {
+    "handler_id": {
+      "$ref": "common.json#/$defs/HandlerId"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "v0 ids and ids proposed in PAYC/PAYB."
+    },
+    "name": {
+      "$ref": "common.json#/$defs/LangText"
+    },
+    "family": {
+      "enum": [
+        "upi",
+        "card",
+        "netbanking",
+        "a2a",
+        "nach",
+        "ppi",
+        "credit",
+        "cod",
+        "bbps",
+        "voucher",
+        "cbdc",
+        "aeps",
+        "transit",
+        "trade_finance",
+        "cross_border",
+        "government",
+        "pa",
+        "cheque",
+        "ledger",
+        "loyalty",
+        "store_credit",
+        "pos"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "payment",
+        "mandate_registration",
+        "financing",
+        "security_verification",
+        "tracker",
+        "ledger"
+      ]
+    },
+    "status": {
+      "enum": [
+        "live",
+        "pilot",
+        "reserved",
+        "deprecated"
+      ]
+    },
+    "rail": {
+      "type": "object",
+      "properties": {
+        "operator": {
+          "type": "string"
+        },
+        "network": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "operator"
+      ],
+      "additionalProperties": false
+    },
+    "regulator": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "instrument": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "instrument"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "presence": {
+      "type": "object",
+      "properties": {
+        "human_presence": {
+          "enum": [
+            "required",
+            "mandate",
+            "none"
+          ],
+          "description": "PAY-101 vocabulary."
+        },
+        "hp": {
+          "type": "boolean"
+        },
+        "hnp": {
+          "enum": [
+            "none",
+            "rail_enforced",
+            "order_only"
+          ],
+          "description": "rail_enforced = a standing authority whose limits the rail or issuer enforces. order_only = order may be placed HNP, payment happens later with a human (COD)."
+        },
+        "device_bound": {
+          "type": "boolean"
+        },
+        "assisted_only": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "human_presence",
+        "hp",
+        "hnp"
+      ],
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "class": {
+          "enum": [
+            "O",
+            "C",
+            "A",
+            "D",
+            "N"
+          ],
+          "description": "Section 13.3: O open-eligible, C closed HP only, A assisted HP, D deferred (COD), N non-paying."
+        },
+        "open_eligible": {
+          "type": "boolean"
+        },
+        "open_requires": {
+          "type": "string",
+          "description": "Condition for open eligibility, e.g. 'only with an AFA-registered e-mandate reference'."
+        },
+        "closed_auth": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "upi.pin",
+              "upi.biometric",
+              "card.3ds",
+              "card.otp",
+              "card.passkey",
+              "netbanking.login_otp",
+              "maker_checker",
+              "aadhaar_biometric",
+              "voucher_code",
+              "wallet_pin",
+              "kfs_esign",
+              "dsc",
+              "cash_at_door",
+              "parent_rail_binding"
+            ]
+          }
+        }
+      },
+      "required": [
+        "class",
+        "open_eligible"
+      ],
+      "additionalProperties": false
+    },
+    "mandate_primitives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "enum": [
+              "sbmd_block",
+              "otm_block",
+              "circle_delegation",
+              "upi_autopay_umn",
+              "card_emandate",
+              "agentic_token_intent",
+              "nach_umrn",
+              "ppi_emandate",
+              "balance_cap",
+              "voucher",
+              "programmability_rules",
+              "upms_registration",
+              "topup_mandate",
+              "loan_sanction",
+              "payee_binding",
+              "approval_policy",
+              "assisted_session",
+              "credit_limit",
+              "factoring_unit",
+              "gpa_block",
+              "pps_registration",
+              "none"
+            ]
+          },
+          "ref_name": {
+            "type": "string",
+            "description": "Rail reference carried in rail_binding.rail_ref, e.g. UMN, UMRN, SBMD block id."
+          },
+          "limits_enforced_by": {
+            "enum": [
+              "rail",
+              "issuer",
+              "merchant",
+              "lender",
+              "bacp",
+              "none"
+            ]
+          },
+          "payee_scope": {
+            "enum": [
+              "single_merchant",
+              "single_biller",
+              "single_creditor",
+              "any_merchant",
+              "purpose_locked",
+              "lender",
+              "n_a"
+            ]
+          },
+          "multi_capture": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "limits_enforced_by"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "enum": [
+              "per_txn",
+              "per_txn_min",
+              "per_day",
+              "per_month",
+              "per_year",
+              "first_24h",
+              "balance",
+              "block_amount",
+              "mandate_max",
+              "voucher_max",
+              "no_afa_debit",
+              "no_afa_debit_special_categories",
+              "validity",
+              "devices",
+              "pps_threshold",
+              "cash_threshold"
+            ]
+          },
+          "amount": {
+            "$ref": "common.json#/$defs/Amount"
+          },
+          "duration": {
+            "$ref": "common.json#/$defs/Duration"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "applies_to": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "common.json#/$defs/Citation"
+          },
+          "verification": {
+            "enum": [
+              "verified",
+              "secondary",
+              "vendor",
+              "unverified",
+              "conflict"
+            ]
+          },
+          "conflict_note": {
+            "type": "string"
+          },
+          "configurable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "name",
+          "source",
+          "verification",
+          "configurable"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "afa": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "enum": [
+            "per_txn_2fa",
+            "at_registration_and_first_debit",
+            "at_registration_only",
+            "at_block_creation",
+            "at_provisioning",
+            "exempt",
+            "exempt_below_threshold",
+            "biometric_assisted",
+            "maker_checker",
+            "loan_acceptance",
+            "voucher_code",
+            "none_cash",
+            "n_a"
+          ]
+        },
+        "threshold": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "threshold_special": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "pre_debit_notice": {
+          "enum": [
+            "required_24h",
+            "bacp_policy_24h",
+            "exempt",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "source": {
+          "$ref": "common.json#/$defs/Citation"
+        }
+      },
+      "required": [
+        "model",
+        "pre_debit_notice"
+      ],
+      "additionalProperties": false
+    },
+    "refund": {
+      "type": "object",
+      "properties": {
+        "route": {
+          "enum": [
+            "source",
+            "source_with_card_credit_consent",
+            "same_ppi",
+            "release_block_or_source",
+            "lender",
+            "user_elected_account",
+            "same_balance",
+            "issuer_or_sponsor",
+            "new_credit_push",
+            "ledger_credit_note",
+            "n_a",
+            "unverified"
+          ]
+        },
+        "failed_txn_tat": {
+          "$ref": "common.json#/$defs/Duration"
+        },
+        "compensation_per_day": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "common.json#/$defs/Citation"
+        }
+      },
+      "required": [
+        "route"
+      ],
+      "additionalProperties": false
+    },
+    "dispute": {
+      "type": "object",
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "window": {
+          "$ref": "common.json#/$defs/Duration"
+        },
+        "source": {
+          "$ref": "common.json#/$defs/Citation"
+        }
+      },
+      "required": [
+        "channels"
+      ],
+      "additionalProperties": false
+    },
+    "settlement": {
+      "type": "object",
+      "properties": {
+        "mechanism": {
+          "type": "string"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "rrn",
+              "utr",
+              "umn",
+              "umrn",
+              "arn",
+              "auth_code",
+              "bconnect_txn_id",
+              "voucher_id",
+              "cbdc_txn_id",
+              "factoring_unit_id",
+              "loan_id",
+              "lc_no",
+              "ebg_no",
+              "gem_order_no",
+              "crac_no",
+              "pfms_payment_id",
+              "pa_order_id",
+              "cheque_no",
+              "uetr",
+              "ledger_entry_id",
+              "awb",
+              "none"
+            ]
+          }
+        },
+        "escrow": {
+          "enum": [
+            "pa_escrow",
+            "none",
+            "gem_pool_account",
+            "platform",
+            "n_a"
+          ]
+        },
+        "timeline_source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mechanism",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "data_minimisation": {
+      "type": "object",
+      "properties": {
+        "payment_leg_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "never_collect": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "pin",
+              "otp",
+              "card_pan",
+              "cvv",
+              "card_expiry",
+              "netbanking_credentials",
+              "aadhaar_number",
+              "biometric",
+              "voucher_code_plaintext",
+              "basket"
+            ]
+          }
+        },
+        "retain_only": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "basket_blind": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "payment_leg_fields",
+        "never_collect",
+        "basket_blind"
+      ],
+      "additionalProperties": false
+    },
+    "funding": {
+      "enum": [
+        "debit",
+        "credit",
+        "prepaid",
+        "cash",
+        "voucher",
+        "loan",
+        "cbdc",
+        "trade_credit",
+        "n_a"
+      ]
+    },
+    "credit_disclosure_required": {
+      "type": "boolean"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "b2c",
+          "b2b",
+          "g2b",
+          "c2c",
+          "assisted",
+          "cross_border"
+        ]
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(PAY|REQ|TRADE|NEG)-[0-9]{3}$"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.json#/$defs/Citation"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "binding": {
+            "properties": {
+              "open_eligible": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "presence": {
+            "properties": {
+              "hnp": {
+                "const": "rail_enforced"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "presence": {
+            "properties": {
+              "device_bound": {
+                "const": true
+              }
+            },
+            "required": [
+              "device_bound"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "binding": {
+            "properties": {
+              "open_eligible": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "funding": {
+            "enum": [
+              "credit",
+              "loan"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "credit_disclosure_required": {
+            "const": true
+          }
+        },
+        "required": [
+          "credit_disclosure_required"
+        ]
+      }
+    }
+  ]
+}

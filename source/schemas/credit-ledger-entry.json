@@ -1,0 +1,468 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/credit-ledger-entry.json",
+  "title": "CreditLedgerEntry",
+  "description": "One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger (TRD section 17.3; TRADE-109, TRADE-111). Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler (TRADE-115).",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "ledger_id",
+    "seq",
+    "type",
+    "amount",
+    "effect",
+    "at",
+    "prev_hash",
+    "entry_hash",
+    "status",
+    "signatures"
+  ],
+  "properties": {
+    "entry_id": {
+      "type": "string",
+      "pattern": "^lde_[A-Za-z0-9]{8,40}$"
+    },
+    "ledger_id": {
+      "type": "string",
+      "pattern": "^ldg_[A-Za-z0-9]{8,40}$"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "type": {
+      "enum": [
+        "opening_balance",
+        "sale",
+        "payment",
+        "credit_note",
+        "debit_note",
+        "scheme_credit",
+        "interest_msmed",
+        "interest_contractual",
+        "gem_penal_interest",
+        "adjustment",
+        "write_off",
+        "limit_change"
+      ]
+    },
+    "amount": {
+      "$ref": "common.json#/$defs/Amount"
+    },
+    "effect": {
+      "enum": [
+        "increase_receivable",
+        "decrease_receivable",
+        "none"
+      ],
+      "description": "From the creditor's (seller's) view."
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "credit_terms": {
+      "type": "object",
+      "properties": {
+        "credit_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reference_event": {
+          "enum": [
+            "on_invoice",
+            "on_fulfilment",
+            "on_acceptance",
+            "on_crac",
+            "statement_date"
+          ]
+        },
+        "reference_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "agreed_in_offer_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        }
+      },
+      "additionalProperties": false
+    },
+    "msmed": {
+      "type": "object",
+      "properties": {
+        "applies": {
+          "type": "boolean"
+        },
+        "supplier_category": {
+          "$ref": "common.json#/$defs/UdyamCategory"
+        },
+        "acceptance_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "written_agreement": {
+          "type": "boolean",
+          "description": "No written agreement means 15 days (MSMED s.15)."
+        },
+        "statutory_due_date": {
+          "type": "string",
+          "format": "date",
+          "description": "min(agreed, acceptance + 45) or acceptance + 15."
+        },
+        "interest_basis": {
+          "const": "3x_rbi_bank_rate_compound_monthly"
+        },
+        "bank_rate_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "interest_accrued": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "tax_flag": {
+          "enum": [
+            "none",
+            "s43B_h_disallowed",
+            "s37_2_g_disallowed"
+          ],
+          "description": "IT Act s.43B(h), now s.37(2)(g) of IT Act 2025 (PAYB section 8a)."
+        }
+      },
+      "required": [
+        "applies"
+      ],
+      "additionalProperties": false
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "common.json#/$defs/DocumentRef"
+      }
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "offer_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "settles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entry_id": {
+            "type": "string"
+          },
+          "amount": {
+            "$ref": "common.json#/$defs/Amount"
+          }
+        },
+        "required": [
+          "entry_id",
+          "amount"
+        ],
+        "additionalProperties": false
+      },
+      "description": "payment / credit_note entries list the sale entries they close (TRADE-111)."
+    },
+    "settlement_evidence": {
+      "type": "object",
+      "properties": {
+        "handler": {
+          "$ref": "common.json#/$defs/HandlerRef"
+        },
+        "receipt_id": {
+          "type": "string"
+        },
+        "rrn": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "utr": {
+          "type": "string"
+        },
+        "factoring_unit_id": {
+          "type": "string"
+        },
+        "new_payee": {
+          "$ref": "common.json#/$defs/Party"
+        }
+      },
+      "description": "Rail-anchored proof. Screenshots never count (TRADE-115). new_payee is set after TReDS discounting (TRADE-110).",
+      "additionalProperties": false
+    },
+    "ledger_after": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "credit_limit": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "overdue": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "ageing": {
+          "type": "object",
+          "properties": {
+            "d0_30": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "d31_45": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "d46_60": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "d61_90": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "d90_plus": {
+              "$ref": "common.json#/$defs/Amount"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "acknowledgements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "by": {
+            "enum": [
+              "seller",
+              "buyer"
+            ]
+          },
+          "method": {
+            "enum": [
+              "signature",
+              "trusted_surface_tap",
+              "sms_link",
+              "voice_confirmation",
+              "assisted_operator",
+              "auto_from_rail_receipt"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evidence_hash": {
+            "$ref": "common.json#/$defs/Hash"
+          }
+        },
+        "required": [
+          "by",
+          "method",
+          "at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "status": {
+      "enum": [
+        "pending_ack",
+        "acknowledged",
+        "disputed",
+        "settled",
+        "partially_settled",
+        "overdue",
+        "written_off"
+      ],
+      "description": "An entry unacknowledged by the counterparty past its ack window becomes disputed (TRADE-111)."
+    },
+    "dispute_ref": {
+      "type": "string"
+    },
+    "agent": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "mandate_ref": {
+          "type": "string"
+        },
+        "presence": {
+          "$ref": "common.json#/$defs/Presence"
+        }
+      },
+      "additionalProperties": false
+    },
+    "prev_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "entry_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.json#/$defs/Signature"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "payment",
+              "credit_note"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "settles"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "payment"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "settlement_evidence"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "sale"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "due_date",
+          "credit_terms"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "msmed": {
+            "properties": {
+              "supplier_category": {
+                "enum": [
+                  "micro",
+                  "small"
+                ]
+              }
+            },
+            "required": [
+              "supplier_category"
+            ]
+          }
+        },
+        "required": [
+          "msmed"
+        ]
+      },
+      "then": {
+        "properties": {
+          "credit_terms": {
+            "properties": {
+              "credit_days": {
+                "maximum": 45
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "CreditLedger": {
+      "type": "object",
+      "properties": {
+        "ledger_id": {
+          "type": "string",
+          "pattern": "^ldg_[A-Za-z0-9]{8,40}$"
+        },
+        "creditor": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "debtor": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "kind": {
+          "enum": [
+            "khata",
+            "trade_credit",
+            "distributor_credit",
+            "gem_receivable"
+          ]
+        },
+        "credit_limit": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "default_credit_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interest_rule": {
+          "enum": [
+            "none",
+            "msmed_statutory",
+            "contractual",
+            "gem_penal_1pct_pm"
+          ]
+        },
+        "ack_window": {
+          "$ref": "common.json#/$defs/Duration"
+        },
+        "head_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          }
+        }
+      },
+      "required": [
+        "ledger_id",
+        "creditor",
+        "debtor",
+        "kind",
+        "credit_limit",
+        "interest_rule",
+        "ack_window",
+        "opened_at",
+        "signatures"
+      ],
+      "description": "Ledger header, signed by both parties at opening.",
+      "additionalProperties": false
+    }
+  }
+}

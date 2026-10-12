@@ -1,0 +1,2116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/termsheet.json",
+  "title": "TermSheet",
+  "description": "Multi-issue term sheet carried in every binding Offer (NEG section 5.3; TRD section 17.2; TRADE-104, TRADE-107). Every issue carries {value, negotiable, status}. Reservation values never appear here (NEG-140). Issues not listed are fixed (NEG section 5.2).",
+  "type": "object",
+  "required": [
+    "term_sheet_id",
+    "version",
+    "currency",
+    "pricing_basis",
+    "parties",
+    "lines",
+    "all_in_total",
+    "payment"
+  ],
+  "properties": {
+    "term_sheet_id": {
+      "type": "string"
+    },
+    "version": {
+      "const": "1"
+    },
+    "currency": {
+      "const": "INR"
+    },
+    "pricing_basis": {
+      "enum": [
+        "list",
+        "volume",
+        "negotiated",
+        "personalised",
+        "auction",
+        "scheme",
+        "posted_dynamic"
+      ],
+      "description": "NEG-171. Device/OS-based pricing is prohibited regardless of basis."
+    },
+    "personalisation_factors": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "quantity",
+          "location",
+          "delivery_cost",
+          "membership",
+          "payment_instrument",
+          "customer_segment"
+        ]
+      }
+    },
+    "parties": {
+      "type": "object",
+      "properties": {
+        "buyer": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "seller": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "ordering_entity": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "consignee": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "paying_authority": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "intermediaries": {
+          "type": "array",
+          "items": {
+            "$ref": "common.json#/$defs/Party"
+          }
+        }
+      },
+      "required": [
+        "buyer",
+        "seller"
+      ],
+      "description": "TRADE-101: orderer, consignee and payer may differ.",
+      "additionalProperties": false
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_id": {
+            "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "name": {
+            "$ref": "common.json#/$defs/LangText"
+          },
+          "hsn": {
+            "type": "string",
+            "pattern": "^[0-9]{4,8}$"
+          },
+          "unit": {
+            "enum": [
+              "each",
+              "kg",
+              "g",
+              "l",
+              "ml",
+              "m",
+              "sqft",
+              "set",
+              "case",
+              "quintal",
+              "tonne",
+              "hour",
+              "job",
+              "seat",
+              "night"
+            ]
+          },
+          "quantity": {
+            "allOf": [
+              {
+                "$ref": "common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "moq": {
+            "allOf": [
+              {
+                "$ref": "common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "tolerance_pct": {
+            "allOf": [
+              {
+                "$ref": "common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "option_clause_pct": {
+            "allOf": [
+              {
+                "$ref": "common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false,
+            "description": "GeM-style +/- quantity option (TRD section 6)."
+          },
+          "unit_price": {
+            "allOf": [
+              {
+                "$ref": "common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "$ref": "common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "tax_inclusive": {
+            "type": "boolean"
+          },
+          "gst_rate_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "mrp": {
+            "$ref": "common.json#/$defs/Amount",
+            "readOnly": true,
+            "description": "From catalog price.maximum_value. Read-only, never negotiable (NEG section 5.11)."
+          },
+          "retail_package_mrp_required": {
+            "type": "boolean",
+            "description": "True only for a retail package that must bear MRP. LM(PC) Rules r.18(2) ceiling applies. Rule 3 exemptions (industrial/institutional consumer packs, over 25 kg) are false (to be verified; NEG-170)."
+          },
+          "price_breaks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "min_qty": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "unit_price": {
+                  "$ref": "common.json#/$defs/Amount"
+                }
+              },
+              "required": [
+                "min_qty",
+                "unit_price"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "line_total": {
+            "$ref": "common.json#/$defs/Amount"
+          },
+          "asserted_by_buyer": {
+            "type": "boolean",
+            "description": "False for seller-added lines. A counter may not add unasserted lines (anti basket-sneaking, NEG section 5.12)."
+          },
+          "quality": {
+            "$ref": "#/$defs/Quality"
+          }
+        },
+        "required": [
+          "line_id",
+          "item_id",
+          "quantity",
+          "unit_price",
+          "line_total"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "charges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "delivery",
+              "packing",
+              "convenience",
+              "platform",
+              "handling",
+              "cod_fee",
+              "payment_handling",
+              "insurance",
+              "installation",
+              "loading",
+              "market_fee",
+              "commission",
+              "other"
+            ]
+          },
+          "amount": {
+            "allOf": [
+              {
+                "$ref": "common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "$ref": "common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "payment_method_specific": {
+            "$ref": "common.json#/$defs/HandlerRef"
+          },
+          "first_disclosed_round": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Round in which the fee first appeared. A fee first disclosed after round 1 forces re-consent (TRADE-121)."
+          }
+        },
+        "required": [
+          "code",
+          "amount",
+          "mandatory"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "all_in_total": {
+      "$ref": "common.json#/$defs/Amount",
+      "description": "Every mandatory charge incl. tax. REQUIRED from round 1 (NEG-122). Must equal Beckn quote.price."
+    },
+    "delivery": {
+      "type": "object",
+      "properties": {
+        "fulfilment_type": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "delivery",
+                "self_pickup",
+                "service_at_location",
+                "digital",
+                "ex_works"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "deliver_by": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "slot": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "end": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "hold_until": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "tat": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Duration"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "incoterm": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "EXW",
+                "FCA",
+                "FAS",
+                "FOB",
+                "CFR",
+                "CIF",
+                "CPT",
+                "CIP",
+                "DAP",
+                "DPU",
+                "DDP",
+                "FOR_DESTINATION"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "FOR_DESTINATION is Indian domestic practice, not an Incoterm (TRD section 5)."
+        },
+        "named_place": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "partial_allowed": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "delivery_charge": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "late_delivery_penalty": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "pct_per_week": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "cap_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "pct_per_week"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "payment": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "option_id": {
+                "type": "string"
+              },
+              "handlers": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.json#/$defs/HandlerRef"
+                },
+                "minItems": 1
+              },
+              "timing": {
+                "enum": [
+                  "ON-ORDER",
+                  "PRE-FULFILLMENT",
+                  "ON-FULFILLMENT",
+                  "POST-FULFILLMENT"
+                ]
+              },
+              "method_fee": {
+                "$ref": "common.json#/$defs/Amount"
+              },
+              "method_discount": {
+                "$ref": "common.json#/$defs/Amount"
+              },
+              "all_in_total": {
+                "$ref": "common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "option_id",
+              "handlers",
+              "timing",
+              "all_in_total"
+            ],
+            "description": "One payment alternative with its own all-in total, so COD vs prepaid prices are visible from round 1 (PAY-132, NEG-122).",
+            "additionalProperties": false
+          }
+        },
+        "selected_option_id": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "schedule": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tranche_id": {
+                "type": "string"
+              },
+              "amount": {
+                "$ref": "common.json#/$defs/Amount"
+              },
+              "pct": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "due": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "enum": [
+                      "on_order",
+                      "pre_fulfilment",
+                      "on_fulfilment",
+                      "post_fulfilment",
+                      "on_invoice",
+                      "on_acceptance",
+                      "on_crac",
+                      "milestone",
+                      "date"
+                    ],
+                    "description": "Beckn timing vocabulary (NEG section 1.1) plus acceptance events: GRN for MSMED, CRAC for GeM."
+                  },
+                  "offset_days": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "milestone_id": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "event"
+                ],
+                "additionalProperties": false
+              },
+              "handlers_allowed": {
+                "type": "array",
+                "items": {
+                  "$ref": "common.json#/$defs/HandlerRef"
+                },
+                "minItems": 1
+              },
+              "is_credit": {
+                "type": "boolean",
+                "description": "True when goods/services move before this tranche is paid (trade credit)."
+              },
+              "refundable": {
+                "type": "boolean"
+              },
+              "deductible_from_final": {
+                "type": "boolean",
+                "description": "Token/advance adjusted against the final amount."
+              }
+            },
+            "required": [
+              "tranche_id",
+              "due"
+            ],
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "amount"
+                ]
+              },
+              {
+                "required": [
+                  "pct"
+                ]
+              }
+            ]
+          },
+          "description": "Tranches, e.g. 30% on_order + 70% on_acceptance+45 (TRADE-107 test)."
+        },
+        "advance_pct": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "credit_days": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 365
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "credit_reference_event": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "on_invoice",
+                "on_fulfilment",
+                "on_acceptance",
+                "on_crac"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "early_pay_discount": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "within_days": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "pct",
+                "within_days"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "delay_interest_pa_pct": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "ONDC BPP_TERMS.DELAY_INTEREST (NEG section 1.4)."
+        },
+        "emi": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "tenor_months": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "apr_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "lender": {
+                  "type": "string"
+                },
+                "kfs_ref": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "interest_amount": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "upfront_discount": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "subvention_by": {
+                  "enum": [
+                    "brand",
+                    "seller",
+                    "platform",
+                    "bank",
+                    "none"
+                  ]
+                },
+                "no_cost": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "tenor_months",
+                "apr_pct",
+                "lender",
+                "kfs_ref"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "PAY-117, PAY-125. no_cost MUST be false when interest_amount > 0."
+        },
+        "collected_by": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "BAP",
+                "BPP"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "settlement_basis": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "delivery",
+                "shipment",
+                "return_window_expiry"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "settlement_window": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Duration"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "withholding_amount": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "cod": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "allowed": {
+                  "type": "boolean"
+                },
+                "fee": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "rto_fee": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "max_amount": {
+                  "$ref": "common.json#/$defs/Amount"
+                }
+              },
+              "required": [
+                "allowed"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "cross_border_instrument": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "advance_tt",
+                    "lc_sight",
+                    "lc_usance",
+                    "dp",
+                    "da",
+                    "open_account"
+                  ]
+                },
+                "usance_days": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "ecgc_cover": {
+                  "type": "boolean"
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "credit_ledger": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "ledger_id": {
+                  "type": "string"
+                },
+                "credit_limit": {
+                  "$ref": "common.json#/$defs/Amount"
+                }
+              },
+              "required": [
+                "ledger_id"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "Settle via bacp.credit_ledger (section 13.6)."
+        }
+      },
+      "required": [
+        "schedule"
+      ],
+      "additionalProperties": false
+    },
+    "returns": {
+      "type": "object",
+      "properties": {
+        "return_window": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Duration"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "return_type": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "refund",
+                "replace",
+                "credit_note",
+                "exchange_only",
+                "none"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "restocking_fee_pct": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "return_shipping_paid_by": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "buyer",
+                "seller"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "open_box_delivery": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "warranty_penalty": {
+      "type": "object",
+      "properties": {
+        "warranty_months": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "warranty_type": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "manufacturer",
+                "seller",
+                "extended",
+                "none"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "extended_warranty_price": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "liquidated_damages": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "pct_per_week": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "cap_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "pct_per_week",
+                "cap_pct"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "pbg_pct": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "Performance bank guarantee (TRD section 5)."
+        },
+        "retention_pct": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "max_liability": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "arbitration": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "court_jurisdiction": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "deliverables": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "$ref": "common.json#/$defs/LangText"
+                  },
+                  "acceptance_criteria": {
+                    "$ref": "common.json#/$defs/LangText"
+                  }
+                },
+                "required": [
+                  "id",
+                  "description"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "milestones": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "$ref": "common.json#/$defs/LangText"
+                  },
+                  "amount": {
+                    "$ref": "common.json#/$defs/Amount"
+                  },
+                  "due": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "id",
+                  "amount"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "inspection_then_quote": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "Two-phase service pricing (TRADE-132)."
+        },
+        "inspection_fee": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "revisions": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "change_order_policy": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "new_offer_required",
+                "within_tolerance_pct"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "no_show_policy": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "fee": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "window": {
+                  "$ref": "common.json#/$defs/Duration"
+                }
+              },
+              "required": [
+                "fee"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "schemes": {
+      "type": "object",
+      "properties": {
+        "applied": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SchemeApplication"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "commission": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "payee": {
+            "$ref": "common.json#/$defs/Party"
+          },
+          "basis": {
+            "enum": [
+              "pct",
+              "flat"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "minimum": 0
+          },
+          "amount": {
+            "$ref": "common.json#/$defs/Amount"
+          },
+          "paid_by": {
+            "enum": [
+              "buyer",
+              "seller",
+              "both"
+            ]
+          },
+          "deducted_at_source": {
+            "type": "boolean",
+            "description": "e.g. arhtiya commission or interlocked loan repayment shown as a separate line (TRADE-150)."
+          },
+          "status": {
+            "$ref": "common.json#/$defs/IssueStatus"
+          }
+        },
+        "required": [
+          "payee",
+          "basis",
+          "value",
+          "paid_by",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "deposit": {
+      "allOf": [
+        {
+          "$ref": "common.json#/$defs/IssueMeta"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "token",
+                "booking",
+                "security",
+                "emd",
+                "refundable_deposit",
+                "caution_money"
+              ]
+            },
+            "amount": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "refundable": {
+              "type": "boolean"
+            },
+            "refund_conditions": {
+              "$ref": "common.json#/$defs/LangText"
+            },
+            "deduction_policy": {
+              "$ref": "common.json#/$defs/LangText"
+            },
+            "held_by": {
+              "enum": [
+                "pa_escrow",
+                "seller",
+                "gem_pool_account",
+                "bank_guarantee",
+                "lc"
+              ]
+            },
+            "linked_agreement_ref": {
+              "type": "string",
+              "description": "e.g. registered RERA agreement for sale, required above 10% (TRADE-118)."
+            }
+          },
+          "required": [
+            "type",
+            "amount",
+            "refundable"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "unevaluatedProperties": false
+    },
+    "cancellation": {
+      "type": "object",
+      "properties": {
+        "terms": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fulfilment_state": {
+                    "type": "string"
+                  },
+                  "fee_pct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "fee": {
+                    "$ref": "common.json#/$defs/Amount"
+                  }
+                },
+                "required": [
+                  "fulfilment_state"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "tax_docs": {
+      "type": "object",
+      "properties": {
+        "gst_credit_invoice": {
+          "type": "boolean"
+        },
+        "e_invoice_required": {
+          "type": "boolean"
+        },
+        "e_way_bill_required": {
+          "type": "boolean"
+        },
+        "tds_section": {
+          "type": "string"
+        },
+        "documents_required": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "conditions_precedent": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "payment_on_order",
+          "advance_received",
+          "credit_approval",
+          "kyc",
+          "inspection_passed",
+          "lc_opened",
+          "ebg_verified",
+          "rera_agreement_registered"
+        ]
+      },
+      "description": "ICA s.6: offer lapses if a condition precedent fails (section 12.5)."
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+      },
+      "additionalProperties": {
+        "allOf": [
+          {
+            "$ref": "common.json#/$defs/IssueMeta"
+          }
+        ]
+      },
+      "description": "Namespaced extra issues. Guards fail closed on any extension issue not in Agree (NEG-132)."
+    },
+    "fx": {
+      "type": "object",
+      "required": [
+        "currency",
+        "foreign_amount",
+        "rate",
+        "markup_bps",
+        "inr_total"
+      ],
+      "additionalProperties": false,
+      "description": "REQ-405 / TRADE-144 (L7-compliance C-5): foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "pattern": "^(?!INR)[A-Z]{3}$"
+        },
+        "foreign_amount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "minor units of currency"
+        },
+        "rate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "INR per 1 unit of currency"
+        },
+        "markup_bps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inr_total": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "rate_source": {
+          "type": "string"
+        },
+        "quoted_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Quality": {
+      "type": "object",
+      "properties": {
+        "spec_ref": {
+          "type": "string"
+        },
+        "grade": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "assay": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "certificate": {
+                  "$ref": "common.json#/$defs/DocumentRef"
+                },
+                "moisture_max_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "foreign_matter_max_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "method"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "inspection": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "enum": [
+                    "buyer",
+                    "seller",
+                    "third_party",
+                    "assayer"
+                  ]
+                },
+                "at": {
+                  "enum": [
+                    "pre_dispatch",
+                    "on_receipt"
+                  ]
+                },
+                "report": {
+                  "$ref": "common.json#/$defs/DocumentRef"
+                }
+              },
+              "required": [
+                "by",
+                "at"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "rejection_terms": {
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "return_at_seller_cost",
+                "replace",
+                "debit_note",
+                "price_adjustment"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "hallmark_huid_required": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SchemeApplication": {
+      "type": "object",
+      "properties": {
+        "offer_id": {
+          "type": "string"
+        },
+        "funder": {
+          "enum": [
+            "brand",
+            "platform",
+            "bank",
+            "seller",
+            "distributor",
+            "government"
+          ]
+        },
+        "benefit_type": {
+          "enum": [
+            "pct_discount",
+            "flat_discount",
+            "free_goods",
+            "cashback_instant",
+            "cashback_deferred",
+            "emi_subvention",
+            "loyalty_points",
+            "target_incentive",
+            "slab_discount"
+          ]
+        },
+        "benefit_value": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "free_goods": {
+          "type": "object",
+          "properties": {
+            "item_id": {
+              "type": "string"
+            },
+            "quantity": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "item_id",
+            "quantity"
+          ],
+          "additionalProperties": false
+        },
+        "eligibility_proof": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "card_bin",
+                "payment_handler",
+                "basket",
+                "quantity_slab",
+                "segment",
+                "date_window",
+                "geo",
+                "membership",
+                "tier"
+              ]
+            },
+            "value_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        "stacking_group": {
+          "type": "string"
+        },
+        "exclusive": {
+          "type": "boolean"
+        },
+        "conditional": {
+          "type": "boolean",
+          "description": "Conditional/deferred cashback MUST NOT be counted in all_in_total (PAYC section 7)."
+        },
+        "claim_lifecycle": {
+          "enum": [
+            "at_invoice",
+            "accrue_claim_credit_note"
+          ]
+        },
+        "credit_note": {
+          "$ref": "common.json#/$defs/DocumentRef"
+        },
+        "status": {
+          "$ref": "common.json#/$defs/IssueStatus"
+        }
+      },
+      "required": [
+        "offer_id",
+        "funder",
+        "benefit_type",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "description": "MSMED s.15 cap: a manufacturing or services micro/small seller may not be given more than 45 days from acceptance or deemed acceptance (NEG-162, TRADE-108). Traders are excluded pending verification.",
+      "if": {
+        "properties": {
+          "parties": {
+            "properties": {
+              "seller": {
+                "properties": {
+                  "udyam": {
+                    "properties": {
+                      "category": {
+                        "enum": [
+                          "micro",
+                          "small"
+                        ]
+                      },
+                      "activity": {
+                        "enum": [
+                          "manufacturing",
+                          "services"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "category",
+                      "activity"
+                    ]
+                  }
+                },
+                "required": [
+                  "udyam"
+                ]
+              }
+            },
+            "required": [
+              "seller"
+            ]
+          }
+        },
+        "required": [
+          "parties"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payment": {
+            "properties": {
+              "credit_days": {
+                "properties": {
+                  "value": {
+                    "maximum": 45
+                  }
+                }
+              },
+              "schedule": {
+                "items": {
+                  "properties": {
+                    "due": {
+                      "properties": {
+                        "offset_days": {
+                          "maximum": 45
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "An interest-bearing EMI cannot be described as no-cost (PAY-117).",
+      "if": {
+        "properties": {
+          "payment": {
+            "properties": {
+              "emi": {
+                "properties": {
+                  "value": {
+                    "properties": {
+                      "interest_amount": {
+                        "properties": {
+                          "value": {
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "interest_amount"
+                    ]
+                  }
+                },
+                "required": [
+                  "value"
+                ]
+              }
+            },
+            "required": [
+              "emi"
+            ]
+          }
+        },
+        "required": [
+          "payment"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payment": {
+            "properties": {
+              "emi": {
+                "properties": {
+                  "value": {
+                    "properties": {
+                      "no_cost": {
+                        "const": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

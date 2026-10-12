@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/beckn-context-bacp.json",
+  "title": "Beckn context extension: context.bacp",
+  "description": "Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp] where a network validator rejects unknown context keys (assumption).",
+  "type": "object",
+  "required": [
+    "agent",
+    "presence",
+    "idempotency_key"
+  ],
+  "properties": {
+    "agent": {
+      "type": "object",
+      "required": [
+        "id",
+        "credential_hash",
+        "operator"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "credential_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "operator": {
+          "type": "string",
+          "description": "Operator legal entity id (CIN/GSTIN)"
+        },
+        "class": {
+          "type": "string"
+        },
+        "uap_agent_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "presence": {
+      "$ref": "common.json#/$defs/Presence"
+    },
+    "mandate_ref": {
+      "type": "object",
+      "required": [
+        "id",
+        "hash"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "kb_jwt": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Agent key-binding JWT (aud = bpp_id, nonce = message_id) closing the open mandate"
+        }
+      },
+      "description": "REQUIRED on init, confirm, update, cancel and IGM issue. Optional on search/select."
+    },
+    "idempotency_key": {
+      "type": "string",
+      "minLength": 22,
+      "maxLength": 64
+    },
+    "channel": {
+      "$ref": "common.json#/$defs/Channel"
+    },
+    "language": {
+      "type": "string"
+    },
+    "ai_disclosure": {
+      "const": true
+    },
+    "log_head": {
+      "$ref": "common.json#/$defs/Hash",
+      "description": "Current InstructionLog head at send time"
+    },
+    "version": {
+      "const": "0.1"
+    }
+  },
+  "additionalProperties": false
+}

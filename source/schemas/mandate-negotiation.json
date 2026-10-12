@@ -1,0 +1,1074 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/mandate-negotiation.json",
+  "title": "NegotiationMandate (separate BACP negotiation mandate)",
+  "description": "A separate BACP mandate that carries the bacp.neg.* constraints, so that legacy AP2/VI verifiers, which fail closed on unknown constraint types, still accept the AP2-compatible checkout and payment mandates (NEG-138). Same envelope conventions as v0 section 4.3 (SD-JWT over JCS, MM + principal signatures, status list). Verified only by the buyer's guard and credential provider, never by the seller.",
+  "type": "object",
+  "required": [
+    "vct",
+    "mandate_id",
+    "kind",
+    "iss",
+    "iat",
+    "valid_from",
+    "valid_until",
+    "principal",
+    "agent",
+    "checkout_mandate_ref",
+    "presence_allowed",
+    "constraints",
+    "revocation",
+    "cnf",
+    "signatures"
+  ],
+  "properties": {
+    "vct": {
+      "const": "in.bacp.mandate.negotiation.1"
+    },
+    "mandate_id": {
+      "type": "string",
+      "pattern": "^mdt_[A-Za-z0-9]{12,40}$"
+    },
+    "kind": {
+      "const": "negotiation"
+    },
+    "parent_mandate_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "checkout_mandate_ref": {
+      "type": "string",
+      "description": "The open AP2-compatible checkout mandate whose budgets and allow-lists also apply. The stricter bound wins."
+    },
+    "iss": {
+      "type": "string"
+    },
+    "iat": {
+      "type": "integer"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "principal": {
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ref"
+      ]
+    },
+    "agent": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "credential_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        }
+      },
+      "required": [
+        "id",
+        "credential_hash"
+      ],
+      "additionalProperties": false
+    },
+    "presence_allowed": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.json#/$defs/Presence"
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "properties": {
+        "negotiation": {
+          "description": "constraints.negotiation: per-issue bounds evaluated fail-closed by the deterministic guard (NEG section 5.6; NEG-130..137). reservation is an SD-JWT selectively disclosable claim that is NEVER disclosed to a counterparty, a seller verifier, a gateway log, or the agent LLM context (NEG-140..142).",
+          "type": "object",
+          "required": [
+            "role",
+            "modes_allowed",
+            "price",
+            "process"
+          ],
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller"
+              ]
+            },
+            "modes_allowed": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "negotiation-session.json#/$defs/Mode"
+              }
+            },
+            "price": {
+              "type": "object",
+              "properties": {
+                "total_max": {
+                  "$ref": "common.json#/$defs/Amount",
+                  "description": "Buyer ceiling on all_in_total. Disclosed to nobody but the guard and the Trusted Surface."
+                },
+                "total_min": {
+                  "$ref": "common.json#/$defs/Amount",
+                  "description": "Seller floor."
+                },
+                "unit_max": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "item_id": {
+                        "type": "string"
+                      },
+                      "max": {
+                        "$ref": "common.json#/$defs/Amount"
+                      }
+                    },
+                    "required": [
+                      "item_id",
+                      "max"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "unit_min": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "item_id": {
+                        "type": "string"
+                      },
+                      "min": {
+                        "$ref": "common.json#/$defs/Amount"
+                      }
+                    },
+                    "required": [
+                      "item_id",
+                      "min"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "reservation": {
+                  "type": "object",
+                  "properties": {
+                    "sd": {
+                      "const": true
+                    },
+                    "value": {
+                      "$ref": "common.json#/$defs/Amount"
+                    },
+                    "disclosure": {
+                      "const": "never"
+                    },
+                    "held_by": {
+                      "enum": [
+                        "policy_engine",
+                        "trusted_surface"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "sd",
+                    "value",
+                    "disclosure",
+                    "held_by"
+                  ],
+                  "description": "Walk-away price. The guard auto-accepts only at or better than this. Between reservation and total_max needs step-up.",
+                  "additionalProperties": false
+                },
+                "max_increase_pct_after_first_quote": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100,
+                  "description": "Drip-pricing tripwire, default 0 for B2C (NEG-135)."
+                }
+              },
+              "additionalProperties": false
+            },
+            "quantity": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_id": {
+                    "type": "string"
+                  },
+                  "min": {
+                    "type": "number"
+                  },
+                  "max": {
+                    "type": "number"
+                  },
+                  "moq_accept_max": {
+                    "type": "number"
+                  }
+                },
+                "required": [
+                  "item_id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "delivery": {
+              "type": "object",
+              "properties": {
+                "deliver_by_latest": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "slots_allowed": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "start": {
+                        "type": "string",
+                        "format": "date-time"
+                      },
+                      "end": {
+                        "type": "string",
+                        "format": "date-time"
+                      }
+                    },
+                    "required": [
+                      "start",
+                      "end"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "incoterms_allowed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "partial_allowed": {
+                  "type": "boolean"
+                },
+                "max_delivery_charge": {
+                  "$ref": "common.json#/$defs/Amount"
+                }
+              },
+              "additionalProperties": false
+            },
+            "payment": {
+              "type": "object",
+              "properties": {
+                "handlers_allowed": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "common.json#/$defs/HandlerRef"
+                  }
+                },
+                "max_advance_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "credit_days_min": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "credit_days_max": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "max_delay_interest_pa_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "emi_allowed": {
+                  "type": "boolean"
+                },
+                "credit_funding_allowed": {
+                  "type": "boolean",
+                  "description": "Consent to credit-funded handlers (PAY-107). Loan acceptance itself is always HP (PAY-127)."
+                },
+                "cod_allowed": {
+                  "type": "boolean"
+                },
+                "cod_max_open_orders": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "description": "PAY-131"
+                },
+                "collected_by_allowed": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "BAP",
+                      "BPP"
+                    ]
+                  }
+                },
+                "credit_ledger": {
+                  "type": "object",
+                  "properties": {
+                    "ledger_id": {
+                      "type": "string"
+                    },
+                    "max_outstanding": {
+                      "$ref": "common.json#/$defs/Amount"
+                    }
+                  },
+                  "required": [
+                    "ledger_id",
+                    "max_outstanding"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "after_sales": {
+              "type": "object",
+              "properties": {
+                "min_return_window": {
+                  "$ref": "common.json#/$defs/Duration"
+                },
+                "min_warranty_months": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "installation_required": {
+                  "type": "boolean"
+                },
+                "return_types_allowed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "quality": {
+              "type": "object",
+              "properties": {
+                "grades_allowed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "inspection_required": {
+                  "type": "boolean"
+                },
+                "hallmark_required": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "commission": {
+              "type": "object",
+              "properties": {
+                "max_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "paid_by_allowed": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "buyer",
+                      "seller",
+                      "both"
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "deposit": {
+              "type": "object",
+              "properties": {
+                "max_amount": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "refundable_only": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
+            },
+            "schemes": {
+              "type": "object",
+              "properties": {
+                "funders_allowed": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "count_conditional_cashback": {
+                  "const": false
+                }
+              },
+              "additionalProperties": false
+            },
+            "process": {
+              "type": "object",
+              "properties": {
+                "max_rounds": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "deadline": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "counterparty_allowlist": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "bpp_id": {
+                        "type": "string"
+                      },
+                      "provider_id": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "bpp_id"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "auction_max_bid": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "rfq_min_responses": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "rfq_min_window": {
+                  "$ref": "common.json#/$defs/Duration"
+                },
+                "award_rule": {
+                  "enum": [
+                    "l1_landed_cost",
+                    "qcbs",
+                    "best_score"
+                  ]
+                },
+                "firm_counter_allowed": {
+                  "type": "boolean",
+                  "description": "false = every outgoing counter is firm:false (indicative)."
+                }
+              },
+              "required": [
+                "max_rounds",
+                "deadline"
+              ],
+              "additionalProperties": false
+            },
+            "step_up": {
+              "type": "object",
+              "properties": {
+                "any_violation": {
+                  "const": true,
+                  "description": "Always: any out-of-bounds deal needs step-up (NEG-134)."
+                },
+                "between_reservation_and_max": {
+                  "const": true
+                },
+                "new_counterparty_above": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "drip_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "agreed_issue_reopened": {
+                  "const": true
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "role": {
+                    "const": "buyer"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "price": {
+                    "required": [
+                      "total_max",
+                      "reservation"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "role": {
+                    "const": "seller"
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "price": {
+                    "required": [
+                      "total_min"
+                    ]
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "required": [
+        "negotiation"
+      ],
+      "description": "Unknown keys fail closed.",
+      "additionalProperties": false
+    },
+    "revocation": {
+      "type": "object",
+      "properties": {
+        "status_uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "notify_sla_seconds": {
+          "type": "integer",
+          "maximum": 60
+        },
+        "on_revoke": {
+          "const": "withdraw_live_firm_offers",
+          "description": "Gateway sends WITHDRAW for every live firm offer of the principal (section 12.5)."
+        }
+      },
+      "required": [
+        "status_uri",
+        "on_revoke"
+      ],
+      "additionalProperties": false
+    },
+    "cnf": {
+      "type": "object",
+      "properties": {
+        "jwk": {
+          "$ref": "common.json#/$defs/Jwk"
+        }
+      },
+      "required": [
+        "jwk"
+      ],
+      "additionalProperties": false
+    },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.json#/$defs/Signature"
+      }
+    },
+    "status": {
+      "readOnly": true,
+      "enum": [
+        "PENDING",
+        "ACTIVE",
+        "PAUSED",
+        "REVOKED",
+        "EXPIRED",
+        "EXHAUSTED",
+        "REJECTED"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "NegotiationConstraints": {
+      "description": "constraints.negotiation: per-issue bounds evaluated fail-closed by the deterministic guard (NEG section 5.6; NEG-130..137). reservation is an SD-JWT selectively disclosable claim that is NEVER disclosed to a counterparty, a seller verifier, a gateway log, or the agent LLM context (NEG-140..142).",
+      "type": "object",
+      "required": [
+        "role",
+        "modes_allowed",
+        "price",
+        "process"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "buyer",
+            "seller"
+          ]
+        },
+        "modes_allowed": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "negotiation-session.json#/$defs/Mode"
+          }
+        },
+        "price": {
+          "type": "object",
+          "properties": {
+            "total_max": {
+              "$ref": "common.json#/$defs/Amount",
+              "description": "Buyer ceiling on all_in_total. Disclosed to nobody but the guard and the Trusted Surface."
+            },
+            "total_min": {
+              "$ref": "common.json#/$defs/Amount",
+              "description": "Seller floor."
+            },
+            "unit_max": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_id": {
+                    "type": "string"
+                  },
+                  "max": {
+                    "$ref": "common.json#/$defs/Amount"
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "max"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "unit_min": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_id": {
+                    "type": "string"
+                  },
+                  "min": {
+                    "$ref": "common.json#/$defs/Amount"
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "min"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "reservation": {
+              "type": "object",
+              "properties": {
+                "sd": {
+                  "const": true
+                },
+                "value": {
+                  "$ref": "common.json#/$defs/Amount"
+                },
+                "disclosure": {
+                  "const": "never"
+                },
+                "held_by": {
+                  "enum": [
+                    "policy_engine",
+                    "trusted_surface"
+                  ]
+                }
+              },
+              "required": [
+                "sd",
+                "value",
+                "disclosure",
+                "held_by"
+              ],
+              "description": "Walk-away price. The guard auto-accepts only at or better than this. Between reservation and total_max needs step-up.",
+              "additionalProperties": false
+            },
+            "max_increase_pct_after_first_quote": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Drip-pricing tripwire, default 0 for B2C (NEG-135)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "quantity": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "item_id": {
+                "type": "string"
+              },
+              "min": {
+                "type": "number"
+              },
+              "max": {
+                "type": "number"
+              },
+              "moq_accept_max": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "item_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "delivery": {
+          "type": "object",
+          "properties": {
+            "deliver_by_latest": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "slots_allowed": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "start": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "end": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "start",
+                  "end"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "incoterms_allowed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "partial_allowed": {
+              "type": "boolean"
+            },
+            "max_delivery_charge": {
+              "$ref": "common.json#/$defs/Amount"
+            }
+          },
+          "additionalProperties": false
+        },
+        "payment": {
+          "type": "object",
+          "properties": {
+            "handlers_allowed": {
+              "type": "array",
+              "items": {
+                "$ref": "common.json#/$defs/HandlerRef"
+              }
+            },
+            "max_advance_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "credit_days_min": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "credit_days_max": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "max_delay_interest_pa_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "emi_allowed": {
+              "type": "boolean"
+            },
+            "credit_funding_allowed": {
+              "type": "boolean",
+              "description": "Consent to credit-funded handlers (PAY-107). Loan acceptance itself is always HP (PAY-127)."
+            },
+            "cod_allowed": {
+              "type": "boolean"
+            },
+            "cod_max_open_orders": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "PAY-131"
+            },
+            "collected_by_allowed": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "BAP",
+                  "BPP"
+                ]
+              }
+            },
+            "credit_ledger": {
+              "type": "object",
+              "properties": {
+                "ledger_id": {
+                  "type": "string"
+                },
+                "max_outstanding": {
+                  "$ref": "common.json#/$defs/Amount"
+                }
+              },
+              "required": [
+                "ledger_id",
+                "max_outstanding"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "after_sales": {
+          "type": "object",
+          "properties": {
+            "min_return_window": {
+              "$ref": "common.json#/$defs/Duration"
+            },
+            "min_warranty_months": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "installation_required": {
+              "type": "boolean"
+            },
+            "return_types_allowed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "quality": {
+          "type": "object",
+          "properties": {
+            "grades_allowed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "inspection_required": {
+              "type": "boolean"
+            },
+            "hallmark_required": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "commission": {
+          "type": "object",
+          "properties": {
+            "max_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "paid_by_allowed": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "buyer",
+                  "seller",
+                  "both"
+                ]
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "deposit": {
+          "type": "object",
+          "properties": {
+            "max_amount": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "refundable_only": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "schemes": {
+          "type": "object",
+          "properties": {
+            "funders_allowed": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "count_conditional_cashback": {
+              "const": false
+            }
+          },
+          "additionalProperties": false
+        },
+        "process": {
+          "type": "object",
+          "properties": {
+            "max_rounds": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "deadline": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "counterparty_allowlist": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "bpp_id": {
+                    "type": "string"
+                  },
+                  "provider_id": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "bpp_id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "auction_max_bid": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "rfq_min_responses": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "rfq_min_window": {
+              "$ref": "common.json#/$defs/Duration"
+            },
+            "award_rule": {
+              "enum": [
+                "l1_landed_cost",
+                "qcbs",
+                "best_score"
+              ]
+            },
+            "firm_counter_allowed": {
+              "type": "boolean",
+              "description": "false = every outgoing counter is firm:false (indicative)."
+            }
+          },
+          "required": [
+            "max_rounds",
+            "deadline"
+          ],
+          "additionalProperties": false
+        },
+        "step_up": {
+          "type": "object",
+          "properties": {
+            "any_violation": {
+              "const": true,
+              "description": "Always: any out-of-bounds deal needs step-up (NEG-134)."
+            },
+            "between_reservation_and_max": {
+              "const": true
+            },
+            "new_counterparty_above": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "drip_pct": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            },
+            "agreed_issue_reopened": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "buyer"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "price": {
+                "required": [
+                  "total_max",
+                  "reservation"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "role": {
+                "const": "seller"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "price": {
+                "required": [
+                  "total_min"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

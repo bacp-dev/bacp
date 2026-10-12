@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/instruction-log-entry.json",
+  "title": "InstructionLogEntry",
+  "description": "Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment (UAP section 5 item 3). entry_hash = sha-256(JCS(entry minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.",
+  "type": "object",
+  "required": [
+    "seq",
+    "session_id",
+    "transaction_id",
+    "stage",
+    "actor",
+    "at",
+    "content_hash",
+    "prev_hash",
+    "entry_hash",
+    "signature"
+  ],
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "transaction_id": {
+      "type": "string"
+    },
+    "stage": {
+      "enum": [
+        "prompt",
+        "intent",
+        "discover",
+        "cart",
+        "disclosure",
+        "mandate",
+        "step_up",
+        "payment",
+        "order",
+        "post_order",
+        "grievance",
+        "negotiation",
+        "guard",
+        "ledger"
+      ]
+    },
+    "actor": {
+      "enum": [
+        "user",
+        "agent",
+        "gateway",
+        "trusted_surface",
+        "bpp",
+        "psp"
+      ]
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "channel": {
+      "$ref": "common.json#/$defs/Channel"
+    },
+    "language": {
+      "type": "string"
+    },
+    "content_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "content_ref": {
+      "type": "string",
+      "format": "uri",
+      "description": "Operator-held encrypted blob (transcript, audio, structured intent)"
+    },
+    "summary": {
+      "$ref": "common.json#/$defs/LangText"
+    },
+    "model": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "translation_model": {
+          "type": "string"
+        }
+      }
+    },
+    "refs": {
+      "type": "object",
+      "properties": {
+        "mandate_ref": {
+          "type": "string"
+        },
+        "checkout_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "message_id": {
+          "type": "string"
+        },
+        "order_id": {
+          "type": "string"
+        },
+        "rrn": {
+          "type": "string"
+        },
+        "receipt_id": {
+          "type": "string"
+        },
+        "issue_id": {
+          "type": "string"
+        }
+      }
+    },
+    "prev_hash": {
+      "$ref": "common.json#/$defs/Hash",
+      "description": "entry_hash of seq-1; genesis uses sha-256 of session_id"
+    },
+    "entry_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "signature": {
+      "$ref": "common.json#/$defs/Signature"
+    }
+  }
+}

@@ -1,0 +1,667 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/mandate.json",
+  "title": "Mandate (bacp.AgentMandate, AMA)",
+  "description": "AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status, usage and signatures is signed and immutable (REQ-103).",
+  "type": "object",
+  "required": [
+    "vct",
+    "mandate_id",
+    "kind",
+    "form",
+    "iss",
+    "iat",
+    "valid_from",
+    "valid_until",
+    "principal",
+    "agent",
+    "purpose",
+    "action_scope",
+    "presence_allowed",
+    "constraints",
+    "revocation",
+    "signatures"
+  ],
+  "properties": {
+    "vct": {
+      "enum": [
+        "in.bacp.mandate.checkout.open.1",
+        "in.bacp.mandate.checkout.1",
+        "in.bacp.mandate.payment.open.1",
+        "in.bacp.mandate.payment.1"
+      ]
+    },
+    "ap2_vct": {
+      "enum": [
+        "mandate.checkout.open.1",
+        "mandate.checkout.1",
+        "mandate.payment.open.1",
+        "mandate.payment.1"
+      ],
+      "description": "AP2 v0.2 type this mandate is wire-compatible with"
+    },
+    "mandate_id": {
+      "type": "string",
+      "pattern": "^mdt_[A-Za-z0-9]{12,40}$"
+    },
+    "parent_mandate_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Open mandate this one narrows (closed mandate or sub-agent delegation). Scope and expiry may only narrow."
+    },
+    "checkout_mandate_ref": {
+      "type": "string",
+      "description": "Payment mandates only: the checkout mandate this payment authority is bound to (AP2 payment.reference, REQUIRED)"
+    },
+    "kind": {
+      "enum": [
+        "checkout",
+        "payment"
+      ]
+    },
+    "form": {
+      "enum": [
+        "open",
+        "closed"
+      ]
+    },
+    "iss": {
+      "type": "string",
+      "description": "Mandate Manager / Trusted Surface subscriber id"
+    },
+    "iat": {
+      "type": "integer"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "principal": {
+      "type": "object",
+      "required": [
+        "ref"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "Pairwise pseudonymous user id at the Mandate Manager. Never an Aadhaar number (REQ-204)."
+        },
+        "assurance": {
+          "enum": [
+            "vpa_pin",
+            "aadhaar_vc",
+            "digilocker",
+            "passkey"
+          ]
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": [
+        "id",
+        "credential_hash"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "credential_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        }
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "required": [
+        "code",
+        "text"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^P-[A-Z]{3}-[0-9]{2}$",
+          "description": "BACP purpose-code registry (Sahamati Fair Use analogue), e.g. P-GRO-01 grocery replenishment"
+        },
+        "text": {
+          "$ref": "common.json#/$defs/LangText"
+        }
+      }
+    },
+    "action_scope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DISCOVER",
+          "QUOTE",
+          "ORDER",
+          "PAY",
+          "CANCEL",
+          "RETURN",
+          "RAISE_ISSUE",
+          "SHARE_DATA"
+        ]
+      }
+    },
+    "data_scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "NAME",
+          "PHONE",
+          "DELIVERY_ADDRESS",
+          "EMAIL",
+          "AGE_OVER_18",
+          "GSTIN"
+        ]
+      }
+    },
+    "presence_allowed": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.json#/$defs/Presence"
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Evaluated fail-closed by deterministic code: unknown keys fail (AP2 agent_authorization 463-465).",
+      "properties": {
+        "amount_per_txn": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "budgets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "period",
+              "max"
+            ],
+            "properties": {
+              "period": {
+                "enum": [
+                  "P1D",
+                  "P7D",
+                  "P1M",
+                  "FIRST_24H",
+                  "LIFETIME"
+                ]
+              },
+              "max": {
+                "$ref": "common.json#/$defs/Amount"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "max_executions": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "categories_allow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "ONDC domain or category codes, e.g. ONDC:RET10, RET10-Staples"
+        },
+        "categories_deny": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "merchants_allow": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "bpp_id"
+            ],
+            "properties": {
+              "bpp_id": {
+                "type": "string"
+              },
+              "provider_id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "delivery_pincodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{5}$"
+          }
+        },
+        "line_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "item_id",
+              "qty_max"
+            ],
+            "properties": {
+              "item_id": {
+                "type": "string"
+              },
+              "qty_max": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "step_up": {
+          "type": "object",
+          "properties": {
+            "above_amount": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "new_merchant": {
+              "type": "boolean"
+            },
+            "outside_categories": {
+              "type": "boolean"
+            },
+            "first_order": {
+              "type": "boolean"
+            }
+          }
+        },
+        "reject_preticked_addons": {
+          "const": true
+        },
+        "cod_allowed": {
+          "type": "boolean"
+        },
+        "cod_max_open_orders": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "PAY-131: open COD orders an agent may hold HNP (L7-compliance C-2)."
+        },
+        "credit_funding_allowed": {
+          "type": "boolean",
+          "description": "PAY-107: credit-funded handlers allowed (L7-compliance C-2)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "checkout_hash": {
+      "$ref": "common.json#/$defs/Hash",
+      "description": "Closed mandates only: hash of the BPP-signed quote / checkout (AP2 checkout_hash)"
+    },
+    "amount": {
+      "$ref": "common.json#/$defs/Amount",
+      "description": "Closed mandates only: exact amount"
+    },
+    "payee": {
+      "type": "object",
+      "properties": {
+        "vpa": {
+          "type": "string"
+        },
+        "bap_id": {
+          "type": "string"
+        }
+      }
+    },
+    "rail_binding": {
+      "type": "object",
+      "required": [
+        "type",
+        "rail_ref",
+        "psp_id",
+        "attestation"
+      ],
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "common.json#/$defs/RailType"
+            },
+            {
+              "$ref": "common.json#/$defs/RailTypeV1"
+            }
+          ],
+          "description": "Any class-O handler (v1 section 13.3, B-1; RailTypeV1) or a v0 RailType alias. Class C/A/D/N ids never validate here (L7-compliance C-1)."
+        },
+        "rail_ref": {
+          "type": "string",
+          "description": "UMN / SBMD block id / Circle delegation id as issued by the payer PSP"
+        },
+        "psp_id": {
+          "type": "string"
+        },
+        "attestation": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "PSP-signed statement {rail_ref, type, limits, expiry, payee} hashed into this mandate"
+        },
+        "rail_limits": {
+          "type": "object",
+          "properties": {
+            "per_txn": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "per_month": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "first_24h": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "block_amount": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "expires_at": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "pre_debit_notice": {
+          "enum": [
+            "required_24h",
+            "not_applicable",
+            "unknown",
+            "bacp_policy_24h",
+            "post_debit_notice"
+          ]
+        }
+      },
+      "description": "OPEN payment mandates only (P-03 as narrowed by L5): binding to a live UPI standing-authority primitive. upi.uap.* reserved."
+    },
+    "auth_binding": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "description": "CLOSED payment mandates only: how this single payment is authorised. Either it executes under the parent open mandate's rail_binding (HNP), or it carries a per-transaction user 2FA reference (HP) or another REQ-401 instrument.",
+      "properties": {
+        "type": {
+          "enum": [
+            "parent_rail_binding",
+            "upi.pin",
+            "upi.biometric",
+            "card.3ds",
+            "instrument"
+          ]
+        },
+        "handler": {
+          "anyOf": [
+            {
+              "$ref": "common.json#/$defs/Handler"
+            },
+            {
+              "$ref": "common.json#/$defs/RailType"
+            }
+          ]
+        },
+        "ref": {
+          "type": "string",
+          "description": "2FA/authentication reference from the PSP or issuer, or the parent rail_ref"
+        },
+        "psp_id": {
+          "type": "string"
+        }
+      }
+    },
+    "dpdp": {
+      "type": "object",
+      "properties": {
+        "consent_receipts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_retention": {
+          "type": "string",
+          "description": "ISO 8601 duration imposed on recipients, e.g. P1Y"
+        }
+      }
+    },
+    "revocation": {
+      "type": "object",
+      "required": [
+        "status_uri"
+      ],
+      "properties": {
+        "status_uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "status_list": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "uri"
+            },
+            "idx": {
+              "type": "integer"
+            }
+          }
+        },
+        "notify_sla_seconds": {
+          "type": "integer",
+          "maximum": 60
+        }
+      }
+    },
+    "audit_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "cnf": {
+      "type": "object",
+      "required": [
+        "jwk"
+      ],
+      "properties": {
+        "jwk": {
+          "$ref": "common.json#/$defs/Jwk"
+        }
+      },
+      "description": "Agent key allowed to close this open mandate (AP2 section 4.1)"
+    },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "common.json#/$defs/Signature"
+      }
+    },
+    "status": {
+      "readOnly": true,
+      "enum": [
+        "PENDING",
+        "ACTIVE",
+        "PAUSED",
+        "REVOKED",
+        "EXPIRED",
+        "EXHAUSTED",
+        "REJECTED"
+      ]
+    },
+    "usage": {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "spent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "period": {
+                "type": "string"
+              },
+              "amount": {
+                "$ref": "common.json#/$defs/Amount"
+              },
+              "window_start": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "last_used_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "form": {
+            "const": "open"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "cnf"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "form": {
+            "const": "closed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "checkout_hash",
+          "amount",
+          "parent_mandate_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "payment"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "checkout_mandate_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "payment"
+          },
+          "form": {
+            "const": "open"
+          }
+        },
+        "required": [
+          "kind",
+          "form"
+        ]
+      },
+      "then": {
+        "required": [
+          "rail_binding"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "payment"
+          },
+          "form": {
+            "const": "closed"
+          }
+        },
+        "required": [
+          "kind",
+          "form"
+        ]
+      },
+      "then": {
+        "required": [
+          "auth_binding"
+        ],
+        "not": {
+          "required": [
+            "rail_binding"
+          ]
+        }
+      }
+    },
+    {
+      "description": "REQ-102 (L7-compliance C-3): an open mandate carries data scopes, an audit URI, a retention period and at least one frequency bound.",
+      "if": {
+        "properties": {
+          "form": {
+            "const": "open"
+          }
+        },
+        "required": [
+          "form"
+        ]
+      },
+      "then": {
+        "required": [
+          "data_scopes",
+          "audit_uri",
+          "dpdp"
+        ],
+        "properties": {
+          "dpdp": {
+            "required": [
+              "data_retention"
+            ]
+          },
+          "constraints": {
+            "anyOf": [
+              {
+                "required": [
+                  "budgets"
+                ]
+              },
+              {
+                "required": [
+                  "max_executions"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

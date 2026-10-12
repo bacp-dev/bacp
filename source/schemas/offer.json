@@ -1,0 +1,1663 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/offer.json",
+  "title": "Negotiation messages (Offer, CounterOffer, Accept, Reject, Withdraw, Terminate, RequestExtension, AcceptRevoke, BidCommit, BidReveal, BidRetract)",
+  "description": "Structured, signed and expiring negotiation messages (NEG section 5.4-5.5; NEG-110..124). Only these are binding. Discriminated by type.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Offer"
+    },
+    {
+      "$ref": "#/$defs/Accept"
+    },
+    {
+      "$ref": "#/$defs/Reject"
+    },
+    {
+      "$ref": "#/$defs/Withdraw"
+    },
+    {
+      "$ref": "#/$defs/Terminate"
+    },
+    {
+      "$ref": "#/$defs/RequestExtension"
+    },
+    {
+      "$ref": "#/$defs/AcceptRevoke"
+    },
+    {
+      "$ref": "#/$defs/BidCommit"
+    },
+    {
+      "$ref": "#/$defs/BidReveal"
+    },
+    {
+      "$ref": "#/$defs/BidRetract"
+    }
+  ],
+  "$defs": {
+    "Offer": {
+      "type": "object",
+      "description": "Offer, counter-offer or auction bid. A counter-offer is a rejection of the prior offer plus a new offer (ICA s.7).",
+      "properties": {
+        "type": {
+          "enum": [
+            "offer",
+            "counter_offer",
+            "bid"
+          ]
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "in_reply_to": {
+          "$ref": "common.json#/$defs/Hash",
+          "description": "offer_hash of the live offer this counters. Required for counter_offer (NEG-110)."
+        },
+        "mode": {
+          "$ref": "negotiation-session.json#/$defs/Mode"
+        },
+        "firm": {
+          "type": "boolean",
+          "description": "true = binding if accepted before expires_at. false = indicative quote, an invitation to treat (NEG section 5.5)."
+        },
+        "subject_to_principal_approval": {
+          "type": "boolean",
+          "description": "Required true when the emitting agent's guard returned escalate. Forces firm=false (NEG section 5.6)."
+        },
+        "term_sheet": {
+          "$ref": "termsheet.json"
+        },
+        "all_in_total": {
+          "$ref": "common.json#/$defs/Amount",
+          "description": "MUST equal term_sheet.all_in_total."
+        },
+        "valid_from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Absolute expiry (not a relative ttl). expires_at - valid_from >= min_offer_validity (NEG-123)."
+        },
+        "inventory_hold_until": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "acceptance_manner": {
+          "const": "bacp.neg.accept",
+          "description": "ICA s.7(2): the offer prescribes the manner of acceptance. Any other form (chat, voice, payment, on_init without accept) is non-conforming and MUST be rejected promptly with NEG_ACCEPT_NONCONFORMING."
+        },
+        "acceptance_revocation": {
+          "enum": [
+            "waived",
+            "allowed_until_receipt"
+          ],
+          "default": "waived",
+          "description": "ICA s.5 lets an acceptor revoke until the acceptance reaches the proposer. waived = expressly excluded by protocol terms (default, A-14). allowed_until_receipt = accept_revoke is honoured if received before the ACCEPT."
+        },
+        "extends": {
+          "$ref": "common.json#/$defs/Hash",
+          "description": "offer_hash of an earlier offer by the same offeror that this one re-issues with a later expires_at (answer to request_extension). Terms MUST be identical."
+        },
+        "rfq_parent_id": {
+          "type": "string",
+          "pattern": "^rfq_[A-Za-z0-9]{8,40}$",
+          "description": "Parent RFQ for exposure counting across sessions (NEG-137)."
+        },
+        "bid_deposit_ref": {
+          "type": "string",
+          "description": "Deposit or EMD reference required for sealed bids. Forfeited if the bid is not revealed (NEG-151)."
+        },
+        "agreed_issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "JSON Pointers of issues in Agree. Narrows, does not bind (NEG section 5.4)."
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^auc_[A-Za-z0-9]{8,40}$"
+        },
+        "jurisdictional": {
+          "type": "object",
+          "properties": {
+            "mrp_checked": {
+              "type": "boolean"
+            },
+            "msme_seller": {
+              "type": "boolean"
+            },
+            "msmed_due_days_cap": {
+              "type": "integer"
+            },
+            "cash_limit_checked": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "mode",
+        "firm",
+        "term_sheet",
+        "all_in_total",
+        "valid_from",
+        "expires_at",
+        "acceptance_manner"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "counter_offer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "in_reply_to"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "subject_to_principal_approval": {
+                "const": true
+              }
+            },
+            "required": [
+              "subject_to_principal_approval"
+            ]
+          },
+          "then": {
+            "properties": {
+              "firm": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bid"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "auction_id"
+            ]
+          }
+        }
+      ]
+    },
+    "Accept": {
+      "type": "object",
+      "description": "Absolute, unqualified acceptance of exactly one live offer. Carries no terms.",
+      "properties": {
+        "type": {
+          "const": "accept"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "common.json#/$defs/Hash",
+          "description": "sha-256 over JCS(offer minus signatures, counter_signature). Acceptance must mirror it exactly (ICA s.7, NEG-111)."
+        },
+        "negotiation_mandate_ref": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "hash": {
+              "$ref": "common.json#/$defs/Hash"
+            }
+          },
+          "required": [
+            "id",
+            "hash"
+          ],
+          "description": "The separate BACP negotiation mandate (NEG-138). Its contents are never disclosed to the counterparty.",
+          "additionalProperties": false
+        },
+        "legal_effect": {
+          "enum": [
+            "acceptance",
+            "purchase_offer"
+          ],
+          "description": "acceptance when the accepted offer was firm. purchase_offer when it was non-firm (an invitation to treat): the ACCEPT is then legally an offer and the seller's on_init/on_confirm is the acceptance."
+        },
+        "bound_attestation": {
+          "$ref": "#/$defs/BoundAttestation"
+        },
+        "step_up_id": {
+          "type": "string",
+          "description": "Present when the principal approved an out-of-mandate deal on the Trusted Surface (NEG-134)."
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "offer_hash",
+        "negotiation_mandate_ref",
+        "legal_effect",
+        "bound_attestation"
+      ],
+      "additionalProperties": false,
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "term_sheet"
+            ]
+          },
+          {
+            "required": [
+              "in_reply_to"
+            ]
+          }
+        ]
+      }
+    },
+    "Reject": {
+      "type": "object",
+      "description": "Rejection of the live offer.",
+      "properties": {
+        "type": {
+          "const": "reject"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "reason_code": {
+          "enum": [
+            "price",
+            "delivery",
+            "payment_terms",
+            "quality",
+            "not_negotiable",
+            "mrp_exceeded",
+            "msmed_credit_cap",
+            "terms_drift",
+            "out_of_mandate",
+            "incoterm_not_supported",
+            "other"
+          ],
+          "description": "Typed reasons (NEG-163). Never carries the reservation value (NEG-140)."
+        },
+        "ondc_error_code": {
+          "type": "string",
+          "description": "e.g. 50005 Incoterm not supported (NEG section 1.4)."
+        },
+        "final": {
+          "type": "boolean",
+          "description": "true ends the negotiation (REJECTED). false leaves room for a new offer."
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "offer_hash",
+        "reason_code",
+        "final"
+      ],
+      "additionalProperties": false
+    },
+    "Withdraw": {
+      "type": "object",
+      "description": "Revocation by the offeror before acceptance is complete as against it (ICA s.5, NEG-112).",
+      "properties": {
+        "type": {
+          "const": "withdraw"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "reason": {
+          "enum": [
+            "offeror_choice",
+            "mandate_revoked",
+            "stock_change",
+            "price_error",
+            "other"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "offer_hash",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "Terminate": {
+      "type": "object",
+      "description": "Ends the negotiation for both sides.",
+      "properties": {
+        "type": {
+          "const": "terminate"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "reason": {
+          "enum": [
+            "max_rounds",
+            "deadline",
+            "principal_instruction",
+            "mandate_revoked",
+            "no_agreement",
+            "auction_closed_no_award",
+            "rfq_not_awarded"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "RequestExtension": {
+      "type": "object",
+      "description": "Asks the offeror to extend expiry. Silence means no extension (NEG section 5.8).",
+      "properties": {
+        "type": {
+          "const": "request_extension"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "requested_expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "offer_hash",
+        "requested_expires_at"
+      ],
+      "additionalProperties": false
+    },
+    "AcceptRevoke": {
+      "type": "object",
+      "description": "Revocation of an ACCEPT before it reaches the proposer (ICA s.5). Valid only if the offer set acceptance_revocation = allowed_until_receipt and this is received first (earlier CounterSignature timestamp wins).",
+      "properties": {
+        "type": {
+          "const": "accept_revoke"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "accept_msg_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "accept_msg_hash"
+      ],
+      "additionalProperties": false
+    },
+    "BidCommit": {
+      "type": "object",
+      "description": "Sealed-bid commitment.",
+      "properties": {
+        "type": {
+          "const": "bid_commit"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^(auc|rfq)_[A-Za-z0-9]{8,40}$"
+        },
+        "commit_hash": {
+          "$ref": "common.json#/$defs/Hash",
+          "description": "sha-256(JCS(bid) || salt). Sealed until close (NEG-151)."
+        },
+        "bid_deposit_ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "auction_id",
+        "commit_hash",
+        "bid_deposit_ref"
+      ],
+      "additionalProperties": false
+    },
+    "BidReveal": {
+      "type": "object",
+      "description": "Reveal after close. Hash must match the commit.",
+      "properties": {
+        "type": {
+          "const": "bid_reveal"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^(auc|rfq)_[A-Za-z0-9]{8,40}$"
+        },
+        "bid": {
+          "$ref": "#/$defs/Offer"
+        },
+        "salt": {
+          "type": "string",
+          "minLength": 22
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "auction_id",
+        "bid",
+        "salt"
+      ],
+      "additionalProperties": false
+    },
+    "BidRetract": {
+      "type": "object",
+      "description": "Retraction of an open-outcry bid before close and outside the anti-sniping window (section 12.9). The previous best bid does not revive.",
+      "properties": {
+        "type": {
+          "const": "bid_retract"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id (REQ-115)."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending NP's RFC 9421 signature, confirmed against the receiver CounterSignature within 5 s skew (section 12.5)."
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = timestamp inside the receiver's CounterSignature. Filled by the receiver."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS(message minus signatures, counter_signature). NP registry key always; agent cnf key too when an agent acted (NEG-120)."
+        },
+        "counter_signature": {
+          "$ref": "common.json#/$defs/Jws",
+          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature (NEG-124). Proves communication (ICA s.4)."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding (NEG-103).",
+          "additionalProperties": false
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^auc_[A-Za-z0-9]{8,40}$"
+        },
+        "bid_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "reason": {
+          "enum": [
+            "obvious_error",
+            "bidder_choice"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "auction_id",
+        "bid_hash",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "BoundAttestation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "bacp.neg.bound_attestation"
+        },
+        "mandate_ref": {
+          "type": "string"
+        },
+        "offer_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "result": {
+          "const": true
+        },
+        "iss": {
+          "type": "string",
+          "description": "Buyer wallet, Mandate Manager or credential provider"
+        },
+        "iat": {
+          "type": "integer"
+        },
+        "signature": {
+          "$ref": "common.json#/$defs/Signature"
+        }
+      },
+      "required": [
+        "type",
+        "mandate_ref",
+        "offer_hash",
+        "result",
+        "iss",
+        "iat",
+        "signature"
+      ],
+      "description": "within_bounds attestation from the buyer credential provider, which itself re-verifies the closed mandate against the open and negotiation mandates. The seller BPP verifies ONLY this attestation and never sees the reservation price (NEG-133, NEG-141).",
+      "additionalProperties": false
+    }
+  }
+}

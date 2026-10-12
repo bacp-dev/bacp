@@ -1,0 +1,1155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/negotiation-session.json",
+  "title": "NegotiationSession",
+  "description": "Authoritative full-state view of one bilateral negotiation (one buyer, one seller, one transaction_id), as returned by the gateway (ACP full-state pattern, brief v0 section 2.2). RFQs and auctions own several sessions.",
+  "type": "object",
+  "required": [
+    "negotiation_id",
+    "transaction_id",
+    "mode",
+    "role",
+    "state",
+    "counterparty",
+    "capability",
+    "mandate_ref",
+    "presence",
+    "round",
+    "negotiation_deadline",
+    "transcript",
+    "messages",
+    "created_at"
+  ],
+  "properties": {
+    "negotiation_id": {
+      "type": "string",
+      "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+    },
+    "transaction_id": {
+      "type": "string"
+    },
+    "mode": {
+      "$ref": "#/$defs/Mode"
+    },
+    "role": {
+      "enum": [
+        "buyer",
+        "seller"
+      ]
+    },
+    "state": {
+      "enum": [
+        "OPEN",
+        "AWAITING_OFFER",
+        "NEGOTIATING",
+        "ESCALATED",
+        "ACCEPT_PENDING",
+        "AGREED",
+        "PURCHASE_OFFERED",
+        "BOUND",
+        "BREACH_FLAGGED",
+        "CONTRACTED",
+        "CANCELLED",
+        "REJECTED",
+        "TERMINATED"
+      ]
+    },
+    "counterparty": {
+      "type": "object",
+      "properties": {
+        "bpp_id": {
+          "type": "string"
+        },
+        "bap_id": {
+          "type": "string"
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "offeror_kind": {
+          "enum": [
+            "agent",
+            "human"
+          ]
+        },
+        "udyam_category": {
+          "$ref": "common.json#/$defs/UdyamCategory"
+        },
+        "pricing_ai_vendor": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "object",
+      "properties": {
+        "negotiable_issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "JSON Pointers into TermSheet, e.g. /lines/*/unit_price, /payment/credit_days"
+        },
+        "modes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mode"
+          },
+          "minItems": 1
+        },
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "round_timeout": {
+          "$ref": "common.json#/$defs/Duration"
+        },
+        "min_offer_validity": {
+          "$ref": "common.json#/$defs/Duration"
+        },
+        "sig_algs": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ES256",
+              "EdDSA"
+            ]
+          }
+        },
+        "firm_quote_supported": {
+          "type": "boolean"
+        },
+        "accepted_handlers": {
+          "type": "array",
+          "items": {
+            "$ref": "common.json#/$defs/HandlerRef"
+          }
+        },
+        "pricing_ai_vendor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "negotiable_issues",
+        "modes",
+        "max_rounds",
+        "min_offer_validity",
+        "sig_algs"
+      ],
+      "description": "bacp.negotiation capability advert and the session intersection (NEG-101).",
+      "additionalProperties": false
+    },
+    "mandate_ref": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "hash": {
+          "$ref": "common.json#/$defs/Hash"
+        }
+      },
+      "required": [
+        "id",
+        "hash"
+      ],
+      "description": "The separate BACP negotiation mandate (NEG-138).",
+      "additionalProperties": false
+    },
+    "checkout_mandate_ref": {
+      "type": "string",
+      "description": "Linked AP2-compatible open checkout mandate (v0 section 4.3)."
+    },
+    "presence": {
+      "$ref": "common.json#/$defs/Presence"
+    },
+    "round": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "max_rounds": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "negotiation_deadline": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "offers": {
+      "type": "array",
+      "description": "Offer state is tracked per offer, separately from the negotiation state (section 12.6).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "offer_hash": {
+            "$ref": "common.json#/$defs/Hash"
+          },
+          "by": {
+            "enum": [
+              "buyer",
+              "seller",
+              "auctioneer"
+            ]
+          },
+          "round": {
+            "type": "integer"
+          },
+          "firm": {
+            "type": "boolean"
+          },
+          "state": {
+            "enum": [
+              "LIVE",
+              "SUPERSEDED",
+              "ACCEPTED",
+              "ACCEPT_REVOKED",
+              "REJECTED",
+              "WITHDRAWN",
+              "EXPIRED",
+              "LAPSED_CONDITION"
+            ]
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dispatched_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "received_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "extends": {
+            "$ref": "common.json#/$defs/Hash"
+          }
+        },
+        "required": [
+          "offer_hash",
+          "by",
+          "firm",
+          "state",
+          "expires_at"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "exposure": {
+      "type": "object",
+      "properties": {
+        "principal_outstanding_firm": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "counted_against": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "total_max",
+              "budget_P1D",
+              "budget_P7D",
+              "budget_P1M",
+              "budget_LIFETIME"
+            ]
+          }
+        },
+        "concurrent_negotiations": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "principal_outstanding_firm",
+        "counted_against"
+      ],
+      "description": "NEG-137: outstanding firm counters and accepts across all of the principal's concurrent negotiations. Amounts only, never the bound.",
+      "additionalProperties": false
+    },
+    "live_offer": {
+      "type": "object",
+      "properties": {
+        "offer_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "by": {
+          "enum": [
+            "buyer",
+            "seller",
+            "auctioneer"
+          ]
+        },
+        "firm": {
+          "type": "boolean"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "all_in_total": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "term_sheet": {
+          "$ref": "termsheet.json"
+        },
+        "guard": {
+          "enum": [
+            "acceptable",
+            "not_acceptable",
+            "needs_escalation",
+            "not_evaluated"
+          ],
+          "description": "Only the verdict reaches the agent LLM (NEG-142)."
+        }
+      },
+      "required": [
+        "offer_hash",
+        "by",
+        "firm",
+        "expires_at",
+        "all_in_total"
+      ],
+      "additionalProperties": false
+    },
+    "transcript": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "msg_type": {
+            "type": "string"
+          },
+          "msg_hash": {
+            "$ref": "common.json#/$defs/Hash"
+          },
+          "by": {
+            "enum": [
+              "buyer",
+              "seller",
+              "auctioneer",
+              "gateway",
+              "trusted_surface"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "counter_signature": {
+            "$ref": "common.json#/$defs/Jws"
+          },
+          "log_entry_hash": {
+            "$ref": "common.json#/$defs/Hash"
+          }
+        },
+        "required": [
+          "seq",
+          "msg_type",
+          "msg_hash",
+          "by",
+          "at"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Hash-chained via the InstructionLog stage negotiation (NEG-183)."
+    },
+    "guard_verdicts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "msg_hash": {
+            "$ref": "common.json#/$defs/Hash"
+          },
+          "direction": {
+            "enum": [
+              "outgoing",
+              "incoming"
+            ]
+          },
+          "verdict": {
+            "enum": [
+              "pass",
+              "fail",
+              "escalate"
+            ]
+          },
+          "constraint_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "IDs only, never values (NEG section 5.13)."
+          }
+        },
+        "required": [
+          "at",
+          "msg_hash",
+          "direction",
+          "verdict",
+          "constraint_ids"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "validator_flags": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "NEG_MRP_EXCEEDED",
+              "NEG_MSMED_CREDIT_CAP",
+              "NEG_DRIP_PRICING",
+              "NEG_TERMS_DRIFT",
+              "NEG_FALSE_URGENCY",
+              "NEG_BASKET_SNEAK",
+              "NEG_PERSONALISED_PRICING",
+              "NEG_STALE_OFFER",
+              "NEG_ISSUE_NOT_NEGOTIABLE",
+              "NEG_OFFER_EXPIRED",
+              "NEG_CASH_LIMIT",
+              "NEG_RERA_TOKEN_CAP",
+              "NEG_SHILL_BID",
+              "NEG_EARLY_AWARD",
+              "NEG_EARLY_REVEAL",
+              "NEG_DUTCH_PRICE_INCREASE",
+              "NEG_COLLUSION_SCREEN",
+              "NEG_INJECTION_SUSPECTED",
+              "NEG_CREDIT_DISCLOSURE_MISSING",
+              "NEG_EMI_NO_COST_FALSE",
+              "NEG_EINVOICE_IRN_MISSING",
+              "NEG_EWB_MISSING"
+            ]
+          },
+          "severity": {
+            "enum": [
+              "block",
+              "step_up",
+              "warn"
+            ]
+          },
+          "issue_path": {
+            "type": "string"
+          },
+          "msg_hash": {
+            "$ref": "common.json#/$defs/Hash"
+          }
+        },
+        "required": [
+          "code",
+          "severity"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "step_up": {
+      "type": "object",
+      "description": "v0 StepUp object (OpenAPI components.schemas.StepUp) with reason negotiation_out_of_mandate and a diff card.",
+      "properties": {
+        "step_up_id": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "confirm",
+            "rail_auth"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        },
+        "trusted_surface_url": {
+          "type": "string"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "diff": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "issue_path": {
+                "type": "string"
+              },
+              "offered": {},
+              "within_bounds": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "issue_path",
+              "within_bounds"
+            ],
+            "description": "Shown to the principal only, on the Trusted Surface. The bound itself is rendered there, never sent to the agent or counterparty.",
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "step_up_id",
+        "kind",
+        "reason",
+        "trusted_surface_url",
+        "expires_at"
+      ]
+    },
+    "accepted_offer_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "bound_term_sheet_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "session_id": {
+      "type": "string",
+      "pattern": "^ses_[A-Za-z0-9]{8,40}$",
+      "description": "v0 checkout session opened after BOUND"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "rfq_id": {
+      "type": "string"
+    },
+    "auction_id": {
+      "type": "string"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "common.json#/$defs/DocumentRef"
+      }
+    },
+    "log_head": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "code",
+          "resolution"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "error",
+              "warning",
+              "info",
+              "disclosure"
+            ]
+          },
+          "code": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "common.json#/$defs/LangText"
+          },
+          "param": {
+            "type": "string"
+          },
+          "resolution": {
+            "enum": [
+              "recoverable",
+              "requires_buyer_input",
+              "requires_buyer_review",
+              "unrecoverable"
+            ]
+          }
+        }
+      },
+      "description": "v0 Message model (brief v0 section 5.4)."
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Mode": {
+      "enum": [
+        "fixed",
+        "posted_dynamic",
+        "alternating",
+        "rfq_sealed",
+        "rfq_iterated",
+        "english",
+        "reverse_l1",
+        "dutch",
+        "scheme"
+      ]
+    },
+    "Capability": {
+      "type": "object",
+      "properties": {
+        "negotiable_issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "JSON Pointers into TermSheet, e.g. /lines/*/unit_price, /payment/credit_days"
+        },
+        "modes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Mode"
+          },
+          "minItems": 1
+        },
+        "max_rounds": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "round_timeout": {
+          "$ref": "common.json#/$defs/Duration"
+        },
+        "min_offer_validity": {
+          "$ref": "common.json#/$defs/Duration"
+        },
+        "sig_algs": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "ES256",
+              "EdDSA"
+            ]
+          }
+        },
+        "firm_quote_supported": {
+          "type": "boolean"
+        },
+        "accepted_handlers": {
+          "type": "array",
+          "items": {
+            "$ref": "common.json#/$defs/HandlerRef"
+          }
+        },
+        "pricing_ai_vendor": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "negotiable_issues",
+        "modes",
+        "max_rounds",
+        "min_offer_validity",
+        "sig_algs"
+      ],
+      "description": "bacp.negotiation capability advert and the session intersection (NEG-101).",
+      "additionalProperties": false
+    },
+    "AuctionSpec": {
+      "type": "object",
+      "properties": {
+        "auction_id": {
+          "type": "string",
+          "pattern": "^auc_[A-Za-z0-9]{8,40}$"
+        },
+        "type": {
+          "enum": [
+            "english",
+            "reverse_l1",
+            "dutch",
+            "sealed_first_price"
+          ]
+        },
+        "auctioneer": {
+          "$ref": "common.json#/$defs/Party"
+        },
+        "auctioneer_neutrality": {
+          "type": "object",
+          "properties": {
+            "operator_type": {
+              "enum": [
+                "network_auction_service",
+                "government_platform",
+                "exchange",
+                "regulated_market"
+              ]
+            },
+            "affiliated_with_any_seller": {
+              "const": false
+            },
+            "clock_source": {
+              "type": "string",
+              "description": "Authoritative bid clock, e.g. auctioneer CounterSignature timestamps"
+            }
+          },
+          "required": [
+            "operator_type",
+            "affiliated_with_any_seller",
+            "clock_source"
+          ],
+          "description": "Bid clock run by a neutral auctioneer, never the seller BPP (shill and conflict risk, section 12.9).",
+          "additionalProperties": false
+        },
+        "lots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "lot_id": {
+                "type": "string"
+              },
+              "item_id": {
+                "type": "string"
+              },
+              "quantity": {
+                "type": "number"
+              },
+              "unit": {
+                "type": "string"
+              },
+              "assay": {
+                "$ref": "common.json#/$defs/DocumentRef"
+              },
+              "mrp": {
+                "$ref": "common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "lot_id",
+              "quantity"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "reserve_price": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "reserve_disclosed": {
+          "type": "boolean"
+        },
+        "start_price": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "increment": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "decrement_schedule": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "at": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "price": {
+                "$ref": "common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "at",
+              "price"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Dutch: non-increasing price ticks (NEG-153)."
+        },
+        "opens_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "closes_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "extension_rule": {
+          "type": "object",
+          "properties": {
+            "window": {
+              "$ref": "common.json#/$defs/Duration"
+            },
+            "extend_by": {
+              "$ref": "common.json#/$defs/Duration"
+            },
+            "max_extensions": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "window",
+            "extend_by",
+            "max_extensions"
+          ],
+          "description": "Normative anti-sniping: a bid received inside window before closes_at extends close by extend_by.",
+          "additionalProperties": false
+        },
+        "visibility": {
+          "enum": [
+            "sealed",
+            "price_only",
+            "open"
+          ],
+          "description": "reverse_l1 shows the current L1 price without bidder identity (TRADE-103)."
+        },
+        "tie_break": {
+          "enum": [
+            "earliest_bid",
+            "lottery",
+            "msme_preference",
+            "make_in_india_preference"
+          ],
+          "description": "Dutch: always earliest auctioneer receipt timestamp, then earliest dispatch, then lowest msg_hash (section 12.9)."
+        },
+        "bid_deposit": {
+          "type": "object",
+          "properties": {
+            "amount": {
+              "$ref": "common.json#/$defs/Amount"
+            },
+            "instrument": {
+              "enum": [
+                "emd",
+                "ebg",
+                "upi_otm_block",
+                "pa_escrow"
+              ]
+            },
+            "forfeit_on": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "no_reveal",
+                  "win_and_walk_away",
+                  "retraction_in_window"
+                ]
+              }
+            }
+          },
+          "required": [
+            "amount",
+            "instrument",
+            "forfeit_on"
+          ],
+          "description": "Required for sealed (commit-reveal) modes (NEG-151).",
+          "additionalProperties": false
+        },
+        "retraction_rule": {
+          "enum": [
+            "no_retraction",
+            "before_close_outside_window",
+            "obvious_error_only"
+          ],
+          "description": "Sale of Goods Act s.64 lets a bidder retract before the hammer [K, UNVERIFIED]. Default before_close_outside_window."
+        },
+        "eligibility": {
+          "type": "object",
+          "properties": {
+            "bidder_allowlist": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "technical_qualified_only": {
+              "type": "boolean"
+            },
+            "licence_required": {
+              "type": "string"
+            },
+            "exclude_suspended": {
+              "const": true
+            }
+          },
+          "additionalProperties": false
+        },
+        "award_rule": {
+          "enum": [
+            "highest_price",
+            "l1",
+            "first_accept",
+            "qcbs"
+          ]
+        },
+        "fixed_terms": {
+          "$ref": "termsheet.json",
+          "description": "Non-price issues fixed for all bidders, or scored by scoring_rule."
+        },
+        "scoring_rule_ref": {
+          "type": "string",
+          "format": "uri"
+        },
+        "procurement_mode_reason": {
+          "type": "string",
+          "description": "Why this mode was chosen, e.g. value threshold (TRADE-129)."
+        },
+        "signature": {
+          "$ref": "common.json#/$defs/Signature"
+        }
+      },
+      "required": [
+        "auction_id",
+        "type",
+        "auctioneer",
+        "auctioneer_neutrality",
+        "lots",
+        "opens_at",
+        "closes_at",
+        "extension_rule",
+        "visibility",
+        "tie_break",
+        "award_rule",
+        "retraction_rule",
+        "signature"
+      ],
+      "description": "Signed before the first bid. Rules MUST NOT change after it (NEG-150).",
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "visibility": {
+                "const": "sealed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "bid_deposit"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "dutch"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "decrement_schedule"
+            ],
+            "properties": {
+              "tie_break": {
+                "const": "earliest_bid"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Rfq": {
+      "type": "object",
+      "properties": {
+        "rfq_id": {
+          "type": "string",
+          "pattern": "^rfq_[A-Za-z0-9]{8,40}$"
+        },
+        "mode": {
+          "enum": [
+            "rfq_sealed",
+            "rfq_iterated"
+          ]
+        },
+        "term_sheet_draft": {
+          "$ref": "termsheet.json"
+        },
+        "issues_negotiable": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "invitees": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "bpp_id": {
+                "type": "string"
+              },
+              "provider_id": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "bpp_id"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "broadcast": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string"
+            },
+            "city": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "response_by": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Award before this time is rejected unless all invitees responded (NEG-152)."
+        },
+        "min_responses": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "e.g. 3 for an L1 purchase (TRD section 6)."
+        },
+        "award_rule": {
+          "enum": [
+            "l1_landed_cost",
+            "qcbs",
+            "best_score"
+          ]
+        },
+        "scoring_rule_ref": {
+          "type": "string",
+          "format": "uri"
+        },
+        "state": {
+          "enum": [
+            "DRAFT",
+            "PUBLISHED",
+            "COLLECTING",
+            "CLOSED",
+            "REVEALED",
+            "SHORTLISTED",
+            "AWARDED",
+            "CANCELLED"
+          ],
+          "readOnly": true
+        },
+        "negotiation_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "readOnly": true
+        },
+        "comparison": {
+          "type": "array",
+          "readOnly": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "negotiation_id": {
+                "type": "string"
+              },
+              "offer_hash": {
+                "$ref": "common.json#/$defs/Hash"
+              },
+              "landed_cost": {
+                "$ref": "common.json#/$defs/Amount"
+              },
+              "rank": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "negotiation_id",
+              "landed_cost"
+            ],
+            "additionalProperties": false
+          },
+          "description": "Normalised to landed cost (TRADE-128). Kept for audit (TRADE-146)."
+        },
+        "awarded": {
+          "type": "object",
+          "properties": {
+            "negotiation_id": {
+              "type": "string"
+            },
+            "offer_hash": {
+              "$ref": "common.json#/$defs/Hash"
+            },
+            "reason": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false,
+          "readOnly": true
+        }
+      },
+      "required": [
+        "rfq_id",
+        "mode",
+        "term_sheet_draft",
+        "response_by",
+        "award_rule"
+      ],
+      "description": "Structured RFQ replacing ONDC BUYER_TERMS free text (NEG section 5.10).",
+      "additionalProperties": false
+    },
+    "AuctionState": {
+      "type": "object",
+      "properties": {
+        "auction_id": {
+          "type": "string"
+        },
+        "spec_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "state": {
+          "enum": [
+            "SCHEDULED",
+            "OPEN",
+            "EXTENDED",
+            "CLOSED",
+            "REVEALED",
+            "AWARDED",
+            "NO_AWARD",
+            "CANCELLED"
+          ]
+        },
+        "current_price": {
+          "$ref": "common.json#/$defs/Amount"
+        },
+        "current_rank_for_caller": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bids_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "closes_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "awarded_offer_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "caller_negotiation_id": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "auction_id",
+        "spec_hash",
+        "state",
+        "closes_at"
+      ],
+      "description": "Bidder view. Never shows other bidders' identities or sealed bids (NEG-151, NEG-180).",
+      "additionalProperties": false
+    }
+  }
+}

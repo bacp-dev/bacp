@@ -1,0 +1,7 @@
+.venv/
+site/
+local_preview/
+build_temp/
+__pycache__/
+.DS_Store
+.env

@@ -1,0 +1,5192 @@
+openapi: 3.1.0
+info:
+  title: Bharat Agentic Commerce Protocol (BACP) — Gateway REST binding
+  version: draft
+  summary: REST binding that a BACP gateway exposes to AI agents.
+  description: "Synchronous, UCP-compatible session API that a BACP gateway (co-located with a Buyer App / BAP) exposes to AI agents.\nThe gateway\
+    \ translates each call into signed Beckn/ONDC actions (search, select, init, confirm, status, cancel, update,\nIGM issue/issue_status), waits\
+    \ for the on_* callbacks, and returns authoritative full state (ACP pattern).\nThe same operations are bound to MCP tools (structuredContent)\
+    \ and an A2A extension. See https://bacp.dev/latest/specification/transports/rest/.\n\nNormative rules carried by this spec:\n- Every request is signed with RFC 9421\
+    \ HTTP Message Signatures (Signature-Input, Signature, Content-Digest per RFC 9530)\n  using the agent key in AgentCredential.cnf. Tag `bacp-browse`\
+    \ for read and discovery calls, `bacp-pay` for\n  /complete, `bacp-post-order` for cancel, return and issue writes. Signature window at most\
+    \ 300 s, with a nonce\n  and a receiver replay cache (see the Identity and request signing section).\n- `Idempotency-Key` is REQUIRED on every POST and PUT (ACP\
+    \ semantics). Missing key returns 400\n  idempotency_key_required. Same key with a different body returns 422 idempotency_conflict. Same key\
+    \ while the first\n  request is in flight returns 409 idempotency_in_flight with Retry-After. A replay returns the stored response with\n\
+    \  `Idempotent-Replayed: true`. Keys are kept at least 24 h (48 h recommended). 5xx responses are never stored.\n- Amounts are integer paise\
+    \ (INR minor units).\n- Business outcomes return 200/201 with full state plus `messages[]`. Transport and protocol failures return 4xx/5xx\n\
+    \  with the flat Error object (ACP model).\n- Unknown fields MUST be ignored by readers. Unknown mandate constraints MUST fail closed.\n"
+  license:
+    name: Apache-2.0
+    identifier: Apache-2.0
+servers:
+- url: https://gw.bap.example.in/bacp
+  description: Example BAP-hosted BACP gateway
+security:
+- httpSignature: []
+  agentCredential: []
+tags:
+- name: profile
+- name: discovery
+- name: session
+  description: Checkout session (UCP checkout verbs) over Beckn select, init and confirm
+- name: mandate
+- name: order
+  description: Post-order reads and mandate-scoped writes (cancel, return)
+- name: issue
+  description: IGM 2.0-compatible grievance with AI_AGENT actor and evidence bundle
+- name: evidence
+- name: trusted-surface
+  description: Callbacks from Mandate Manager / payer PSP (Trusted Surface). Never callable by agents.
+- name: negotiation
+  description: Bilateral negotiation sessions (design brief v1 section 12)
+- name: rfq
+  description: Structured RFQ with sealed commit-reveal quotations
+- name: auction
+  description: Forward, reverse (L1) and Dutch auctions run by a neutral auctioneer
+- name: payment-handlers
+  description: Registry of Indian payment handlers and UCP-style intersection (section 13)
+paths:
+  /.well-known/bacp:
+    get:
+      tags:
+      - profile
+      operationId: getProfile
+      summary: Gateway profile (UCP /.well-known pattern)
+      security: []
+      responses:
+        '200':
+          description: Profile with versions, capabilities, handlers, transports and JWK Set
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+              examples:
+                default:
+                  value:
+                    bacp:
+                      version: '0.1'
+                      supported_versions:
+                      - '0.1'
+                    bap_id: bap.vaani.example.in
+                    transports:
+                    - rest
+                    - mcp
+                    - a2a
+                    capabilities:
+                    - in.bacp.discover
+                    - in.bacp.checkout
+                    - in.bacp.mandate
+                    - in.bacp.order
+                    - in.bacp.issue
+                    payment_handlers:
+                    - upi.circle.delegate
+                    - upi.reservepay.block
+                    - upi.autopay
+                    - upi.lite
+                    - upi.123pay
+                    - rupay.token
+                    - cod
+                    reserved_handlers:
+                    - upi.uap.*
+                    keys:
+                      keys:
+                      - kty: OKP
+                        crv: Ed25519
+                        x: 11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo
+                        kid: ukid-7
+  /discover:
+    post:
+      tags:
+      - discovery
+      operationId: discover
+      summary: Network discovery (Beckn search / 2.0 discover via gateway and registry)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiscoverRequest'
+            examples:
+              hindiVoice:
+                value:
+                  query:
+                    hi-IN: do kilo aashirvaad atta, ek litre doodh, aadha kilo toor dal
+                  category: ONDC:RET10
+                  delivery:
+                    pincode: '560034'
+                    gps: 12.9352,77.6245
+                  mandate_ref: mdt_CHK7Q2W9X4K1M3
+                  max_wait_ms: 4000
+      responses:
+        '200':
+          description: Aggregated on_search results within max_wait_ms, with ranking explanation (REQ-315)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DiscoverResponse'
+              examples:
+                default:
+                  value:
+                    transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+                    results:
+                    - bpp_id: bpp.kirana.example.in
+                      provider:
+                        id: P-112
+                        name: Shree Ganesh Kirana
+                        rating: 4.5
+                      items:
+                      - id: I-ATTA-2KG
+                        name:
+                          en-IN: Aashirvaad Atta 2 kg
+                          hi-IN: आशीर्वाद आटा 2 किलो
+                        unit_price:
+                          value: 11000
+                          currency: INR
+                        hsn: '1101'
+                        gst_rate_bps: 0
+                        available_on_cod: true
+                        returnable: true
+                        return_window: P2D
+                      within_mandate: true
+                    ranking:
+                      main_parameters:
+                      - distance
+                      - price
+                      - seller_rating
+                      sponsored: false
+                    complete: true
+                    messages: []
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+  /sessions:
+    post:
+      tags:
+      - session
+      operationId: createSession
+      summary: Create checkout session (UCP create_checkout, Beckn select)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionCreate'
+            examples:
+              grocery:
+                value:
+                  transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+                  bpp_id: bpp.kirana.example.in
+                  provider_id: P-112
+                  items:
+                  - id: I-ATTA-2KG
+                    quantity: 1
+                  - id: I-MILK-1L
+                    quantity: 1
+                  - id: I-TOOR-500G
+                    quantity: 1
+                  presence: HNP
+                  mandate_ref: mdt_CHK7Q2W9X4K1M3
+                  channel: voice
+                  language: hi-IN
+                  webhook_url: https://agents.vaani.example.in/bacp/hooks
+      responses:
+        '201':
+          description: Session with authoritative quote (from on_select)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                quoted:
+                  $ref: '#/components/examples/SessionQuoted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+  /sessions/{session_id}:
+    parameters:
+    - $ref: '#/components/parameters/SessionId'
+    get:
+      tags:
+      - session
+      operationId: getSession
+      summary: Get session (UCP get_checkout). Use for lost-response recovery before any retry.
+      parameters:
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      responses:
+        '200':
+          description: Authoritative full state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                ready:
+                  $ref: '#/components/examples/SessionReady'
+                stepUp:
+                  $ref: '#/components/examples/SessionStepUp'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags:
+      - session
+      operationId: updateSession
+      summary: Update session, full replace (UCP update_checkout). Items trigger select, fulfilment/billing triggers init.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SessionUpdate'
+            examples:
+              addFulfilment:
+                value:
+                  items:
+                  - id: I-ATTA-2KG
+                    quantity: 1
+                  - id: I-MILK-1L
+                    quantity: 1
+                  - id: I-TOOR-500G
+                    quantity: 1
+                  fulfilment:
+                    type: Delivery
+                    address_ref: addr_home
+                    pincode: '560034'
+                  data_share:
+                    consent_receipt_ref: cr_A1B2C3D4E5F6G7
+                    fields:
+                    - NAME
+                    - PHONE
+                    - DELIVERY_ADDRESS
+                  payment:
+                    handler: upi.reservepay.block
+      responses:
+        '200':
+          description: Updated full state (ready_for_complete after on_init, or requires_escalation)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                ready:
+                  $ref: '#/components/examples/SessionReady'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
+  /sessions/{session_id}/complete:
+    parameters:
+    - $ref: '#/components/parameters/SessionId'
+    post:
+      tags:
+      - session
+      operationId: completeSession
+      summary: Complete (UCP complete_checkout). Verifies closed mandates, debits the rail, sends Beckn confirm.
+      description: 'HNP: body carries the agent-closed Checkout and Payment Mandates (KB-JWT under the open mandates'' cnf key).
+
+        HP: body carries closed mandates signed on the Trusted Surface plus a per-transaction 2FA reference (auth_binding).
+
+        Returns `completed` with order and payment receipt, `complete_in_progress` (payment in doubt or awaiting on_confirm),
+
+        or `requires_escalation` with a step_up object. Retry ONLY with the same Idempotency-Key after GET /sessions/{id}.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteRequest'
+            examples:
+              hnpReservePay:
+                value:
+                  presence: HNP
+                  checkout_mandate: eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUuY2hlY2tvdXQuMSJ9.c2ln~WyJzYWx0IiwiY2hlY2tvdXRfaGFzaCJd~eyJhbGciOiJFUzI1NiJ9.eyJub25jZSI6Im4ifQ.c2ln
+                  payment_mandate: eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln~eyJhbGciOiJFUzI1NiJ9.eyJub25jZSI6Im4ifQ.c2ln
+                  checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+                  accepted_disclosures_hash: sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg
+      responses:
+        '200':
+          description: Completed, in progress, or requires escalation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+              examples:
+                completed:
+                  $ref: '#/components/examples/SessionCompleted'
+                stepUp:
+                  $ref: '#/components/examples/SessionStepUp'
+                inDoubt:
+                  $ref: '#/components/examples/SessionInDoubt'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /sessions/{session_id}/cancel:
+    parameters:
+    - $ref: '#/components/parameters/SessionId'
+    post:
+      tags:
+      - session
+      operationId: cancelSession
+      summary: Cancel a session before an order exists (UCP cancel_checkout). No Beckn call is needed.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      responses:
+        '200':
+          description: Canceled session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /mandates:
+    post:
+      tags:
+      - mandate
+      operationId: requestMandate
+      summary: Request a mandate. Returns PENDING plus a Trusted Surface link. The agent never signs or activates it.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MandateRequest'
+            examples:
+              groceryReservePay:
+                value:
+                  purpose_code: P-GRO-01
+                  rail: upi.reservepay.block
+                  presence_allowed:
+                  - HNP
+                  - HP
+                  proposed_constraints:
+                    amount_per_txn:
+                      value: 150000
+                      currency: INR
+                    budgets:
+                    - period: P1M
+                      max:
+                        value: 300000
+                        currency: INR
+                    categories_allow:
+                    - ONDC:RET10
+                    delivery_pincodes:
+                    - '560034'
+                    step_up:
+                      above_amount:
+                        value: 120000
+                        currency: INR
+                      outside_categories: true
+                    reject_preticked_addons: true
+                  data_scopes:
+                  - NAME
+                  - PHONE
+                  - DELIVERY_ADDRESS
+                  validity: P30D
+                  language: hi-IN
+      responses:
+        '202':
+          description: Mandate request created in PENDING. User must approve on the Trusted Surface.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MandateHandle'
+              examples:
+                pending:
+                  value:
+                    request_id: mrq_01HZX7
+                    status: PENDING
+                    trusted_surface_url: upi://mandate?pa=vaani.collect@examplebank&mn=BACP&am=3000.00&mode=SBMD&ref=mrq_01HZX7
+                    expires_at: '2026-10-12T10:15:00+05:30'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /mandates/{mandate_id}:
+    parameters:
+    - $ref: '#/components/parameters/MandateId'
+    get:
+      tags:
+      - mandate
+      operationId: getMandate
+      summary: Get mandate with live status and usage (AA ConsentUse analogue)
+      parameters:
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      responses:
+        '200':
+          description: Mandate
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandate'
+              examples:
+                openPayment:
+                  $ref: '#/components/examples/OpenPaymentMandate'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /mandates/{mandate_id}/relinquish:
+    parameters:
+    - $ref: '#/components/parameters/MandateId'
+    post:
+      tags:
+      - mandate
+      operationId: relinquishMandate
+      summary: Agent gives up its authority (agent-side revoke). Users revoke or pause on the Trusted Surface only.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Mandate now REVOKED
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Mandate'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /trusted-surface/events:
+    post:
+      tags:
+      - trusted-surface
+      operationId: trustedSurfaceEvent
+      summary: Signed event from a Mandate Manager or payer PSP (mandate activated, paused, resumed, revoked, step-up result, rail event)
+      description: 'Authenticated by the MM/PSP registry key (RFC 9421, tag `bacp-ts`). Agents calling this endpoint get 403.
+
+        On mandate.revoked or rail.safety_switch the gateway MUST stop all in-flight sessions under the mandate and notify
+
+        the agent (webhook mandate.status_changed) within 60 s (REQ-107).
+
+        '
+      security:
+      - httpSignature: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TrustedSurfaceEvent'
+            examples:
+              revoked:
+                value:
+                  event: mandate.revoked
+                  mandate_id: mdt_PAY7Q2W9X4K1M3
+                  related_mandates:
+                  - mdt_CHK7Q2W9X4K1M3
+                  at: '2026-10-25T08:00:00+05:30'
+                  source:
+                    iss: mm.psp.example.in
+                    rail_event: SBMD_REVOKED
+                    rail_ref: SBMD-HDFX-000123456
+                  signature:
+                    role: mandate_manager
+                    kid: mm.psp.example.in|ukid-2|es256
+                    alg: ES256
+                    value: eyJhbGciOiJFUzI1NiJ9.eyJyIjoxfQ.c2ln
+              stepUpApproved:
+                value:
+                  event: step_up.approved
+                  step_up_id: stp_01HZXA
+                  session_id: ses_01HZXB
+                  closed_checkout_mandate: eyJhbGciOiJFUzI1NiJ9.eyJ1c2VyIjoxfQ.c2ln
+                  auth_binding:
+                    type: upi.pin
+                    ref: PSPAUTH-55120
+                    psp_id: psp.example.in
+                  at: '2026-10-22T18:31:40+05:30'
+                  signature:
+                    role: psp
+                    kid: psp.example.in|ukid-1|es256
+                    alg: ES256
+                    value: eyJhbGciOiJFUzI1NiJ9.eyJzIjoxfQ.c2ln
+      responses:
+        '202':
+          description: Accepted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /orders/{order_id}:
+    parameters:
+    - $ref: '#/components/parameters/OrderId'
+    get:
+      tags:
+      - order
+      operationId: getOrder
+      summary: Get order (Beckn status, UCP get_order). Adjustments are the append-only read model.
+      parameters:
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      - name: bpp_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Seller subscriber id; needed only when the order id is ambiguous across BPPs (SC-63).
+      responses:
+        '200':
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+              examples:
+                delivered:
+                  $ref: '#/components/examples/OrderDelivered'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /orders/{order_id}/cancel:
+    parameters:
+    - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+      - order
+      operationId: cancelOrder
+      summary: Mandate-scoped cancel (Beckn cancel). Requires CANCEL in action_scope.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CancelRequest'
+            examples:
+              changedMind:
+                value:
+                  reason_code: '001'
+                  mandate_ref: mdt_CHK7Q2W9X4K1M3
+                  presence: HP
+                  note:
+                    hi-IN: Galti se order ho gaya
+      responses:
+        '200':
+          description: Order with cancellation state from on_cancel, refund adjustment pending or done
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /orders/{order_id}/returns:
+    parameters:
+    - $ref: '#/components/parameters/OrderId'
+    post:
+      tags:
+      - order
+      operationId: requestReturn
+      summary: Mandate-scoped return (Beckn update with update_target=item). Requires RETURN in action_scope.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReturnRequest'
+            examples:
+              damagedMilk:
+                value:
+                  items:
+                  - id: I-MILK-1L
+                    quantity: 1
+                  reason_code: '002'
+                  mandate_ref: mdt_CHK7Q2W9X4K1M3
+                  presence: HP
+                  evidence:
+                  - type: image
+                    hash: sha-256:aW1hZ2UtZGFtYWdlZC1taWxrLXBhY2tldC0wMDAwMDE
+                    uri: https://agents.vaani.example.in/e/1.jpg
+                  refund_to: original_method
+      responses:
+        '202':
+          description: Return accepted for processing. Track via GET or webhook return.updated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnRecord'
+              examples:
+                initiated:
+                  value:
+                    return_id: ret_01HZXC
+                    order_id: ORD-KIR-88231
+                    status: RETURN_INITIATED
+                    items:
+                    - id: I-MILK-1L
+                      quantity: 1
+                    refund:
+                      status: PENDING
+                      amount:
+                        value: 6800
+                        currency: INR
+                      to: original_method
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /orders/{order_id}/returns/{return_id}:
+    parameters:
+    - $ref: '#/components/parameters/OrderId'
+    - name: return_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - order
+      operationId: getReturn
+      summary: Get return and refund status (refund receipt carries RRN/UTR)
+      responses:
+        '200':
+          description: Return record
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReturnRecord'
+      parameters:
+      - name: bpp_id
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Seller subscriber id; needed only when the order id is ambiguous across BPPs (SC-63).
+  /issues:
+    post:
+      tags:
+      - issue
+      operationId: raiseIssue
+      summary: Raise an IGM issue as AI_AGENT on behalf of the user (IGM issue). Requires RAISE_ISSUE in action_scope.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueCreate'
+            examples:
+              refundNotReceived:
+                value:
+                  order_id: ORD-KIR-88231
+                  category: PAYMENT
+                  sub_category: PMT02
+                  description:
+                    hi-IN: Doodh wapas kiya par refund nahi aaya
+                    en-IN: Returned milk, refund not received
+                  mandate_ref: mdt_CHK7Q2W9X4K1M3
+                  rrn: '629318004417'
+                  evidence_bundle_ref: https://gw.bap.example.in/bacp/v0/evidence/6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+      responses:
+        '201':
+          description: Issue opened (on_issue ACK received)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+              examples:
+                open:
+                  $ref: '#/components/examples/IssueOpen'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /issues/{issue_id}:
+    parameters:
+    - name: issue_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - issue
+      operationId: getIssue
+      summary: Issue status (IGM issue_status / on_issue_status)
+      responses:
+        '200':
+          description: Issue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+              examples:
+                open:
+                  $ref: '#/components/examples/IssueOpen'
+  /issues/{issue_id}/actions:
+    parameters:
+    - name: issue_id
+      in: path
+      required: true
+      schema:
+        type: string
+    post:
+      tags:
+      - issue
+      operationId: issueAction
+      summary: Complainant action (IGM 2.0 action log). ESCALATE moves ISSUE to GRIEVANCE. ODR is an out-of-protocol reference.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - action
+              properties:
+                action:
+                  enum:
+                  - INFO_PROVIDED
+                  - RESOLUTION_ACCEPTED
+                  - RESOLUTION_REJECTED
+                  - ESCALATED
+                  - CLOSED
+                note:
+                  $ref: '#/components/schemas/LangText'
+                presence:
+                  $ref: '#/components/schemas/Presence'
+            examples:
+              escalate:
+                value:
+                  action: ESCALATED
+                  presence: HP
+                  note:
+                    en-IN: No response in 48 hours
+      responses:
+        '200':
+          description: Updated issue
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Issue'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+  /evidence/{transaction_id}:
+    parameters:
+    - name: transaction_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - evidence
+      operationId: getEvidence
+      summary: Evidence bundle for a transaction (mandates, receipts, instruction-log chain). Access-controlled to principal, counterparties of
+        record, GRO/ODR.
+      responses:
+        '200':
+          description: Evidence bundle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceBundle'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /negotiations:
+    post:
+      tags:
+      - negotiation
+      operationId: openNegotiation
+      summary: Open a negotiation with one seller (Beckn select with bacp.negotiation capability tag)
+      description: 'Intersects BAP and BPP `bacp.negotiation` capabilities (NEG-101). If the intersection of modes is empty the
+
+        response is 200 with message `capabilities_incompatible`. The negotiation mandate must be ACTIVE and linked to an
+
+        ACTIVE open checkout mandate (NEG-138). Returns the first seller offer if one arrives within `max_wait_ms`.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NegotiationCreate'
+            examples:
+              saree:
+                value:
+                  bpp_id: bpp.bunkar.example.in
+                  provider_id: P2
+                  mode: alternating
+                  profile: b2c.ecom
+                  negotiation_mandate_ref: mdt_NEG7Q2W9X4K1M3
+                  presence: HNP
+                  items:
+                  - item_id: CHND-SILK-112
+                    quantity: 1
+                  max_wait_ms: 5000
+      responses:
+        '201':
+          description: Negotiation opened (state OPEN, AWAITING_OFFER or NEGOTIATING)
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+  /negotiations/{negotiation_id}:
+    parameters:
+    - $ref: '#/components/parameters/NegotiationId'
+    get:
+      tags:
+      - negotiation
+      operationId: getNegotiation
+      summary: Authoritative full state, offer states, transcript hashes and guard verdicts (constraint IDs only)
+      responses:
+        '200':
+          description: Negotiation session
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /negotiations/{negotiation_id}/offers:
+    parameters:
+    - $ref: '#/components/parameters/NegotiationId'
+    get:
+      tags:
+      - negotiation
+      operationId: listNegotiationMessages
+      summary: Signed negotiation messages in this session (transcript), oldest first
+      responses:
+        '200':
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - items
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: ../schemas/offer.json
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags:
+      - negotiation
+      operationId: sendNegotiationMessage
+      summary: Send offer, counter_offer, reject, withdraw, terminate, request_extension or accept_revoke
+      description: "The agent submits an unsigned draft. The gateway runs guard N-1..N-11 and validators V-01..V-14, signs with the\nBAP registry\
+        \ key and the agent key, and sends Beckn select (buyer) carrying a bacp.neg TagGroup.\n- A firm counter outside the negotiation mandate\
+        \ is never sent. The response is 200 with `requires_escalation`\n  (NEG-131, NEG-134), or the agent may resend with subject_to_principal_approval\
+        \ true (forces firm false).\n- A counter that cites a non-live offer returns 409 NEG_STALE_OFFER. A counter on an expired offer returns\
+        \ 200\n  message NEG_OFFER_EXPIRED (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt.\
+        \ The crossing rule (earlier CounterSignature timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n"
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NegotiationMessageDraft'
+            examples:
+              counter:
+                value:
+                  type: counter_offer
+                  in_reply_to: sha-256:Wc6l4R0gH0b0dXzcrZmLtJ3x3yQ6m5PZb1oS2kA9VQo
+                  firm: true
+                  expires_in: PT30M
+                  term_sheet_patch:
+                  - op: replace
+                    path: /lines/0/unit_price/value
+                    value:
+                      value: 180000
+                      currency: INR
+                  - op: replace
+                    path: /lines/0/unit_price/status
+                    value: Assert
+              withdraw:
+                value:
+                  type: withdraw
+                  offer_hash: sha-256:Wc6l4R0gH0b0dXzcrZmLtJ3x3yQ6m5PZb1oS2kA9VQo
+                  reason: offeror_choice
+      responses:
+        '200':
+          description: Message sent, or escalation required, or business message (full state)
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /negotiations/{negotiation_id}/accept:
+    parameters:
+    - $ref: '#/components/parameters/NegotiationId'
+    post:
+      tags:
+      - negotiation
+      operationId: acceptOffer
+      summary: Absolute, unqualified ACCEPT of the live offer (bacp.neg.accept, sent on Beckn init)
+      description: 'The gateway obtains a `within_bounds` attestation from the buyer credential provider (which re-verifies the
+
+        closed mandate against the open checkout mandate and the negotiation mandate) and sends Beckn init carrying
+
+        bacp.neg.accept. The seller BPP receives only the attestation (NEG-133). Accept of a firm offer gives
+
+        legal_effect acceptance (state ACCEPT_PENDING then AGREED). Accept of a non-firm offer gives purchase_offer
+
+        (state PURCHASE_OFFERED). on_init with the identical term hash moves to BOUND and opens or updates the v0
+
+        checkout session, whose checkout_hash is the hash of the BPP-signed quote (not the offer hash, NEG-138).
+
+        Outside the mandate: 200 with requires_escalation, then retry with step_up_id after approval.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AcceptRequest'
+            examples:
+              accept:
+                value:
+                  offer_hash: sha-256:Wc6l4R0gH0b0dXzcrZmLtJ3x3yQ6m5PZb1oS2kA9VQo
+      responses:
+        '200':
+          description: ACCEPT dispatched (AGREED, PURCHASE_OFFERED, BOUND), or requires_escalation, or a breach flag
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /rfqs:
+    post:
+      tags:
+      - rfq
+      operationId: createRfq
+      summary: Publish a structured RFQ to invitees or by broadcast (one Beckn select per BPP, parent rfq_id)
+      description: 'Requires response_by and min_responses (NEG-152). rfq_sealed requires a bid deposit in term_sheet_draft.deposit
+
+        or the RFQ policy (NEG-151). One negotiation session is created per responding seller, each carrying the parent
+
+        rfq_id for cross-session exposure (NEG-137).
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/negotiation-session.json#/$defs/Rfq
+      responses:
+        '201':
+          description: RFQ published (state PUBLISHED or COLLECTING)
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json#/$defs/Rfq
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/InFlight'
+  /rfqs/{rfq_id}:
+    parameters:
+    - $ref: '#/components/parameters/RfqId'
+    get:
+      tags:
+      - rfq
+      operationId: getRfq
+      summary: RFQ state. Before close, shows only commit counts. After reveal, the landed-cost comparison set.
+      responses:
+        '200':
+          description: RFQ
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json#/$defs/Rfq
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /rfqs/{rfq_id}/award:
+    parameters:
+    - $ref: '#/components/parameters/RfqId'
+    post:
+      tags:
+      - rfq
+      operationId: awardRfq
+      summary: Award to one seller (ACCEPT of its revealed offer) and terminate the rest
+      description: Refused with NEG_EARLY_AWARD before response_by unless all invitees responded. Losers receive terminate rfq_not_awarded and
+        their deposits are released.
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - negotiation_id
+              - offer_hash
+              properties:
+                negotiation_id:
+                  type: string
+                offer_hash:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Awarded. Returns the winning negotiation session.
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+  /auctions:
+    post:
+      tags:
+      - auction
+      operationId: createAuction
+      summary: Host a reverse (L1) or sealed auction through a neutral auctioneer, or register to join one
+      description: 'The AuctionSpec must name a neutral auctioneer (affiliated_with_any_seller false), a mandatory anti-sniping
+
+        extension_rule, a retraction_rule and, for sealed visibility, a bid_deposit. Rules are frozen at the first bid
+
+        (NEG-150). Seller-hosted auctions are refused.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/negotiation-session.json#/$defs/AuctionSpec
+      responses:
+        '201':
+          description: Auction scheduled
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+  /auctions/{auction_id}:
+    parameters:
+    - $ref: '#/components/parameters/AuctionId'
+    get:
+      tags:
+      - auction
+      operationId: getAuction
+      summary: Bidder view (current price only, own rank, never identities or sealed bids)
+      responses:
+        '200':
+          description: Auction state
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auctions/{auction_id}/bids:
+    parameters:
+    - $ref: '#/components/parameters/AuctionId'
+    post:
+      tags:
+      - auction
+      operationId: placeBid
+      summary: Place a bid, bid_commit, bid_reveal or bid_retract (signed, bacp-negotiate)
+      description: 'Guarded against the negotiation mandate (auction_max_bid, total_max, exposure). Dutch ACCEPTs of the current tick
+
+        are ordered by auctioneer receipt timestamp, then dispatch time, then lowest msg_hash. A bid inside the
+
+        anti-sniping window extends close. Retractions follow the spec retraction_rule.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NegotiationMessageDraft'
+      responses:
+        '200':
+          description: Bid accepted by the auctioneer (CounterSignature returned) or escalation required
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+  /auctions/{auction_id}/award:
+    parameters:
+    - $ref: '#/components/parameters/AuctionId'
+    post:
+      tags:
+      - auction
+      operationId: awardAuction
+      summary: Buyer or auctioneer award of the winning bid hash (reverse_l1), or seller acceptance of the highest bid (english)
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - bid_hash
+              properties:
+                bid_hash:
+                  type: string
+      responses:
+        '200':
+          description: Awarded, negotiation for the winner moves to AGREED
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/negotiation-session.json
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+  /payment-handlers:
+    get:
+      tags:
+      - payment-handlers
+      operationId: listPaymentHandlers
+      summary: The handler registry (HandlerDescriptor[]). Public, cacheable.
+      security: []
+      parameters:
+      - name: presence
+        in: query
+        schema:
+          enum:
+          - HP
+          - HNP
+      - name: class
+        in: query
+        schema:
+          enum:
+          - O
+          - C
+          - A
+          - D
+          - N
+      - name: kind
+        in: query
+        schema:
+          enum:
+          - payment
+          - mandate_registration
+          - financing
+          - security_verification
+          - tracker
+          - ledger
+      - name: segment
+        in: query
+        schema:
+          enum:
+          - b2c
+          - b2b
+          - g2b
+          - c2c
+          - assisted
+          - cross_border
+      - name: status
+        in: query
+        schema:
+          enum:
+          - live
+          - pilot
+          - reserved
+          - deprecated
+      responses:
+        '200':
+          description: Registry entries
+          headers:
+            ETag:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - registry_version
+                - items
+                properties:
+                  registry_version:
+                    type: string
+                    examples:
+                    - '2026-10-13'
+                  items:
+                    type: array
+                    items:
+                      $ref: ../schemas/handler-descriptor.json
+  /payment-handlers/{handler_id}:
+    parameters:
+    - name: handler_id
+      in: path
+      required: true
+      description: v1 id or a v0/PAYB alias (resolved to the canonical descriptor)
+      schema:
+        type: string
+    get:
+      tags:
+      - payment-handlers
+      operationId: getPaymentHandler
+      security: []
+      responses:
+        '200':
+          description: One descriptor
+          content:
+            application/json:
+              schema:
+                $ref: ../schemas/handler-descriptor.json
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /payment-handlers/intersect:
+    post:
+      tags:
+      - payment-handlers
+      operationId: intersectPaymentHandlers
+      summary: Session-scoped eligible handlers, ordered by user preference then lowest all-in total (section 13.4)
+      description: 'Intersection of registry, BAP profile, BPP accepted handlers, the TermSheet payment option and tranche, mandates,
+
+        presence, amount limits and Trusted-Surface-reported instrument availability. Empty result returns 200 with message
+
+        handlers_incompatible (resolution requires_buyer_input). Read-only, but POST because of the body.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - presence
+              properties:
+                session_id:
+                  type: string
+                negotiation_id:
+                  type: string
+                option_id:
+                  type: string
+                tranche_id:
+                  type: string
+                presence:
+                  enum:
+                  - HP
+                  - HNP
+                amount:
+                  $ref: '#/components/schemas/Amount'
+      responses:
+        '200':
+          description: Eligible handlers with totals and the reason each other handler was excluded
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - eligible
+                - excluded
+                - messages
+                properties:
+                  eligible:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - handler_id
+                      - class
+                      - all_in_total
+                      properties:
+                        handler_id:
+                          type: string
+                        class:
+                          enum:
+                          - O
+                          - C
+                          - A
+                          - D
+                        all_in_total:
+                          $ref: '#/components/schemas/Amount'
+                        method_fee:
+                          $ref: '#/components/schemas/Amount'
+                        afa_expected:
+                          type: boolean
+                        rank_reason:
+                          enum:
+                          - user_preference
+                          - lowest_total
+                          - lowest_friction
+                  excluded:
+                    type: array
+                    items:
+                      type: object
+                      required:
+                      - handler_id
+                      - reason
+                      properties:
+                        handler_id:
+                          type: string
+                        reason:
+                          enum:
+                          - not_in_registry
+                          - not_offered_by_bap
+                          - not_accepted_by_seller
+                          - not_in_term_sheet
+                          - not_in_mandate
+                          - presence_handler_mismatch
+                          - above_limit
+                          - instrument_unavailable
+                          - card_not_enabled_for_cnp
+                          - cod_not_allowed
+                          - reservepay_block_wrong_payee
+                          - pilot_not_attested
+                          - cod_open_orders_cap
+                          - credit_funding_not_allowed
+                  messages:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Message'
+                  comparison:
+                    type: array
+                    description: Every option and its all-in total (PAY-132 selection log)
+                    items:
+                      type: object
+                      properties:
+                        handler_id:
+                          type: string
+                        all_in_total:
+                          $ref: '#/components/schemas/Amount'
+                        option_id:
+                          type: string
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+webhooks:
+  mandate.status_changed:
+    post:
+      summary: Mandate status changed (ACTIVE, PAUSED, REVOKED, EXPIRED, EXHAUSTED). Delivered within 60 s of the Trusted Surface event.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+            examples:
+              revoked:
+                value:
+                  event_id: evt_01HZXR
+                  type: mandate.status_changed
+                  created_at: '2026-10-25T08:00:03+05:30'
+                  data:
+                    mandate_id: mdt_PAY7Q2W9X4K1M3
+                    status: REVOKED
+                    reason: user_revoked_on_trusted_surface
+                    affected_sessions:
+                    - ses_01HZXD
+      responses:
+        '200':
+          description: Acknowledged
+  session.updated:
+    post:
+      summary: Full session snapshot, e.g. step-up required or approved, payment resolved after in-doubt
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged
+  payment.receipt:
+    post:
+      summary: Rail-anchored payment or refund receipt (RRN/UTR)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+            examples:
+              paid:
+                value:
+                  event_id: evt_01HZXP
+                  type: payment.receipt
+                  created_at: '2026-10-20T19:02:12+05:30'
+                  data:
+                    receipt:
+                      receipt_id: rcpt_PAY0000000001
+                      receipt_type: payment
+                      result: success
+                      rrn: '629318004417'
+                      amount:
+                        value: 30200
+                        currency: INR
+      responses:
+        '200':
+          description: Acknowledged
+  order.updated:
+    post:
+      summary: Full order snapshot from unsolicited on_status, on_cancel or on_update
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged
+  return.updated:
+    post:
+      summary: Return or refund state change
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged
+  issue.updated:
+    post:
+      summary: IGM on_issue respondent action (PROCESSING, INFO_REQUESTED, RESOLUTION_PROPOSED, CASCADED, RESOLVED)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged
+  pre_debit.notice:
+    post:
+      summary: Issuer pre-debit notice (upi.autopay, at least 24 h ahead). The agent MUST relay it to the user and MUST NOT dismiss it (REQ-304).
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged
+components:
+  securitySchemes:
+    httpSignature:
+      type: apiKey
+      in: header
+      name: Signature
+      description: 'RFC 9421 HTTP Message Signature with RFC 9530 Content-Digest. Covered components MUST include @method, @authority,
+
+        @path, @query (if present), content-digest, content-type, idempotency-key and bacp-agent-credential (when present).
+
+        Parameters MUST include created, expires (expires - created <= 300 s), nonce, keyid and tag
+
+        (bacp-browse, bacp-pay, bacp-post-order or bacp-ts). Keys: AgentCredential.cnf.jwk (agents) or the registry
+
+        record (MM, PSP, BAP). ES256 mandatory, Ed25519 optional.
+
+        '
+    agentCredential:
+      type: apiKey
+      in: header
+      name: BACP-Agent-Credential
+      description: SD-JWT VC (vct in.bacp.agent.1) with only the disclosures the gateway needs. Checked against the registry status list.
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: 128-bit or more random value (UUIDv4 or ULID). Required on every POST and PUT.
+      schema:
+        type: string
+        minLength: 22
+        maxLength: 64
+      example: 01HZX8W3T6Q9M2R7C4B1N8K5D0
+    SignatureInput:
+      name: Signature-Input
+      in: header
+      required: true
+      schema:
+        type: string
+      example: sig1=("@method" "@authority" "@path" "content-digest" "content-type" "idempotency-key" "bacp-agent-credential");created=1792501322;expires=1792501622;nonce="q8Fz1V2w";keyid="sakhi-2026-10";alg="ecdsa-p256-sha256";tag="bacp-pay"
+    Signature:
+      name: Signature
+      in: header
+      required: true
+      schema:
+        type: string
+      example: 'sig1=:MEUCIQDexampleSignatureBase64Value=:'
+    SessionId:
+      name: session_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^ses_[A-Za-z0-9]{8,40}$
+    MandateId:
+      name: mandate_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^mdt_[A-Za-z0-9]{12,40}$
+    OrderId:
+      name: order_id
+      in: path
+      required: true
+      schema:
+        type: string
+    NegotiationId:
+      name: negotiation_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^neg_[A-Za-z0-9]{8,40}$
+    RfqId:
+      name: rfq_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^rfq_[A-Za-z0-9]{8,40}$
+    AuctionId:
+      name: auction_id
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: ^auc_[A-Za-z0-9]{8,40}$
+  responses:
+    BadRequest:
+      description: Invalid request or missing Idempotency-Key
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            missingKey:
+              value:
+                type: invalid_request
+                code: idempotency_key_required
+                message: Idempotency-Key header is required
+                param: $.headers.Idempotency-Key
+    Unauthorized:
+      description: Signature, credential or replay failure
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            replay:
+              value:
+                type: authentication_error
+                code: replay_detected
+                message: Signature nonce already seen within window
+            unregistered:
+              value:
+                type: authentication_error
+                code: agent_unregistered
+                message: Agent credential not found or revoked in registry
+    Forbidden:
+      description: Caller is not allowed to use this endpoint
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            agentOnTsEndpoint:
+              value:
+                type: authorization_error
+                code: trusted_surface_only
+                message: Only a registered Mandate Manager or payer PSP may call this endpoint
+    MandateRejected:
+      description: Deterministic mandate verification failed (fail closed)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            revoked:
+              value:
+                type: mandate_error
+                code: mandate_revoked
+                message: Mandate mdt_PAY7Q2W9X4K1M3 is REVOKED
+                param: $.mandate_ref
+            outOfScope:
+              value:
+                type: mandate_error
+                code: mandate_scope_mismatch
+                message: Category ONDC:RET12 not in categories_allow
+                param: $.items[0]
+            railCap:
+              value:
+                type: mandate_error
+                code: rail_limit_exceeded
+                message: Amount exceeds Reserve Pay block remaining balance
+                param: $.totals
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    InFlight:
+      description: Same Idempotency-Key is still being processed
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          example: 2
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            inFlight:
+              value:
+                type: invalid_request
+                code: idempotency_in_flight
+                message: Request with this key is in progress
+    IdempotencyConflict:
+      description: Same Idempotency-Key with a different body
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            conflict:
+              value:
+                type: invalid_request
+                code: idempotency_conflict
+                message: Idempotency-Key reused with a different request body
+    BppTimeout:
+      description: No on_* callback within the facade wait window. Session remains retrievable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            timeout:
+              value:
+                type: upstream_error
+                code: bpp_timeout
+                message: on_select not received within 5000 ms
+    StaleOffer:
+      description: The message cites an offer that is not LIVE (NEG-110). GET the negotiation and respond to the live offer.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            stale:
+              value:
+                type: invalid_request
+                code: NEG_STALE_OFFER
+                message: in_reply_to is not the live offer
+                param: $.in_reply_to
+    BppNack:
+      description: The seller NACKed the Beckn request (v0 contract gap, also used by v1).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RequestTooLarge:
+      description: Request body above the gateway limit; refused before signature verification (request_too_large, E-FIX-3).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    QuotaExceeded:
+      description: Per-agent idempotency-key quota exhausted (quota_exceeded, E-FIX-3).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Amount:
+      type: object
+      description: Integer minor units (paise) per ISO 4217, as in UCP, ACP and AP2.
+      required:
+      - value
+      - currency
+      properties:
+        value:
+          type: integer
+          minimum: 0
+        currency:
+          const: INR
+      additionalProperties: false
+    Hash:
+      type: string
+      description: Multihash-style 'alg:base64url'. sha-256 is mandatory, blake2b-512 allowed for Beckn digests.
+      pattern: ^(sha-256|blake2b-512):[A-Za-z0-9_-]{43,88}$
+    Jws:
+      type: string
+      description: Compact JWS or SD-JWT (with ~ separators). Payload canonicalised with JCS (RFC 8785).
+      pattern: ^[A-Za-z0-9_-]+\.[A-Za-z0-9_-]*\.[A-Za-z0-9_-]+(~[A-Za-z0-9_.~-]*)?$
+    Jwk:
+      type: object
+      required:
+      - kty
+      properties:
+        kty:
+          enum:
+          - EC
+          - OKP
+        crv:
+          enum:
+          - P-256
+          - Ed25519
+        x:
+          type: string
+        y:
+          type: string
+        kid:
+          type: string
+    Signature:
+      type: object
+      required:
+      - kid
+      - alg
+      - value
+      properties:
+        role:
+          enum:
+          - principal
+          - mandate_manager
+          - psp
+          - agent
+          - agent_provider
+          - bap
+          - bpp
+          - registry
+          - operator
+        kid:
+          type: string
+          description: Registry-resolvable key id, e.g. 'bap.example.in|ukid-7|ed25519' or a did:web#fragment
+        alg:
+          enum:
+          - ES256
+          - EdDSA
+        value:
+          $ref: '#/components/schemas/Jws'
+      additionalProperties: false
+    Presence:
+      enum:
+      - HP
+      - HNP
+      description: Human present / human not present (AP2 section 4.2).
+    LangText:
+      type: object
+      description: 'Multilingual map keyed by BCP 47 tag, e.g. {"hi-IN": "...", "en-IN": "..."}.'
+      propertyNames:
+        pattern: ^[a-z]{2,3}(-[A-Za-z]{4})?(-[A-Z]{2})?$
+      additionalProperties:
+        type: string
+      minProperties: 1
+    RailType:
+      type: string
+      pattern: ^(upi\.circle\.delegate|upi\.reservepay\.block|upi\.autopay|upi\.uap\.[a-z0-9_.]+)$
+    Channel:
+      enum:
+      - app
+      - voice
+      - ivr
+      - upi123pay
+      - whatsapp
+      - web
+      - assisted
+    Handler:
+      enum:
+      - upi.circle.delegate
+      - upi.reservepay.block
+      - upi.autopay
+      - upi.lite
+      - upi.123pay
+      - rupay.token
+      - erupi
+      - erupee
+      - bbps
+      - cod
+      description: BACP payment handler ids (REQ-401). upi.uap.* is reserved and validated by RailType.
+    AgentCredential:
+      title: AgentCredential
+      description: Claims of an SD-JWT VC (vct in.bacp.agent.1) issued by a registry-accredited issuer to an agent operated by a registered legal
+        entity and bound to a BAP subscriber.
+      type: object
+      required:
+      - vct
+      - iss
+      - sub
+      - iat
+      - exp
+      - operator
+      - bap
+      - agent
+      - cnf
+      - purposes
+      - disclosure
+      - status
+      properties:
+        vct:
+          const: in.bacp.agent.1
+        iss:
+          type: string
+          format: uri
+          description: 'Issuer: ONDC registry / DeDi record or accredited issuer'
+        sub:
+          type: string
+          description: Agent id, e.g. did:web:agents.example.in:krishi-voice or urn:bacp:agent:...
+        iat:
+          type: integer
+        exp:
+          type: integer
+          description: <= iat + 180 days (REQ-116 rotation)
+        operator:
+          type: object
+          required:
+          - legal_name
+          - entity_id
+          - grievance_officer
+          properties:
+            legal_name:
+              type: string
+            entity_id:
+              type: object
+              required:
+              - type
+              - value
+              properties:
+                type:
+                  enum:
+                  - CIN
+                  - LLPIN
+                  - GSTIN
+                  - PAN
+                value:
+                  type: string
+            grievance_officer:
+              type: object
+              required:
+              - name
+              - email
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                phone:
+                  type: string
+            incident_contact:
+              type: string
+              format: email
+            ai_inventory_ref:
+              type: string
+              format: uri
+              description: FREE-AI Rec 23 inventory entry
+        bap:
+          type: object
+          required:
+          - subscriber_id
+          - ukid
+          properties:
+            subscriber_id:
+              type: string
+              description: ONDC/Beckn bap_id (FQDN)
+            ukid:
+              type: string
+        agent:
+          type: object
+          required:
+          - class
+          - model_family
+          - build
+          properties:
+            class:
+              enum:
+              - shopping
+              - voice_shopping
+              - assisted
+              - sub_agent
+            model_family:
+              type: string
+            build:
+              type: string
+              description: Release or build hash of the agent runtime
+            channels:
+              type: array
+              items:
+                $ref: '#/components/schemas/Channel'
+            languages:
+              type: array
+              items:
+                type: string
+            uap_agent_id:
+              type:
+              - string
+              - 'null'
+              description: Reserved for an NPCI UAP registry id once published
+        cnf:
+          type: object
+          required:
+          - jwk
+          properties:
+            jwk:
+              $ref: '#/components/schemas/Jwk'
+          description: RFC 7800 key binding. The same key signs RFC 9421 requests and KB-JWTs that close open mandates.
+        purposes:
+          type: array
+          minItems: 1
+          items:
+            enum:
+            - bacp-browse
+            - bacp-pay
+            - bacp-post-order
+            - bacp-negotiate
+          description: RFC 9421 signature tags this key may use (Visa TAP-style browse/pay split).
+        disclosure:
+          type: object
+          required:
+          - ai_notice
+          - human_handoff_url
+          properties:
+            ai_notice:
+              $ref: '#/components/schemas/LangText'
+            human_handoff_url:
+              type: string
+              format: uri
+        conformance:
+          type: object
+          properties:
+            level:
+              enum:
+              - v0-core
+              - v0-full
+            attestation:
+              $ref: '#/components/schemas/Jws'
+        status:
+          type: object
+          required:
+          - status_list
+          properties:
+            status_list:
+              type: object
+              required:
+              - uri
+              - idx
+              properties:
+                uri:
+                  type: string
+                  format: uri
+                idx:
+                  type: integer
+                  minimum: 0
+    Mandate:
+      title: Mandate (bacp.AgentMandate, AMA)
+      description: AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status,
+        usage and signatures is signed and immutable (REQ-103).
+      type: object
+      required:
+      - vct
+      - mandate_id
+      - kind
+      - form
+      - iss
+      - iat
+      - valid_from
+      - valid_until
+      - principal
+      - agent
+      - purpose
+      - action_scope
+      - presence_allowed
+      - constraints
+      - revocation
+      - signatures
+      properties:
+        vct:
+          enum:
+          - in.bacp.mandate.checkout.open.1
+          - in.bacp.mandate.checkout.1
+          - in.bacp.mandate.payment.open.1
+          - in.bacp.mandate.payment.1
+        ap2_vct:
+          enum:
+          - mandate.checkout.open.1
+          - mandate.checkout.1
+          - mandate.payment.open.1
+          - mandate.payment.1
+          description: AP2 v0.2 type this mandate is wire-compatible with
+        mandate_id:
+          type: string
+          pattern: ^mdt_[A-Za-z0-9]{12,40}$
+        parent_mandate_id:
+          type:
+          - string
+          - 'null'
+          description: Open mandate this one narrows (closed mandate or sub-agent delegation). Scope and expiry may only narrow.
+        checkout_mandate_ref:
+          type: string
+          description: 'Payment mandates only: the checkout mandate this payment authority is bound to (AP2 payment.reference, REQUIRED)'
+        kind:
+          enum:
+          - checkout
+          - payment
+        form:
+          enum:
+          - open
+          - closed
+        iss:
+          type: string
+          description: Mandate Manager / Trusted Surface subscriber id
+        iat:
+          type: integer
+        valid_from:
+          type: string
+          format: date-time
+        valid_until:
+          type: string
+          format: date-time
+        principal:
+          type: object
+          required:
+          - ref
+          properties:
+            ref:
+              type: string
+              description: Pairwise pseudonymous user id at the Mandate Manager. Never an Aadhaar number (REQ-204).
+            assurance:
+              enum:
+              - vpa_pin
+              - aadhaar_vc
+              - digilocker
+              - passkey
+        agent:
+          type: object
+          required:
+          - id
+          - credential_hash
+          properties:
+            id:
+              type: string
+            credential_hash:
+              $ref: '#/components/schemas/Hash'
+        purpose:
+          type: object
+          required:
+          - code
+          - text
+          properties:
+            code:
+              type: string
+              pattern: ^P-[A-Z]{3}-[0-9]{2}$
+              description: BACP purpose-code registry (Sahamati Fair Use analogue), e.g. P-GRO-01 grocery replenishment
+            text:
+              $ref: '#/components/schemas/LangText'
+        action_scope:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            enum:
+            - DISCOVER
+            - QUOTE
+            - ORDER
+            - PAY
+            - CANCEL
+            - RETURN
+            - RAISE_ISSUE
+            - SHARE_DATA
+        data_scopes:
+          type: array
+          uniqueItems: true
+          items:
+            enum:
+            - NAME
+            - PHONE
+            - DELIVERY_ADDRESS
+            - EMAIL
+            - AGE_OVER_18
+            - GSTIN
+        presence_allowed:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Presence'
+        constraints:
+          type: object
+          description: 'Evaluated fail-closed by deterministic code: unknown keys fail (AP2 agent_authorization 463-465).'
+          properties:
+            amount_per_txn:
+              $ref: '#/components/schemas/Amount'
+            budgets:
+              type: array
+              items:
+                type: object
+                required:
+                - period
+                - max
+                properties:
+                  period:
+                    enum:
+                    - P1D
+                    - P7D
+                    - P1M
+                    - FIRST_24H
+                    - LIFETIME
+                  max:
+                    $ref: '#/components/schemas/Amount'
+                additionalProperties: false
+            max_executions:
+              type: integer
+              minimum: 1
+            categories_allow:
+              type: array
+              items:
+                type: string
+              description: ONDC domain or category codes, e.g. ONDC:RET10, RET10-Staples
+            categories_deny:
+              type: array
+              items:
+                type: string
+            merchants_allow:
+              type: array
+              items:
+                type: object
+                required:
+                - bpp_id
+                properties:
+                  bpp_id:
+                    type: string
+                  provider_id:
+                    type: string
+            delivery_pincodes:
+              type: array
+              items:
+                type: string
+                pattern: ^[1-9][0-9]{5}$
+            line_items:
+              type: array
+              items:
+                type: object
+                required:
+                - item_id
+                - qty_max
+                properties:
+                  item_id:
+                    type: string
+                  qty_max:
+                    type: integer
+                    minimum: 1
+            step_up:
+              type: object
+              properties:
+                above_amount:
+                  $ref: '#/components/schemas/Amount'
+                new_merchant:
+                  type: boolean
+                outside_categories:
+                  type: boolean
+                first_order:
+                  type: boolean
+            reject_preticked_addons:
+              const: true
+            cod_allowed:
+              type: boolean
+            cod_max_open_orders:
+              type: integer
+              minimum: 0
+              description: 'PAY-131: open COD orders an agent may hold HNP (L7-compliance C-2).'
+            credit_funding_allowed:
+              type: boolean
+              description: 'PAY-107: credit-funded handlers allowed (L7-compliance C-2).'
+          additionalProperties: false
+        checkout_hash:
+          $ref: '#/components/schemas/Hash'
+          description: 'Closed mandates only: hash of the BPP-signed quote / checkout (AP2 checkout_hash)'
+        amount:
+          $ref: '#/components/schemas/Amount'
+          description: 'Closed mandates only: exact amount'
+        payee:
+          type: object
+          properties:
+            vpa:
+              type: string
+            bap_id:
+              type: string
+        rail_binding:
+          type: object
+          required:
+          - type
+          - rail_ref
+          - psp_id
+          - attestation
+          properties:
+            type:
+              anyOf:
+              - $ref: '#/components/schemas/RailType'
+              - $ref: ../schemas/common.json#/$defs/RailTypeV1
+            rail_ref:
+              type: string
+              description: UMN / SBMD block id / Circle delegation id as issued by the payer PSP
+            psp_id:
+              type: string
+            attestation:
+              $ref: '#/components/schemas/Jws'
+              description: PSP-signed statement {rail_ref, type, limits, expiry, payee} hashed into this mandate
+            rail_limits:
+              type: object
+              properties:
+                per_txn:
+                  $ref: '#/components/schemas/Amount'
+                per_month:
+                  $ref: '#/components/schemas/Amount'
+                first_24h:
+                  $ref: '#/components/schemas/Amount'
+                block_amount:
+                  $ref: '#/components/schemas/Amount'
+                expires_at:
+                  type: string
+                  format: date-time
+            pre_debit_notice:
+              enum:
+              - required_24h
+              - not_applicable
+              - unknown
+              - bacp_policy_24h
+              - post_debit_notice
+          description: 'OPEN payment mandates only (P-03 as narrowed by L5): binding to a live UPI standing-authority primitive. upi.uap.* reserved.'
+        auth_binding:
+          type: object
+          required:
+          - type
+          description: 'CLOSED payment mandates only: how this single payment is authorised. Either it executes under the parent open mandate''s
+            rail_binding (HNP), or it carries a per-transaction user 2FA reference (HP) or another REQ-401 instrument.'
+          properties:
+            type:
+              enum:
+              - parent_rail_binding
+              - upi.pin
+              - upi.biometric
+              - card.3ds
+              - instrument
+            handler:
+              anyOf:
+              - $ref: '#/components/schemas/Handler'
+              - $ref: '#/components/schemas/RailType'
+            ref:
+              type: string
+              description: 2FA/authentication reference from the PSP or issuer, or the parent rail_ref
+            psp_id:
+              type: string
+        dpdp:
+          type: object
+          properties:
+            consent_receipts:
+              type: array
+              items:
+                type: string
+            data_retention:
+              type: string
+              description: ISO 8601 duration imposed on recipients, e.g. P1Y
+        revocation:
+          type: object
+          required:
+          - status_uri
+          properties:
+            status_uri:
+              type: string
+              format: uri
+            status_list:
+              type: object
+              properties:
+                uri:
+                  type: string
+                  format: uri
+                idx:
+                  type: integer
+            notify_sla_seconds:
+              type: integer
+              maximum: 60
+        audit_uri:
+          type: string
+          format: uri
+        cnf:
+          type: object
+          required:
+          - jwk
+          properties:
+            jwk:
+              $ref: '#/components/schemas/Jwk'
+          description: Agent key allowed to close this open mandate (AP2 section 4.1)
+        signatures:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/Signature'
+        status:
+          readOnly: true
+          enum:
+          - PENDING
+          - ACTIVE
+          - PAUSED
+          - REVOKED
+          - EXPIRED
+          - EXHAUSTED
+          - REJECTED
+        usage:
+          readOnly: true
+          type: object
+          properties:
+            count:
+              type: integer
+            spent:
+              type: array
+              items:
+                type: object
+                properties:
+                  period:
+                    type: string
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  window_start:
+                    type: string
+                    format: date-time
+            last_used_at:
+              type: string
+              format: date-time
+      allOf:
+      - if:
+          properties:
+            form:
+              const: open
+        then:
+          required:
+          - cnf
+      - if:
+          properties:
+            form:
+              const: closed
+        then:
+          required:
+          - checkout_hash
+          - amount
+          - parent_mandate_id
+      - if:
+          properties:
+            kind:
+              const: payment
+          required:
+          - kind
+        then:
+          required:
+          - checkout_mandate_ref
+      - if:
+          properties:
+            kind:
+              const: payment
+            form:
+              const: open
+          required:
+          - kind
+          - form
+        then:
+          required:
+          - rail_binding
+      - if:
+          properties:
+            kind:
+              const: payment
+            form:
+              const: closed
+          required:
+          - kind
+          - form
+        then:
+          required:
+          - auth_binding
+          not:
+            required:
+            - rail_binding
+      - description: 'REQ-102 (L7-compliance C-3): an open mandate carries data scopes, an audit URI, a retention period and at least one frequency
+          bound.'
+        if:
+          properties:
+            form:
+              const: open
+          required:
+          - form
+        then:
+          required:
+          - data_scopes
+          - audit_uri
+          - dpdp
+          properties:
+            dpdp:
+              required:
+              - data_retention
+            constraints:
+              anyOf:
+              - required:
+                - budgets
+              - required:
+                - max_executions
+    ConsentReceipt:
+      title: ConsentReceipt (DPDP)
+      description: One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or
+        for) a DPDP Consent Manager.
+      type: object
+      required:
+      - receipt_id
+      - iss
+      - issued_at
+      - principal_ref
+      - mandate_ref
+      - recipient
+      - data_items
+      - purpose
+      - legal_basis
+      - notice
+      - captured_via
+      - withdrawal
+      - grievance
+      - retention
+      - signature
+      properties:
+        receipt_id:
+          type: string
+          pattern: ^cr_[A-Za-z0-9]{12,40}$
+        iss:
+          type: string
+        cm_registration_no:
+          type:
+          - string
+          - 'null'
+          description: DPDP Board registration of the Consent Manager (REQ-211, from ~13 Nov 2026)
+        issued_at:
+          type: string
+          format: date-time
+        principal_ref:
+          type: string
+        mandate_ref:
+          type: string
+        recipient:
+          type: object
+          required:
+          - fiduciary_name
+          - bpp_id
+          properties:
+            fiduciary_name:
+              type: string
+            bpp_id:
+              type: string
+            provider_id:
+              type: string
+            dpo_contact:
+              type: string
+        data_items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+            - field
+            - form
+            properties:
+              field:
+                enum:
+                - NAME
+                - PHONE
+                - DELIVERY_ADDRESS
+                - EMAIL
+                - AGE_OVER_18
+                - GSTIN
+              form:
+                enum:
+                - plain
+                - masked
+                - selective_disclosure_vc
+                - token
+        purpose:
+          type: object
+          required:
+          - code
+          - text
+          properties:
+            code:
+              type: string
+            text:
+              $ref: '#/components/schemas/LangText'
+            goods_or_services:
+              type: string
+        legal_basis:
+          enum:
+          - consent_s6
+          - legitimate_use_s7a
+        notice:
+          type: object
+          required:
+          - language
+          - hash
+          properties:
+            language:
+              type: string
+              description: English or an Eighth Schedule language (BCP 47)
+            hash:
+              $ref: '#/components/schemas/Hash'
+            uri:
+              type: string
+              format: uri
+            translation_model:
+              type: string
+        captured_via:
+          type: object
+          required:
+          - surface
+          - user_action
+          - device_signature
+          properties:
+            surface:
+              type: string
+              description: Trusted Surface id (PSP app or Mandate Manager app), never the agent
+            user_action:
+              enum:
+              - tap_confirm
+              - upi_pin
+              - biometric
+              - passkey
+              - voice_confirm_plus_device
+            device_signature:
+              $ref: '#/components/schemas/Jws'
+            voice_evidence:
+              type: object
+              properties:
+                audio_hash:
+                  $ref: '#/components/schemas/Hash'
+                transcript_hash:
+                  $ref: '#/components/schemas/Hash'
+                translation_model:
+                  type: string
+        withdrawal:
+          type: object
+          required:
+          - uri
+          properties:
+            uri:
+              type: string
+              format: uri
+            erasure_signal:
+              const: true
+        grievance:
+          type: object
+          required:
+          - contact
+          properties:
+            contact:
+              type: string
+            board_complaint_uri:
+              type: string
+              format: uri
+        retention:
+          type: object
+          required:
+          - recipient_max
+          properties:
+            recipient_max:
+              type: string
+              description: ISO 8601 duration
+            legal_minimum:
+              type: string
+              default: P1Y
+              description: DPDP Rule 8(3)
+        status:
+          readOnly: true
+          enum:
+          - ACTIVE
+          - WITHDRAWN
+          - EXPIRED
+        signature:
+          $ref: '#/components/schemas/Signature'
+    Receipt:
+      title: Receipt (rail-anchored)
+      description: Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). Payment and refund receipts MUST carry the UPI RRN
+        and UTR.
+      type: object
+      required:
+      - receipt_id
+      - receipt_type
+      - iss
+      - issued_at
+      - result
+      - reference
+      - mandate_ref
+      - transaction_id
+      - signature
+      properties:
+        receipt_id:
+          type: string
+          pattern: ^rcpt_[A-Za-z0-9]{12,40}$
+        receipt_type:
+          enum:
+          - mandate
+          - checkout
+          - payment
+          - refund
+        iss:
+          type: string
+          description: 'Verifier: Mandate Manager, BPP, payer PSP'
+        issued_at:
+          type: string
+          format: date-time
+        result:
+          enum:
+          - success
+          - failure
+          - in_doubt
+        error:
+          type: string
+        reference:
+          $ref: '#/components/schemas/Hash'
+          description: Hash of the presented (closed) mandate, AP2 Receipt.reference
+        mandate_ref:
+          type: string
+        open_mandate_ref:
+          type: string
+        transaction_id:
+          type: string
+          description: Beckn context.transaction_id, end to end (REQ-115)
+        order_id:
+          type: string
+        checkout_hash:
+          $ref: '#/components/schemas/Hash'
+        amount:
+          $ref: '#/components/schemas/Amount'
+        payee:
+          type: object
+          properties:
+            vpa:
+              type: string
+            name:
+              type: string
+        rail:
+          type: object
+          required:
+          - type
+          - rail_ref
+          - status
+          properties:
+            type:
+              anyOf:
+              - $ref: '#/components/schemas/RailType'
+              - $ref: ../schemas/common.json#/$defs/HandlerRef
+            rail_ref:
+              type: string
+            rrn:
+              type: string
+              pattern: ^[0-9]{12}$
+            utr:
+              type: string
+            npci_txn_id:
+              type: string
+            psp_confirmation_id:
+              type: string
+            status:
+              enum:
+              - SUCCESS
+              - FAILURE
+              - PENDING
+              - DEEMED
+              - REVERSED
+            original_rrn:
+              type: string
+              description: 'Refund receipts: RRN of the debit being refunded (REQ-306)'
+            evidence:
+              type: object
+              additionalProperties:
+                type: string
+              description: v1 non-UPI settlement evidence (SC-16)
+          allOf:
+          - description: 'UPI-family rails (RE-2, E-ED-1): RRN is mandatory; UTR is mandatory unless the handler descriptor''s settlement.evidence_refs
+              lists RRN only (generated from examples/payment-handlers.registry.json).'
+            if:
+              properties:
+                type:
+                  pattern: ^(upi\.|in\.upi\.|in\.cod\.upi$|in\.pos\.(tap|dynamic_qr)$)
+              required:
+              - type
+            then:
+              required:
+              - rrn
+              if:
+                properties:
+                  type:
+                    pattern: ^(in\.upi\.intl|in\.upi\.lite|in\.upi\.uap|in\.upi\.uap\..+|upi\.lite|upi\.uap\.(?!pin$).+)$
+                required:
+                - type
+              else:
+                required:
+                - utr
+            else:
+              anyOf:
+              - required:
+                - rrn
+              - required:
+                - utr
+              - required:
+                - evidence
+        signature:
+          $ref: '#/components/schemas/Signature'
+        refund_state:
+          enum:
+          - pending_cardholder_consent
+          - reversed_to_bank_account
+          - released_block
+          - credit_note_issued
+          - refunded_to_source
+          - adjusted_against_dues
+          description: v1 delta (PAYC 2.8, PAY-106, TRD 17.3). adjusted_against_dues and refunded_to_source are prototype additions (SC-17).
+        fx:
+          $ref: ../schemas/fx.json
+      allOf:
+      - if:
+          properties:
+            receipt_type:
+              enum:
+              - payment
+              - refund
+            result:
+              const: success
+          required:
+          - receipt_type
+          - result
+        then:
+          required:
+          - rail
+          - amount
+          - checkout_hash
+    InstructionLogEntry:
+      title: InstructionLogEntry
+      description: Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment (UAP section 5 item 3). entry_hash = sha-256(JCS(entry
+        minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.
+      type: object
+      required:
+      - seq
+      - session_id
+      - transaction_id
+      - stage
+      - actor
+      - at
+      - content_hash
+      - prev_hash
+      - entry_hash
+      - signature
+      properties:
+        seq:
+          type: integer
+          minimum: 0
+        session_id:
+          type: string
+        transaction_id:
+          type: string
+        stage:
+          enum:
+          - prompt
+          - intent
+          - discover
+          - cart
+          - disclosure
+          - mandate
+          - step_up
+          - payment
+          - order
+          - post_order
+          - grievance
+          - negotiation
+          - guard
+          - ledger
+        actor:
+          enum:
+          - user
+          - agent
+          - gateway
+          - trusted_surface
+          - bpp
+          - psp
+        at:
+          type: string
+          format: date-time
+        channel:
+          $ref: '#/components/schemas/Channel'
+        language:
+          type: string
+        content_hash:
+          $ref: '#/components/schemas/Hash'
+        content_ref:
+          type: string
+          format: uri
+          description: Operator-held encrypted blob (transcript, audio, structured intent)
+        summary:
+          $ref: '#/components/schemas/LangText'
+        model:
+          type: object
+          properties:
+            id:
+              type: string
+            version:
+              type: string
+            translation_model:
+              type: string
+        refs:
+          type: object
+          properties:
+            mandate_ref:
+              type: string
+            checkout_hash:
+              $ref: '#/components/schemas/Hash'
+            message_id:
+              type: string
+            order_id:
+              type: string
+            rrn:
+              type: string
+            receipt_id:
+              type: string
+            issue_id:
+              type: string
+        prev_hash:
+          $ref: '#/components/schemas/Hash'
+          description: entry_hash of seq-1; genesis uses sha-256 of session_id
+        entry_hash:
+          $ref: '#/components/schemas/Hash'
+        signature:
+          $ref: '#/components/schemas/Signature'
+    BecknContextBacp:
+      title: 'Beckn context extension: context.bacp'
+      description: Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp]
+        where a network validator rejects unknown context keys (assumption).
+      type: object
+      required:
+      - agent
+      - presence
+      - idempotency_key
+      properties:
+        agent:
+          type: object
+          required:
+          - id
+          - credential_hash
+          - operator
+          properties:
+            id:
+              type: string
+            credential_hash:
+              $ref: '#/components/schemas/Hash'
+            operator:
+              type: string
+              description: Operator legal entity id (CIN/GSTIN)
+            class:
+              type: string
+            uap_agent_id:
+              type:
+              - string
+              - 'null'
+        presence:
+          $ref: '#/components/schemas/Presence'
+        mandate_ref:
+          type: object
+          required:
+          - id
+          - hash
+          properties:
+            id:
+              type: string
+            hash:
+              $ref: '#/components/schemas/Hash'
+            kb_jwt:
+              $ref: '#/components/schemas/Jws'
+              description: Agent key-binding JWT (aud = bpp_id, nonce = message_id) closing the open mandate
+          description: REQUIRED on init, confirm, update, cancel and IGM issue. Optional on search/select.
+        idempotency_key:
+          type: string
+          minLength: 22
+          maxLength: 64
+        channel:
+          $ref: '#/components/schemas/Channel'
+        language:
+          type: string
+        ai_disclosure:
+          const: true
+        log_head:
+          $ref: '#/components/schemas/Hash'
+          description: Current InstructionLog head at send time
+        version:
+          const: '0.1'
+      additionalProperties: false
+    Error:
+      type: object
+      description: ACP flat error model, with param as an RFC 9535 JSONPath
+      required:
+      - type
+      - code
+      - message
+      properties:
+        type:
+          enum:
+          - invalid_request
+          - authentication_error
+          - authorization_error
+          - mandate_error
+          - payment_error
+          - upstream_error
+          - service_unavailable
+        code:
+          type: string
+          examples:
+          - idempotency_key_required
+          - idempotency_conflict
+          - idempotency_in_flight
+          - signature_invalid
+          - replay_detected
+          - agent_unregistered
+          - agent_credential_revoked
+          - mandate_required
+          - mandate_invalid_signature
+          - mandate_expired
+          - mandate_revoked
+          - mandate_paused
+          - mandate_exhausted
+          - mandate_scope_mismatch
+          - constraint_unresolved
+          - presence_not_allowed
+          - rail_limit_exceeded
+          - quote_expired
+          - bpp_timeout
+          - bpp_nack
+          - trusted_surface_only
+        message:
+          type: string
+        param:
+          type: string
+    Message:
+      type: object
+      description: ACP messages[] entry. resolution tells the agent whether it may self-fix, must ask the user, or must get user review.
+      required:
+      - type
+      - code
+      - content
+      - resolution
+      properties:
+        type:
+          enum:
+          - error
+          - warning
+          - info
+          - disclosure
+        code:
+          type: string
+          examples:
+          - step_up_required
+          - preticked_addon_removed
+          - drip_pricing_detected
+          - price_changed
+          - item_unavailable
+          - quote_expired
+          - payment_in_doubt
+          - debited_not_confirmed
+          - pre_debit_notice
+          - pre_debit_opt_out
+          - cod_unavailable
+          - ai_disclosure
+        content:
+          $ref: '#/components/schemas/LangText'
+        param:
+          type: string
+        resolution:
+          enum:
+          - recoverable
+          - requires_buyer_input
+          - requires_buyer_review
+          - unrecoverable
+    Profile:
+      type: object
+      required:
+      - bacp
+      - bap_id
+      - transports
+      - capabilities
+      - payment_handlers
+      - keys
+      properties:
+        bacp:
+          type: object
+          properties:
+            version:
+              type: string
+            supported_versions:
+              type: array
+              items:
+                type: string
+        bap_id:
+          type: string
+        transports:
+          type: array
+          items:
+            enum:
+            - rest
+            - mcp
+            - a2a
+        capabilities:
+          type: array
+          items:
+            type: string
+        payment_handlers:
+          type: array
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/Handler'
+            - $ref: ../schemas/common.json#/$defs/HandlerRef
+        reserved_handlers:
+          type: array
+          items:
+            type: string
+        keys:
+          type: object
+          properties:
+            keys:
+              type: array
+              items:
+                $ref: '#/components/schemas/Jwk'
+        negotiation:
+          $ref: ../schemas/negotiation-session.json#/$defs/Capability
+        payment_handlers_registry:
+          type: string
+          description: URI of GET /payment-handlers
+        profiles:
+          type: array
+          items:
+            type: string
+          description: Trade-model profiles (section 14)
+    DiscoverRequest:
+      type: object
+      required:
+      - query
+      properties:
+        query:
+          $ref: '#/components/schemas/LangText'
+        category:
+          type: string
+        delivery:
+          type: object
+          properties:
+            pincode:
+              type: string
+            gps:
+              type: string
+        mandate_ref:
+          type: string
+          description: Optional. When present
+          results are flagged within_mandate.: null
+        max_wait_ms:
+          type: integer
+          maximum: 10000
+          default: 4000
+    DiscoverResponse:
+      type: object
+      required:
+      - transaction_id
+      - results
+      - complete
+      properties:
+        transaction_id:
+          type: string
+        results:
+          type: array
+          items:
+            type: object
+            properties:
+              bpp_id:
+                type: string
+              provider:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  name:
+                    type: string
+                  rating:
+                    type: number
+              items:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CatalogItem'
+              within_mandate:
+                type: boolean
+        ranking:
+          type: object
+          properties:
+            main_parameters:
+              type: array
+              items:
+                type: string
+            sponsored:
+              type: boolean
+        complete:
+          type: boolean
+          description: false if some BPPs had not answered within max_wait_ms
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+    CatalogItem:
+      type: object
+      required:
+      - id
+      - name
+      - unit_price
+      properties:
+        id:
+          type: string
+        name:
+          $ref: '#/components/schemas/LangText'
+        unit_price:
+          $ref: '#/components/schemas/Amount'
+        hsn:
+          type: string
+        gst_rate_bps:
+          type: integer
+        available_on_cod:
+          type: boolean
+        returnable:
+          type: boolean
+        return_window:
+          type: string
+        category:
+          type: string
+    ItemRef:
+      type: object
+      required:
+      - id
+      - quantity
+      properties:
+        id:
+          type: string
+        quantity:
+          type: integer
+          minimum: 1
+    SessionCreate:
+      type: object
+      required:
+      - transaction_id
+      - bpp_id
+      - provider_id
+      - items
+      - presence
+      properties:
+        transaction_id:
+          type: string
+        bpp_id:
+          type: string
+        provider_id:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ItemRef'
+        presence:
+          $ref: '#/components/schemas/Presence'
+        mandate_ref:
+          type: string
+        channel:
+          $ref: '#/components/schemas/Channel'
+        language:
+          type: string
+        webhook_url:
+          type: string
+          format: uri
+    SessionUpdate:
+      type: object
+      required:
+      - items
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ItemRef'
+        fulfilment:
+          type: object
+          properties:
+            type:
+              enum:
+              - Delivery
+              - Self-Pickup
+            address_ref:
+              type: string
+            pincode:
+              type: string
+        billing:
+          type: object
+          properties:
+            gstin:
+              type: string
+            name:
+              type: string
+        data_share:
+          type: object
+          required:
+          - consent_receipt_ref
+          - fields
+          properties:
+            consent_receipt_ref:
+              type: string
+            fields:
+              type: array
+              items:
+                type: string
+        payment:
+          type: object
+          properties:
+            handler:
+              anyOf:
+              - $ref: '#/components/schemas/Handler'
+              - $ref: '#/components/schemas/RailType'
+    LineItem:
+      type: object
+      required:
+      - id
+      - quantity
+      - unit_price
+      - total
+      properties:
+        id:
+          type: string
+        name:
+          $ref: '#/components/schemas/LangText'
+        quantity:
+          type: integer
+        unit_price:
+          $ref: '#/components/schemas/Amount'
+        total:
+          $ref: '#/components/schemas/Amount'
+        hsn:
+          type: string
+        tax_lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxLine'
+        preticked_addon:
+          type: boolean
+          description: Set by BPP. The gateway strips such items (REQ-311).
+    TaxLine:
+      type: object
+      required:
+      - type
+      - amount
+      properties:
+        type:
+          enum:
+          - CGST
+          - SGST
+          - IGST
+          - CESS
+          - TCS
+        rate_bps:
+          type: integer
+        amount:
+          $ref: '#/components/schemas/Amount'
+    Total:
+      type: object
+      required:
+      - type
+      - amount
+      properties:
+        type:
+          enum:
+          - subtotal
+          - delivery
+          - packing
+          - convenience_fee
+          - tax
+          - discount
+          - cod_fee
+          - total
+        amount:
+          $ref: '#/components/schemas/Amount'
+    Disclosures:
+      type: object
+      description: Mandatory pre-commit disclosures as given by the BPP (REQ-314), hashed into accepted_disclosures_hash
+      required:
+      - seller_name
+      - total_price
+      - return_terms
+      - cancellation_terms
+      - country_of_origin
+      - expected_delivery
+      - price_breakup
+      properties:
+        seller_name:
+          type: string
+        seller_address:
+          type: string
+        grievance_officer:
+          type: string
+        country_of_origin:
+          type: object
+          additionalProperties:
+            type: string
+        total_price:
+          $ref: '#/components/schemas/Amount'
+        return_terms:
+          type: string
+        cancellation_terms:
+          type: string
+        expected_delivery:
+          type: string
+        hash:
+          $ref: '#/components/schemas/Hash'
+        price_breakup:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+            - type
+            - amount
+            properties:
+              type:
+                type: string
+              amount:
+                $ref: '#/components/schemas/Amount'
+        fx:
+          $ref: ../schemas/fx.json
+    StepUp:
+      type: object
+      required:
+      - step_up_id
+      - kind
+      - reason
+      - trusted_surface_url
+      - expires_at
+      properties:
+        step_up_id:
+          type: string
+        kind:
+          enum:
+          - confirm
+          - rail_auth
+          description: confirm = user signs closed mandate on Trusted Surface. rail_auth = fresh per-transaction 2FA (UPI PIN) because a rail
+            cap or AFA threshold is exceeded.
+        reason:
+          enum:
+          - above_step_up_threshold
+          - above_amount_per_txn
+          - above_rail_limit
+          - above_afa_limit
+          - new_merchant
+          - outside_categories
+          - budget_exhausted
+          - constraint_unresolved
+          - negotiation_out_of_mandate
+          - negotiation_between_reservation_and_max
+          - afa_threshold_card_emandate
+          - credit_acceptance
+          - split_tender_afa_on_total
+          - afa_crossborder_cnp
+          - pre_debit_notice_pending
+        summary:
+          $ref: '#/components/schemas/LangText'
+        trusted_surface_url:
+          type: string
+        expires_at:
+          type: string
+          format: date-time
+        a2a_state:
+          const: AUTH_REQUIRED
+        mcp_error:
+          const: insufficient_scope
+    PaymentState:
+      type: object
+      required:
+      - handler
+      - status
+      properties:
+        handler:
+          anyOf:
+          - $ref: '#/components/schemas/Handler'
+          - $ref: '#/components/schemas/RailType'
+          - $ref: ../schemas/common.json#/$defs/HandlerRef
+        collected_by:
+          enum:
+          - BAP
+          - BPP
+        type:
+          enum:
+          - ON-ORDER
+          - ON-FULFILLMENT
+        status:
+          enum:
+          - not_started
+          - initiated
+          - debited
+          - confirmed
+          - in_doubt
+          - reversal_pending
+          - reversed
+          - failed
+        receipt:
+          anyOf:
+          - $ref: '#/components/schemas/Receipt'
+          - $ref: '#/components/schemas/ReceiptRef'
+        reversal_deadline:
+          type: string
+          format: date-time
+          description: T+5 for UPI P2M debited-not-confirmed (REQ-307)
+        budget_after:
+          type: array
+          description: Unsigned, computed by the gateway from its mandate ledger after applying the PSP-signed receipt (M-3, E-SC-2). Never part
+            of the receipt.
+          items:
+            type: object
+            required:
+            - period
+            - remaining
+            properties:
+              period:
+                type: string
+              remaining:
+                $ref: '#/components/schemas/Amount'
+    Session:
+      type: object
+      required:
+      - id
+      - transaction_id
+      - status
+      - presence
+      - line_items
+      - totals
+      - messages
+      properties:
+        id:
+          type: string
+        transaction_id:
+          type: string
+        status:
+          enum:
+          - incomplete
+          - requires_escalation
+          - ready_for_complete
+          - complete_in_progress
+          - completed
+          - canceled
+        presence:
+          $ref: '#/components/schemas/Presence'
+        bpp_id:
+          type: string
+        provider_id:
+          type: string
+        mandate_ref:
+          type: string
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+        totals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Total'
+        quote:
+          type: object
+          properties:
+            id:
+              type: string
+            ttl:
+              type: string
+            expires_at:
+              type: string
+              format: date-time
+            checkout_hash:
+              $ref: '#/components/schemas/Hash'
+            bpp_signature:
+              $ref: '#/components/schemas/Jws'
+        disclosures:
+          $ref: '#/components/schemas/Disclosures'
+        fulfilment:
+          type: object
+          additionalProperties: true
+        payment:
+          $ref: '#/components/schemas/PaymentState'
+        step_up:
+          $ref: '#/components/schemas/StepUp'
+        order_id:
+          type: string
+        receipts:
+          type: array
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/Receipt'
+            - $ref: '#/components/schemas/ReceiptRef'
+        beckn:
+          type: object
+          description: Diagnostic correlation
+          properties:
+            last_action:
+              type: string
+            last_message_id:
+              type: string
+        expires_at:
+          type: string
+          format: date-time
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+    CompleteRequest:
+      type: object
+      required:
+      - presence
+      - checkout_mandate
+      - payment_mandate
+      - checkout_hash
+      properties:
+        presence:
+          $ref: '#/components/schemas/Presence'
+        checkout_mandate:
+          $ref: '#/components/schemas/Jws'
+        payment_mandate:
+          $ref: '#/components/schemas/Jws'
+        checkout_hash:
+          $ref: '#/components/schemas/Hash'
+        accepted_disclosures_hash:
+          $ref: '#/components/schemas/Hash'
+        step_up_id:
+          type: string
+          description: Present when completing after an approved step-up
+    MandateRequest:
+      type: object
+      required:
+      - purpose_code
+      - rail
+      - presence_allowed
+      - proposed_constraints
+      - validity
+      properties:
+        purpose_code:
+          type: string
+        rail:
+          $ref: '#/components/schemas/RailType'
+        presence_allowed:
+          type: array
+          items:
+            $ref: '#/components/schemas/Presence'
+        proposed_constraints:
+          $ref: '#/components/schemas/Mandate/properties/constraints'
+        data_scopes:
+          type: array
+          items:
+            type: string
+        action_scope:
+          type: array
+          items:
+            type: string
+        validity:
+          type: string
+          description: ISO 8601 duration
+        language:
+          type: string
+        parent_mandate_id:
+          type: string
+          description: For sub-agent delegation. May only narrow.
+    MandateHandle:
+      type: object
+      required:
+      - request_id
+      - status
+      - trusted_surface_url
+      properties:
+        request_id:
+          type: string
+        status:
+          enum:
+          - PENDING
+          - ACTIVE
+          - REJECTED
+        trusted_surface_url:
+          type: string
+        mandate_ids:
+          type: array
+          items:
+            type: string
+        expires_at:
+          type: string
+          format: date-time
+    TrustedSurfaceEvent:
+      type: object
+      required:
+      - event
+      - at
+      - signature
+      properties:
+        event:
+          enum:
+          - mandate.activated
+          - mandate.rejected
+          - mandate.paused
+          - mandate.resumed
+          - mandate.revoked
+          - mandate.expired
+          - step_up.approved
+          - step_up.declined
+          - rail.safety_switch
+          - rail.pre_debit_notice
+          - rail.debit_opt_out
+          - consent.withdrawn
+          - negotiation_mandate.activated
+          - negotiation_mandate.revoked
+          - negotiation.step_up.approved
+          - negotiation.step_up.declined
+          - negotiation.request_extension
+          - instruments.reported
+          - loan.accepted
+          - payment.afa_completed
+        mandate_id:
+          type: string
+        related_mandates:
+          type: array
+          items:
+            type: string
+        step_up_id:
+          type: string
+        session_id:
+          type: string
+        closed_checkout_mandate:
+          $ref: '#/components/schemas/Jws'
+        auth_binding:
+          $ref: '#/components/schemas/Mandate/properties/auth_binding'
+        source:
+          type: object
+          additionalProperties: true
+        at:
+          type: string
+          format: date-time
+        signature:
+          $ref: '#/components/schemas/Signature'
+        negotiation_id:
+          type: string
+        offer_hash:
+          type: string
+        diff_ack:
+          type: string
+        attestation:
+          type: object
+    Order:
+      type: object
+      required:
+      - id
+      - transaction_id
+      - bpp_id
+      - state
+      - line_items
+      - totals
+      properties:
+        id:
+          type: string
+        transaction_id:
+          type: string
+        bpp_id:
+          type: string
+        provider_id:
+          type: string
+        state:
+          enum:
+          - Created
+          - Accepted
+          - In-progress
+          - Completed
+          - Cancelled
+        fulfilment_state:
+          type: string
+          description: ONDC fulfilment state code
+          e.g. Order-delivered: null
+        line_items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineItem'
+        totals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Total'
+        invoice:
+          type: object
+          properties:
+            irn:
+              type: string
+            qr:
+              type: string
+            ewb:
+              type: string
+            seller_gstin:
+              type: string
+            buyer_gstin:
+              type: string
+            doc_date:
+              type: string
+              format: date
+        adjustments:
+          type: array
+          description: Append-only read model (UCP/ACP adjustments)
+          items:
+            type: object
+            required:
+            - type
+            - status
+            - at
+            properties:
+              type:
+                enum:
+                - cancellation
+                - return
+                - refund
+                - replacement
+                - dispute
+              status:
+                type: string
+              amount:
+                $ref: '#/components/schemas/Amount'
+              receipt_id:
+                type: string
+              at:
+                type: string
+                format: date-time
+        return_window_ends:
+          type: string
+          format: date-time
+        payment:
+          $ref: '#/components/schemas/PaymentState'
+        mandate_ref:
+          type: string
+    CancelRequest:
+      type: object
+      required:
+      - reason_code
+      - mandate_ref
+      - presence
+      properties:
+        reason_code:
+          type: string
+          description: From Beckn get_cancellation_reasons
+        mandate_ref:
+          type: string
+        presence:
+          $ref: '#/components/schemas/Presence'
+        note:
+          $ref: '#/components/schemas/LangText'
+        bpp_id:
+          type: string
+          description: Seller subscriber id. Required only when the agent holds the same order id from two BPPs (otherwise 400 invalid_request
+            at $.bpp_id).
+    ReturnRequest:
+      type: object
+      required:
+      - items
+      - reason_code
+      - mandate_ref
+      - presence
+      properties:
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ItemRef'
+        reason_code:
+          type: string
+          description: From Beckn get_return_reasons
+        mandate_ref:
+          type: string
+        presence:
+          $ref: '#/components/schemas/Presence'
+        evidence:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                enum:
+                - image
+                - video
+                - text
+              hash:
+                $ref: '#/components/schemas/Hash'
+              uri:
+                type: string
+                format: uri
+        refund_to:
+          enum:
+          - original_method
+          default: original_method
+        bpp_id:
+          type: string
+          description: Seller subscriber id. Required only when the agent holds the same order id from two BPPs (otherwise 400 invalid_request
+            at $.bpp_id).
+    ReturnRecord:
+      type: object
+      required:
+      - return_id
+      - order_id
+      - status
+      - items
+      properties:
+        return_id:
+          type: string
+        order_id:
+          type: string
+        status:
+          enum:
+          - RETURN_INITIATED
+          - RETURN_APPROVED
+          - RETURN_PICKED
+          - RETURN_DELIVERED
+          - RETURN_REJECTED
+          - LIQUIDATED
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/ItemRef'
+        refund:
+          type: object
+          properties:
+            status:
+              enum:
+              - PENDING
+              - INITIATED
+              - SUCCESS
+              - FAILED
+            amount:
+              $ref: '#/components/schemas/Amount'
+            to:
+              const: original_method
+            receipt:
+              anyOf:
+              - $ref: '#/components/schemas/Receipt'
+              - $ref: '#/components/schemas/ReceiptRef'
+    IssueCreate:
+      type: object
+      required:
+      - order_id
+      - category
+      - sub_category
+      - description
+      - mandate_ref
+      properties:
+        order_id:
+          type: string
+        category:
+          enum:
+          - ORDER
+          - ITEM
+          - FULFILLMENT
+          - AGENT
+          - PAYMENT
+          - TRANSACTION
+        sub_category:
+          type: string
+        description:
+          $ref: '#/components/schemas/LangText'
+        mandate_ref:
+          type: string
+        rrn:
+          type: string
+        utr:
+          type: string
+        evidence_bundle_ref:
+          type: string
+          format: uri
+        bpp_id:
+          type: string
+          description: Seller subscriber id. Required only when the agent holds the same order id from two BPPs (otherwise 400 invalid_request
+            at $.bpp_id).
+    Issue:
+      type: object
+      required:
+      - id
+      - order_id
+      - level
+      - status
+      - complainant
+      - actions
+      properties:
+        id:
+          type: string
+        order_id:
+          type: string
+        level:
+          enum:
+          - ISSUE
+          - GRIEVANCE
+        status:
+          enum:
+          - OPEN
+          - PROCESSING
+          - RESOLVED
+          - CLOSED
+        category:
+          type: string
+        sub_category:
+          type: string
+        complainant:
+          type: object
+          required:
+          - actor_type
+          - on_behalf_of
+          properties:
+            actor_type:
+              const: AI_AGENT
+            agent_id:
+              type: string
+            operator:
+              type: string
+            on_behalf_of:
+              type: string
+              description: principal_ref
+            mandate_ref:
+              type: string
+        payment_refs:
+          type: object
+          properties:
+            rrn:
+              type: string
+            utr:
+              type: string
+        evidence_bundle:
+          $ref: '#/components/schemas/EvidenceBundle'
+        actions:
+          type: array
+          items:
+            type: object
+            required:
+            - action
+            - actor_type
+            - at
+            properties:
+              action:
+                enum:
+                - OPEN
+                - INFO_REQUESTED
+                - INFO_PROVIDED
+                - INFO_NOT_AVAILABLE
+                - PROCESSING
+                - RESOLUTION_PROPOSED
+                - RESOLUTION_ACCEPTED
+                - RESOLUTION_REJECTED
+                - RESOLUTION_CASCADED
+                - CASCADED
+                - ESCALATED
+                - RESOLVED
+                - CLOSED
+              actor_type:
+                enum:
+                - AI_AGENT
+                - CONSUMER
+                - INTERFACING_NP
+                - COUNTERPARTY_NP
+                - CASCADED_NP
+                - INTERFACING_NP_GRO
+                - COUNTERPARTY_NP_GRO
+                - CASCADED_NP_GRO
+              note:
+                $ref: '#/components/schemas/LangText'
+              at:
+                type: string
+                format: date-time
+        resolution:
+          type: object
+          properties:
+            action_triggered:
+              enum:
+              - REFUND
+              - REPLACEMENT
+              - RETURN
+              - CANCEL
+              - NO-ACTION
+            refund_amount:
+              $ref: '#/components/schemas/Amount'
+        expected_response_by:
+          type: string
+          format: date-time
+        expected_resolution_by:
+          type: string
+          format: date-time
+        odr_reference:
+          type: string
+          description: Out-of-protocol ODR escalation reference (IGM 2.0 has no DISPUTE level)
+    EvidenceBundle:
+      type: object
+      required:
+      - transaction_id
+      - mandates
+      - receipts
+      - instruction_log
+      properties:
+        transaction_id:
+          type: string
+        agent_credential_hash:
+          $ref: '#/components/schemas/Hash'
+        mandates:
+          type: array
+          items:
+            $ref: '#/components/schemas/Jws'
+          description: Open and closed mandates (selectively disclosed)
+        checkout:
+          type: object
+          properties:
+            bpp_signed_quote:
+              $ref: '#/components/schemas/Jws'
+            checkout_hash:
+              $ref: '#/components/schemas/Hash'
+            disclosures_hash:
+              $ref: '#/components/schemas/Hash'
+        receipts:
+          type: array
+          items:
+            anyOf:
+            - $ref: '#/components/schemas/Receipt'
+            - $ref: '#/components/schemas/ReceiptRef'
+        consent_receipts:
+          type: array
+          items:
+            type: string
+        instruction_log:
+          type: array
+          items:
+            $ref: '#/components/schemas/InstructionLogEntry'
+        verification:
+          type: object
+          description: Result of the AP2 5-step dispute verification run by the gateway
+          properties:
+            steps_passed:
+              type: integer
+              maximum: 5
+            chain_valid:
+              type: boolean
+        bundle_signature:
+          $ref: '#/components/schemas/Signature'
+    WebhookEvent:
+      type: object
+      description: Delivered with Standard Webhooks headers (webhook-id, webhook-timestamp) plus a mandatory RFC 9421 signature by the gateway
+        (UCP rule). Retries with backoff. Payloads are full snapshots.
+      required:
+      - event_id
+      - type
+      - created_at
+      - data
+      properties:
+        event_id:
+          type: string
+        type:
+          enum:
+          - mandate.status_changed
+          - session.updated
+          - payment.receipt
+          - order.updated
+          - return.updated
+          - issue.updated
+          - pre_debit.notice
+        created_at:
+          type: string
+          format: date-time
+        data:
+          type: object
+          additionalProperties: true
+    NegotiationCreate:
+      type: object
+      required:
+      - bpp_id
+      - mode
+      - negotiation_mandate_ref
+      - presence
+      - items
+      properties:
+        bpp_id:
+          type: string
+        provider_id:
+          type: string
+        mode:
+          $ref: ../schemas/negotiation-session.json#/$defs/Mode
+        profile:
+          type: string
+          description: Trade-model profile id, e.g. b2c.ecom, b2b.procurement (section 14)
+        negotiation_mandate_ref:
+          type: string
+          pattern: ^mdt_[A-Za-z0-9]{12,40}$
+        presence:
+          enum:
+          - HP
+          - HNP
+        rfq_parent_id:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+            - item_id
+            - quantity
+            properties:
+              item_id:
+                type: string
+              quantity:
+                type: number
+                exclusiveMinimum: 0
+        initial_term_sheet:
+          $ref: ../schemas/termsheet.json
+        max_wait_ms:
+          type: integer
+          maximum: 10000
+          default: 4000
+    NegotiationMessageDraft:
+      type: object
+      description: 'Agent-submitted draft. The gateway fills envelope fields (msg_id, round, dispatched_at, from, signatures), applies
+
+        the patch to the live term sheet, computes all_in_total and expires_at, then guards, validates and signs.
+
+        '
+      required:
+      - type
+      properties:
+        type:
+          enum:
+          - offer
+          - counter_offer
+          - bid
+          - reject
+          - withdraw
+          - terminate
+          - request_extension
+          - accept_revoke
+          - bid_commit
+          - bid_reveal
+          - bid_retract
+        in_reply_to:
+          type: string
+        offer_hash:
+          type: string
+        firm:
+          type: boolean
+        subject_to_principal_approval:
+          type: boolean
+        expires_in:
+          type: string
+          description: ISO 8601 duration
+          at least min_offer_validity: null
+        term_sheet:
+          $ref: ../schemas/termsheet.json
+        term_sheet_patch:
+          type: array
+          description: RFC 6902 JSON Patch against the live term sheet. Only negotiable issues may change.
+          items:
+            type: object
+            required:
+            - op
+            - path
+            properties:
+              op:
+                enum:
+                - add
+                - remove
+                - replace
+              path:
+                type: string
+              value: {}
+        reason:
+          type: string
+        reason_code:
+          type: string
+        final:
+          type: boolean
+        auction_id:
+          type: string
+        bid_deposit_ref:
+          type: string
+        salt:
+          type: string
+        advisory_text:
+          type: string
+          description: Logged with binding false and returned to the counterparty only as untrusted text
+      allOf:
+      - if:
+          properties:
+            subject_to_principal_approval:
+              const: true
+          required:
+          - subject_to_principal_approval
+        then:
+          properties:
+            firm:
+              const: false
+    AcceptRequest:
+      type: object
+      required:
+      - offer_hash
+      properties:
+        offer_hash:
+          type: string
+        step_up_id:
+          type: string
+          description: Present after the principal approved an out-of-mandate deal
+      not:
+        anyOf:
+        - required:
+          - term_sheet
+        - required:
+          - term_sheet_patch
+    ReceiptRef:
+      type: object
+      required:
+      - receipt_id
+      - receipt_hash
+      - result
+      description: Webhook-scoped receipt reference (L7-I5). GET the resource for the full signed receipt.
+      properties:
+        receipt_id:
+          type: string
+        receipt_hash:
+          $ref: '#/components/schemas/Hash'
+        receipt_type:
+          enum:
+          - mandate
+          - checkout
+          - payment
+          - refund
+        result:
+          enum:
+          - success
+          - failure
+          - in_doubt
+        amount:
+          $ref: '#/components/schemas/Amount'
+        refund_state:
+          type: string
+        rail:
+          type: object
+          properties:
+            type:
+              type: string
+            rrn:
+              type: string
+            status:
+              type: string
+            original_rrn:
+              type: string
+      additionalProperties: false
+  examples:
+    OpenPaymentMandate:
+      value:
+        vct: in.bacp.mandate.payment.open.1
+        ap2_vct: mandate.payment.open.1
+        mandate_id: mdt_PAY7Q2W9X4K1M3
+        parent_mandate_id: null
+        checkout_mandate_ref: mdt_CHK7Q2W9X4K1M3
+        kind: payment
+        form: open
+        iss: mm.psp.example.in
+        iat: 1791763200
+        valid_from: '2026-10-12T10:00:00+05:30'
+        valid_until: '2026-11-11T10:00:00+05:30'
+        principal:
+          ref: pp_9f2c1e
+          assurance: vpa_pin
+        agent:
+          id: did:web:agents.vaani.example.in:sakhi
+          credential_hash: sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM
+        purpose:
+          code: P-GRO-01
+          text:
+            hi-IN: Ghar ka kirana saman
+            en-IN: Household grocery replenishment
+        action_scope:
+        - DISCOVER
+        - QUOTE
+        - ORDER
+        - PAY
+        - CANCEL
+        - RETURN
+        - RAISE_ISSUE
+        - SHARE_DATA
+        data_scopes:
+        - NAME
+        - PHONE
+        - DELIVERY_ADDRESS
+        presence_allowed:
+        - HNP
+        - HP
+        constraints:
+          amount_per_txn:
+            value: 150000
+            currency: INR
+          budgets:
+          - period: P1M
+            max:
+              value: 300000
+              currency: INR
+          categories_allow:
+          - ONDC:RET10
+          delivery_pincodes:
+          - '560034'
+          step_up:
+            above_amount:
+              value: 120000
+              currency: INR
+            new_merchant: false
+            outside_categories: true
+          reject_preticked_addons: true
+          cod_allowed: false
+        payee:
+          bap_id: bap.vaani.example.in
+          vpa: vaani.collect@examplebank
+        rail_binding:
+          type: upi.reservepay.block
+          rail_ref: SBMD-HDFX-000123456
+          psp_id: psp.example.in
+          attestation: eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl
+          rail_limits:
+            block_amount:
+              value: 300000
+              currency: INR
+            expires_at: '2026-11-11T10:00:00+05:30'
+          pre_debit_notice: unknown
+        dpdp:
+          consent_receipts:
+          - cr_A1B2C3D4E5F6G7
+          data_retention: P1Y
+        revocation:
+          status_uri: https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/status
+          notify_sla_seconds: 60
+        audit_uri: https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/audit
+        cnf:
+          jwk:
+            kty: EC
+            crv: P-256
+            x: f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU
+            y: x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0
+            kid: sakhi-2026-10
+        signatures:
+        - role: principal
+          kid: device:pp_9f2c1e#k1
+          alg: ES256
+          value: eyJhbGciOiJFUzI1NiJ9.eyJtIjoxfQ.c2ln
+        - role: mandate_manager
+          kid: mm.psp.example.in|ukid-2|es256
+          alg: ES256
+          value: eyJhbGciOiJFUzI1NiJ9.eyJtIjoyfQ.c2ln
+        status: ACTIVE
+        usage:
+          count: 0
+          spent:
+          - period: P1M
+            amount:
+              value: 0
+              currency: INR
+            window_start: '2026-10-12T10:00:00+05:30'
+    ClosedPaymentMandate:
+      value:
+        vct: in.bacp.mandate.payment.1
+        mandate_id: mdt_PAYC0000000001
+        kind: payment
+        form: closed
+        iss: did:web:agents.vaani.example.in:sakhi
+        iat: 1791763200
+        valid_from: '2026-10-20T19:01:00+05:30'
+        valid_until: '2026-10-20T19:16:00+05:30'
+        principal:
+          ref: pp_9f2c1e
+          assurance: vpa_pin
+        agent:
+          id: did:web:agents.vaani.example.in:sakhi
+          credential_hash: sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM
+        purpose:
+          code: P-GRO-01
+          text:
+            hi-IN: Ghar ka kirana saman
+            en-IN: Household grocery replenishment
+        action_scope:
+        - PAY
+        presence_allowed:
+        - HNP
+        revocation:
+          status_uri: https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/status
+          notify_sla_seconds: 60
+        signatures:
+        - role: agent
+          kid: did:web:agents.vaani.example.in:sakhi#sakhi-2026-10
+          alg: ES256
+          value: eyJhbGciOiJFUzI1NiJ9.eyJrYiI6MX0.c2ln
+        checkout_mandate_ref: mdt_CHKC0000000001
+        ap2_vct: mandate.payment.1
+        parent_mandate_id: mdt_PAY7Q2W9X4K1M3
+        constraints: {}
+        checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+        amount:
+          value: 30200
+          currency: INR
+        payee:
+          vpa: vaani.collect@examplebank
+        auth_binding:
+          type: parent_rail_binding
+          handler: upi.reservepay.block
+          ref: SBMD-HDFX-000123456
+          psp_id: psp.example.in
+    PaymentReceipt:
+      value:
+        receipt_id: rcpt_PAY0000000001
+        receipt_type: payment
+        iss: psp.example.in
+        issued_at: '2026-10-20T19:02:11+05:30'
+        result: success
+        reference: sha-256:cGF5bWVudC1tYW5kYXRlLWNsb3NlZC0wMDAwMDAwMDAx
+        mandate_ref: mdt_PAYC0000000001
+        open_mandate_ref: mdt_PAY7Q2W9X4K1M3
+        transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+        order_id: ORD-KIR-88231
+        checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+        amount:
+          value: 30200
+          currency: INR
+        payee:
+          vpa: vaani.collect@examplebank
+          name: Vaani Voice Commerce Pvt Ltd
+        rail:
+          type: upi.reservepay.block
+          rail_ref: SBMD-HDFX-000123456
+          rrn: '629318004417'
+          utr: '629318004417'
+          npci_txn_id: NPCIEX0000000001
+          psp_confirmation_id: PSPCONF-77812
+          status: SUCCESS
+        signature:
+          role: psp
+          kid: psp.example.in|ukid-1|es256
+          alg: ES256
+          value: eyJhbGciOiJFUzI1NiJ9.eyJyIjoxfQ.c2ln
+    AgentCredential:
+      value:
+        vct: in.bacp.agent.1
+        iss: https://registry.ondc.example/dedi/bacp-issuer
+        sub: did:web:agents.vaani.example.in:sakhi
+        iat: 1791763200
+        exp: 1807315200
+        operator:
+          legal_name: Vaani Voice Commerce Pvt Ltd
+          entity_id:
+            type: CIN
+            value: U62099KA2026PTC000001
+          grievance_officer:
+            name: R. Iyer
+            email: grievance@vaani.example.in
+          incident_contact: ai-incidents@vaani.example.in
+          ai_inventory_ref: https://vaani.example.in/ai-inventory#sakhi
+        bap:
+          subscriber_id: bap.vaani.example.in
+          ukid: ukid-7
+        agent:
+          class: voice_shopping
+          model_family: example-llm-2
+          build: sakhi-2026.10.1
+          channels:
+          - voice
+          - app
+          languages:
+          - hi-IN
+          - en-IN
+          uap_agent_id: null
+        cnf:
+          jwk:
+            kty: EC
+            crv: P-256
+            x: f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU
+            y: x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0
+            kid: sakhi-2026-10
+        purposes:
+        - bacp-browse
+        - bacp-pay
+        - bacp-post-order
+        disclosure:
+          ai_notice:
+            hi-IN: Aap ek AI sahayak se baat kar rahe hain.
+            en-IN: You are talking to an AI assistant.
+          human_handoff_url: https://vaani.example.in/human
+        conformance:
+          level: v0-core
+        status:
+          status_list:
+            uri: https://registry.ondc.example/status/agents/1
+            idx: 4211
+    ConsentReceipt:
+      value:
+        receipt_id: cr_A1B2C3D4E5F6G7
+        iss: mm.psp.example.in
+        cm_registration_no: null
+        issued_at: '2026-10-12T10:00:05+05:30'
+        principal_ref: pp_9f2c1e
+        mandate_ref: mdt_CHK7Q2W9X4K1M3
+        recipient:
+          fiduciary_name: Any ONDC:RET10 seller selected under this mandate
+          bpp_id: '*'
+          dpo_contact: per seller on_init
+        data_items:
+        - field: NAME
+          form: plain
+        - field: PHONE
+          form: masked
+        - field: DELIVERY_ADDRESS
+          form: plain
+        purpose:
+          code: P-GRO-01
+          text:
+            hi-IN: Order delivery ke liye
+            en-IN: To deliver grocery orders
+          goods_or_services: Grocery delivery
+        legal_basis: consent_s6
+        notice:
+          language: hi-IN
+          hash: sha-256:Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5
+          uri: https://mm.psp.example.in/notices/n-551
+        captured_via:
+          surface: psp.example.in/app
+          user_action: upi_pin
+          device_signature: eyJhbGciOiJFUzI1NiJ9.eyJjIjoxfQ.c2ln
+        withdrawal:
+          uri: https://mm.psp.example.in/consents/cr_A1B2C3D4E5F6G7/withdraw
+          erasure_signal: true
+        grievance:
+          contact: dpo@psp.example.in
+          board_complaint_uri: https://dpb.example.gov.in/complaints
+        retention:
+          recipient_max: P1Y
+          legal_minimum: P1Y
+        status: ACTIVE
+        signature:
+          role: mandate_manager
+          kid: mm.psp.example.in|ukid-2|es256
+          alg: ES256
+          value: eyJhbGciOiJFUzI1NiJ9.eyJjciI6MX0.c2ln
+    InstructionLogEntry:
+      value:
+        seq: 0
+        session_id: ses_01HZX8V4K2
+        transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+        stage: prompt
+        actor: user
+        at: '2026-10-20T19:00:02+05:30'
+        channel: voice
+        language: hi-IN
+        content_hash: sha-256:YXVkaW8tYW5kLXRyYW5zY3JpcHQtaGFzaC0wMDAwMDE
+        content_ref: https://logs.vaani.example.in/blobs/ses_01HZX8V4K2/0
+        summary:
+          hi-IN: Do kilo atta, ek litre doodh aur paanch sau gram dal mangwa do
+          en-IN: Order 2 kg atta, 1 l milk and 500 g dal
+        model:
+          id: example-llm-2
+          version: 2026.10.1
+          translation_model: bhashini-asr-hi-v3
+        refs: {}
+        prev_hash: sha-256:c2Vzc2lvbi1nZW5lc2lzLXNlc18wMUhaWDhWNEsyLXh4
+        entry_hash: sha-256:ZW50cnktMC1oYXNoLWZvci1zZXNfMDFIWlg4VjRLMgA
+        signature:
+          role: operator
+          kid: bap.vaani.example.in|ukid-7|ed25519
+          alg: EdDSA
+          value: eyJhbGciOiJFZERTQSJ9.eyJsIjowfQ.c2ln
+    BecknContextBacp:
+      value:
+        agent:
+          id: did:web:agents.vaani.example.in:sakhi
+          credential_hash: sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM
+          operator: CIN:U62099KA2026PTC000001
+          class: voice_shopping
+          uap_agent_id: null
+        presence: HNP
+        mandate_ref:
+          id: mdt_CHKC0000000001
+          hash: sha-256:Y2xvc2VkLWNoZWNrb3V0LW1hbmRhdGUtMDAwMDAwMDAx
+          kb_jwt: eyJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJicHAifQ.c2ln
+        idempotency_key: 01HZX8W3T6Q9M2R7C4B1N8K5D0
+        channel: voice
+        language: hi-IN
+        ai_disclosure: true
+        log_head: sha-256:ZW50cnktNi1oYXNoLWZvci1zZXNfMDFIWlg4VjRLMgA
+        version: '0.1'
+    SessionQuoted:
+      value:
+        id: ses_01HZXB
+        transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+        status: incomplete
+        presence: HNP
+        bpp_id: bpp.kirana.example.in
+        provider_id: P-112
+        mandate_ref: mdt_CHK7Q2W9X4K1M3
+        line_items:
+        - id: I-ATTA-2KG
+          quantity: 1
+          unit_price:
+            value: 11000
+            currency: INR
+          total:
+            value: 11000
+            currency: INR
+          hsn: '1101'
+        - id: I-MILK-1L
+          quantity: 1
+          unit_price:
+            value: 6800
+            currency: INR
+          total:
+            value: 6800
+            currency: INR
+          hsn: '0401'
+        - id: I-TOOR-500G
+          quantity: 1
+          unit_price:
+            value: 8900
+            currency: INR
+          total:
+            value: 8900
+            currency: INR
+          hsn: '0713'
+        totals:
+        - type: subtotal
+          amount:
+            value: 26700
+            currency: INR
+        - type: total
+          amount:
+            value: 26700
+            currency: INR
+        quote:
+          id: Q-55
+          ttl: PT10M
+          expires_at: '2026-10-20T19:11:00+05:30'
+        messages:
+        - type: info
+          code: ai_disclosure
+          content:
+            hi-IN: Yeh order ek AI sahayak dwara banaya ja raha hai.
+          resolution: recoverable
+    SessionReady:
+      value:
+        id: ses_01HZXB
+        transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+        status: ready_for_complete
+        presence: HNP
+        bpp_id: bpp.kirana.example.in
+        mandate_ref: mdt_CHK7Q2W9X4K1M3
+        line_items:
+        - id: I-ATTA-2KG
+          quantity: 1
+          unit_price:
+            value: 11000
+            currency: INR
+          total:
+            value: 11000
+            currency: INR
+        - id: I-MILK-1L
+          quantity: 1
+          unit_price:
+            value: 6800
+            currency: INR
+          total:
+            value: 6800
+            currency: INR
+        - id: I-TOOR-500G
+          quantity: 1
+          unit_price:
+            value: 8900
+            currency: INR
+          total:
+            value: 8900
+            currency: INR
+        totals:
+        - type: subtotal
+          amount:
+            value: 26700
+            currency: INR
+        - type: delivery
+          amount:
+            value: 3500
+            currency: INR
+        - type: total
+          amount:
+            value: 30200
+            currency: INR
+        quote:
+          id: Q-55
+          ttl: PT10M
+          checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+          bpp_signature: eyJhbGciOiJFUzI1NiJ9.eyJxIjoiUS01NSJ9.c2ln
+        disclosures:
+          seller_name: Shree Ganesh Kirana
+          total_price: &id001
+            value: 30200
+            currency: INR
+          return_terms: Returnable within 2 days if damaged
+          cancellation_terms: Free before dispatch
+          expected_delivery: PT2H
+          hash: sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg
+          country_of_origin:
+            default: IN
+          price_breakup:
+          - type: total
+            amount: *id001
+        payment:
+          handler: upi.reservepay.block
+          collected_by: BAP
+          type: ON-ORDER
+          status: not_started
+        messages:
+        - type: warning
+          code: preticked_addon_removed
+          content:
+            en-IN: Removed pre-selected 'Delivery insurance Rs 15' (not in mandate)
+          param: $.line_items[3]
+          resolution: recoverable
+    SessionStepUp:
+      value:
+        id: ses_01HZXE
+        transaction_id: 0b9d3f4a-1111-4c1e-8a7b-2d3e4f5a6b7c
+        status: requires_escalation
+        presence: HNP
+        line_items:
+        - id: I-OIL-5L
+          quantity: 1
+          unit_price:
+            value: 135000
+            currency: INR
+          total:
+            value: 135000
+            currency: INR
+        totals:
+        - type: total
+          amount:
+            value: 135000
+            currency: INR
+        step_up:
+          step_up_id: stp_01HZXA
+          kind: confirm
+          reason: above_step_up_threshold
+          summary:
+            hi-IN: Rs 1,350 ka order aapki Rs 1,200 ki seema se zyada hai. Kripya UPI app mein pushti karein.
+          trusted_surface_url: https://psp.example.in/approve/stp_01HZXA
+          expires_at: '2026-10-22T18:40:00+05:30'
+          a2a_state: AUTH_REQUIRED
+          mcp_error: insufficient_scope
+        messages:
+        - type: error
+          code: step_up_required
+          content:
+            en-IN: User confirmation required on Trusted Surface
+          resolution: requires_buyer_review
+    SessionCompleted:
+      value:
+        id: ses_01HZXB
+        transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+        status: completed
+        presence: HNP
+        order_id: ORD-KIR-88231
+        line_items:
+        - id: I-ATTA-2KG
+          quantity: 1
+          unit_price:
+            value: 11000
+            currency: INR
+          total:
+            value: 11000
+            currency: INR
+        totals:
+        - type: total
+          amount:
+            value: 30200
+            currency: INR
+        payment:
+          handler: upi.reservepay.block
+          collected_by: BAP
+          type: ON-ORDER
+          status: confirmed
+          receipt:
+            receipt_id: rcpt_PAY0000000001
+            receipt_type: payment
+            iss: psp.example.in
+            issued_at: '2026-10-20T19:02:11+05:30'
+            result: success
+            reference: sha-256:cGF5bWVudC1tYW5kYXRlLWNsb3NlZC0wMDAwMDAwMDAx
+            mandate_ref: mdt_PAYC0000000001
+            open_mandate_ref: mdt_PAY7Q2W9X4K1M3
+            transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+            order_id: ORD-KIR-88231
+            checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+            amount:
+              value: 30200
+              currency: INR
+            payee:
+              vpa: vaani.collect@examplebank
+              name: Vaani Voice Commerce Pvt Ltd
+            rail:
+              type: upi.reservepay.block
+              rail_ref: SBMD-HDFX-000123456
+              rrn: '629318004417'
+              utr: '629318004417'
+              npci_txn_id: NPCIEX0000000001
+              psp_confirmation_id: PSPCONF-77812
+              status: SUCCESS
+            signature:
+              role: psp
+              kid: psp.example.in|ukid-1|es256
+              alg: ES256
+              value: eyJhbGciOiJFUzI1NiJ9.eyJyIjoxfQ.c2ln
+        messages: []
+    SessionInDoubt:
+      value:
+        id: ses_01HZXF
+        transaction_id: 7a7a7a7a-2222-4b4b-9c9c-3d3d3d3d3d3d
+        status: complete_in_progress
+        presence: HNP
+        line_items: []
+        totals:
+        - type: total
+          amount:
+            value: 30200
+            currency: INR
+        payment:
+          handler: upi.reservepay.block
+          collected_by: BAP
+          type: ON-ORDER
+          status: in_doubt
+        messages:
+        - type: warning
+          code: payment_in_doubt
+          content:
+            en-IN: Debit status unknown. Reconciling with PSP. Do not retry with a new key.
+          resolution: recoverable
+    OrderDelivered:
+      value:
+        id: ORD-KIR-88231
+        transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
+        bpp_id: bpp.kirana.example.in
+        provider_id: P-112
+        state: Completed
+        fulfilment_state: Order-delivered
+        line_items:
+        - id: I-MILK-1L
+          quantity: 1
+          unit_price:
+            value: 6800
+            currency: INR
+          total:
+            value: 6800
+            currency: INR
+          tax_lines:
+          - type: CGST
+            rate_bps: 0
+            amount:
+              value: 0
+              currency: INR
+        totals:
+        - type: total
+          amount:
+            value: 30200
+            currency: INR
+        adjustments: []
+        return_window_ends: '2026-10-22T21:00:00+05:30'
+        mandate_ref: mdt_CHK7Q2W9X4K1M3
+    IssueOpen:
+      value:
+        id: ISS-0091
+        order_id: ORD-KIR-88231
+        level: ISSUE
+        status: OPEN
+        category: PAYMENT
+        sub_category: PMT02
+        complainant:
+          actor_type: AI_AGENT
+          agent_id: did:web:agents.vaani.example.in:sakhi
+          operator: CIN:U62099KA2026PTC000001
+          on_behalf_of: pp_9f2c1e
+          mandate_ref: mdt_CHK7Q2W9X4K1M3
+        payment_refs:
+          rrn: '629318004417'
+        actions:
+        - action: OPEN
+          actor_type: AI_AGENT
+          at: '2026-10-28T10:00:00+05:30'
+        expected_response_by: '2026-10-30T10:00:00+05:30'
+        expected_resolution_by: '2026-11-27T10:00:00+05:30'
