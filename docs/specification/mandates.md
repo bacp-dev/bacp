@@ -114,7 +114,7 @@ than its parent's.
   },
   "payee": {"vpa": "ganeshkirana@examplebank"},
   "rail_binding": {
-    "type": "upi.reservepay.block",
+    "type": "in.upi.reservepay",
     "rail_ref": "SBMD-HDFX-000123456",
     "psp_id": "psp.example.in",
     "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl",
@@ -167,7 +167,9 @@ Manager** (MM) issues it.
    `purpose_code`, `rail`, `presence_allowed`, `proposed_constraints`, `data_scopes`,
    `action_scope`, `validity` (an ISO 8601 duration), `language` and `webhook_url`. The gateway
    **MUST** accept `webhook_url`, so that `mandate.status_changed` can reach the agent before any
-   session exists.
+   session exists. Proposed: when `action_scope` is omitted, all eight actions (`DISCOVER`,
+   `QUOTE`, `ORDER`, `PAY`, `CANCEL`, `RETURN`, `RAISE_ISSUE`, `SHARE_DATA`) are requested, and the
+   Trusted Surface shows that full scope to the principal before approval.
 2. Before anything reaches the Trusted Surface, the gateway or the MM **MUST** reject the request:
     - with `403 constraint_unknown` if `proposed_constraints` has a key this page does not define
       (see [Fail-closed handling](#unknown-constraints));

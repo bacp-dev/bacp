@@ -41,7 +41,7 @@ Solid arrows are calls. Dotted arrows are trust dependencies: every call is chec
 | **Seller app (BPP) and seller** | Publish catalogues, quote, fulfil, handle cancellations and returns, issue GST invoices and respond to grievances. |
 | **Mandate Manager** | Turns the user's approval into a signed mandate and consent receipt, tracks use and revocation, and publishes status. It does not see order or payment payloads. |
 | **Trusted surface** | A non-agentic screen, usually the user's UPI or banking app, where the user reviews and approves a mandate and authenticates. |
-| **Payer PSP, issuer and NPCI** | Execute the payment, enforce rail limits and return a signed receipt with the UPI RRN. They see the payee and amount, not the basket. |
+| **Payer PSP, issuer and NPCI** | Execute the payment and enforce rail limits. In BACP the payer PSP also returns a signed receipt with the UPI RRN. They see the payee and amount, not the basket. |
 
 See the [glossary](../specification/glossary.md) for the full list of terms.
 

@@ -226,7 +226,7 @@ come from a receipt.
   "amount": {"value": 30200, "currency": "INR"},
   "payee": {"vpa": "ganeshkirana@examplebank", "name": "Shree Ganesh Kirana"},
   "rail": {
-    "type": "upi.reservepay.block",
+    "type": "in.upi.reservepay",
     "rail_ref": "SBMD-HDFX-000123456",
     "rrn": "629318004417",
     "utr": "629318004417",

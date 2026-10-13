@@ -180,7 +180,7 @@ requested quantities.
     "consent_receipt_ref": "cr_A1B2C3D4E5F6G7",
     "fields": ["NAME", "PHONE", "DELIVERY_ADDRESS"]
   },
-  "payment": {"handler": "upi.reservepay.block"}
+  "payment": {"handler": "in.upi.reservepay"}
 }
 ```
 
@@ -220,7 +220,7 @@ Response (`200`, abridged):
     "price_breakup": [{"type": "total", "amount": {"value": 30200, "currency": "INR"}}],
     "hash": "sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg"
   },
-  "payment": {"handler": "upi.reservepay.block", "collected_by": "BAP", "type": "ON-ORDER",
+  "payment": {"handler": "in.upi.reservepay", "collected_by": "BAP", "type": "ON-ORDER",
               "status": "not_started"},
   "messages": [
     {"type": "disclosure", "code": "ai_disclosure",
@@ -371,8 +371,8 @@ and **MUST** offer the human handoff. A handoff on the network maps to Beckn `su
 
 The gateway, in order:
 
-1. **Decodes the closed mandates** and checks they are signed by the session agent's `cnf` key and
-   narrow the session's open mandates (`403 mandate_invalid_signature` or
+1. **Decodes the closed mandates** and checks they are signed by the session agent's `cnf` key
+   (HNP) or by the principal key that signed the parent (HP), and narrow the session's open mandates (`403 mandate_invalid_signature` or
    `mandate_scope_mismatch`).
 2. **Checks the session state.** A canceled session returns its state (or the mandate error that
    canceled it). A session that is already `complete_in_progress` or `completed` re-runs the
@@ -411,7 +411,7 @@ Response (`200`, abridged):
   ],
   "totals": [{"type": "total", "amount": {"value": 30200, "currency": "INR"}}],
   "payment": {
-    "handler": "upi.reservepay.block",
+    "handler": "in.upi.reservepay",
     "collected_by": "BAP",
     "type": "ON-ORDER",
     "status": "confirmed",
@@ -430,7 +430,7 @@ Response (`200`, abridged):
       "amount": {"value": 30200, "currency": "INR"},
       "payee": {"vpa": "ganeshkirana@examplebank", "name": "Shree Ganesh Kirana"},
       "rail": {
-        "type": "upi.reservepay.block",
+        "type": "in.upi.reservepay",
         "rail_ref": "SBMD-HDFX-000123456",
         "rrn": "629318004417",
         "utr": "629318004417",
@@ -496,7 +496,7 @@ When the evaluation calls for a step-up the gateway returns `200` with
 
 The step-up flow, the two kinds (`confirm`, `rail_auth`) and split-order detection are specified in
 [Mandates: Step-up](../mandates.md#step-up). In the A2A and MCP bindings a step-up surfaces as A2A
-`AUTH_REQUIRED` and MCP `insufficient_scope` ([MCP and A2A](../transports/mcp-a2a.md)).
+`TASK_STATE_AUTH_REQUIRED` and MCP `insufficient_scope` ([MCP and A2A](../transports/mcp-a2a.md)).
 
 ### Timeout, in-doubt and reconciliation {#in-doubt}
 

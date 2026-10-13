@@ -6,7 +6,7 @@ envelope differs. This page defines the MCP and A2A envelopes.
 
 !!! warning "Partly Proposed"
     The tool and DataPart names, the use of `structuredContent`, and the mapping of step-up to MCP
-    `insufficient_scope` and A2A `AUTH_REQUIRED` are defined. Items marked **Proposed** below are not yet settled.
+    `insufficient_scope` and A2A `TASK_STATE_AUTH_REQUIRED` are defined. Items marked **Proposed** below are not yet settled.
     Bindings for payment plans, credit ledgers and trade documents are open: [Q-44](../open-questions.md#q-44).
 
 ## Common rules {#common}
@@ -19,8 +19,9 @@ envelope differs. This page defines the MCP and A2A envelopes.
    MUST NOT execute it or treat it as an instruction.
 4. In negotiation, the guard's verdict (`acceptable`, `not_acceptable`, `needs_escalation`) is the only signal about
    the mandate that reaches the model. Bounds such as the reservation price never appear in any binding.
-5. A step-up is surfaced as MCP `insufficient_scope` or A2A `AUTH_REQUIRED`. That mapping is kept on the gateway's
-   step-up record and appears only in these bindings, never in the REST resource view.
+5. A step-up is surfaced as MCP `insufficient_scope` or A2A `TASK_STATE_AUTH_REQUIRED`. That mapping is kept on the gateway's
+   step-up record. It never appears in the REST `NegotiationSession` view; a checkout session's `step_up` object MAY
+   echo it as `a2a_state` and `mcp_error`.
 6. The step-up itself always completes on the Trusted Surface. Neither MCP elicitation nor an A2A message can approve
    a step-up.
 
@@ -122,15 +123,18 @@ task.
 
 ### Task states {#a2a-states}
 
-| A2A task state | Negotiation state | Checkout session |
+| A2A task state (v1.0 JSON value) | Negotiation state | Checkout session |
 |---|---|---|
-| `working` | Waiting on the counterparty | `complete_in_progress` (Proposed) |
-| `input-required` | A counter to answer | Proposed: `incomplete` when the buyer must supply data |
-| `auth-required` | ESCALATED | `requires_escalation` (step-up) |
-| `completed` | CONTRACTED | `completed` (Proposed) |
-| `canceled` or `failed` | REJECTED, TERMINATED or CANCELLED | `canceled` (Proposed) |
+| `TASK_STATE_WORKING` | Waiting on the counterparty | `complete_in_progress` (Proposed) |
+| `TASK_STATE_INPUT_REQUIRED` | A counter to answer | Proposed: `incomplete` when the buyer must supply data |
+| `TASK_STATE_AUTH_REQUIRED` | ESCALATED | `requires_escalation` (step-up) |
+| `TASK_STATE_COMPLETED` | CONTRACTED | `completed` (Proposed) |
+| `TASK_STATE_CANCELED` or `TASK_STATE_FAILED` | REJECTED, TERMINATED or CANCELLED | `canceled` (Proposed) |
 
-`AUTH_REQUIRED` is a signal, not an authorisation: the task resumes only after the Mandate Manager or PSP posts a
+Versions of A2A before 1.0 use the lowercase names `working`, `input-required`, `auth-required`, `completed`,
+`canceled` and `failed`.
+
+`TASK_STATE_AUTH_REQUIRED` is a signal, not an authorisation: the task resumes only after the Mandate Manager or PSP posts a
 signed step-up result to the gateway.
 
 ### How mandates travel {#a2a-mandates}

@@ -168,7 +168,7 @@ allows, even when the rail authority is far larger than the budget, and MUST NOT
 - The InstructionLog keeps content encrypted at the operator. Only hashes and references leave it, and content is
   released only inside an evidence bundle to a party entitled to it.
 - Receipts and evidence MUST NOT contain any value a handler descriptor lists under `never_collect` (UPI PIN, OTP,
-  card number, CVV, expiry, Aadhaar number, net-banking credentials).
+  card number, CVV, expiry, Aadhaar number, biometrics, net-banking credentials).
 - An Aadhaar number is never collected; age or identity attributes use selective disclosure.
 
 ### Reservation-price DLP {#reservation-dlp}
@@ -217,6 +217,12 @@ See [REST](transports/rest.md#webhooks) for delivery and signing.
 
 ## Privacy under the DPDP Act and Rules {#privacy}
 
+!!! danger "Not legal advice"
+    This section describes how BACP carries the artefacts that DPDP duties need. It is not legal advice and does not
+    establish that any deployment complies with the DPDP Act or Rules. Dates and penalties are taken from the
+    Gazette texts cited here and may change by later notification. Each participant remains responsible for its own
+    compliance and should take advice from qualified counsel.
+
 BACP treats every seller that receives the buyer's personal data as a separate Data Fiduciary, and the agent
 operator and buyer app as Fiduciaries for their own processing. The protocol carries the artefacts each of them
 needs to show compliance; it does not replace their own notices and policies.
@@ -225,24 +231,28 @@ needs to show compliance; it does not replace their own notices and policies.
 
 | Provisions | Applies from | Notes |
 |---|---|---|
-| DPDP Rules 1, 2 and 17–21 (the Data Protection Board) | 13 November 2025, on publication of the Rules (G.S.R. 846(E)) | In force. |
-| Rule 4 and the First Schedule (Consent Managers) | About 13 November 2026 (one year after publication) | See [Consent Manager role](#consent-manager). |
-| Rules 3 and 5–16, 22 and 23 (notice, security, breach, retention, children, Significant Data Fiduciaries, rights, cross-border transfer) and the matching duties of the Act | About 13 May 2027 (eighteen months after publication) | Whether the Act's duties commence with these Rules should be checked against the commencement notification. |
+| DPDP Rules 1, 2 and 17–21 (the Data Protection Board); Act s.1(2), s.2, ss.18–26, 35, 38–43, 44(1) and 44(3) | 13 November 2025, on publication (Rules: G.S.R. 846(E); Act commencement: G.S.R. 843(E), both of 13 November 2025) | In force. |
+| Rule 4 and the First Schedule (Consent Managers); Act s.6(9) (Consent Manager registration) and s.27(1)(d) | 13 November 2026 (one year after publication) | See [Consent Manager role](#consent-manager). |
+| Rules 3, 5–16, 22 and 23 (notice, security, breach, retention, children, Significant Data Fiduciaries, rights, cross-border transfer); Act ss.3–5, 6(1)–(8) and 6(10), 7–17, 27 (except 27(1)(d)), 28–34, 36, 37 and 44(2) | 13 May 2027 (eighteen months after publication) | The Act's duties and its penalties (s.33 and the Schedule) commence on the same date as these Rules (G.S.R. 843(E)). |
 | RBI direction on Storage of Payment System Data (6 April 2018) | In force | See [Data localisation](#data-localisation). |
 
 !!! warning "Dates may move"
-    A MeitY consultation in January 2026 reportedly proposed shortening the 18 months to 12, which would bring the
-    May 2027 duties forward to about November 2026, and a corrigendum (G.S.R. 113(E)) is reported. Neither is
-    verified. See [Q-53](open-questions.md#q-53).
+    A MeitY consultation in January 2026 reportedly proposed shortening some of the eighteen-month periods to
+    twelve months; reports differ on whether it covers all the duties or only Rule 13. It is reported in secondary
+    sources only, and no amending notification had been found as of October 2026. A corrigendum to the Rules
+    (G.S.R. 892(E), 10 December 2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E), 5 October
+    2026) change wording only and move no date. A further corrigendum, G.S.R. 113(E), is listed by a secondary
+    source, but its text has not been seen. See [Q-53](open-questions.md#q-53).
 
 ### Notice and consent {#notice-and-consent}
 
 - Consent is captured only on the Trusted Surface, by an explicit affirmative action (tap, PIN, biometric or
   passkey), never inferred by an agent. The capture records a device signature; voice captures add the audio and
   transcript hashes and the translation model.
-- A **ConsentReceipt** is issued per recipient Fiduciary per mandate. It records the Rule 3 notice: itemised data
-  fields, purpose and the goods or services, the recipient, the language (English or an Eighth Schedule language),
-  the withdrawal route and the grievance route, and the legal basis (`consent_s6` or `legitimate_use_s7a` for
+- A **ConsentReceipt** is issued per recipient Fiduciary per mandate. It records the Rule 3 notice (an itemised
+  description of the data, the specified purpose and the goods or services, and the means to withdraw consent,
+  exercise rights and complain to the Board), together with the recipient, the notice language (English or an
+  Eighth Schedule language, Act s.5(3) and s.6(3)), and the legal basis (`consent_s6` or `legitimate_use_s7a` for
   delivery data the buyer provided for that order).
 - Withdrawal MUST be as easy as giving consent. The receipt carries a withdrawal URI and an erasure signal.
 - When the seller is unknown at mandate setup, a class receipt (recipient `*`) scoped to the mandate's categories is
@@ -270,10 +280,13 @@ needs to show compliance; it does not replace their own notices and policies.
 
 Proposed rules, pending that answer:
 
-- `cm_registration_no` is REQUIRED on ConsentReceipts issued on or after 2026-11-13.
+- `cm_registration_no` is REQUIRED on ConsentReceipts issued on or after 2026-11-13, the date from which Act
+  s.6(9) (registration of Consent Managers with the Board) and Rule 4 apply. Under the First Schedule, a Consent
+  Manager is a company incorporated in India with a net worth of at least ₹2 crore.
 - The credential-provider role (re-verifying closed mandates, issuing `within_bounds` attestations) is split from
   the data-blind Consent Manager.
-- The Consent Manager keeps records for 7 years and offers a machine-readable export (proposed
+- The Consent Manager keeps records of consents, notices and sharing for at least 7 years and gives them to the
+  Data Principal on request in machine-readable form (First Schedule Part B item 4; proposed
   `GET /mm/records?principal=`).
 
 ### Data localisation {#data-localisation}
@@ -285,12 +298,14 @@ Proposed rules, pending that answer:
 
 Proposed: anything that contains payment data is stored only in India; the AgentCredential and registry declare
 `data_residency{payment_data: "IN", llm_region, log_region, transfer_basis}`; the gateway refuses payment-data
-egress outside India. Cross-border transfer of other personal data follows DPDP s.16 (a negative list) once
-notified.
+egress outside India. Cross-border transfer of other personal data follows DPDP s.16 and Rule 15 from 13 May 2027: transfer is
+restricted only to countries the Central Government notifies. A Significant Data Fiduciary may also be required to
+keep specified data in India (Rule 13(4)).
 
 ### Retention {#retention}
 
-- DPDP Rule 8(3) requires personal data, traffic data and processing logs to be kept for at least one year; the
+- From 13 May 2027, DPDP Rule 8(3) requires personal data, traffic data and processing logs to be kept for at
+  least one year; the
   ConsentReceipt records `retention.legal_minimum` (default one year) and the recipient's maximum.
 - Erasure on withdrawal or once the purpose is served (s.8(7)) is reconciled with that minimum.
 - Mandate records at the Mandate Manager are kept for 7 years.
@@ -301,8 +316,10 @@ notified.
 
 ### Breach notice {#breach-notice}
 
-From about 13 May 2027, DPDP Rule 7 requires a Fiduciary to inform each affected Data Principal without delay, and
-the Board without delay with a detailed report within 72 hours. In a BACP flow a breach at one participant can
+From 13 May 2027, Act s.8(6) and DPDP Rule 7 require a Fiduciary that becomes aware of a personal data
+breach to inform each affected Data Principal without delay, and the Board without delay, followed by a detailed
+report within 72 hours of becoming aware of it (or a longer period the Board allows on a written request). Failure
+to notify can attract a penalty of up to ₹200 crore. In a BACP flow a breach at one participant can
 affect data held by others. Proposed: a cross-participant `bacp.breach_signal` message carrying detection and
 notification times ([Q-17](open-questions.md#q-17)).
 
@@ -316,9 +333,24 @@ These DPDP duties start in May 2027 and are not yet designed in. Proposed messag
 | Downstream erasure after withdrawal, with acknowledgement and an SLA | `bacp.erasure_request` |
 | Accuracy and correction propagation to recipients (s.8(3)) | `bacp.correction` |
 | Breach signalling (Rule 7) | `bacp.breach_signal` |
-| Children: verifiable parental consent; no tracking, behavioural monitoring or targeted advertising (s.9, Rule 10) | `principal.minor_status`, `parental_consent_ref`, and a minor mode that turns off personalised ranking and sponsored results |
+| Children: verifiable parental consent; no tracking, behavioural monitoring or targeted advertising (s.9, Rules 10 and 12) | `principal.minor_status`, `parental_consent_ref`, and a minor mode that turns off personalised ranking and sponsored results |
 | Separate consent for model training and for health data | Separate purpose classes with a no-training default |
 
 Grievances: the operator's grievance officer is named in the AgentCredential, and DPDP grievances must be answered
 within 90 days (Rule 14(3)); e-commerce grievances follow the shorter timelines described in
 [Beckn / ONDC Binding](transports/beckn.md#igm).
+
+### Penalties {#penalties}
+
+The Schedule to the DPDP Act (s.33(1)) sets the maximum penalties the Board may impose. They apply from about
+13 May 2027.
+
+| Breach | Maximum penalty |
+|---|---|
+| Failure to take reasonable security safeguards to prevent a personal data breach (s.8(5)) | ₹250 crore |
+| Failure to notify the Board or affected Data Principals of a breach (s.8(6)) | ₹200 crore |
+| Breach of the additional obligations for children (s.9) | ₹200 crore |
+| Breach of the additional obligations of a Significant Data Fiduciary (s.10) | ₹150 crore |
+| Breach of a Data Principal's duties (s.15) | ₹10,000 |
+| Breach of a voluntary undertaking accepted by the Board (s.32) | Up to the penalty for the original breach |
+| Breach of any other provision of the Act or the Rules | ₹50 crore |

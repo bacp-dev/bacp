@@ -70,7 +70,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-50](#q-50) | Cross-seller split-order detection | BACP WG | No |
 | [Q-51](#q-51) | Payment aggregator marketplace limits and settlement ETA | RBI | No |
 | [Q-52](#q-52) | Indian Contract Act timing rules | Legal counsel | **Blocking** |
-| [Q-53](#q-53) | Final DPDP commencement dates | MeitY/DPDP | No |
+| [Q-53](#q-53) | Final DPDP commencement dates (resolved) | MeitY/DPDP | No |
 | [Q-54](#q-54) | BACP operator as card token requestor | RBI | No |
 | [Q-55](#q-55) | Aadhaar offline VC verification and OVSE registration | MeitY/DPDP | No |
 | [Q-56](#q-56) | Retention of negotiation transcripts | Legal counsel | No |
@@ -100,7 +100,8 @@ registry or DeDi, or DIDs and VCs?<br>
 ### Q-03 Pre-debit notice for Reserve Pay and OTM {#q-03}
 
 **Question.** Does the RBI E-mandate Framework 2026 pre-debit notice of at least 24 hours apply to Reserve Pay
-(single-block multi-debit) repeat debits, and to OTM?<br>
+(single-block multi-debit) repeat debits, and to OTM? NPCI's Reserve Pay product page says the payer is "notified
+each time money is deducted" and mentions no pre-debit notice.<br>
 **Owner.** NPCI.
 
 **Working position.** Fail-safe: an unknown pre-debit-notice status is treated as "required 24 h" from the second
@@ -108,18 +109,20 @@ unattended debit on the block. See [Rail Bindings](payments/rails.md).
 
 ### Q-04 Reserve Pay issuers and account types {#q-04}
 
-**Question.** Which issuers and which account types (credit or savings) support Reserve Pay?<br>
+**Question.** Which issuers and which account types (credit or savings) support Reserve Pay? NPCI's product page sets
+₹10,000 per block and 90 days but does not restrict account types; the GFF 2025 release launched it on credit cards and
+pre-sanctioned credit lines.<br>
 **Owner.** NPCI.
 
 **Working position.** Support both and read the PSP's attestation.
 
 ### Q-05 UPI 123PAY limit {#q-05}
 
-**Question.** The RBI limit for UPI 123PAY is ₹10,000, while an NPCI FAQ gives ₹5,000 P2M and ₹1,000 P2P. Which
-applies?<br>
+**Question.** RBI raised the UPI 123PAY per-transaction limit from ₹5,000 to ₹10,000 on 9 October 2024 and said NPCI
+would issue instructions. Has NPCI implemented ₹10,000 for every 123PAY channel?<br>
 **Owner.** NPCI.
 
-**Working position.** The cap is configurable, and a gateway refuses a payment above either figure.
+**Working position.** Default ₹10,000, configurable in the handler descriptor.
 
 ### Q-06 IGM version {#q-06}
 
@@ -140,7 +143,8 @@ available only to members.<br>
 
 ### Q-08 UPI Circle details {#q-08}
 
-**Question.** What are the cooling period and the per-transaction cap for human secondary users of UPI Circle?<br>
+**Question.** What are the cooling period and the per-transaction cap for human secondary users of UPI Circle? NPCI's
+full-delegation release says only "a short cooling period".<br>
 **Owner.** NPCI.
 
 **Working position.** Both are configurable in the handler descriptor.
@@ -163,8 +167,8 @@ PSP.
 
 ### Q-11 `AI_AGENT` in IGM {#q-11}
 
-**Question.** Will ONDC register `actor_type=AI_AGENT` in IGM, given that IGM 2.0 `AGENT` means a fulfilment
-agent?<br>
+**Question.** Will ONDC register `AI_AGENT` as an IGM 2.0 actor type (the `type` of an `actors[]` entry), given that
+the IGM 2.0 enum has only `AGENT`, which means a fulfilment agent?<br>
 **Owner.** ONDC.
 
 **Working position.** A namespaced extension value, mirrored in tags.
@@ -217,7 +221,7 @@ the registry; the gateway refuses payment-data egress. See
 !!! danger "Blocking"
     Must be resolved before a dated release.
 
-**Question.** DPDP Rule 4 applies from about 13 November 2026. Should the Mandate Manager register as a Consent
+**Question.** DPDP Rule 4 applies from 13 November 2026. Should the Mandate Manager register as a Consent
 Manager, or integrate with one? Is co-locating the Mandate Manager with the payer PSP, and giving it the role of
 credential provider that re-verifies closed mandates, compatible with a data-blind Consent Manager? From what date is
 `cm_registration_no` mandatory, and how is the 7-year machine-readable export offered? Do RBI-registered Account
@@ -252,8 +256,14 @@ against, or must the buyer app attest?<br>
 **Question.** Can an offer waive the acceptor's right under Indian Contract Act s.5 to revoke an acceptance?<br>
 **Owner.** Legal counsel.
 
+**Findings.** Section 5 reads: "An acceptance may be revoked at any time before the communication of the acceptance is
+complete as against the acceptor, but not afterwards." No statute or other source found permits a waiver of that
+right. The Uttar Pradesh amendment to s.5 (U.P. Act 57 of 1976) concerns proposals that must be kept open for a
+specified time, not acceptances.
+
 **Working position.** Waived by default (`acceptance_revocation: waived`); `allowed_until_receipt` and the
-`ACCEPT_REVOKED` state are supported. This is also listed as [proposed design choice (c)](#proposed-c).
+`ACCEPT_REVOKED` state are supported. The default is a BACP design choice and the waiver may not hold. This is also
+listed as [proposed design choice (c)](#proposed-c).
 
 ### Q-20 Fees and the MRP ceiling {#q-20}
 
@@ -263,6 +273,13 @@ against, or must the buyer app attest?<br>
 **Question.** Do delivery, packing or convenience fees count toward the MRP? What exactly is the Legal Metrology
 Rule 3 exemption (industrial or institutional packs, packs above 25 kg)?<br>
 **Owner.** Legal counsel.
+
+**Findings.** Rule 18(2) of the Legal Metrology (Packaged Commodities) Rules, 2011 bars selling a packaged commodity
+above its MRP (Lok Sabha Unstarred Question 4362, answered 26 March 2025). The Rule 3 exemptions (packages above
+25 kg or 25 litres; cement, fertiliser and agricultural farm produce in bags above 50 kg; packages for industrial or
+institutional consumers) come only from a 2022 secondary consolidation; the Rules text was not seen. No official
+source was found on whether delivery, packing or convenience fees count toward the MRP, so the question stays
+blocking.
 
 **Working position.** Fees are separate disclosed lines and `retail_package_mrp_required` is set per line. The answer
 will be encoded as `mrp_inclusive_charges`. The MRP validator is normative, so its scope must be settled first. See
@@ -274,8 +291,16 @@ will be encoded as `mrp_inclusive_charges`. The MRP validator is normative, so i
 acceptance machine-checkable?<br>
 **Owner.** Legal counsel.
 
-**Working position.** Traders get a warning only. Acceptance is the GRN or the `on_acceptance` event. The 15-day
-deemed-acceptance rule is unverified.
+**Findings.** MSMED Act s.2(b) Explanation: the day of acceptance is the day of actual delivery, or, if the buyer
+objects in writing within fifteen days of delivery, the day the supplier removes the objection; with no objection in
+that time, the day of deemed acceptance is the day of actual delivery. The fifteen days enter s.15 only through the
+"appointed day" (the day after fifteen days from acceptance or deemed acceptance), which applies when there is no
+written agreement (Gazette of India, 16 June 2006). The MSME Office Memorandum 5/2(2)/2021-E/P&G/Policy of 2 July 2021
+restricts benefits to retail and wholesale trade MSMEs to priority-sector lending; its legal effect on s.15 is open.
+Also open: how a buyer's written objection travels on the network.
+
+**Working position.** Traders get a warning only. Acceptance is the GRN or the `on_acceptance` event, which records
+the delivery date and any written objection.
 
 ### Q-22 Firm-offer breach penalty {#q-22}
 
@@ -333,7 +358,10 @@ deemed-acceptance rule is unverified.
 ### Q-29 eNACH cap {#q-29}
 
 **Question.** What are the eNACH ₹1 crore net-banking and debit-card cap (NPCI FY2023-24/003) and any NACH
-pre-debit rule?<br>
+pre-debit rule? NPCI Circular 010 (2020) is confirmed: ₹10 lakh for net-banking and debit-card e-mandates, ₹1 lakh
+for Aadhaar eSign, and ₹50 lakh for security mandates (loan category). Circular 003 of FY2023-24 exists by title; its
+₹1 crore figure is reported only by vendors. No RBI pre-debit rule for NACH was found: the E-mandate Framework 2026
+covers cards, PPIs and UPI only.<br>
 **Owner.** NPCI.
 
 **Working position.** A configurable cap with a default of ₹10 lakh; BACP's own 24-hour notice applies.
@@ -542,21 +570,39 @@ the seller?<br>
     Must be resolved before a dated release.
 
 **Question.** The dispatch and receipt timing of negotiation messages, the WITHDRAW/ACCEPT crossing rule and the
-dispatch-time assumption rest on Indian Contract Act ss.4–7, cited from memory and unverified. Are those citations
-right?<br>
+dispatch-time assumption rest on Indian Contract Act ss.4–7. Do they hold for electronic negotiation messages?<br>
 **Owner.** Legal counsel.
+
+**Findings.** The text of Contract Act ss.2 and 4–7 has been checked against India Code. Still open: whether mapping
+dispatch and receipt to CounterSignature timestamps, and the crossing tie-break, hold for electronic messages. IT Act
+s.13 sets despatch and receipt rules for electronic records "save as otherwise agreed to between the originator and
+the addressee", so the parties may agree their own.
 
 **Working position.** The timing semantics are normative in [Negotiation](negotiation/index.md); their legal basis
 must be confirmed before publication.
 
 ### Q-53 DPDP commencement dates {#q-53}
 
+!!! success "Resolved"
+    The dates are fixed in the Gazette. Re-check only if an amending notification is published.
+
 **Question.** What are the final DPDP commencement dates, given a reported MeitY consultation to shorten 18 months to
 12 and a reported corrigendum G.S.R. 113(E)?<br>
 **Owner.** MeitY/DPDP.
 
-**Working position.** Plan for about 13 November 2026 (Rule 4) and about 13 May 2027 (Rules 3, 5–16, 22, 23), and
-re-check.
+**Answer.** The DPDP Rules 2025 are G.S.R. 846(E) and the Act's commencement notification is G.S.R. 843(E), both
+dated 13 November 2025. Together they set three dates:
+
+| From | Rules (G.S.R. 846(E), rule 1) | Act (G.S.R. 843(E)) |
+|---|---|---|
+| 13 November 2025 (in force now) | Rules 1, 2 and 17–21 | ss.1(2), 2, 18–26, 35, 38–43, 44(1) and 44(3) |
+| 13 November 2026 | Rule 4 (Consent Managers) | s.6(9) and s.27(1)(d) |
+| 13 May 2027 | Rules 3, 5–16, 22 and 23 | ss.3–5, 6(1)–(8) and 6(10), 7–17, 27 (except 27(1)(d)), the penalty provisions ss.28–34, 36, 37 and 44(2) |
+
+The corrigendum G.S.R. 892(E) (10 December 2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E),
+5 October 2026) change wording only and move no date. The reported consultation to shorten the eighteen-month period
+and the reported corrigendum G.S.R. 113(E) appear only in secondary sources; no amending notification had been found
+as of October 2026. See [Security and Privacy](security-and-privacy.md#commencement).
 
 ### Q-54 Token requestor duties {#q-54}
 
@@ -588,8 +634,13 @@ is proposed but unverified.<br>
 policy portal was unreachable. Should BACP auto-escalate on missed clocks?<br>
 **Owner.** ONDC.
 
+**Partly answered.** The 48-hour acknowledgement and one-month resolution are maximums under Consumer Protection
+(E-Commerce) Rules r.4(5), restated by ONDC on its [complaint page](https://ondc.org/pages/complaint.html). IGM 2.0
+carries them as per-issue durations (`expected_response_time`, `expected_resolution_time`) with no network default.
+Still open: auto-escalation on a missed clock, and the ONDC Network Policy IGM chapter, which was not retrieved.
+
 **Working position.** Proposed: normative `ack_by` and `resolve_by` timers. See
-[Beckn / ONDC Binding](transports/beckn.md#igm).
+[Beckn / ONDC Binding](transports/beckn.md#igm) and [Orders and Post-order](checkout/post-order.md#igm).
 
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 

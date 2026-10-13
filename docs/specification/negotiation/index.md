@@ -151,14 +151,15 @@ A tranche structure such as "30% advance, 70% net-45 from GRN" is two `schedule[
 
 ### Credit terms and MSMED limits
 
-If the seller is a Udyam **micro or small** enterprise in **manufacturing or services**, every credit offset (`credit_days` and every tranche `offset_days`) MUST be at most **45 days** from acceptance or deemed acceptance (MSMED Act, 2006, s.15). The term-sheet schema encodes this rule, and the validator also runs in code.
+If the seller is a Udyam **micro or small** enterprise in **manufacturing or services**, every credit offset (`credit_days` and every tranche `offset_days`) MUST be at most **45 days** from acceptance or deemed acceptance. MSMED Act, 2006, s.15 says the period agreed in writing "in no case … shall exceed forty-five days from the day of acceptance or the day of deemed acceptance". The term-sheet schema encodes this rule, and the validator also runs in code.
 
-- Where no written agreement exists, the default credit period is 15 days.
-- Medium enterprises are never covered.
-- **Traders** are excluded pending verification of whether Udyam-registered traders fall outside s.15. For a trader seller the validator only warns. See [Q-21](../open-questions.md#q-21).
+- Where no written agreement exists, payment is due within 15 days of acceptance: before the "appointed day" of s.2(b).
+- The day of acceptance is the day of actual delivery, or, if the buyer objects in writing within 15 days of delivery, the day the supplier removes the objection. With no written objection within 15 days, the day of deemed acceptance is the day of actual delivery (s.2(b), Explanation).
+- Medium enterprises are never covered: the Act's "supplier" is a micro or small enterprise (s.2(n)).
+- **Traders.** The Ministry of MSME Office Memorandum of 2 July 2021 lets retail and wholesale traders register on Udyam but says their benefits "are to be restricted to Priority Sector Lending only". BACP therefore does not apply the cap to a trader seller, and the validator only warns. Whether that memorandum excludes traders from s.15 as a matter of law is open ([Q-21](../open-questions.md#q-21)).
 - A firm offer that breaches the cap is blocked with `NEG_MSMED_CREDIT_CAP`. A buyer's own draft only warns.
-- A buyer-signed GRN is REQUIRED for the `on_acceptance` event and for every MSMED-applicable sale. The acceptance date that starts the 45-day clock is the earlier of the GRN date and delivery + 15 days. The 15-day deemed-acceptance rule is unverified ([Q-21](../open-questions.md#q-21)).
-- The credit ledger computes the statutory due date, compound interest at three times the bank rate on overdue amounts, and the income-tax deduction flag for late MSE payments. See [Credit and Split Tender](../payments/credit-and-split-tender.md).
+- A buyer-signed GRN is REQUIRED for the `on_acceptance` event and for every MSMED-applicable sale. It records the delivery date and any written objection. The acceptance date that starts the clock is the delivery date, or the date an objection recorded within 15 days of delivery was removed. How an objection travels on the network is open ([Q-21](../open-questions.md#q-21)).
+- The credit ledger computes the statutory due date, compound interest at three times the bank rate on overdue amounts (s.16), and the income-tax deduction flag for late payments to micro and small enterprises. See [Credit and Split Tender](../payments/credit-and-split-tender.md).
 
 ```json title="termsheet.b2b-net30.json (small manufacturer, net-30 from GRN)"
 --8<-- "source/examples/termsheet.b2b-net30.json"
@@ -373,7 +374,7 @@ Counter-offers follow two rules:
 
 ### Step-up to the Trusted Surface
 
-On `needs_escalation`, the session moves to `ESCALATED` and carries a `step_up` object with `kind: confirm` and `reason` ∈ `negotiation_out_of_mandate` | `negotiation_between_reservation_and_max`. In the A2A binding this maps to `AUTH_REQUIRED`, and in MCP to `insufficient_scope` (see [MCP and A2A](../transports/mcp-a2a.md)).
+On `needs_escalation`, the session moves to `ESCALATED` and carries a `step_up` object with `kind: confirm` and `reason` ∈ `negotiation_out_of_mandate` | `negotiation_between_reservation_and_max`. In the A2A binding this maps to the task state `TASK_STATE_AUTH_REQUIRED` (A2A 1.0), and in MCP to `insufficient_scope` (see [MCP and A2A](../transports/mcp-a2a.md)).
 
 - The **diff card** (issue, offered value, the principal's own bound, all-in total, offer expiry) is rendered **only on the Trusted Surface**. The agent and the counterparty never receive the bound. In the REST view, `step_up.diff[]` carries only `issue_path`, `offered` and `within_bounds`.
 - The principal approves with an RBI-compliant factor such as the UPI PIN or a device biometric. The Mandate Manager then issues a one-off `within_bounds` attestation bound to that exact `offer_hash`.
@@ -396,7 +397,7 @@ Validators run at three places: at the BPP before it sends, at the BAP gateway o
 
 | ID | Validator | Rule | Outcome and code |
 |---|---|---|---|
-| V-01 | MRP ceiling | For a line with `retail_package_mrp_required: true`, the unit price including tax MUST NOT exceed `mrp` per sale unit, at every offer, bid, `on_select`, `on_init`, `confirm` and `update`, in B2B and B2C (Legal Metrology (Packaged Commodities) Rules, 2011). English auctions are capped at MRP. Not applied to exempt industrial or institutional packs or to loose goods. Delivery and packing fees are separate disclosed charges. Whether they count toward MRP, and the exact exemption, are open ([Q-20](../open-questions.md#q-20)). | block, `NEG_MRP_EXCEEDED` |
+| V-01 | MRP ceiling | For a line with `retail_package_mrp_required: true`, the unit price including tax MUST NOT exceed `mrp` per sale unit, at every offer, bid, `on_select`, `on_init`, `confirm` and `update`, in B2B and B2C. Legal Metrology (Packaged Commodities) Rules, 2011, Rule 18(2) bars any retail dealer or other person, including a manufacturer, packer, importer or wholesale dealer, from selling a packaged commodity above its retail sale price (as confirmed in a Lok Sabha answer of 26 March 2025). English auctions are capped at MRP. Not applied to loose goods or to packs exempt under Rule 3, which per a consolidated text are: packages of more than 25 kg or 25 litres; cement, fertiliser and agricultural farm produce in bags above 50 kg; and packs meant for industrial or institutional consumers. The Rule 3 wording is from a secondary consolidation and was not checked against the Gazette. Delivery and packing fees are separate disclosed charges. The rules define the retail sale price as the maximum price "inclusive of all taxes" and say nothing about fees. No official source was found on whether fees count toward MRP, so this and the current Rule 3 text are open ([Q-20](../open-questions.md#q-20)). | block, `NEG_MRP_EXCEEDED` |
 | V-02 | MSMED credit cap | See [Credit terms and MSMED limits](#credit-terms-and-msmed-limits) | block for a firm offer, warn otherwise; `NEG_MSMED_CREDIT_CAP` |
 | V-03 | Drip pricing | `all_in_total` present from round 1 and equal to `quote.price`. A charge with `first_disclosed_round > 1` forces re-consent. A rise above `max_increase_pct_after_first_quote` between `on_select` and `on_init` or `confirm` triggers step-up. Payment-method fees appear in `payment.options[]` from round 1. | step-up, `NEG_DRIP_PRICING` |
 | V-04 | Terms drift | See [Drift detection](#drift-detection) | breach, `NEG_TERMS_DRIFT` |
@@ -407,9 +408,9 @@ Validators run at three places: at the BPP before it sends, at the BAP gateway o
 | V-09 | Shill bidding | No bids by the seller or its affiliates; neutral auctioneer | block, `NEG_SHILL_BID` ([details](rfq-and-auctions.md#shill-and-affiliate-detection)) |
 | V-10 | Agent disclosure | `offeror_kind` on every message | block |
 | V-11 | Prompt-injection isolation | Counterparty free text is untrusted data. Only structured messages reach the guard. | flag, `NEG_INJECTION_SUSPECTED` |
-| V-12 | Cash and high-value gates | A cash tranche of ₹2 lakh or more is refused (Income-tax Act s.269ST). PAN is required for jewellery above the statutory threshold. A RERA token or booking amount above 10% needs a `linked_agreement_ref`. High-value categories always need a human-present commitment. | block, `NEG_CASH_LIMIT`, `NEG_RERA_TOKEN_CAP` |
+| V-12 | Cash and high-value gates | A cash tranche of ₹2 lakh or more is refused (Income-tax Act 1961 s.269ST; reported as s.186 of the Income-tax Act 2025, not verified). PAN is required for jewellery above the statutory threshold. A RERA token or booking amount above 10% needs a `linked_agreement_ref`. High-value categories always need a human-present commitment. | block, `NEG_CASH_LIMIT`, `NEG_RERA_TOKEN_CAP` |
 | V-13 | Credit disclosure | EMI, BNPL and credit-funded options carry the lender, APR, KFS reference, and `no_cost: false` when interest is above zero | block, `NEG_CREDIT_DISCLOSURE_MISSING`, `NEG_EMI_NO_COST_FALSE` |
-| V-14 | Document gates | IRN for B2B invoices from sellers whose AATO exceeds ₹5 crore; e-way bill before dispatch above ₹50,000; the 30-day IRN reporting flag where AATO is ₹10 crore or more | block at dispatch, `NEG_EINVOICE_IRN_MISSING`, `NEG_EWB_MISSING` |
+| V-14 | Document gates | IRN for B2B invoices from sellers whose aggregate turnover exceeded ₹5 crore in any financial year since 2017-18; e-way bill before dispatch above ₹50,000; the 30-day IRN reporting flag where AATO is ₹10 crore or more | block at dispatch, `NEG_EINVOICE_IRN_MISSING`, `NEG_EWB_MISSING` |
 
 ## Drift detection
 
@@ -424,7 +425,7 @@ A difference in any one of these is drift, even when the totals still match: a s
 
 | Accepted offer | On drift |
 |---|---|
-| Firm | The accepted firm offer is a contract, so drift is a **breach**, not a return to negotiation. The session moves to `BREACH_FLAGGED` with message `NEG_TERMS_DRIFT` (`requires_buyer_review`). The gateway raises an IGM issue with `actor_type = AI_AGENT` and the evidence (accepted hash, claimed and recomputed hashes, the list of differences, both totals). The buyer MAY cancel without penalty (`cancelled_no_penalty`). A post-acceptance "out of stock" on a firm offer is also a breach. Whether a breach carries a network penalty is open ([Q-22](../open-questions.md#q-22)). |
+| Firm | The accepted firm offer is a contract, so drift is a **breach**, not a return to negotiation. The session moves to `BREACH_FLAGGED` with message `NEG_TERMS_DRIFT` (`requires_buyer_review`). The gateway raises an IGM 2.0 issue with the agent as an `AI_AGENT` actor (Proposed, [Q-11](../open-questions.md#q-11)) and the evidence (accepted hash, claimed and recomputed hashes, the list of differences, both totals). The buyer MAY cancel without penalty (`cancelled_no_penalty`). A post-acceptance "out of stock" on a firm offer is also a breach. Whether a breach carries a network penalty is open ([Q-22](../open-questions.md#q-22)). |
 | Non-firm (purchase offer) | The differing `on_init` is the seller's counter-offer. The accepted offer becomes `SUPERSEDED`, the session returns to `NEGOTIATING`, and the buyer gets `seller_counter_at_init` (`requires_buyer_input`). |
 
 The gateway records `bound_term_sheet_hash` as the hash it **computed** from the bound content, never the hash the seller claimed.
@@ -466,23 +467,25 @@ On Beckn, the acceptance is an `init` carrying `bacp.neg.accept`, `BOUND` is the
 
 ## Indian Contract Act timing
 
-!!! warning "Unverified legal basis"
-    The section numbers and rules below rest on the Indian Contract Act, 1872, ss.2 and 4–7. Their legal basis is to be confirmed before publication ([Q-52](../open-questions.md#q-52)). The timing rules themselves are normative.
+!!! warning "Legal basis pending review"
+    The statutory rules cited below are taken from the text of the Indian Contract Act, 1872, ss.2 and 4–7. How they apply to signed electronic negotiation messages, and the crossing rule, which is a BACP design choice, still need legal confirmation before a dated release ([Q-52](../open-questions.md#q-52)). The timing rules themselves are normative.
 
-| Rule | BACP behaviour |
-|---|---|
-| Proposal and invitation to treat (s.2) | `firm: true` is a proposal. `firm: false` is an invitation to treat. Accepting a non-firm offer has `legal_effect: purchase_offer`: it is the buyer's proposal, and the seller's echoing `on_init` or `on_confirm` is the acceptance. |
-| Communication (s.4) | A proposal is communicated when the offeree's CounterSignature exists. Acceptance is complete **against the proposer on dispatch**, and **against the acceptor on receipt**. |
-| Revocation of a proposal (s.5) | The offeror may `withdraw` only until the offeree **dispatches** an acceptance. A `withdraw` takes effect on **receipt**. |
-| Crossing | When a `withdraw` and an `accept` cross, compare the withdrawal's `received_at` at the offeree with the acceptance's `dispatched_at`. **The earlier timestamp wins. On an exact tie the acceptance wins.** A losing withdrawal is a breach event and is reported (`withdraw_lost_crossing`). A losing acceptance is void (`accept_void_withdrawn`, `seller_accept_void`). |
-| Lapse (s.6) | An offer lapses at `expires_at`, and silence leads to `EXPIRED`. A counter-offer that cites an expired offer is refused with `NEG_OFFER_EXPIRED`. Either party MAY send a fresh offer while rounds and the deadline remain. If a `conditions_precedent[]` entry fails (e.g. `lc_opened`), the offer becomes `LAPSED_CONDITION`. |
-| Absolute acceptance (s.7(1)) | An acceptance mirrors `offer_hash` and carries no terms. A changed term is a counter-offer, which rejects the prior offer. |
-| Manner of acceptance (s.7(2)) | Every offer prescribes `acceptance_manner: bacp.neg.accept`. Any other form is non-conforming and is refused with `NEG_ACCEPT_NONCONFORMING`. |
+| Rule | Statute | BACP behaviour |
+|---|---|---|
+| Proposal (s.2(a), (b)) | A person who signifies willingness to do or abstain from something, "with a view to obtaining the assent of that other", makes a proposal. A proposal, when accepted, becomes a promise. | `firm: true` is a proposal. `firm: false` is an invitation to treat. That term is not in the Act; it comes from case law. Accepting a non-firm offer has `legal_effect: purchase_offer`: it is the buyer's proposal, and the seller's echoing `on_init` or `on_confirm` is the acceptance. |
+| Communication (s.4) | A proposal is communicated "when it comes to the knowledge of the person to whom it is made". An acceptance is complete against the proposer "when it is put in a course of transmission to him, so as to be out of the power of the acceptor", and against the acceptor "when it comes to the knowledge of the proposer". | A proposal is communicated when the offeree's CounterSignature exists. Acceptance is complete **against the proposer on dispatch** (`dispatched_at`), and **against the acceptor on receipt** (`received_at`). |
+| Revocation of a proposal (ss.4, 5) | A proposal "may be revoked at any time before the communication of its acceptance is complete as against the proposer, but not afterwards". A revocation is complete against the person it is made to "when it comes to his knowledge". | The offeror may `withdraw` only until the offeree **dispatches** an acceptance. A `withdraw` takes effect on **receipt**. |
+| Crossing (BACP rule) | The Act gives no tie-break. | When a `withdraw` and an `accept` cross, compare the withdrawal's `received_at` at the offeree with the acceptance's `dispatched_at`. **The earlier timestamp wins. On an exact tie the acceptance wins.** A losing withdrawal is a breach event and is reported (`withdraw_lost_crossing`). A losing acceptance is void (`accept_void_withdrawn`, `seller_accept_void`). |
+| Lapse (s.6(2), (3)) | A proposal is revoked "by the lapse of the time prescribed in such proposal for its acceptance", and "by the failure of the acceptor to fulfil a condition precedent to acceptance". | An offer lapses at `expires_at`, and silence leads to `EXPIRED`. A counter-offer that cites an expired offer is refused with `NEG_OFFER_EXPIRED`. Either party MAY send a fresh offer while rounds and the deadline remain. If a `conditions_precedent[]` entry fails (e.g. `lc_opened`), the offer becomes `LAPSED_CONDITION`. Treating every condition precedent as one of the kind s.6(3) describes is a BACP choice. |
+| Absolute acceptance (s.7(1)) | The acceptance must "be absolute and unqualified". | An acceptance mirrors `offer_hash` and carries no terms. A changed term is a counter-offer. That a counter-offer rejects the prior offer comes from case law, not from the text of s.7. |
+| Manner of acceptance (s.7(2)) | If an acceptance is not made in the prescribed manner, the proposer "may, within a reasonable time after the acceptance is communicated to him, insist" on that manner, "but if he fails to do so, he accepts the acceptance". | Every offer prescribes `acceptance_manner: bacp.neg.accept`. Any other form is non-conforming and is refused promptly with `NEG_ACCEPT_NONCONFORMING`, so that the proposer insists on the prescribed manner within a reasonable time. |
+
+The Information Technology Act, 2000, s.13 fixes when an electronic record is despatched and received "save as otherwise agreed" between originator and addressee. BACP's CounterSignature timestamps are such an agreed rule.
 
 ### Acceptance revocation
 
 !!! warning "Proposed"
-    Proposed: an acceptor's s.5 right to revoke an acceptance before it reaches the proposer is **waived by default** through the protocol terms of each offer (`acceptance_revocation: waived`). Whether an offer can validly waive this right is open: see [Q-19](../open-questions.md#q-19).
+    Proposed: under Indian Contract Act s.5, "an acceptance may be revoked at any time before the communication of the acceptance is complete as against the acceptor, but not afterwards", that is, until it reaches the proposer. BACP proposes to **waive this right by default** through the protocol terms of each offer (`acceptance_revocation: waived`). The default is a BACP design choice, not a rule of the Act. No statute or other source found so far says that an offer can validly waive the right, so the waiver may not hold. The question is open: see [Q-19](../open-questions.md#q-19).
 
 If an offer sets `acceptance_revocation: allowed_until_receipt`, an `accept_revoke` that the proposer receives **before** the acceptance itself is honoured: the offer moves to `ACCEPT_REVOKED`, and the negotiation returns from `ACCEPT_PENDING` to `NEGOTIATING`. Under `waived`, an `accept_revoke` has no effect.
 
@@ -512,7 +515,7 @@ Each operation is defined once and bound to REST, MCP and A2A (see [REST](../tra
 | `POST /rfqs`, `GET /rfqs/{id}`, `POST /rfqs/{id}/award` | `bacp_rfq_create`, `bacp_rfq_get`, `bacp_rfq_award` | `bacp-negotiate` (award) |
 | `POST /auctions`, `GET /auctions/{id}`, `POST /auctions/{id}/bids`, `POST /auctions/{id}/award` | `bacp_auction_create`, `bacp_auction_get`, `bacp_auction_bid`, `bacp_auction_award` | `bacp-negotiate` |
 
-MCP results return the `NegotiationSession` in `structuredContent`. A2A task states map as: `working` (waiting on the counterparty), `input-required` (a counter-offer to answer), `auth-required` (`ESCALATED`), `completed` (`CONTRACTED`), `canceled` or `failed` (`REJECTED`, `TERMINATED`, `CANCELLED`). Agent-to-agent negotiation over A2A without a network participant's signature can produce only `firm: false` offers.
+MCP results return the `NegotiationSession` in `structuredContent`. A2A 1.0 task states map as: `TASK_STATE_WORKING` (waiting on the counterparty), `TASK_STATE_INPUT_REQUIRED` (a counter-offer to answer), `TASK_STATE_AUTH_REQUIRED` (`ESCALATED`), `TASK_STATE_COMPLETED` (`CONTRACTED`), `TASK_STATE_CANCELED` or `TASK_STATE_FAILED` (`REJECTED`, `TERMINATED`, `CANCELLED`). Versions of A2A before 1.0 use the lowercase names `working`, `input-required`, `auth-required`, `completed`, `canceled` and `failed`. Agent-to-agent negotiation over A2A without a network participant's signature can produce only `firm: false` offers.
 
 ## Error codes
 

@@ -156,10 +156,10 @@ The reverse auction follows GeM practice: after technical evaluation, qualified 
 | Value | Mode |
 |---|---|
 | Up to ₹50,000 | Direct purchase from any GeM seller meeting quality, specification and delivery period |
-| Above ₹50,000, up to ₹10 lakh | L1 purchase from the lowest-priced seller among at least three different manufacturers. Bid or reverse auction may also be used. |
-| Above ₹10 lakh | Bid (e-bid) or reverse auction is mandatory, with at least 10 clear days for submission |
+| Above ₹50,000, up to ₹10 lakh | L1 purchase from the GeM seller with the lowest price among the sellers of at least three different manufacturers. The online bidding and reverse auction tools may also be used. |
+| Above ₹10 lakh | Bids are mandatory, obtained through online bidding (e-bid) or the reverse auction tool. GeM gives a normal bid duration of 10 to 45 days. |
 
-These values come from secondary sources and MUST be configurable, not hard-coded.
+The values are from GFR 2017 Rule 149 as consolidated by the Department of Expenditure. Direct purchase has no ceiling for automobiles. Scientific ministries and research institutes have a ₹1 lakh direct-purchase limit (DoE OM F.20/42/2021-PPD, 18 July 2024). Rule 149 forbids splitting a demand to avoid L1 buying, bidding or reverse auction. The values MUST be configurable, not hard-coded.
 
 ### English (forward) auctions
 
@@ -232,7 +232,9 @@ Under every rule, a retraction inside the anti-sniping window, or after close, i
 **Retraction isolation.** A retraction voids **only the retracting bidder's own bid**. Other bidders' bids stand. The previous best bid is not re-published as the standing price: the standing price stays hidden until the next bid. Repeated retractions by one bidder are flagged to the shill and collusion screens.
 
 !!! warning "Proposed"
-    Proposed: the Sale of Goods Act s.64 right of a bidder to retract before the fall of the hammer is not treated as overriding `no_retraction` in e-auctions. Whether it applies is open ([Q-35](../open-questions.md#q-35)).
+    Proposed: the Sale of Goods Act, 1930, s.64(2) says that an auction sale "is complete when the auctioneer announces its completion by the fall of the hammer or in other customary manner; and, until such announcement is made, any bidder may retract his bid". BACP does not treat this right as overriding `no_retraction` in e-auctions. Whether it applies is open ([Q-35](../open-questions.md#q-35)). The quoted text is from a bare-act reproduction; the official India Code text could not be retrieved.
+
+    Section 64 also bears on shill bidding: unless the sale is notified as subject to the seller's right to bid, the seller may not bid or employ anyone to bid (s.64(4)), and a sale in which the seller uses "pretended bidding to raise the price" is voidable by the buyer (s.64(6)).
 
 ## Shill and affiliate detection
 
@@ -252,7 +254,7 @@ A bid by the seller, or by anyone acting for the seller, inflates the price. The
 
 ## Collusion screens
 
-BACP prevents collusion structurally and screens for it statistically:
+Under the Competition Act, 2002, s.3(3)(d), an agreement between enterprises "engaged in identical or similar trade" that "directly or indirectly results in bid rigging or collusive bidding" is presumed to have an appreciable adverse effect on competition. The proviso added in 2023 extends that presumption to an enterprise not in that trade if it "participates or intends to participate in the furtherance of such agreement". BACP prevents collusion structurally and screens for it statistically:
 
 - **No seller-to-seller channel.** The protocol offers no way for one seller to obtain another's live or sealed quote or bid. Gateways MUST NOT cache or relay `on_select` term sheets across BPPs. Bidder-to-bidder messaging is not supported.
 - **Pricing-AI disclosure.** Participants declare any third-party pricing or negotiation AI (`pricing_ai_vendor`). A shared vendor is a hub-and-spoke risk signal under the Competition Act, 2002, s.3(3) and its 2023 proviso.

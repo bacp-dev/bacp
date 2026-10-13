@@ -112,7 +112,7 @@ flowchart TB
     end
     subgraph N["Beckn / ONDC backbone"]
         BKN["search, select, init, confirm, status, cancel, update"]
-        IGM["IGM issue and issue_status"]
+        IGM["IGM 2.0 issue and on_issue"]
         CTX["context.bacp extension"]
     end
     subgraph P["Indian payment rails"]
@@ -142,9 +142,9 @@ carries only payment *terms*: money moves off-network.
 
 | Layer | What BACP reuses | What BACP adds |
 |---|---|---|
-| **Transport bindings** | REST (OpenAPI 3.1), MCP tools with `structuredContent`, A2A `DataPart` and the `AUTH_REQUIRED` task state. One operation set, bound three ways, as UCP does. | RFC 9421 agent signatures with separate tags for browsing, paying, post-order writes and negotiation. Step-up mapped to A2A `AUTH_REQUIRED` and MCP `insufficient_scope`. See [REST](../transports/rest.md) and [MCP and A2A](../transports/mcp-a2a.md). |
+| **Transport bindings** | REST (OpenAPI 3.1), MCP tools with `structuredContent`, A2A `DataPart` and the `TASK_STATE_AUTH_REQUIRED` task state. One operation set, bound three ways, as UCP does. | RFC 9421 agent signatures with separate tags for browsing, paying, post-order writes and negotiation. Step-up mapped to A2A `TASK_STATE_AUTH_REQUIRED` and MCP `insufficient_scope`. See [REST](../transports/rest.md) and [MCP and A2A](../transports/mcp-a2a.md). |
 | **Session façade** | UCP checkout verbs and statuses; ACP full-state responses, flat errors, `messages[].resolution` and idempotency; AP2's Trusted Surface and fail-closed constraint evaluation. | A synchronous session over asynchronous Beckn; the deterministic verifier; the instruction log; an in-doubt payment saga. See [Sessions and Checkout](../checkout/index.md). |
-| **Beckn/ONDC backbone** | Beckn `{context, message}`, ACK plus `on_*` callbacks, Ed25519/BLAKE2b network signing, registry lookup, ONDC payment and settlement fields, IGM. | The [`context.bacp`](https://bacp.dev/schemas/beckn-context-bacp.json) extension, mandatory idempotency and a replay cache, and `actor_type=AI_AGENT` on IGM. Agent semantics stay in a namespace that network participants can ignore. See [Beckn / ONDC Binding](../transports/beckn.md). |
+| **Beckn/ONDC backbone** | Beckn `{context, message}`, ACK plus `on_*` callbacks, Ed25519/BLAKE2b network signing, registry lookup, ONDC payment and settlement fields, IGM. | The [`context.bacp`](https://bacp.dev/schemas/beckn-context-bacp.json) extension, mandatory idempotency and a replay cache, and an IGM `actors[]` entry of type `AI_AGENT` (Proposed: [Q-11](../open-questions.md#q-11)). Agent semantics stay in a namespace that network participants can ignore. See [Beckn / ONDC Binding](../transports/beckn.md). |
 | **Payment rails** | Live Indian rails: UPI Reserve Pay, UPI Circle, UPI AutoPay, card e-mandates, eNACH, PPIs, COD and others, with their own regulatory limits. | Payment authority bound to a **live** rail primitive with a PSP-signed attestation; a basket-blind payment leg; rail-anchored receipts. See [Payments](../payments/index.md). |
 | **Consent** | AA/DEPA consent-artefact semantics: immutable, purpose-coded, use-counted, revocable. AP2-style open and closed mandates. | Periodic budgets, allow-lists, step-up thresholds, post-order action scopes, a separate negotiation mandate, revocation within 60 seconds, DPDP consent receipts. See [Mandates and Consent](../mandates.md). |
 | **Identity** | ONDC registry onboarding and key lookup, W3C verifiable credentials and status lists, AP2 `cnf` key binding. | The [`AgentCredential`](https://bacp.dev/schemas/agent-credential.json): the agent, its operator's legal entity, its BAP binding, AI disclosure and human handoff. See [Identity and Request Signing](../identity-and-signing.md). |
@@ -258,16 +258,17 @@ flowchart LR
 |---|---|---|---|---|
 | Mandate setup | `POST /mandates` | `bacp-browse` | None on the network. The Mandate Manager and PSP create the mandate and the rail authority after the principal approves on the Trusted Surface. | [Mandates and Consent](../mandates.md) |
 | Discover | `POST /discover` | `bacp-browse` | Beckn `search` → `on_search` through the Beckn gateway, with registry lookup | [Discovery and Profiles](../discovery.md) |
-| Negotiate | `/negotiations`, `/negotiations/{id}/offers`, `/negotiations/{id}/accept`, `/rfqs`, `/auctions` | `bacp-browse` for non-binding messages; `bacp-negotiate` for firm offers, ACCEPT, bids and awards | `select` / `on_select` rounds carrying negotiation tags | [Negotiation](../negotiation/index.md) |
+| Negotiate | `/negotiations`, `/negotiations/{id}/offers`, `/negotiations/{id}/accept`, `/rfqs`, `/auctions` | `bacp-browse` for non-binding messages; `bacp-negotiate` for firm offers, ACCEPT, auction creation, bids and awards | `select` / `on_select` rounds carrying negotiation tags | [Negotiation](../negotiation/index.md) |
 | Checkout | `POST /sessions`, `PUT /sessions/{id}` | `bacp-browse` | `select` → `on_select` (quote), then `init` → `on_init` (signed quote, payment terms) | [Sessions and Checkout](../checkout/index.md) |
 | Pay | `POST /sessions/{id}/complete` | `bacp-pay` | Basket-blind debit through the payer PSP, then `confirm` → `on_confirm` with the rail reference | [Payments](../payments/index.md) |
-| Fulfil | `GET /orders/{id}` and webhooks | `bacp-browse` | `status`, `track` and unsolicited `on_status` | [Orders and Post-order](../checkout/post-order.md) |
+| Fulfil | `GET /orders/{id}` and webhooks | `bacp-browse` | `status` and unsolicited `on_status` (`track` is proposed) | [Orders and Post-order](../checkout/post-order.md) |
 | Return and refund | `POST /orders/{id}/returns`, `POST /orders/{id}/cancel` | `bacp-post-order` | `update` (return) or `cancel`, then a refund to the original source | [Orders and Post-order](../checkout/post-order.md) |
-| Grievance | `POST /issues`, `POST /issues/{id}/actions` | `bacp-post-order` | IGM `issue` / `on_issue` with `actor_type=AI_AGENT` and an evidence bundle | [Evidence and Instruction Log](../evidence.md) |
+| Grievance | `POST /issues`, `POST /issues/{id}/actions` | `bacp-post-order` | IGM 2.0 `issue` / `on_issue` with an `AI_AGENT` actor (Proposed) and an evidence bundle | [Evidence and Instruction Log](../evidence.md) |
 
 Revocation can happen at any point. A revoked mandate stops new commitments
 within 60 seconds. Protective actions on orders already placed under it
-(cancel, return, grievance) remain allowed.
+(cancel, return, grievance) remain allowed with the principal present
+(`presence: HP`).
 
 [Getting Started](../getting-started.md) walks through one complete
 transaction.
@@ -305,7 +306,8 @@ The detailed evaluation order is defined in
 
 BACP versions are calendar dates in the form `YYYY-MM-DD`. A dated version is
 a snapshot of the whole protocol: the specification pages, the JSON Schemas,
-the OpenAPI document and the handler registry, published together.
+the OpenAPI document, the handler registry and the conformance manifest,
+published together.
 
 - The current specification is `draft`. It has no date and may change without
   notice.

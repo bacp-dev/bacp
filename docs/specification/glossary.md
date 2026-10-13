@@ -197,8 +197,8 @@ SD-JWT { #sd-jwt }
 
 Signature tag { #signature-tag }
 :   The `tag` parameter of an RFC 9421 request signature. It states what kind
-    of action the request is, and the gateway accepts only the tag defined for
-    each endpoint. The agent tags are `bacp-browse`, `bacp-pay`,
+    of action the request is. Each endpoint accepts exactly one agent tag, or
+    one of two for negotiation messages, and the gateway rejects any other. The agent tags are `bacp-browse`, `bacp-pay`,
     `bacp-post-order` and `bacp-negotiate`. `bacp-ts` is used only by the
     Mandate Manager and PSP. See
     [Identity and Request Signing](identity-and-signing.md#signature-tags).
@@ -252,7 +252,8 @@ Data scopes { #data-scopes }
 
 Deterministic verifier { #deterministic-verifier }
 :   The non-LLM code in the gateway that evaluates mandates, constraints,
-    presence, rail caps and step-up rules on every `complete`, and fails
+    presence, rail caps and step-up rules authoritatively on every `complete`
+    and as an advisory pre-check on every `PUT /sessions/{id}`, and fails
     closed. See [Mandates and Consent](mandates.md).
 
 Mandate { #mandate }
@@ -288,8 +289,8 @@ Payment mandate { #payment-mandate }
 
 Presence { #presence }
 :   Whether the principal is present for an action: `HP` (human present) or
-    `HNP` (human not present). It is explicit on every BACP request and in
-    `context.bacp`, and each mandate lists the values it allows in
+    `HNP` (human not present). It is declared on every session and every
+    post-order write and carried in `context.bacp`, and each mandate lists the values it allows in
     `presence_allowed`.
 
 Purpose code { #purpose-code }
@@ -310,9 +311,11 @@ Reservation ledger { #reservation-ledger }
     reservations as spent, inside one atomic section per mandate.
 
 Revocation { #revocation }
-:   Ending a mandate on the Trusted Surface. It reaches the gateway and the
-    agent within 60 seconds. It stops new commitments; protective actions on
-    orders already placed (cancel, return, grievance) remain allowed.
+:   Ending a mandate, by the principal on the Trusted Surface, by the rail
+    (for example a UPI safety switch), or by the agent relinquishing it. It
+    reaches the gateway and the agent within 60 seconds. It stops new
+    commitments; protective actions on orders already placed (cancel, return,
+    grievance) remain allowed with `presence: HP`.
 
 Step-up { #step-up }
 :   Escalating a decision to the principal on the Trusted Surface. A step-up
@@ -403,7 +406,8 @@ UPI Circle { #upi-circle }
     person, or a device or software such as an AI agent) and sets limits. For
     devices and software NPCI publishes caps of ₹5,000 per transaction,
     ₹15,000 per month and ₹2,000 in the first 24 hours, per device, with at
-    most five devices. Handler `in.upi.circle`.
+    most five devices. NPCI describes AI and software payments on Circle as
+    a pilot, so the handler `in.upi.circle` has status `pilot`.
 
 UTR { #utr }
 :   Unique Transaction Reference. The bank-side reference of a fund transfer,
@@ -429,8 +433,8 @@ Checkout session { #checkout-session }
 `context.bacp` { #context-bacp }
 :   The extension the gateway adds to the Beckn/ONDC `context` of every
     BACP-originated network message: agent, presence, mandate reference,
-    idempotency key, channel, language, AI disclosure and instruction-log
-    head. Schema:
+    idempotency key, channel, language, AI disclosure, instruction-log head
+    and protocol version. Schema:
     [`beckn-context-bacp.json`](https://bacp.dev/schemas/beckn-context-bacp.json).
 
 Evidence bundle { #evidence-bundle }
@@ -439,10 +443,11 @@ Evidence bundle { #evidence-bundle }
     See [Evidence and Instruction Log](evidence.md).
 
 IGM { #igm }
-:   Issue and Grievance Management, ONDC's protocol for complaints (`issue`,
-    `on_issue`, `issue_status`, `on_issue_status`). BACP agents raise issues
-    as `actor_type: AI_AGENT` on the principal's behalf
-    ([Q-11](open-questions.md#q-11)).
+:   Issue and Grievance Management, ONDC's protocol for complaints. BACP
+    targets IGM 2.0, which uses only `issue` and `on_issue` (`issue_status`
+    and `on_issue_status` are IGM 1.x). BACP agents raise issues on the
+    principal's behalf as an `actors[]` entry with `type = AI_AGENT`
+    (Proposed: [Q-11](open-questions.md#q-11)).
 
 In doubt { #in-doubt }
 :   The payment state when the PSP did not answer a debit request in time.
@@ -472,13 +477,16 @@ Reversal pending { #reversal-pending }
 
 RSF { #rsf }
 :   Reconciliation and Settlement Framework, ONDC's protocol for
-    reconciliation and settlement between network participants. Refund
-    adjustments flow through it as corrections.
+    reconciliation and settlement between network participants. When the
+    buyer app collects, the gateway takes part as the collector. IGM outcomes
+    feed RSF `Correction` objects. See
+    [Beckn / ONDC Binding](transports/beckn.md#rsf).
 
 Webhook { #webhook }
 :   A gateway-signed notification to the agent's `webhook_url`, such as
-    `mandate.status_changed`, `session.updated`, `order.updated`,
-    `return.updated`, `issue.updated` or `pre_debit.notice`. Webhooks never
+    `mandate.status_changed`, `session.updated`, `payment.receipt`,
+    `order.updated`, `return.updated`, `issue.updated` or
+    `pre_debit.notice`. Webhooks never
     embed signed receipts, only references with hashes.
 
 ## Negotiation
@@ -542,7 +550,7 @@ Conformance level { #conformance-level }
 Profile { #profile }
 :   The JSON document a gateway publishes at `/.well-known/bacp`, listing its
     versions, transports, capabilities, payment handlers, keys and
-    conformance. See [Discovery and Profiles](discovery.md).
+    `message_id_namespace`. A `conformance` field is proposed. See [Discovery and Profiles](discovery.md).
 
 Trade profile { #trade-profile }
 :   A named bundle of defaults for one Indian trade model (roles, negotiation

@@ -399,14 +399,8 @@
           ]
         },
         "handler": {
-          "anyOf": [
-            {
-              "$ref": "common.json#/$defs/Handler"
-            },
-            {
-              "$ref": "common.json#/$defs/RailType"
-            }
-          ]
+          "$ref": "common.json#/$defs/HandlerRef",
+          "description": "The handler that executes the payment: for HNP the parent's rail_binding.type, for HP the closed-class handler (for example in.upi.intent). Any canonical id or legacy alias; compared after alias resolution."
         },
         "ref": {
           "type": "string",

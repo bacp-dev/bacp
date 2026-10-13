@@ -140,17 +140,7 @@
   "validator_flags": [],
   "accepted_offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
   "log_head": "sha-256:puM6b3R7BrQTlpr9p56R-_uigPyPOQaTc6_KCeiDQRU",
-  "messages": [
-    {
-      "type": "info",
-      "code": "negotiation_agreed",
-      "content": {
-        "hi-IN": "Saree Rs 2,160 mein tay hua",
-        "en-IN": "Agreed at Rs 2,160 all-in"
-      },
-      "resolution": "recoverable"
-    }
-  ],
+  "messages": [],
   "created_at": "2026-10-13T10:58:00+05:30",
   "updated_at": "2026-10-13T11:05:11+05:30"
 }

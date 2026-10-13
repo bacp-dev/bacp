@@ -58,7 +58,7 @@ Every descriptor carries `binding.class`. The class decides whether a handler ma
 
 The full assignment of all 57 handlers is in the [registry table](handler-registry.md#registry-table).
 
-**Why only class O is open-eligible.** The RBI Authentication Directions 2025 (RBI/2025-26/79) require every digital payment to be authenticated with at least two factors, one of them dynamic for card-not-present payments. The exemptions in Annexure-1 include recurring e-mandate debits after the first one, small-value contactless and offline payments, gift PPIs and PPI-MTS, and UPI Tap & Pay. So an unattended agent debit is lawful only when it runs under a standing authority that the rail or issuer recognises and enforces, such as an AFA-registered e-mandate, a UPI Circle delegation or an SBMD block. Class O names exactly those handlers. Every other payment needs a fresh, human-performed 2FA, which makes it class C or A.
+**Why only class O is open-eligible.** The RBI Authentication Directions 2025 (RBI/2025-26/79) require every digital payment to be authenticated with at least two factors, at least one of them dynamic for every payment other than a card-present one. The exemptions in Annexure-1 include recurring e-mandate debits after the first one, small-value contactless and offline payments, gift PPIs and PPI-MTS, and UPI Tap & Pay. So an unattended agent debit is lawful only when it runs under a standing authority that the rail or issuer recognises and enforces, such as an AFA-registered e-mandate, a UPI Circle delegation or an SBMD block. Class O names exactly those handlers. Every other payment needs a fresh, human-performed 2FA, which makes it class C or A.
 
 The descriptor schema enforces two consistency rules:
 
@@ -83,7 +83,7 @@ The rules below apply after the handler reference has been resolved to its canon
 4. **Class A.** A class A handler needs presence HP, an assisted channel and an assisted-session binding: operator id, terminal id, and an order hash shown to the payer before capture. A remote agent is refused.
 5. **Class D.** A COD order needs an open checkout mandate with `cod_allowed: true` and a `cod_max_open_orders` cap. No payment mandate is created at order time. See [COD](rails.md#cash-on-delivery).
 6. **Class N.** A class N handler never satisfies a payment mandate. Credit-funded handlers need `credit_funding_allowed: true` on the governing mandate (otherwise `credit_funding_not_allowed`) and an HP loan acceptance. See [Credit and Split Tender](credit-and-split-tender.md).
-7. **Credit on UPI.** `in.upi.credit_line` and `in.upi.rupay_cc` are class C. They MAY run HNP only through a class O primitive on the credit account (AutoPay, Reserve Pay or OTM), and the rail binding then carries `funding: credit` and a consent reference.
+7. **Credit on UPI.** `in.upi.credit_line` and `in.upi.rupay_cc` are class C. They MAY run HNP only through a class O primitive on the credit account (AutoPay, Reserve Pay or OTM), and the payment-plan leg then carries `funding: credit`, with the user's prior consent recorded as `credit_funding_allowed` on the mandate.
 8. **AFA thresholds.** A debit above ₹15,000 (₹1,00,000 for insurance premiums, mutual-fund subscriptions and credit-card bills) under UPI AutoPay, a card e-mandate or a PPI e-mandate needs AFA (RBI E-mandate Framework 2026). The gateway returns `requires_escalation` with `step_up.kind = rail_auth`. Thresholds are evaluated on the **total** of a payment plan, never per tender.
 9. **Other rail caps.** Exceeding any other rail cap (per-transaction, period, block balance, first-24-hour, channel caps) gives 403 `rail_limit_exceeded` with `resolution: requires_buyer_review`, `step_up_kind: rail_auth` and every reason listed.
 10. **Budgets do not rely on the rail.** A gateway MUST NOT rely on rail-enforced limits to bound BACP budgets, because the rail authority may be larger than the mandate's budget. Budgets are enforced atomically by the gateway (see [Mandates and Consent](../mandates.md)).
@@ -187,7 +187,7 @@ A refund receipt MUST identify the original payment (`original_rrn`, `original_u
 
 **Default: to the original method.** A refund goes back to the instrument that paid (RBI PA Master Direction 2025 para 10(f)), routed through the PA escrow. A refund goes to store credit or to another mode owned by the payer only on the payer's explicit instruction; otherwise the gateway refuses it with `refund_not_to_source`. Refunds do not restore a mandate budget.
 
-**Never into a PPI where the PPI rules forbid it.** Refunds of card, UPI or net-banking payments MUST NOT be credited to an RBI-regulated PPI (wallet, PPI card, gift PPI), even if the user asks (PPI Master Direction 2021 para 14.3(2) has no consent exception). The gateway refuses with `refund_to_ppi_forbidden`. In the other direction, a refund of a PPI-funded payment MUST go back to the same PPI immediately, even if this takes it above the PPI's limits (para 14.3(1)).
+**Never into a PPI where the PPI rules forbid it.** Refunds of card, UPI or net-banking payments MUST NOT be credited to an RBI-regulated PPI (wallet, PPI card, gift PPI), even if the user asks (PPI Master Direction 2021 para 14.3 has no consent exception). The gateway refuses with `refund_to_ppi_forbidden`. In the other direction, a refund of a PPI-funded payment MUST go back to the same PPI immediately, even if this takes it above the PPI's limits (para 14.3).
 
 **Card refunds above the consent threshold.** Where the card bill has already been paid and a refund would leave a credit balance above the lower of 1% of the credit limit or ₹5,000, the issuer must seek the cardholder's consent within 7 days; without consent the issuer reverses the amount to the cardholder's bank account (Credit Card and Debit Card Directions 2022 para 10(h)). The refund receipt goes through `pending_cardholder_consent` and then either `refunded_to_source` or `reversed_to_bank_account`, and BACP MUST NOT promise an "instant refund to card" in that case. A refund made before the bill is paid is adjusted against the dues (`adjusted_against_dues`) and does not pass through `pending_cardholder_consent`.
 
@@ -221,12 +221,12 @@ RBI's harmonised turnaround-time circular (RBI/2019-20/67) requires automatic re
 | UPI P2P | T+1 |
 | IMPS beneficiary not credited | T+1 auto-reversal |
 | NACH debit after mandate revocation | T+1 |
-| Card-present POS | T+5 |
+| Card-present POS, and card-not-present (e-commerce) debited without merchant confirmation | T+5 |
 | Card-to-card transfer | T+1 |
 | PPI on-us | T+1 (off-us follows the underlying rail) |
-| Aadhaar Pay debited without merchant confirmation; micro-ATM cash not dispensed | T+5 |
+| AePS or Aadhaar Pay debited without merchant confirmation; ATM or micro-ATM cash not dispensed | T+5 |
 
-The card-not-present (e-commerce) row of the circular could not be read and is not verified. The circular has no net-banking row. NEFT and RTGS follow their own return rules: NEFT credits within 2 hours of batch settlement or returns, RTGS credits within 30 minutes or returns within 1 hour, with penal interest at repo + 2% for delay ([Rail Bindings](rails.md#imps-neft-and-rtgs)).
+The circular has no net-banking row. NEFT and RTGS follow their own return rules: NEFT credits within 2 hours of batch settlement or returns, RTGS credits within 30 minutes or returns within 1 hour, with penal interest at repo + 2% for delay ([Rail Bindings](rails.md#imps-neft-and-rtgs)).
 
 Inside the checkout session, a payment moves through `initiated`, `debited` and `confirmed`. The failure paths are:
 

@@ -4,18 +4,18 @@ info:
   version: draft
   summary: REST binding that a BACP gateway exposes to AI agents.
   description: "Synchronous, UCP-compatible session API that a BACP gateway (co-located with a Buyer App / BAP) exposes to AI agents.\nThe gateway\
-    \ translates each call into signed Beckn/ONDC actions (search, select, init, confirm, status, cancel, update,\nIGM issue/issue_status), waits\
+    \ translates each call into signed Beckn/ONDC actions (search, select, init, confirm, status, cancel, update,\nIGM 2.0 issue/on_issue), waits\
     \ for the on_* callbacks, and returns authoritative full state (ACP pattern).\nThe same operations are bound to MCP tools (structuredContent)\
-    \ and an A2A extension. See https://bacp.dev/latest/specification/transports/rest/.\n\nNormative rules carried by this spec:\n- Every request is signed with RFC 9421\
-    \ HTTP Message Signatures (Signature-Input, Signature, Content-Digest per RFC 9530)\n  using the agent key in AgentCredential.cnf. Tag `bacp-browse`\
-    \ for read and discovery calls, `bacp-pay` for\n  /complete, `bacp-post-order` for cancel, return and issue writes, `bacp-negotiate`\
-    \ for binding negotiation acts (firm offers,\n  accept, award, bids). Signature window at most\
-    \ 300 s, with a nonce\n  and a receiver replay cache (see the Identity and request signing section).\n- `Idempotency-Key` is REQUIRED on every POST and PUT (ACP\
-    \ semantics). Missing key returns 400\n  idempotency_key_required. Same key with a different body returns 422 idempotency_conflict. Same key\
-    \ while the first\n  request is in flight returns 409 idempotency_in_flight with Retry-After. A replay returns the stored response with\n\
-    \  `Idempotent-Replayed: true`. Keys are kept at least 24 h (48 h recommended). 5xx responses are never stored.\n- Amounts are integer paise\
-    \ (INR minor units).\n- Business outcomes return 200/201 with full state plus `messages[]`. Transport and protocol failures return 4xx/5xx\n\
-    \  with the flat Error object (ACP model).\n- Unknown fields MUST be ignored by readers. Unknown mandate constraints MUST fail closed.\n"
+    \ and an A2A extension. See https://bacp.dev/latest/specification/transports/rest/.\n\nNormative rules carried by this spec:\n- Every request\
+    \ is signed with RFC 9421 HTTP Message Signatures (Signature-Input, Signature, Content-Digest per RFC 9530)\n  using the agent key in AgentCredential.cnf.\
+    \ Tag `bacp-browse` for read and discovery calls, `bacp-pay` for\n  /complete, `bacp-post-order` for cancel, return and issue writes, `bacp-negotiate`\
+    \ for binding negotiation acts (firm offers,\n  accept, award, bids). Signature window at most 300 s, with a nonce\n  and a receiver replay\
+    \ cache (see the Identity and request signing section).\n- `Idempotency-Key` is REQUIRED on every POST and PUT (ACP semantics). Missing key\
+    \ returns 400\n  idempotency_key_required. Same key with a different body returns 422 idempotency_conflict. Same key while the first\n  request\
+    \ is in flight returns 409 idempotency_in_flight with Retry-After. A replay returns the stored response with\n  `Idempotent-Replayed: true`.\
+    \ Keys are kept at least 24 h (48 h recommended). 5xx responses are never stored.\n- Amounts are integer paise (INR minor units).\n- Business\
+    \ outcomes return 200/201 with full state plus `messages[]`. Transport and protocol failures return 4xx/5xx\n  with the flat Error object\
+    \ (ACP model).\n- Unknown fields MUST be ignored by readers. Unknown mandate constraints MUST fail closed.\n"
   license:
     name: Apache-2.0
     identifier: Apache-2.0
@@ -166,12 +166,16 @@ paths:
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /sessions:
     post:
       tags:
@@ -224,16 +228,18 @@ paths:
           $ref: '#/components/responses/MandateRejected'
         '409':
           $ref: '#/components/responses/InFlight'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
-        '504':
-          $ref: '#/components/responses/BppTimeout'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
         '502':
           $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
   /sessions/{session_id}:
     parameters:
     - $ref: '#/components/parameters/SessionId'
@@ -257,6 +263,8 @@ paths:
                   $ref: '#/components/examples/SessionReady'
                 stepUp:
                   $ref: '#/components/examples/SessionStepUp'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
     put:
@@ -308,16 +316,24 @@ paths:
                   $ref: '#/components/examples/SessionReady'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/InFlight'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
         '504':
           $ref: '#/components/responses/BppTimeout'
   /sessions/{session_id}/complete:
@@ -375,14 +391,18 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/InFlight'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /sessions/{session_id}/cancel:
     parameters:
     - $ref: '#/components/parameters/SessionId'
@@ -402,12 +422,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Session'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /mandates:
     post:
       tags:
@@ -455,8 +485,18 @@ paths:
                   - NAME
                   - PHONE
                   - DELIVERY_ADDRESS
+                  action_scope:
+                  - DISCOVER
+                  - QUOTE
+                  - ORDER
+                  - PAY
+                  - CANCEL
+                  - RETURN
+                  - RAISE_ISSUE
+                  - SHARE_DATA
                   validity: P30D
                   language: hi-IN
+                  webhook_url: https://agents.vaani.example.in/bacp/hooks
       responses:
         '202':
           description: Mandate request created in PENDING. User must approve on the Trusted Surface.
@@ -473,12 +513,20 @@ paths:
                     expires_at: '2026-10-12T10:15:00+05:30'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /mandates/{mandate_id}:
     parameters:
     - $ref: '#/components/parameters/MandateId'
@@ -500,6 +548,8 @@ paths:
               examples:
                 openPayment:
                   $ref: '#/components/examples/OpenPaymentMandate'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /mandates/{mandate_id}/relinquish:
@@ -529,10 +579,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Mandate'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /trusted-surface/events:
     post:
       tags:
@@ -594,14 +656,24 @@ paths:
       responses:
         '202':
           description: Accepted
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /orders/{order_id}:
     parameters:
     - $ref: '#/components/parameters/OrderId'
@@ -629,6 +701,8 @@ paths:
               examples:
                 delivered:
                   $ref: '#/components/examples/OrderDelivered'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
   /orders/{order_id}/cancel:
@@ -664,16 +738,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/InFlight'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
   /orders/{order_id}/returns:
     parameters:
     - $ref: '#/components/parameters/OrderId'
@@ -728,14 +814,28 @@ paths:
                         value: 6800
                         currency: INR
                       to: original_method
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
   /orders/{order_id}/returns/{return_id}:
     parameters:
     - $ref: '#/components/parameters/OrderId'
@@ -756,6 +856,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ReturnRecord'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
       parameters:
       - name: bpp_id
         in: query
@@ -801,12 +905,26 @@ paths:
               examples:
                 open:
                   $ref: '#/components/examples/IssueOpen'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
   /issues/{issue_id}:
     parameters:
     - name: issue_id
@@ -818,7 +936,7 @@ paths:
       tags:
       - issue
       operationId: getIssue
-      summary: Issue status (IGM issue_status / on_issue_status)
+      summary: 'Issue status: the gateway''s snapshot, kept current from IGM 2.0 on_issue callbacks (IGM 2.0 has no issue_status)'
       responses:
         '200':
           description: Issue
@@ -829,6 +947,10 @@ paths:
               examples:
                 open:
                   $ref: '#/components/examples/IssueOpen'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /issues/{issue_id}/actions:
     parameters:
     - name: issue_id
@@ -879,10 +1001,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Issue'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/InFlight'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /evidence/{transaction_id}:
     parameters:
     - name: transaction_id
@@ -903,8 +1039,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EvidenceBundle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /negotiations:
     post:
       tags:
@@ -956,16 +1096,18 @@ paths:
           $ref: '#/components/responses/MandateRejected'
         '409':
           $ref: '#/components/responses/InFlight'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
-        '504':
-          $ref: '#/components/responses/BppTimeout'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
         '502':
           $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
   /negotiations/{negotiation_id}:
     parameters:
     - $ref: '#/components/parameters/NegotiationId'
@@ -981,10 +1123,10 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/negotiation-session.json
-        '404':
-          $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /negotiations/{negotiation_id}/offers:
     parameters:
     - $ref: '#/components/parameters/NegotiationId'
@@ -1016,14 +1158,14 @@ paths:
       - negotiation
       operationId: sendNegotiationMessage
       summary: Send offer, counter_offer, reject, withdraw, terminate, request_extension or accept_revoke
-      description: "The agent submits an unsigned draft in a request signed with its own key (RFC 9421, tag bacp-negotiate for firm\
-        \ messages, bacp-browse for non-firm ones). The gateway verifies that signature before parsing and records it as the\
-        \ agent's act in the transcript, runs guard N-1..N-11 and validators V-01..V-14, signs the message with the BAP registry\
-        \ key only, and sends Beckn select (buyer) carrying a bacp.neg TagGroup. The gateway never holds or uses an agent key.\n- A firm counter outside the negotiation mandate\
-        \ is never sent. The response is 200 with `requires_escalation`, or the agent may resend with subject_to_principal_approval true (forces\
-        \ firm false).\n- A counter that cites a non-live offer returns 409 NEG_STALE_OFFER. A counter on an expired offer returns 200\n  message\
-        \ NEG_OFFER_EXPIRED (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt. The crossing\
-        \ rule (earlier CounterSignature timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n"
+      description: "The agent submits an unsigned draft in a request signed with its own key (RFC 9421, tag bacp-negotiate for firm messages,\
+        \ bacp-browse for non-firm ones). The gateway verifies that signature before parsing and records it as the agent's act in the transcript,\
+        \ runs guard N-1..N-11 and validators V-01..V-14, signs the message with the BAP registry key only, and sends Beckn select (buyer) carrying\
+        \ a bacp.neg TagGroup. The gateway never holds or uses an agent key.\n- A firm counter outside the negotiation mandate is never sent.\
+        \ The response is 200 with `requires_escalation`, or the agent may resend with subject_to_principal_approval true (forces firm false).\n\
+        - A counter that cites a non-live offer returns 409 NEG_STALE_OFFER. A counter on an expired offer returns 200\n  message NEG_OFFER_EXPIRED\
+        \ (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt. The crossing rule (earlier CounterSignature\
+        \ timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n"
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -1068,16 +1210,22 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
-        '409':
-          $ref: '#/components/responses/StaleOffer'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
   /negotiations/{negotiation_id}/accept:
     parameters:
     - $ref: '#/components/parameters/NegotiationId'
@@ -1128,16 +1276,22 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/MandateRejected'
-        '409':
-          $ref: '#/components/responses/StaleOffer'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '502':
+          $ref: '#/components/responses/BppNack'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/BppTimeout'
   /rfqs:
     post:
       tags:
@@ -1170,18 +1324,20 @@ paths:
                 $ref: ../schemas/negotiation-session.json#/$defs/Rfq
         '400':
           $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/MandateRejected'
-        '422':
-          $ref: '#/components/responses/IdempotencyConflict'
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
         '409':
           $ref: '#/components/responses/InFlight'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /rfqs/{rfq_id}:
     parameters:
     - $ref: '#/components/parameters/RfqId'
@@ -1197,10 +1353,10 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/negotiation-session.json#/$defs/Rfq
-        '404':
-          $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /rfqs/{rfq_id}/award:
     parameters:
     - $ref: '#/components/parameters/RfqId'
@@ -1238,22 +1394,24 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/negotiation-session.json
-        '403':
-          $ref: '#/components/responses/MandateRejected'
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/StaleOffer'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /auctions:
     post:
       tags:
@@ -1285,16 +1443,20 @@ paths:
                 $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
         '400':
           $ref: '#/components/responses/BadRequest'
-        '403':
-          $ref: '#/components/responses/MandateRejected'
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /auctions/{auction_id}:
     parameters:
     - $ref: '#/components/parameters/AuctionId'
@@ -1310,10 +1472,10 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
-        '404':
-          $ref: '#/components/responses/NotFound'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /auctions/{auction_id}/bids:
     parameters:
     - $ref: '#/components/parameters/AuctionId'
@@ -1346,22 +1508,24 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
-        '403':
-          $ref: '#/components/responses/MandateRejected'
-        '409':
-          $ref: '#/components/responses/StaleOffer'
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /auctions/{auction_id}/award:
     parameters:
     - $ref: '#/components/parameters/AuctionId'
@@ -1392,22 +1556,24 @@ paths:
             application/json:
               schema:
                 $ref: ../schemas/negotiation-session.json
-        '403':
-          $ref: '#/components/responses/MandateRejected'
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
         '404':
           $ref: '#/components/responses/NotFound'
         '409':
           $ref: '#/components/responses/StaleOffer'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /payment-handlers:
     get:
       tags:
@@ -1631,18 +1797,22 @@ paths:
                           $ref: '#/components/schemas/Amount'
                         option_id:
                           type: string
-        '413':
-          $ref: '#/components/responses/RequestTooLarge'
-        '429':
-          $ref: '#/components/responses/QuotaExceeded'
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 webhooks:
   mandate.status_changed:
     post:
@@ -1680,8 +1850,8 @@ webhooks:
           description: Acknowledged
   payment.receipt:
     post:
-      summary: A payment or refund receipt was applied. The body carries a ReceiptRef, never the signed receipt; GET the session, order or
-        return for the full receipt and check its hash against receipt_hash.
+      summary: A payment or refund receipt was applied. The body carries a ReceiptRef, never the signed receipt; GET the session, order or return
+        for the full receipt and check its hash against receipt_hash.
       requestBody:
         content:
           application/json:
@@ -1748,7 +1918,7 @@ webhooks:
           description: Acknowledged
   issue.updated:
     post:
-      summary: IGM on_issue respondent action (PROCESSING, INFO_REQUESTED, RESOLUTION_PROPOSED, CASCADED, RESOLVED)
+      summary: IGM on_issue respondent action (PROCESSING, INFO_REQUESTED, RESOLUTION_PROPOSED, RESOLUTION_CASCADED, RESOLVED)
       requestBody:
         content:
           application/json:
@@ -1759,9 +1929,9 @@ webhooks:
           description: Acknowledged
   pre_debit.notice:
     post:
-      summary: Pre-debit notice, at least 24 h before an unattended debit, with opt-out. Issued for UPI AutoPay and other e-mandates (RBI
-        E-mandate Framework 2026), for the second and every later debit on a UPI Reserve Pay or OTM binding, and for NACH debits (BACP
-        policy). The agent MUST relay it to the user and MUST NOT dismiss it.
+      summary: Pre-debit notice, at least 24 h before an unattended debit, with opt-out. Issued for UPI AutoPay and other e-mandates (RBI E-mandate
+        Framework 2026), for the second and every later debit on a UPI Reserve Pay or OTM binding, and for NACH debits (BACP policy). The agent
+        MUST relay it to the user and MUST NOT dismiss it.
       requestBody:
         content:
           application/json:
@@ -1795,9 +1965,9 @@ components:
       type: apiKey
       in: header
       name: BACP-Agent
-      description: SD-JWT VC (vct in.bacp.agent.1) with only the disclosures the gateway needs. Checked against the registry status list.
-        Covered by the request signature. A gateway MAY also accept the header name BACP-Agent-Credential until the first dated release,
-        and MUST NOT accept it afterwards.
+      description: SD-JWT VC (vct in.bacp.agent.1) with only the disclosures the gateway needs. Checked against the registry status list. Covered
+        by the request signature. A gateway MAY also accept the header name BACP-Agent-Credential until the first dated release, and MUST NOT
+        accept it afterwards.
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -1866,7 +2036,8 @@ components:
         pattern: ^auc_[A-Za-z0-9]{8,40}$
   responses:
     BadRequest:
-      description: Invalid request or missing Idempotency-Key
+      description: Invalid request (invalid_request, mandate_schema_invalid, receipt_invalid, NEG_SCHEMA_INVALID, …) or a missing or malformed
+        Idempotency-Key (idempotency_key_required).
       content:
         application/json:
           schema:
@@ -1890,13 +2061,22 @@ components:
                 type: authentication_error
                 code: replay_detected
                 message: Signature nonce already seen within window
+                resolution: unrecoverable
+                param: $.headers.Signature-Input
             unregistered:
               value:
                 type: authentication_error
                 code: agent_unregistered
-                message: Agent credential not found or revoked in registry
+                message: Signing key or AgentCredential not found in the registry
+                resolution: unrecoverable
+            revoked:
+              value:
+                type: authentication_error
+                code: agent_credential_revoked
+                message: AgentCredential is revoked on its status list
+                resolution: unrecoverable
     Forbidden:
-      description: Caller is not allowed to use this endpoint
+      description: Caller is not allowed to use this endpoint or resource (trusted_surface_only, evidence_forbidden).
       content:
         application/json:
           schema:
@@ -1907,8 +2087,15 @@ components:
                 type: authorization_error
                 code: trusted_surface_only
                 message: Only a registered Mandate Manager or payer PSP may call this endpoint
+            evidence:
+              value:
+                type: authorization_error
+                code: evidence_forbidden
+                message: Not a party of record for this transaction
+                resolution: unrecoverable
     MandateRejected:
-      description: Deterministic mandate verification failed (fail closed)
+      description: Deterministic mandate verification, the post-order gate or a guard refused the request (fail closed). Carries a 403 code from
+        the error registry, for example a mandate_error code, cancel_not_allowed, return_not_allowed or a NEG_* guard code.
       content:
         application/json:
           schema:
@@ -1920,26 +2107,40 @@ components:
                 code: mandate_revoked
                 message: Mandate mdt_PAY7Q2W9X4K1M3 is REVOKED
                 param: $.mandate_ref
+                resolution: requires_buyer_input
             outOfScope:
               value:
                 type: mandate_error
                 code: mandate_scope_mismatch
                 message: Category ONDC:RET12 not in categories_allow
                 param: $.items[0]
+                resolution: requires_buyer_review
             railCap:
               value:
                 type: mandate_error
                 code: rail_limit_exceeded
                 message: Amount exceeds Reserve Pay block remaining balance
                 param: $.totals
+                resolution: requires_buyer_review
+                reasons:
+                - rail:block_remaining_exceeded
+                step_up_kind: rail_auth
     NotFound:
       description: Not found
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          examples:
+            notFound:
+              value:
+                type: invalid_request
+                code: not_found
+                message: Resource not found or not visible to the caller
+                resolution: unrecoverable
     InFlight:
-      description: Same Idempotency-Key is still being processed
+      description: Same Idempotency-Key is still being processed (idempotency_in_flight, with Retry-After), or the operation is not allowed in
+        the resource's current state (session_state_conflict).
       headers:
         Retry-After:
           schema:
@@ -1955,8 +2156,16 @@ components:
                 type: invalid_request
                 code: idempotency_in_flight
                 message: Request with this key is in progress
+            stateConflict:
+              value:
+                type: invalid_request
+                code: session_state_conflict
+                message: session is incomplete; PUT the session first
+                param: $.status
+                resolution: recoverable
     IdempotencyConflict:
-      description: Same Idempotency-Key with a different body
+      description: 'Same Idempotency-Key with a different body (idempotency_conflict). The same status carries other 422 codes from the error
+        registry: evidence_unverifiable, NEG_ACCEPT_NONCONFORMING, NEG_CLOCK_SKEW.'
       content:
         application/json:
           schema:
@@ -1980,7 +2189,8 @@ components:
                 code: bpp_timeout
                 message: on_select not received within 5000 ms
     StaleOffer:
-      description: The message cites an offer that is not LIVE. GET the negotiation and respond to the live offer.
+      description: The message cites an offer that is not LIVE (NEG_STALE_OFFER; GET the negotiation and respond to the live offer). The same
+        status carries idempotency_in_flight (with Retry-After), bid_not_improving and auction_not_open.
       content:
         application/json:
           schema:
@@ -1992,24 +2202,70 @@ components:
                 code: NEG_STALE_OFFER
                 message: in_reply_to is not the live offer
                 param: $.in_reply_to
+            notImproving:
+              value:
+                type: invalid_request
+                code: bid_not_improving
+                message: Bid does not improve on your previous bid by the increment
+                param: $.amount
+                resolution: recoverable
     BppNack:
       description: The seller NACKed the Beckn request.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          examples:
+            nack:
+              value:
+                type: upstream_error
+                code: bpp_nack
+                message: Seller NACKed the Beckn request
+                resolution: recoverable
     RequestTooLarge:
       description: Request body above the gateway limit; refused before signature verification (request_too_large).
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          examples:
+            tooLarge:
+              value:
+                type: invalid_request
+                code: request_too_large
+                message: Request body exceeds 262144 bytes
+                resolution: unrecoverable
     QuotaExceeded:
       description: Per-agent idempotency-key quota exhausted (quota_exceeded).
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+          examples:
+            quota:
+              value:
+                type: invalid_request
+                code: quota_exceeded
+                message: Too many live idempotency keys for this agent
+                resolution: recoverable
+      headers:
+        Retry-After:
+          schema:
+            type: integer
+          example: 5
+    ServiceUnavailable:
+      description: The idempotency store is unavailable; writes fail closed (idempotency_store_unavailable).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            storeDown:
+              value:
+                type: service_unavailable
+                code: idempotency_store_unavailable
+                message: Idempotency store unreachable; request not processed
+                resolution: recoverable
   schemas:
     Amount:
       type: object
@@ -2593,9 +2849,9 @@ components:
               - card.3ds
               - instrument
             handler:
-              anyOf:
-              - $ref: '#/components/schemas/Handler'
-              - $ref: '#/components/schemas/RailType'
+              $ref: ../schemas/common.json#/$defs/HandlerRef
+              description: 'The handler that executes the payment: for HNP the parent''s rail_binding.type, for HP the closed-class handler (for
+                example in.upi.intent). Any canonical id or legacy alias; compared after alias resolution.'
             ref:
               type: string
               description: 2FA/authentication reference from the PSP or issuer, or the parent rail_ref
@@ -2930,9 +3186,9 @@ components:
           $ref: '#/components/schemas/Signature'
     Receipt:
       title: Receipt (rail-anchored)
-      description: Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a
-        UPI-family handler MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists
-        utr. Any other successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence.
+      description: Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family
+        handler MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists utr. Any other
+        successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence.
       type: object
       required:
       - receipt_id
@@ -3087,10 +3343,14 @@ components:
           - rail
           - amount
           - checkout_hash
+      - description: budget_after MUST NOT appear in a PSP-signed receipt; the gateway returns it unsigned in session.payment.budget_after.
+        not:
+          required:
+          - budget_after
     InstructionLogEntry:
       title: InstructionLogEntry
-      description: Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment. entry_hash = sha-256(JCS(entry
-        minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.
+      description: Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment. entry_hash = sha-256(JCS(entry minus
+        entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.
       type: object
       required:
       - seq
@@ -3244,7 +3504,7 @@ components:
           description: Current InstructionLog head at send time
         version:
           type: string
-          pattern: '^(\d{4}-\d{2}-\d{2}|draft)$'
+          pattern: ^(\d{4}-\d{2}-\d{2}|draft)$
       additionalProperties: false
     Error:
       type: object
@@ -3280,10 +3540,8 @@ components:
           - mandate_paused
           - mandate_exhausted
           - mandate_scope_mismatch
-          - constraint_unresolved
           - presence_not_allowed
           - rail_limit_exceeded
-          - quote_expired
           - bpp_timeout
           - bpp_nack
           - trusted_surface_only
@@ -3291,6 +3549,23 @@ components:
           type: string
         param:
           type: string
+        resolution:
+          enum:
+          - recoverable
+          - requires_buyer_input
+          - requires_buyer_review
+          - unrecoverable
+          description: What the agent may do next; the value registered for this code in the error registry.
+        reasons:
+          type: array
+          items:
+            type: string
+          description: Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors (rail_limit_exceeded).
+        step_up_kind:
+          enum:
+          - confirm
+          - rail_auth
+          description: REQUIRED on rail-cap and step-up errors; rail_auth for rail_limit_exceeded.
     Message:
       type: object
       description: ACP messages[] entry. resolution tells the agent whether it may self-fix, must ask the user, or must get user review.
@@ -3347,13 +3622,13 @@ components:
           properties:
             version:
               type: string
-              pattern: '^(\d{4}-\d{2}-\d{2}|draft)$'
+              pattern: ^(\d{4}-\d{2}-\d{2}|draft)$
               description: Protocol version this profile speaks (a release date or draft).
             supported_versions:
               type: array
               items:
                 type: string
-                pattern: '^(\d{4}-\d{2}-\d{2}|draft)$'
+                pattern: ^(\d{4}-\d{2}-\d{2}|draft)$
         bap_id:
           type: string
         transports:
@@ -3397,8 +3672,8 @@ components:
         message_id_namespace:
           type: string
           format: uuid
-          description: UUIDv5 namespace from which the gateway derives each Beckn message_id as UUIDv5(ns, agent_id | idempotency_key |
-            action), so that a BACP-aware BPP can check a key-binding JWT nonce.
+          description: UUIDv5 namespace from which the gateway derives each Beckn message_id as UUIDv5(ns, agent_id | idempotency_key | action),
+            so that a BACP-aware BPP can check a key-binding JWT nonce.
     DiscoverRequest:
       type: object
       required:
@@ -3417,8 +3692,7 @@ components:
               type: string
         mandate_ref:
           type: string
-          description: Optional. When present
-          results are flagged within_mandate.: null
+          description: Optional. When present, results are flagged within_mandate.
         max_wait_ms:
           type: integer
           maximum: 10000
@@ -3584,6 +3858,9 @@ components:
               anyOf:
               - $ref: '#/components/schemas/Handler'
               - $ref: '#/components/schemas/RailType'
+              - $ref: ../schemas/common.json#/$defs/HandlerRef
+              description: 'Any handler reference: a canonical id (for example in.upi.reservepay) or a legacy alias. Compared with the mandate''s
+                rail binding after alias resolution.'
     LineItem:
       type: object
       required:
@@ -3708,18 +3985,15 @@ components:
           enum:
           - confirm
           - rail_auth
-          description: confirm = user signs closed mandate on Trusted Surface. rail_auth = fresh per-transaction 2FA (UPI PIN) because a rail
-            cap or AFA threshold is exceeded.
+          description: confirm = the principal confirms this checkout on the Trusted Surface. rail_auth = a fresh per-transaction factor (for
+            example the UPI PIN) because an AFA threshold applies. Other rail caps never escalate; they return 403 rail_limit_exceeded.
         reason:
           enum:
           - above_step_up_threshold
-          - above_amount_per_txn
-          - above_rail_limit
           - above_afa_limit
           - new_merchant
           - outside_categories
           - first_order
-          - budget_exhausted
           - constraint_unresolved
           - negotiation_out_of_mandate
           - negotiation_between_reservation_and_max
@@ -3727,7 +4001,6 @@ components:
           - credit_acceptance
           - split_tender_afa_on_total
           - afa_crossborder_cnp
-          - pre_debit_notice_pending
         summary:
           $ref: '#/components/schemas/LangText'
         trusted_surface_url:
@@ -3736,7 +4009,7 @@ components:
           type: string
           format: date-time
         a2a_state:
-          const: AUTH_REQUIRED
+          const: TASK_STATE_AUTH_REQUIRED
         mcp_error:
           const: insufficient_scope
     PaymentState:
@@ -3897,8 +4170,8 @@ components:
           description: Present when completing after an approved step-up
         kb_jwt:
           $ref: '#/components/schemas/Jws'
-          description: Key-binding JWT for closing the open mandate, with aud = the bpp_id and nonce = the Beckn confirm message_id (derived
-            with the profile's message_id_namespace).
+          description: Key-binding JWT for closing the open mandate, with aud = the bpp_id and nonce = the Beckn confirm message_id (derived with
+            the profile's message_id_namespace).
     MandateRequest:
       type: object
       required:
@@ -3914,8 +4187,8 @@ components:
           anyOf:
           - $ref: '#/components/schemas/RailType'
           - $ref: ../schemas/common.json#/$defs/RailTypeV1
-          description: The handler that will back the open payment mandate. Any class-O handler id (for example in.upi.reservepay,
-            in.upi.circle, in.card.mandate, in.nach.debit) or a legacy RailType alias. Class C, A, D and N ids never validate here.
+          description: The handler that will back the open payment mandate. Any class-O handler id (for example in.upi.reservepay, in.upi.circle,
+            in.card.mandate, in.nach.debit) or a legacy RailType alias. Class C, A, D and N ids never validate here.
         presence_allowed:
           type: array
           items:
@@ -3928,8 +4201,20 @@ components:
             type: string
         action_scope:
           type: array
+          minItems: 1
+          uniqueItems: true
           items:
-            type: string
+            enum:
+            - DISCOVER
+            - QUOTE
+            - ORDER
+            - PAY
+            - CANCEL
+            - RETURN
+            - RAISE_ISSUE
+            - SHARE_DATA
+          description: 'Actions the mandate will authorise. Proposed: when omitted, all eight actions are requested; the principal sees the full
+            scope on the Trusted Surface.'
         validity:
           type: string
           description: ISO 8601 duration
@@ -3941,8 +4226,8 @@ components:
         webhook_url:
           type: string
           format: uri
-          description: Where the gateway sends mandate.status_changed (and later events for this mandate), which can occur before any
-            session exists.
+          description: Where the gateway sends mandate.status_changed (and later events for this mandate), which can occur before any session
+            exists.
     MandateHandle:
       type: object
       required:
@@ -4052,8 +4337,7 @@ components:
           - Cancelled
         fulfilment_state:
           type: string
-          description: ONDC fulfilment state code
-          e.g. Order-delivered: null
+          description: ONDC fulfilment state code, e.g. Order-delivered
         line_items:
           type: array
           items:
@@ -4251,6 +4535,9 @@ components:
           type: string
           description: Seller subscriber id. Required only when the agent holds the same order id from two BPPs (otherwise 400 invalid_request
             at $.bpp_id).
+        presence:
+          $ref: '#/components/schemas/Presence'
+          description: Presence of this write. Defaults to HNP. HP is required on an order whose mandate is REVOKED.
     Issue:
       type: object
       required:
@@ -4325,7 +4612,6 @@ components:
                 - RESOLUTION_ACCEPTED
                 - RESOLUTION_REJECTED
                 - RESOLUTION_CASCADED
-                - CASCADED
                 - ESCALATED
                 - RESOLVED
                 - CLOSED
@@ -4419,9 +4705,9 @@ components:
     WebhookEvent:
       type: object
       description: Delivered with Standard Webhooks headers (webhook-id, webhook-timestamp) plus a mandatory RFC 9421 signature by the gateway
-        (UCP rule). Retries with backoff. Payloads are full-state snapshots, except that a webhook never embeds a signed receipt; each
-        one is replaced by a ReceiptRef, and the full receipt is fetched by GET on its owning resource. A webhook carries no personal data
-        outside the receiving agent's mandate data_scopes and no negotiation bound.
+        (UCP rule). Retries with backoff. Payloads are full-state snapshots, except that a webhook never embeds a signed receipt; each one is
+        replaced by a ReceiptRef, and the full receipt is fetched by GET on its owning resource. A webhook carries no personal data outside the
+        receiving agent's mandate data_scopes and no negotiation bound.
       required:
       - event_id
       - type
@@ -4525,8 +4811,7 @@ components:
           type: boolean
         expires_in:
           type: string
-          description: ISO 8601 duration
-          at least min_offer_validity: null
+          description: ISO 8601 duration, at least min_offer_validity
         term_sheet:
           $ref: ../schemas/termsheet.json
         term_sheet_patch:
@@ -5128,7 +5413,7 @@ components:
             hi-IN: Rs 1,350 ka order aapki Rs 1,200 ki seema se zyada hai. Kripya UPI app mein pushti karein.
           trusted_surface_url: https://psp.example.in/approve/stp_01HZXA
           expires_at: '2026-10-22T18:40:00+05:30'
-          a2a_state: AUTH_REQUIRED
+          a2a_state: TASK_STATE_AUTH_REQUIRED
           mcp_error: insufficient_scope
         messages:
         - type: error

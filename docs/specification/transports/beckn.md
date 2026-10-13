@@ -37,7 +37,7 @@ reports it in `confirm` with `payment.status: PAID` and the rail reference.
 | `POST /orders/{order_id}/returns` | `get_return_reasons`, then `update` with `update_target=item` → `on_update` (Return_Initiated → Return_Approved → Return_Picked → Return_Delivered or Liquidated) | RETURN | `bacp-post-order` |
 | `GET /orders/{order_id}/returns/{return_id}` | read model over `on_update` / `on_cancel` refund state | — | `bacp-browse` |
 | `POST /issues`, `POST /issues/{issue_id}/actions` | IGM `issue` → `on_issue` | RAISE_ISSUE | `bacp-post-order` |
-| `GET /issues/{issue_id}` | IGM `issue_status` → `on_issue_status` | — | `bacp-browse` |
+| `GET /issues/{issue_id}` | none; the gateway's issue snapshot, kept current from IGM `on_issue` callbacks (IGM 2.0 has no `issue_status`) | — | `bacp-browse` |
 | `GET /evidence/{transaction_id}` | none; referenced from the IGM issue, joined to the payment dispute channel by the rail reference | — | `bacp-browse` |
 | `POST /mandates` and the other mandate operations | none (off-network: Mandate Manager and payer PSP) | — | `bacp-browse` |
 | (Trusted Surface) revoke, pause, resume, step-up result | none (signed Mandate Manager or PSP event to `/trusted-surface/events`) | — | `bacp-ts` |
@@ -80,7 +80,7 @@ The key is `bacp`, not `agent`, because "agent" in Beckn means a fulfilment agen
 |---|---|---|
 | `agent.id` | yes | The agent's id from its AgentCredential (`sub`) |
 | `agent.credential_hash` | yes | Hash of the presented AgentCredential |
-| `agent.operator` | yes | The operator's legal entity id (CIN or GSTIN) |
+| `agent.operator` | yes | The operator's legal entity id as `<type>:<value>`, where the type is `CIN`, `LLPIN`, `GSTIN` or `PAN` |
 | `agent.class`, `agent.uap_agent_id` | no | Agent class; slot reserved for an NPCI UAP id |
 | `presence` | yes | `HP` (human present) or `HNP` (human not present) |
 | `idempotency_key` | yes | The agent's `Idempotency-Key`, carried end to end (22–64 characters) |
@@ -97,7 +97,7 @@ No other keys are allowed (`additionalProperties: false`).
   "agent": {
     "id": "did:web:agents.vaani.example.in:sakhi",
     "credential_hash": "sha-256:n4bQgYhMfWWaL-qgxVrQFaO_TxsrC4Is0V1sFbDwCgg",
-    "operator": "U72900KA2025PTC000000",
+    "operator": "CIN:U72900KA2025PTC000000",
     "class": "voice_shopping",
     "uap_agent_id": null
   },
@@ -184,11 +184,13 @@ Working rules:
 
 ## IGM {#igm}
 
-Grievances use ONDC IGM 2.0: `issue` / `on_issue` and `issue_status` / `on_issue_status`, with every update going
-through `issue` / `on_issue`. ODR is an out-of-protocol reference ([Q-06](../open-questions.md#q-06)).
+Grievances use ONDC IGM 2.0, which has only `issue` and `on_issue`: every update in either direction, including
+status changes, goes through `issue` / `on_issue`. The IGM 1.x actions `issue_status` / `on_issue_status` and the 1.x
+`complainant_info` object are not used. ODR is an out-of-protocol reference ([Q-06](../open-questions.md#q-06)).
 
-- `POST /issues` sends IGM `issue` with `complainant.actor_type = AI_AGENT`
-  ([Q-11](../open-questions.md#q-11)), `on_behalf_of` = the principal reference, the mandate reference, the RRN or
+- `POST /issues` sends IGM `issue` with the agent as an entry in `actors[]` whose `id` is the issue's
+  `complainant_id`. Proposed: that entry has `type = AI_AGENT` ([Q-11](../open-questions.md#q-11)); the IGM 2.0
+  actor `type` enum has `AGENT`, not `AI_AGENT`. The issue also carries `on_behalf_of` = the principal reference, the mandate reference, the RRN or
   UTR, and an `evidence_bundle_ref`. The gateway assembles and verifies the evidence bundle first. The response is
   201 with status `OPEN`.
 - `Issue.status` is one of `OPEN`, `PROCESSING`, `RESOLVED`, `CLOSED`. Complainant and respondent actions
@@ -199,8 +201,11 @@ through `issue` / `on_issue`. ODR is an out-of-protocol reference ([Q-06](../ope
 - `POST /issues/{issue_id}/actions` with `ESCALATED` moves the issue level from ISSUE to GRIEVANCE, with the same
   evidence bundle. The agent sends `RESOLUTION_ACCEPTED` only after the buyer confirms, with `presence: HP`.
 - A payment-side dispute is raised through the PSP's dispute channel keyed by the RRN, linked to the IGM issue id.
-- Timelines: E-commerce grievance officers acknowledge within 48 hours and resolve within one month. ONDC's own
-  Level I/II timelines are unverified. Proposed: normative `ack_by` and `resolve_by` timers with auto-escalation
+- Timelines: E-commerce grievance officers acknowledge within 48 hours and resolve within one month (Consumer
+  Protection (E-Commerce) Rules r.4(5); the limits are unchanged by the 2026 amendment in force from 1 January 2027).
+  ONDC restates these as maximums on its complaint page; IGM 2.0 carries per-issue durations
+  (`expected_response_time`, `expected_resolution_time`) with no network default, and the Network Policy IGM chapter
+  was not retrieved. Proposed: normative `ack_by` and `resolve_by` timers with auto-escalation
   ([Q-57](../open-questions.md#q-57)).
 
 ## Settlement (RSF) {#rsf}

@@ -22,7 +22,7 @@ India already has the rails that agentic commerce needs. ONDC and Beckn provide 
 
 None of these rails knows about agents. A network message identifies the buyer app, not the agent that acted. A payment carries no record of what the user allowed the agent to do. Nothing standard says whether a human was present, how a user revokes an agent, or how a dispute can reconstruct what the agent was told.
 
-Global agentic-commerce protocols solve parts of this problem, but they are built around cards and around single merchants. They do not cover UPI, cash on delivery, GST, Indian-language voice or the ONDC network.
+Global agentic-commerce protocols solve parts of this problem, but they are built mainly around cards and around single merchants. None of them defines how to use UPI, cash on delivery, GST, Indian-language voice or the ONDC network.
 
 BACP is a thin agent layer over the Indian rails. It replaces none of them. It adds four things to every transaction:
 
@@ -59,7 +59,7 @@ Every step leaves verifiable evidence, so that a dispute can be traced from the 
 
     ---
 
-    Open mandates bind to UPI Circle, Reserve Pay, AutoPay and One-Time Mandate. A registry of payment handlers covers cards, net banking, wallets, BBPS, e-RUPI, NACH, cash on delivery and B2B credit.
+    Open mandates bind to UPI Circle, Reserve Pay, AutoPay and One-Time Mandate. (NPCI lists AI-driven payments through UPI Circle as a closed-user-group pilot.) A registry of payment handlers covers cards, net banking, wallets, BBPS, e-RUPI, NACH, cash on delivery and B2B credit.
 
     [Payments →](specification/payments/index.md)
 

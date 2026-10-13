@@ -27,7 +27,7 @@ this page and the OpenAPI document differ, this page is authoritative.
 | Header | Direction | Required | Meaning |
 |---|---|---|---|
 | `Signature-Input`, `Signature` | request | every call except the public reads | RFC 9421 HTTP Message Signature by the agent's `cnf` key (see [Signatures](#signatures)) |
-| `Content-Digest` | request | every call with a body | RFC 9530 digest of the raw body, covered by the signature |
+| `Content-Digest` | request | every signed call | RFC 9530 digest of the raw body (of the empty body on a `GET`), covered by the signature |
 | `BACP-Agent` | request | every signed agent call | The AgentCredential (SD-JWT VC) with only the disclosures the gateway needs |
 | `Idempotency-Key` | request | every POST and PUT | 22–64 printable ASCII characters with at least 128 bits of entropy (see [Idempotency](#idempotency)) |
 | `Content-Type` | request | every call with a body | `application/json` |
@@ -121,7 +121,7 @@ The gateway pushes state changes to the agent's webhook URL, given as `webhook_u
 | `payment.receipt` | A payment or refund receipt was applied (as a `ReceiptRef`). |
 | `order.updated` | Full order snapshot after an unsolicited `on_status`, `on_cancel` or `on_update`. |
 | `return.updated` | A return or refund changed state. |
-| `issue.updated` | An IGM respondent action arrived (PROCESSING, INFO_REQUESTED, RESOLUTION_PROPOSED, CASCADED, RESOLVED). |
+| `issue.updated` | An IGM respondent action arrived (PROCESSING, INFO_REQUESTED, RESOLUTION_PROPOSED, RESOLUTION_CASCADED, RESOLVED). |
 | `pre_debit.notice` | A pre-debit notice was issued. The agent MUST relay it to the buyer and MUST NOT dismiss it. |
 
 Each delivery is a `WebhookEvent`: `event_id`, `type`, `created_at` and `data`.
@@ -164,7 +164,7 @@ endpoint requires. This table is generated from `source/services/bacp.openapi.ya
 | POST | `/orders/{order_id}/returns` | order | `bacp-post-order` | required | Mandate-scoped return (Beckn update with update_target=item). Requires RETURN in action_scope. |
 | GET | `/orders/{order_id}/returns/{return_id}` | order | `bacp-browse` | — | Get return and refund status (refund receipt carries RRN/UTR) |
 | POST | `/issues` | issue | `bacp-post-order` | required | Raise an IGM issue as AI_AGENT on behalf of the user (IGM issue). Requires RAISE_ISSUE in action_scope. |
-| GET | `/issues/{issue_id}` | issue | `bacp-browse` | — | Issue status (IGM issue_status / on_issue_status) |
+| GET | `/issues/{issue_id}` | issue | `bacp-browse` | — | Issue status: the gateway's snapshot, kept current from IGM 2.0 on_issue callbacks (IGM 2.0 has no issue_status) |
 | POST | `/issues/{issue_id}/actions` | issue | `bacp-post-order` | required | Complainant action (IGM 2.0 action log). ESCALATE moves ISSUE to GRIEVANCE. ODR is an out-of-protocol reference. |
 | GET | `/evidence/{transaction_id}` | evidence | `bacp-browse` | — | Evidence bundle for a transaction (mandates, receipts, instruction-log chain). Access-controlled to principal, counterparties of record, GRO/ODR. |
 | POST | `/negotiations` | negotiation | `bacp-browse` | required | Open a negotiation with one seller (Beckn select with bacp.negotiation capability tag) |
@@ -181,10 +181,10 @@ endpoint requires. This table is generated from `source/services/bacp.openapi.ya
 | POST | `/auctions/{auction_id}/award` | auction | `bacp-negotiate` | required | Buyer or auctioneer award of the winning bid hash (reverse_l1), or seller acceptance of the highest bid (english) |
 | GET | `/payment-handlers` | payment-handlers | `none (public)` | — | The handler registry (HandlerDescriptor[]). Public, cacheable. |
 | GET | `/payment-handlers/{handler_id}` | payment-handlers | `none (public)` | — | getPaymentHandler |
-| POST | `/payment-handlers/intersect` | payment-handlers | `bacp-browse` | required | Session-scoped eligible handlers, ordered by user preference then lowest all-in total |
+| POST | `/payment-handlers/intersect` | payment-handlers | `bacp-browse` | required | Eligible payment handlers for a negotiation, ordered by user preference then lowest all-in total |
 
 The status codes each operation can return are documented in the OpenAPI document. Every operation documents every
-status it can return, including 401, 404, 409, 413, 422, 429, 502 and 504 where they apply.
+status it can return, including 401, 404, 409, 413, 422, 429, 502, 503 and 504 where they apply.
 
 ## Lost-response recovery {#recovery}
 

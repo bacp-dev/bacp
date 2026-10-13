@@ -93,8 +93,9 @@ any Beckn message is sent:
 
 1. **Tag and idempotency.** The request is signed with tag `bacp-post-order` and carries an
    `Idempotency-Key`.
-2. **Mandate.** If the request names a `mandate_ref`, it **MUST** be the mandate the order was
-   placed under (`403 mandate_scope_mismatch` otherwise).
+2. **Mandate.** The `mandate_ref` that a cancel, return or issue request carries **MUST** be the
+   mandate the order was placed under (`403 mandate_scope_mismatch` otherwise). An issue action is
+   checked against the mandate of the issue's order.
 3. **Scope.** The action (`CANCEL`, `RETURN` or `RAISE_ISSUE`) **MUST** be in the mandate's
    `action_scope` (`403 mandate_scope_mismatch`).
 4. **Status.** The mandate **MUST** be `ACTIVE`, or `REVOKED` with `presence: HP`. A write on a
@@ -239,34 +240,38 @@ bundle attached.
 }
 ```
 
-1. The gateway passes the [post-order gate](#post-order-gate).
+1. The gateway passes the [post-order gate](#post-order-gate). `presence` defaults to `HNP`; on an
+   order whose mandate is `REVOKED` it **MUST** be `HP`.
 2. It assembles the transaction's **evidence bundle** and runs the five-step verification and the
    InstructionLog chain check ([Evidence bundle](../evidence.md#bundle)). If the bundle does not
    verify fully, it returns `422 evidence_unverifiable` and sends nothing.
-3. It sends Beckn IGM `issue` with `complainant_info.actor_type: AI_AGENT`, the agent id and
-   operator, `on_behalf_of` set to the principal's pseudonymous `principal_ref`, the
+3. It sends Beckn IGM 2.0 `issue` with the agent as an `actors[]` entry of `type` `AI_AGENT`
+   (Proposed, see below) whose `id` is the issue's `complainant_id`, the agent id and operator, `on_behalf_of` set to the principal's pseudonymous `principal_ref`, the
    `mandate_ref`, the payment references (RRN or UTR), the `evidence_bundle_ref` URI and the
-   `evidence_bundle_hash`, and mirrors `actor_type` in a `bacp` tag group.
+   `evidence_bundle_hash`, and mirrors the actor type in a `bacp` tag group.
 4. For a `PAYMENT` issue with an RRN, the gateway also lets the payer PSP pick the complaint up
    through UPI's dispute channel (UDIR), cross-referenced by RRN and the IGM issue id.
 5. It returns `201` with the `Issue` in status `OPEN` and level `ISSUE`. The seller's `on_issue` is
    only an acknowledgement; `PROCESSING` arrives later as an unsolicited `on_issue`.
 
-Whether ONDC registers `AI_AGENT` as a complainant type is open
-([Q-11](../open-questions.md#q-11)); until then it is a namespaced extension value mirrored in tags.
+Whether ONDC registers `AI_AGENT` as an IGM 2.0 actor type is open
+([Q-11](../open-questions.md#q-11)): the IGM 2.0 enum has `AGENT`, which is not an AI agent. Until then
+it is a namespaced extension value mirrored in tags. BACP targets IGM 2.0, which has only `issue` and
+`on_issue`; `GET /issues/{issue_id}` returns the gateway's snapshot and makes no network call (the
+IGM 1.x `issue_status` / `on_issue_status` actions are not used).
 
 ### Status, actions and levels
 
 `Issue.status` is one of `OPEN`, `PROCESSING`, `RESOLVED`, `CLOSED`. Everything the parties *do*
 is an entry in `actions[]` (with `actor_type` and time), never a status: `OPEN`, `PROCESSING`,
 `INFO_REQUESTED`, `INFO_PROVIDED`, `INFO_NOT_AVAILABLE`, `RESOLUTION_PROPOSED`,
-`RESOLUTION_ACCEPTED`, `RESOLUTION_REJECTED`, `RESOLUTION_CASCADED`, `CASCADED`, `ESCALATED`,
-`RESOLVED`, `CLOSED`. A proposed remedy is carried in `resolution` (`action_triggered`: `REFUND`,
+`RESOLUTION_ACCEPTED`, `RESOLUTION_REJECTED`, `RESOLUTION_CASCADED`, `RESOLVED`, `CLOSED` (the IGM 2.0 action codes),
+plus `ESCALATED`, a BACP agent action that raises the issue level (`ISSUE` → `GRIEVANCE`) rather than an IGM 2.0 action code. A proposed remedy is carried in `resolution` (`action_triggered`: `REFUND`,
 `REPLACEMENT`, `RETURN`, `CANCEL`, `NO-ACTION`, and `refund_amount`).
 
 | Respondent action (`on_issue`) | Effect on `status` |
 |---|---|
-| `PROCESSING`, `INFO_REQUESTED`, `RESOLUTION_PROPOSED`, `CASCADED` | `PROCESSING` |
+| `PROCESSING`, `INFO_REQUESTED`, `RESOLUTION_PROPOSED`, `RESOLUTION_CASCADED` | `PROCESSING` |
 | `RESOLVED` | `RESOLVED` |
 
 The agent acts with `POST /issues/{issue_id}/actions` (`INFO_PROVIDED`, `RESOLUTION_ACCEPTED`,
@@ -285,14 +290,20 @@ of protocol as `odr_reference` ([Q-06](../open-questions.md#q-06)).
 
 ### Timelines
 
-On opening, the gateway sets `expected_response_by` to 48 hours after the issue is raised and
-`expected_resolution_by` to 30 days after it. If the respondent misses `expected_response_by`, the
-agent SHOULD offer the principal an escalation to `GRIEVANCE`.
+On opening, the gateway sets `expected_response_by` to at most 48 hours after the issue is raised
+and `expected_resolution_by` to at most 30 days after it, or to the shorter durations the respondent
+declares in the IGM 2.0 `expected_response_time` and `expected_resolution_time`. The 48-hour
+acknowledgement and one-month redress limits come from the Consumer Protection (E-Commerce) Rules,
+2020, Rule 4(5), and ONDC restates them for buyers: the buyer app "must come back to you within 48
+hours", and a complaint "has to be resolved within 30 days"
+([ONDC complaint page](https://ondc.org/pages/complaint.html)). The IGM 2.0 schema carries these clocks
+as per-issue ISO 8601 durations and sets no network default; ONDC's reference SDK uses `PT1H` and
+`P1D` as example values. If the respondent misses `expected_response_by`, the agent SHOULD offer the
+principal an escalation to `GRIEVANCE`.
 
 !!! warning "Proposed"
-    The 48-hour response and 30-day resolution clocks, and whether the gateway escalates
-    automatically when a clock is missed, follow the IGM service levels as currently understood and
-    are not yet confirmed against the ONDC policy ([Q-57](../open-questions.md#q-57)).
+    Whether the gateway escalates automatically when a clock is missed, and what the ONDC Network
+    Policy IGM chapter (not retrieved) adds, are open ([Q-57](../open-questions.md#q-57)).
 
 ```mermaid
 sequenceDiagram
@@ -306,7 +317,7 @@ sequenceDiagram
     U->>A: My refund has not arrived
     A->>G: POST /issues with category PAYMENT, RRN, mandate_ref
     G->>G: Post-order gate, assemble and verify evidence bundle
-    G->>S: IGM issue with actor_type AI_AGENT and evidence_bundle_ref
+    G->>S: IGM issue with AI_AGENT actor and evidence_bundle_ref
     S-->>G: on_issue ACK
     G->>P: UDIR complaint keyed by RRN with the issue id
     G-->>A: 201 issue OPEN, response due in 48 h
@@ -336,6 +347,8 @@ sequenceDiagram
 | 413 | `request_too_large` |
 | 422 | `idempotency_conflict`, `evidence_unverifiable` |
 | 429 | `quota_exceeded` |
+| 502 | `bpp_nack` |
+| 503 | `idempotency_store_unavailable` |
 | 504 | `bpp_timeout` |
 
 See [Errors](../errors.md) for the full registry.

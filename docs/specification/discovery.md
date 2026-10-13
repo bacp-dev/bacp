@@ -174,8 +174,8 @@ Rules:
    for business sessions.
 4. `min_offer_validity` is at least `PT5M` in every profile. A counterparty's
    advert cannot lower this floor.
-5. If the mode intersection is empty, the gateway returns `200` with the
-   message `capabilities_incompatible` (`requires_buyer_input`), and the agent
+5. If the mode intersection is empty, `POST /negotiations` returns `201` with
+   the message `capabilities_incompatible` (`requires_buyer_input`), and the agent
    falls back to mode `fixed`, an ordinary catalog checkout.
 
 See [Negotiation](negotiation/index.md).

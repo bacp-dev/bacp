@@ -185,14 +185,15 @@ A seller app that does not implement BACP needs no change: it ignores
 `context.bacp`. A **BACP-aware** BPP MUST:
 
 - Reject a duplicate `message_id` within its `ttl` with a NACK.
-- Refuse (NACK) an `init`, `confirm`, `update` or `cancel` that lacks
-  `context.bacp.mandate_ref`, and verify the `kb_jwt` when one is present.
+- Refuse (NACK) an `init`, `confirm`, `update`, `cancel` or IGM `issue` that
+  lacks `context.bacp.mandate_ref`, and verify the `kb_jwt` when one is present.
 - Return a signed quote in `on_init`, with the required disclosures.
 - In negotiation, sign every message with its registry key, give every
   firm offer an absolute expiry, verify only the buyer's `within_bounds`
   attestation, and never request the buyer's bounds.
-- Respond to IGM issues raised with `actor_type: AI_AGENT` as to any other
-  complainant.
+- Respond to IGM issues whose complainant is an AI agent (an `actors[]`
+  entry with `type = AI_AGENT`, Proposed: [Q-11](open-questions.md#q-11))
+  as to any other complainant.
 
 ### Mandate Manager
 
@@ -235,6 +236,37 @@ A payer PSP MUST:
 - Refund to the original source.
 - Send signed revocation, pre-debit notice and opt-out events to the
   gateway, and reject debits on a revoked authority.
+
+### Operator {#operator}
+
+These are duties of the operator of an agent, gateway or Mandate Manager
+as a Data Fiduciary under the DPDP Act and Rules. They sit outside the
+protocol, so the conformance runner does not test them: an operator that
+claims a level attests to them. Each applies from 13 May 2027
+([Commencement](security-and-privacy.md#commencement)).
+
+An operator MUST:
+
+- Engage a Data Processor, including a model or LLM host, only under a
+  valid contract (Act s.8(2)) that requires reasonable security
+  safeguards (DPDP Rule 6(1)(f)), and cause the processor to erase
+  personal data whenever the operator must erase it (Act s.8(7)(b))
+  ([Retention](security-and-privacy.md#retention)).
+- If it is, or belongs to a class notified as, a Significant Data
+  Fiduciary: carry out a Data Protection Impact Assessment and an audit
+  once in every twelve months and have the report of significant
+  observations furnished to the Board (Rule 13(1)–(2)), and verify with
+  due diligence that its algorithmic software, including the agent's
+  models, is not likely to pose a risk to Data Principals' rights
+  (Rule 13(3)). The AgentCredential's `model_family` and `build` feed this
+  inventory ([Identity and Request Signing](identity-and-signing.md)).
+- If it is an e-commerce entity with at least two crore registered users
+  in India: erase a Data Principal's personal data three years after she
+  last approached it or exercised her rights (except what she needs to
+  reach her user account or a stored virtual token), and tell her at
+  least 48 hours before the erasure (Rules 8(1)–(2) and the Third
+  Schedule, item 1). Data that another law requires to be kept is kept
+  ([Retention](security-and-privacy.md#retention)).
 
 ## Global invariants
 
