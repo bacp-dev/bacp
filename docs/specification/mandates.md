@@ -111,7 +111,7 @@ than its parent's.
     "reject_preticked_addons": true,
     "cod_allowed": false
   },
-  "payee": {"vpa": "ganeshkirana@examplebank"},
+  "payee": {"vpa": "ganeshkirana@examplebank", "bpp_id": "bpp.kirana.example.in"},
   "rail_binding": {
     "type": "in.upi.reservepay",
     "primitive": "sbmd_block",
@@ -169,7 +169,11 @@ Manager** (MM) issues it.
    `action_scope`, `validity` (an ISO 8601 duration), `language`, `channel` (the channel on which the
    principal will approve) and `webhook_url`. The gateway
    **MUST** accept `webhook_url`, so that `mandate.status_changed` can reach the agent before any
-   session exists. Proposed: when `action_scope` is omitted, all eight actions (`DISCOVER`,
+   session exists. To add a seller to an existing root open Checkout Mandate, the request also
+   carries `checkout_mandate_ref` (pattern `^mdt_[A-Za-z0-9]{12,40}$`). A request for a
+   payee-bound primitive carries `payee{vpa, bpp_id}`, and a request for a Reserve Pay block also
+   carries the block amount it asks for in `rail_limits.block_amount`
+   ([Sibling Payment Mandates](#sibling-payment-mandates)). Proposed: when `action_scope` is omitted, all eight actions (`DISCOVER`,
    `QUOTE`, `ORDER`, `PAY`, `CANCEL`, `RETURN`, `RAISE_ISSUE`, `SHARE_DATA`) are requested, and the
    Trusted Surface shows that full scope to the principal before approval.
 2. Before anything reaches the Trusted Surface, the gateway or the MM **MUST** reject the request:
@@ -184,17 +188,39 @@ Manager** (MM) issues it.
       than the purpose allows; exceeds any per-transaction or per-period bound of the purpose
       ([Purpose bounds](#purpose-bounds)); asks for a data scope the purpose does not allow; names a
       `purpose_code` that is not in the [purpose-code registry](#purpose-bounds); or exceeds the
-      static limits of the requested rail.
+      static limits of the requested rail, including a `rail_limits.block_amount` above the
+      handler's per-block limit in the [handler registry](payments/rails.md) (at
+      `$.rail_limits.block_amount`);
+    - if `rail` resolves to `in.upi.reservepay` (primitive `sbmd_block`): with
+      `403 mandate_scope_mismatch` at `$.payee` if the request has no `payee`, and at
+      `$.rail_limits.block_amount` if it has no `rail_limits.block_amount`; with
+      `400 rail_binding_not_open_eligible` if the gateway holds no BPP-signed payment terms of the
+      seller `payee.bpp_id` and does not obtain them first (a Beckn `init` to that seller, never
+      followed by `confirm`), if that `payee` is the buyer app (a block collected by the BAP) and
+      `presence_allowed` includes `HNP`, or if `payee.vpa` is not the VPA in those terms; and, for
+      every Reserve Pay request, with `403 mandate_scope_mismatch` if the requested
+      `rail_limits.block_amount` breaks the [sum-of-blocks rule](#sibling-payment-mandates), or
+      `403 mandate_exhausted` if it does not fit the root's headroom, at `$.checkout_mandate_ref`
+      for a request with `checkout_mandate_ref` and at `$.rail_limits.block_amount` for a request
+      without it, whose root is the one it proposes. These checks run before
+      anything reaches the rail, so the principal's PSP is never asked to create a block that the
+      MM would then refuse.
 3. Otherwise the gateway returns `202` with a `MandateHandle` in `PENDING`, carrying a
    `trusted_surface_url` deep link. The link expires after at most 15 minutes.
 4. The principal opens the link. The Trusted Surface shows the notice in the principal's language
    (English or a language of the Eighth Schedule): limits, categories, data items, recipient class,
-   withdrawal route and grievance route. The principal approves with an explicit action and the
-   rail's own authentication (for UPI, the UPI PIN).
+   withdrawal route and grievance route. For a payee-bound primitive the notice also shows the
+   payee name the bank returns for `payee.vpa` and the seller's `bpp_id`. For a Reserve Pay block it
+   shows the requested block amount and, unless the payer PSP attests a block-debit feed, the
+   unseen-draw statement ([Usage ledger](#usage-ledger)). For a sibling Payment Mandate it shows the
+   other Payment Mandates under the same root, their combined total, and the amount each budget of
+   the root has left (its `max` less the root's exposure). The principal approves with an explicit
+   action and the rail's own authentication (for UPI, the UPI PIN).
 5. The payer PSP creates or links the rail primitive (for example a Reserve Pay block, a UPI Circle
    delegation or an AutoPay mandate). It **MUST** use a primitive listed in the handler descriptor's
    `binding.open_primitives`, and signs a rail **attestation**: a JWS over
-   `{rail_ref, type, primitive, limits, expiry, payee}`.
+   `{rail_ref, type, primitive, limits, expiry, payee, funding}`. It **MUST NOT** create a Reserve Pay
+   block larger than the requested `rail_limits.block_amount`.
 6. The MM checks [handler eligibility](#handler-binding) against the current registry, taken
    from the dated BACP release or a registry-signed snapshot and never from a gateway endpoint,
    records that registry's version in `rail_binding.registry_version`, and **MUST** refuse
@@ -203,7 +229,16 @@ Manager** (MM) issues it.
    is neither `live` nor an attested `pilot`. For a `pilot` handler the MM **MUST** first verify the
    gateway's [conformance attestation](conformance.md#conformance-attestation) and find the handler
    in its `pilots[]`. The MM then checks that every BACP constraint is at or below the attested rail
-   limits, and builds the open Checkout and open Payment Mandates. The **principal** signs both
+   limits, and, for a Reserve Pay block, that the attested `block_amount` is at most the requested
+   one and that the attested expiry is no later than the root open Checkout Mandate's
+   `valid_until`. It builds the open Checkout and open Payment Mandates, or, for a request with
+   `checkout_mandate_ref`, only the open Payment Mandate ([Sibling Payment Mandates](#sibling-payment-mandates)).
+   If the MM refuses issuance at this step after the rail primitive exists, it **MUST** revoke the
+   primitive at the rail and report the outcome in `rail_revocation{status}` on the
+   `mandate.rejected` event it sends to the gateway. A refused block whose revocation is
+   `unconfirmed` is exposure at its attested `block_amount` until the revocation is confirmed or
+   the block expires, although it never became `ACTIVE` ([Usage ledger](#usage-ledger)).
+   The **principal** signs both
    (`signatures[].role: principal`) and the **MM countersigns** both
    (`role: mandate_manager`). The MM allocates a status-list entry per mandate and issues the
    ConsentReceipt.
@@ -211,7 +246,14 @@ Manager** (MM) issues it.
    (tag `bacp-ts`, registry key of role MM or PSP). The event **MUST** carry the
    [`Presentation`](human-participants.md#presentation) of the approval: surface, channel, language,
    modality, the hash of the notice shown and the principal's action. The gateway records an InstructionLog entry at
-   stage `mandate` and sends the webhook `mandate.status_changed` (`ACTIVE`) to the agent.
+   stage `mandate` and sends the webhook `mandate.status_changed` (`ACTIVE`) to the agent. For a sibling
+   Reserve Pay block the gateway applies the activation inside the atomic section keyed on the root open
+   Checkout Mandate ([Usage ledger](#usage-ledger)), so that an activation and a `complete` never both
+   take the same headroom: if the block at its full attested amount no longer fits every budget window
+   that contains the activation, the gateway refuses the event with `403 mandate_exhausted` and never
+   treats the mandate as `ACTIVE`; the MM then revokes the mandate and its block at the rail and sends
+   `mandate.revoked` with `rail_revocation{status}`. If that status is `unconfirmed`, the block is
+   exposure at its attested `block_amount` until the revocation is confirmed or the block expires.
 
 A verifier **MUST** accept an open mandate only if a principal signature and an MM signature both
 verify against registry-resolvable keys of those roles, and the rail attestation verifies against
@@ -245,6 +287,79 @@ sequenceDiagram
     G->>G: InstructionLog entry at stage mandate
     G-->>A: Webhook mandate.status_changed ACTIVE
 ```
+
+### Sibling Payment Mandates {#sibling-payment-mandates}
+
+A Reserve Pay block pays one seller, so a principal who shops hands-free across several sellers holds
+one open Payment Mandate per payee-bound instrument, all under **one** root open Checkout Mandate
+whose budgets cap the total ([Multi-seller basket](checkout/index.md#multi-seller-basket)).
+
+- **Requesting a sibling.** A `MandateRequest` with `checkout_mandate_ref` asks for one more open
+  Payment Mandate under an existing root. `checkout_mandate_ref` **MUST** name an `ACTIVE` root open
+  Checkout Mandate of the same principal; otherwise the MM refuses it with
+  `403 mandate_scope_mismatch` at `$.checkout_mandate_ref`. The MM builds **only** an open Payment
+  Mandate, whose `checkout_mandate_ref` is that root and whose constraints narrow the root's
+  ([Immutability and delegation](#immutability-and-delegation)). It never builds a second Checkout
+  Mandate or a second budget for the same basket. `parent_mandate_id` stays reserved for sub-agent
+  delegation.
+- **Payee.** An open Payment Mandate whose `rail_binding.primitive` is `sbmd_block` **MUST** carry
+  `payee{vpa, bpp_id}`. A request without it is refused with `403 mandate_scope_mismatch` at
+  `$.payee`. `payee.vpa` **MUST** equal the VPA in the seller's BPP-signed payment terms (Beckn
+  `payments[].params.virtual_payment_address` of `on_init`), and the attested payee **MUST** equal
+  `payee.vpa`; otherwise issuance is refused with `400 rail_binding_not_open_eligible` and nothing
+  is sent to the rail ([Handler binding](#handler-binding)).
+- **The payee is bound to BPP-signed terms, always.** The gateway **MUST** hold the BPP-signed
+  payment terms of the seller `payee.bpp_id` before a Reserve Pay request goes to the Trusted
+  Surface, including for a set-up outside any checkout. If it holds none, it obtains them first by a
+  Beckn `init` to that seller that it never follows with `confirm`, or refuses the request with
+  `400 rail_binding_not_open_eligible`. The terms are the raw `on_init` body as received together
+  with its Beckn `Authorization` header, verified against the registry key of the BPP named in
+  `context.bpp_id`, which **MUST** be `payee.bpp_id`. No per-object JWS is needed
+  ([Q-43](open-questions.md#q-43); [Beckn signing](transports/beckn.md#signing)). The gateway keeps
+  them as `bpp_signed_payment_terms` for every Reserve Pay leg ([Evidence bundle](evidence.md#contents)).
+- **Requested block amount.** A Reserve Pay request carries `rail_limits.block_amount`, the block the
+  principal is asked to set up. The gateway and the MM check it at step 2 of [Issuance](#issuance),
+  the notice shows it, and the payer PSP creates no larger block. It **MUST NOT** exceed the
+  handler's per-block limit in the [handler registry](payments/rails.md); otherwise the request is
+  refused at step 2 with `403 mandate_scope_mismatch` at `$.rail_limits.block_amount`. If the
+  attested `block_amount` is larger than the requested one, the MM refuses issuance at step 6 and
+  revokes the block at the rail.
+- **Every Reserve Pay request is checked against a root.** The per-block limit, the sum-of-blocks
+  rule and the headroom check below apply to every Reserve Pay request, with or without
+  `checkout_mandate_ref`. A request without it proposes a new root: the checks then use the
+  request's own `proposed_constraints.budgets` as the root's budgets, the exposure that already
+  counts against a new root of the same principal (unconfirmed blocks) as the root's exposure, and
+  `$.rail_limits.block_amount` instead of `$.checkout_mandate_ref` as the error location.
+- **Sum of blocks.** The `block_amount`s of all Reserve Pay mandates under one root, including the
+  one requested (its requested amount at step 2, its attested amount at step 6), **MUST NOT** exceed
+  the smallest `budgets[].max` of the root; and, with the requested block at its full amount, the
+  root's exposure ([Usage ledger](#usage-ledger)) **MUST** fit every budget window that contains the
+  activation. A request that breaks the first rule is refused with `403 mandate_scope_mismatch` at
+  `$.checkout_mandate_ref`, and one that breaks the second (no headroom) with `403 mandate_exhausted`
+  at `$.checkout_mandate_ref`; the first rule is checked before the second. The gateway checks the
+  headroom at step 2 and again, authoritatively,
+  when it applies the activation inside the root's atomic section (step 7), so that an issuance never
+  races a `complete` for the same headroom.
+- **Block expiry within the root.** The attested expiry of a block **MUST NOT** be later than the
+  root open Checkout Mandate's `valid_until`; otherwise the MM refuses issuance at step 6 and
+  revokes the block.
+- **One root per principal.** The parallel-root key is the principal's **account at the Mandate
+  Manager**: the one account behind every pairwise `principal.ref` that the MM issues for that
+  person, whichever agent or operator asked. The MM **MUST** refuse a new root open Checkout Mandate
+  for a principal who already holds one or more `ACTIVE` roots at that MM, with
+  `403 mandate_scope_mismatch` at `$.checkout_mandate_ref` (use `checkout_mandate_ref` to add a
+  seller to an existing root), unless the notice the principal approves for it states the budgets of
+  every other `ACTIVE` root and the combined total of all of them. A root at another Mandate Manager
+  is outside this rule (the [budgets across gateways](open-questions.md#q-36) question).
+- **Unconfirmed blocks outlive their root.** A block whose rail revocation is still `unconfirmed`
+  when its root ends counts as exposure against every new root of the same principal (by the key
+  above) until the MM reports it `confirmed` or the block expires. A PSP that never confirms can
+  therefore hold at most the block's amount for at most the block's validity (at most 90 days,
+  [Rail Bindings](payments/rails.md)). The Trusted Surface shows the principal the route to revoke the block in the UPI
+  app (NPCI UPI Consolidated Circular v1.0, para 16.10).
+- **Set-up outside a checkout.** A principal may set up a block for a seller in advance, outside any
+  checkout, through this request. The rule that a new block is offered only beside a one-time
+  human-present payment ([Per-leg rule](#per-leg-rule), 3b) does not apply to such a set-up.
 
 ### Purpose bounds {#purpose-bounds}
 
@@ -457,11 +572,12 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   Every later `complete` under it gets `400 rail_binding_not_open_eligible` with
   `reasons: [binding_ineligible]` while the binding stays ineligible.
 - **Pause reasons form a set.** A paused mandate carries the set of reasons for which it is paused:
-  `principal_paused` (a pause by the principal on the Trusted Surface), `binding_ineligible` and
-  `reissue_required` (below). The mandate stays `PAUSED` while any reason remains. A principal pause
+  `principal_paused` (a pause by the principal on the Trusted Surface), `binding_ineligible`,
+  `reissue_required` (below) and `unmatched_rail_debit` (a debit on a Reserve Pay block that matches
+  no BACP payment, [Usage ledger](#usage-ledger)). The mandate stays `PAUSED` while any reason remains. A principal pause
   that arrives while a binding pause is in force is added to the set, never dropped, and a binding
   pause that arrives while the principal has paused the mandate is added in the same way. Only the
-  principal, on the Trusted Surface, removes `principal_paused`. The gateway removes only
+  principal, on the Trusted Surface, removes `principal_paused` and `unmatched_rail_debit`. The gateway removes only
   `binding_ineligible`, and only on a registry version strictly newer than the one recorded for the
   pause in which the binding is eligible again (or, for a pause caused by the gateway's conformance
   attestation, a newer attestation that lists the pilot); a replica that still holds the recorded
@@ -469,8 +585,8 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   and the gateway sends `mandate.status_changed` (`ACTIVE`) to the agent; a change to the set of a
   mandate that stays `PAUSED` is sent as `mandate.status_changed` (`PAUSED`) with the new
   `pause_reasons`. While a binding reason is in the set, `complete` gets
-  `400 rail_binding_not_open_eligible` at step 1 of [evaluation](#evaluation); when
-  `principal_paused` is the only reason, it gets `403 mandate_paused`.
+  `400 rail_binding_not_open_eligible` at step 1 of [evaluation](#evaluation); when only
+  `principal_paused` or `unmatched_rail_debit` remain, it gets `403 mandate_paused`.
 - **The Mandate Manager is not notified by the gateway.** The MM reads the same registry and can
   detect the change itself; a gateway-to-MM event is not defined in `2026-10-17`
   ([Q-61](open-questions.md#q-61)). The gateway **MUST** record every addition and removal of
@@ -494,9 +610,12 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
 - BACP constraints **MUST** be at or below the descriptor's rail limits. The MM rejects a mandate
   that exceeds its binding. The rail is authoritative for its own limits, but **MUST NOT** be
   relied on to enforce BACP budgets ([Usage ledger](#usage-ledger)).
-- A Reserve Pay block is payable to one seller. Multi-seller HNP shopping needs one open Payment
-  Mandate per seller block under one open Checkout Mandate whose budgets cap the total, or an
-  any-merchant primitive such as UPI Circle, or HP.
+- A Reserve Pay block is payable to one seller. Its open Payment Mandate **MUST** name the block's
+  payee seller in `payee{vpa, bpp_id}`, and `payee.vpa` **MUST** equal the VPA in that seller's
+  BPP-signed payment terms. A block whose payee is the buyer app (a BAP-collected block) **MUST NOT**
+  back an HNP payment: the MM refuses it, and the gateway refuses such a binding, with
+  `400 rail_binding_not_open_eligible`. So is a block whose seller's BPP-signed payment terms the
+  gateway does not hold and cannot obtain ([Sibling Payment Mandates](#sibling-payment-mandates)).
 
 !!! note "Settled"
     Binding open mandates to class-O handlers through rail- or issuer-enforced primitives is settled
@@ -510,6 +629,53 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
     them back open mandates is Proposed and waits for [Q-59](open-questions.md#q-59) and
     [Q-46](open-questions.md#q-46).
 
+### Per-leg payment rule for a multi-seller basket {#per-leg-rule}
+
+In a [multi-seller basket](checkout/index.md#multi-seller-basket) each seller is one **leg** with its
+own session, closed mandates and debit. No payment ever spans sellers. For each leg the gateway
+plans the payment in this order, and takes the first that is eligible for that seller at that
+presence ([handler intersection](payments/index.md#handler-intersection-and-preference)):
+
+1. **The principal's preference.** The handler the principal designated, ranked by rule 1 of the
+   handler intersection. No other rung ranks above it.
+2. **The seller's existing payee-bound instrument (3a).** An `ACTIVE` sibling open Payment Mandate
+   under the basket's root whose `payee` is this seller, for example a Reserve Pay block the
+   principal already holds for it.
+3. **A gift PPI the principal designated.** An `ACTIVE` sibling open Payment Mandate bound to
+   `in.ppi.gift` under the root.
+4. **One planned human-present step.** If any leg is left without an HNP handler, the gateway raises
+   **one** step-up (`confirm`, reason `rail_fallback`) for the whole basket **before any debit**
+   ([Step-up](#step-up)). Each human-present leg is then paid with its own closed mandates and its
+   own per-payee factor.
+
+Rules on the order:
+
+- Any-merchant primitives that are `pilot` (`in.upi.circle`, `in.card.agentic`) back no open mandate
+  until [Q-60](open-questions.md#q-60) is settled, and a rung never ranks above the principal's
+  preference. A seller that lacks only a block keeps its place and is offered the human-present
+  step; it is not dropped from the basket.
+- The gateway **MUST** record, for every leg, the rung chosen and every rung skipped with its reason,
+  as `comparison[]` entries in the InstructionLog ([handler intersection](payments/index.md#handler-intersection-and-preference)).
+- **A new block in a checkout (3b).** A new per-seller block **MAY** be offered during a checkout only
+  beside a one-time human-present payment to the same payee, with equal weight (the same number of
+  steps, neither preselected; TS-2 in [Human participants](human-participants.md#ts-requirements)).
+  It **MUST NOT** be offered after a failed payment, and **MUST NOT** be offered on a step-up whose
+  `delivery` is `ivr_callback`. A block set up outside a checkout is exempt
+  ([Sibling Payment Mandates](#sibling-payment-mandates)).
+- **Fallback is a step-up.** When a leg cannot be paid with the handler first planned for it (the
+  principal's preference, or the rung the principal last approved), and the replacement changes the
+  leg's funding (deposit or credit), fee-bearer, payee or collector, the gateway raises a
+  `rail_fallback` step-up and moves no money. A change of rail alone, with none of those changing, is
+  logged in `comparison[]` and raises no step-up.
+- **No re-route of an in-doubt leg.** A leg whose payment is `in_doubt` **MUST NOT** be re-routed to
+  another handler, and no new debit is attempted for it, until reconciliation resolves it
+  ([Failed payments](payments/index.md#failed-payments-tat-and-auto-reversal)).
+
+!!! note "Settled"
+    The per-leg rule settles [design choice (d)](open-questions.md#proposed-d) in `2026-10-17`. Whether an
+    agent-initiated draw on a Reserve Pay block counts as a customer action on the merchant's platform is
+    open ([Q-65](open-questions.md#q-65)).
+
 ## Step-up {#step-up}
 
 A step-up hands the decision back to the human. It is never only an error: the session moves to
@@ -522,7 +688,7 @@ There are three kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
-| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, or any check the gateway cannot resolve. |
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, fee-bearer, payee or collector ([Per-leg rule](#per-leg-rule)). |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
 | `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 
@@ -543,8 +709,9 @@ local and rail reason.
    never changes it. The Trusted Surface fetches it by `step_up_id`
    (`GET /trusted-surface/step-ups/{step_up_id}`, tag `bacp-ts`) with the key of the step-up's
    Mandate Manager or payer PSP: for a session step-up, the issuer of the session's mandate or the
-   PSP in `rail_binding.psp_id` of the open Payment Mandate whose `checkout_mandate_ref` is the
-   session's mandate; for a `post_order` step-up, the issuer of the order's mandate or the PSP in
+   PSP in `rail_binding.psp_id` of the leg's planned open Payment Mandate (the one under the
+   session's root that the gateway planned to pay the session with); for a summary step-up over a
+   basket, the root's Mandate Manager only; for a `post_order` step-up, the issuer of the order's mandate or the PSP in
    `auth_binding.psp_id` of the order's closed Payment Mandate(s)
    ([Step-up signers](human-participants.md#ts-signers)); any other
    registry key gets `404 not_found`. It renders only from the `ts_render` and its own templates; the
@@ -572,6 +739,32 @@ local and rail reason.
    confirms the order without drawing on the open mandate's binding.
 6. On decline, or once `expires_at` passes, the session becomes `cancelled` with
    `step_up_declined` or `step_up_expired`, and no money moves.
+
+**Summary step-up over a basket.** For a [multi-seller basket](checkout/index.md#multi-seller-basket)
+the gateway raises one `rail_fallback` step-up for the whole plan, before any debit. It belongs to
+the session whose `complete` raised it (its `ts_render.session_id` and `checkout_hash` are that
+session's), and the same `step_up` is shown on every session of the basket. Its `ts_render` carries
+`basket[]`, one line per seller ([Render input](human-participants.md#ts-render)), and its
+`step_up` and `ts_render` carry `covers[]`: one entry `{session_id, checkout_hash, payee, amount}`
+per leg the approval covers.
+
+- A summary approves a **plan**, never a payment. It never replaces a per-payee factor: each
+  human-present leg still needs its own closed mandates signed on the Trusted Surface and its own
+  factor, and an HNP leg still draws only on its own payee-bound instrument.
+- The `complete` of a covered session skips step 8 of [evaluation](#evaluation) only by consuming
+  its `covers[]` entry. The entry is consumed **once**, inside the atomic section keyed on the shared
+  root open Checkout Mandate ([Usage ledger](#usage-ledger)), and only while the session's current
+  `checkout_hash`, payee and amount equal the entry. An entry already used, a session re-quoted since
+  the approval, or a session that no entry names gets `requires_escalation` and moves no money.
+- Only the shared root's Mandate Manager fetches the summary `ts_render` and posts its result
+  ([Step-up signers](human-participants.md#ts-signers)). No payer PSP does, so that no PSP learns the
+  rest of the basket; any other key, including a payer PSP of an open Payment Mandate under the root,
+  gets `404 not_found`. While a session is in `human_handoff`, the approval is held as for any
+  step-up, and on release it applies to that session only if its `covers[]` entry still equals the
+  session's `checkout_hash`, payee and amount.
+- When the summary is declined or expires, every `covers[]` entry in it is void, for every covered
+  leg: a covered session's `complete` then gets `requires_escalation` as for a session that no entry
+  names, and no money moves on the summary.
 
 **Split-order detection.** To stop an agent splitting one purchase into several orders that each
 stay under `step_up.above_amount`, the gateway **MUST** escalate (`confirm`,
@@ -628,7 +821,8 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
    `checkout_hash` equals the `checkout_hash` of the approved step-up's `Presentation`. Once the
    quote changes, the approval no longer applies: step 8 runs again and a new step-up is needed,
    and no money moves on the old approval. A `step_up_id` that belongs to another session is
-   `404 not_found`.
+   `404 not_found`, unless the step-up is an approved summary step-up whose `covers[]` names this
+   session, in which case the step is skipped by consuming that entry ([Step-up](#step-up)).
 9. **Disclosures and dark patterns.** Mandatory disclosures are present and hashed, pre-ticked
    add-ons are removed and drip pricing is flagged (see
    [Sessions and Checkout](checkout/index.md#update)).
@@ -638,9 +832,9 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
     (`403 log_chain_invalid`; see [Evidence](evidence.md#chain-verification)).
 12. **Collector.** On `complete`, the party in `collected_by` is an RBI-authorised payment
     aggregator or a bank, according to its registry attribute (`403 collector_not_authorised`).
-13. **Commit.** Consume the closed Payment Mandate (one use), create the budget reservation, move
-    the session to `complete_in_progress`, increment `usage.count` and report the use to
-    `audit_uri`.
+13. **Commit.** Consume the closed Payment Mandate (one use) and any `covers[]` entry used at step 8,
+    create the budget reservation, move the session to `complete_in_progress`, increment
+    `usage.count` and report the use to `audit_uri`.
 
 Steps 9 and 10 are checked when the session is updated and re-checked before `complete`. A gateway
 MAY run steps 9 to 12 before it enters the atomic section, since they do not depend on the ledger.
@@ -672,6 +866,34 @@ is a read-only view of it.
   its `hp_proof` in the section keyed on the order's root open Checkout Mandate, or on its closed
   Checkout Mandate when the order was placed with no open mandate
   ([Presence proof](human-participants.md#hp-proof)).
+- **Blocks are exposure.** A Reserve Pay block is a pull authority: the seller may debit it several
+  times. Each block bound by an open Payment Mandate under the root counts as **reserved spend at
+  its full attested `block_amount`** in every budget window it overlaps, from activation until its
+  revocation at the rail is confirmed (`rail_revocation.status: confirmed`) or it expires, and after
+  its root ends it counts against any new root of the same principal
+  ([Sibling Payment Mandates](#sibling-payment-mandates)). A block that a `mandate.rejected` or
+  `mandate.revoked` event reports with `rail_revocation.status: unconfirmed`, including one refused
+  at step 6 or step 7 of [Issuance](#issuance) after the rail call and so never activated, is
+  exposure in the same way: at its attested `block_amount`, from the moment the gateway receives
+  the event, under the root it was requested for (or, for a request without
+  `checkout_mandate_ref`, against every root of the same principal), until the MM reports it
+  `confirmed` or the block expires. Such a block never counts as ₹0. Settled
+  debits matched to the block (PSP-signed receipts on its mandate) count within that reservation,
+  never on top of it. The atomic section, every budget check, the headroom check on the activation
+  of a block and the [sum-of-blocks rule](#sibling-payment-mandates) use this exposure.
+- **Unmatched rail debits.** Where the payer PSP attests that it reports every debit on the block to
+  the gateway (a block-debit feed), a debit on the block that matches no BACP payment counts as
+  settled spend, and the gateway adds the pause reason `unmatched_rail_debit` to the block's open
+  Payment Mandate ([pause reasons](#handler-binding)). Only the principal, on the Trusted Surface,
+  removes it. The pause stops BACP payments but not draws at the rail, so while it is set the Trusted
+  Surface also shows the principal the route to revoke the block in the UPI app (NPCI UPI
+  Consolidated Circular v1.0, para 16.10). Where no such feed is attested, the gateway cannot see
+  such a debit. The **unseen-draw statement** then says, in the principal's language, that this
+  seller can draw up to ₹X unseen by BACP, where X is the block's attested amount less the matched
+  debits (at issuance, the requested block amount), and that the seller can change the block's amount or validity (Consolidated Circular
+  para 16.9). It appears in the notice of the block's issuance ([Issuance](#issuance), step 4) and
+  in the `ts_render` of every step-up that lists the block. The form of a block-debit feed and of
+  its attestation is not defined in this version ([Q-10](open-questions.md#q-10)).
 - **Resolution.** A reservation becomes settled spend only when a PSP-signed success receipt is
   applied. It is released on a PSP-signed failure receipt or a refused debit. While a payment is
   `in_doubt` its reservation is kept until reconciliation resolves it. When every payment on a
@@ -765,6 +987,21 @@ stateDiagram-v2
   ([Post-order gate](checkout/post-order.md#post-order-gate)).
 - If a debit races a revocation, the rail rejects it, because the Trusted Surface revokes the rail
   primitive first.
+- **Ending a root ends its siblings.** When a root open Checkout Mandate ends in any way (revoked by
+  the principal, by a rail safety switch or by the agent's relinquishment, or `EXPIRED`), every open
+  Payment Mandate under it is revoked too. The Mandate Manager **MUST** revoke each
+  payee-bound primitive (each Reserve Pay block) at the rail, one by one, and **MUST** send one
+  signed `mandate.revoked` event per sibling open Payment Mandate, carrying `cascade_of` (the root's
+  `mandate_id`) and `rail_revocation{status}` (`confirmed` or `unconfirmed`) for its block. The
+  gateway reports each to the agent in `mandate.status_changed` with the same two fields. A block
+  whose revocation is `unconfirmed` stays exposure in the ledger, including against any new root of
+  the same principal ([Usage ledger](#usage-ledger)), until the MM reports it `confirmed` or the
+  block expires. The Trusted Surface, on the revocation and in any later `ts_render` that lists the
+  block, shows the principal the route to revoke it in the UPI app, where the payee PSP and the UPI
+  app must provide a revoke facility (NPCI UPI Consolidated Circular v1.0,
+  para 16.10). The gateway treats every sibling as revoked as soon as it learns that the root has
+  ended, without waiting for the MM's events. How the MM learns of a relinquishment made at the
+  gateway is not defined in this version ([Q-61](open-questions.md#q-61)).
 - A **binding pause** is different. The gateway adds the reason `binding_ineligible` when a
   mandate's rail binding stops being eligible after a registry or conformance-attestation change,
   and `reissue_required` to an open Payment Mandate issued without `rail_binding.primitive` or

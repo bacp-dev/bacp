@@ -156,8 +156,9 @@ Trusted Surface { #trusted-surface }
     Surface reach the gateway only at `POST /trusted-surface/events`, signed
     under tag `bacp-ts` with the registry key of the step-up's Mandate
     Manager or payer PSP: for a session step-up, the PSP named in
-    `rail_binding.psp_id` of the open Payment Mandate under the session's
-    mandate; for a `post_order` step-up, the PSP named in
+    `rail_binding.psp_id` of the leg's planned open Payment Mandate under the
+    session's root; for a summary step-up over a multi-seller basket, only the
+    root's Mandate Manager; for a `post_order` step-up, the PSP named in
     `auth_binding.psp_id` of the order's closed Payment Mandate(s)
     ([Step-up signers](human-participants.md#ts-signers)). See
     [Human Participants and the Trusted Surface](human-participants.md).

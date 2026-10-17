@@ -653,7 +653,7 @@
    "closed_auth": [
     "upi.pin"
    ],
-   "open_requires": "One block per seller."
+   "open_requires": "One block at a time per merchant per mobile number. An open mandate names the block's payee seller (payee.vpa and payee.bpp_id); a block payable to the buyer app does not back human-not-present payment."
   },
   "mandate_primitives": [
    {
@@ -767,6 +767,16 @@
     "label": "NPCI"
    },
    {
+    "file": "NPCI UPI OC No. 228 (FY 2025-26) 'Enhancements in UPI Single Block Multiple Debits (UPI Reserve Pay)', 08-10-2025, https://www.npci.org.in/uploads/UPI_OC_No_228_FY_2025_26_Enhancement_in_UPI_Single_Block_Multiple_Debits_UPI_Reserve_Pay_a9095c181d.pdf",
+    "section": "General; Issuer Banks paras 2 and 4; Acquiring entities paras 1 to 3",
+    "label": "NPCI"
+   },
+   {
+    "file": "NPCI UPI Consolidated Circular v1.0 (NPCI/UPI/CC/01), 18-09-2026, https://www.npci.org.in/uploads/UPI_Consolidated_Circular_0641e910f7.pdf",
+    "section": "paras 16.1, 16.4, 16.6, 16.9 to 16.11",
+    "label": "NPCI"
+   },
+   {
     "file": "NPCI press release 'RBI Governor unveils New Generation of Digital Payment Initiatives at GFF 2025' (08-10-2025), https://www.npci.org.in/uploads/RBI_Governor_unveils_New_Generation_of_Digital_Payment_Initiatives_at_GFF_6494fabdfc.pdf",
     "section": "UPI Reserve Pay - SBMD on Credit Accounts",
     "label": "NPCI"
@@ -777,7 +787,7 @@
     "label": "VENDOR"
    }
   ],
-  "notes": "NPCI product page: block set up with UPI PIN; the payer is notified each time money is deducted; the payer can modify or cancel the reserve at any time before expiry; unused money is released on expiry or cancellation. It states no pre-debit notice. Account types conflict: the GFF 2025 release launched Reserve Pay on credit cards and pre-sanctioned credit lines, the product page says 'your account' without restriction, and Pine Labs lists savings accounts."
+  "notes": "NPCI UPI OC 228 (08-10-2025) and the UPI Consolidated Circular v1.0 para 16.1 extend Reserve Pay to all UPI-permitted sources of funds, naming savings, current and overdraft accounts, RuPay credit cards and pre-sanctioned credit lines; the extant pricing of RuPay credit cards and credit lines on UPI applies to executed debits. funding stays debit for this descriptor: a block on a RuPay credit card or a credit line is a credit-funded leg (funding credit, in.upi.rupay_cc or in.upi.credit_line), which the PSP attestation states and which needs credit_funding_allowed. Acquirer eligibility: OC 228 enables Reserve Pay to begin with only for 'online verified merchants with low ticket and high frequency transactions'. One mobile number may hold only one block at a time for a particular merchant (OC 228 Issuer Banks para 4; Consolidated Circular para 16.4); no NPCI text caps blocks per user across merchants. A block is not a guarantee of payment. A timeout on a debit is a decline, reversed in real time and not settled; for timeouts only, acquiring entities may retry at most 3 times in 24 hours (OC 228 Acquiring entities para 3). The payer is notified of block creation, modification, debit, revoke and expiry (OC 228 Issuer Banks para 2; Consolidated Circular para 16.11); no NPCI text found states whether a pre-debit notice applies (Q-03). The payee PSP and the UPI app must give the user a facility to revoke the block (Consolidated Circular para 16.10); the merchant gives the facility to modify its amount or validity (para 16.9). No public NPCI list of the issuers that support Reserve Pay was found as of 17-10-2026 (an absence finding; Q-04). NPCI product page: block set up with UPI PIN; unused money is released on expiry or cancellation."
  },
  {
   "handler_id": "in.upi.circle",

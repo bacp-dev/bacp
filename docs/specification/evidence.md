@@ -261,12 +261,13 @@ trusting the agent or its operator.
 | `transaction_id` | The Beckn transaction. |
 | `agent_credential_hash` | Hash of the AgentCredential the agent used. |
 | `mandates[]` | The open Checkout and Payment Mandates, each wrapped in a JWS by the operator (the payload keeps the principal and MM signatures), and the closed mandates exactly as presented (agent-signed or principal-signed attached JWS). |
-| `checkout` | The BPP-signed quote (`bpp_signed_quote`), `checkout_hash` and `disclosures_hash`. |
+| `checkout` | The BPP-signed quote (`bpp_signed_quote`), `checkout_hash` and `disclosures_hash`, and `bpp_signed_payment_terms`: the seller's payment terms from `on_init` (Beckn `payments[]`, with `collected_by` and the payee VPA in `params.virtual_payment_address`) as the gateway received them, kept as `{body, authorization}`: the raw `on_init` body and its Beckn `Authorization` header, which verifies against the BPP's registry key ([Beckn signing](transports/beckn.md#signing)). REQUIRED for every Reserve Pay leg ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)). |
 | `receipts[]` | The full signed receipts: the BPP's checkout receipt, the PSP's payment receipt, and any refund receipts. |
 | `consent_receipts[]` | The ConsentReceipts under which data was shared. |
 | `instruction_log[]` | The session's full InstructionLog. |
 | `trusted_surface_events[]` | Every signed Trusted Surface event of the transaction, verbatim as received at `/trusted-surface/events` (step-up results, mandate activation, credit acceptance, AFA completion), each with its [`Presentation`](human-participants.md#presentation). |
-| `ts_renders[]` | The gateway-signed [`ts_render`](human-participants.md#ts-render) (compact JWS) of every step-up that a `step_up.approved` or `step_up.declined` event in `trusted_surface_events[]` names, byte-identical to what the Trusted Surface fetched. |
+| `ts_renders[]` | The gateway-signed [`ts_render`](human-participants.md#ts-render) (compact JWS) of every step-up that a `step_up.approved` or `step_up.declined` event in `trusted_surface_events[]` names, byte-identical to what the Trusted Surface fetched. In a bundle released to a seller or a payer PSP, a summary step-up's render is left out and `ts_render_digests[]` carries it instead. |
+| `ts_render_digests[]` | Only in a bundle released to a seller or a payer PSP: for each summary step-up over a [multi-seller basket](checkout/index.md#multi-seller-basket), `{step_up_id, render_hash, cover}`, where `render_hash` is the sha-256 of its `ts_render` and `cover` is the `covers[]` entry of this transaction's leg. The other sellers' lines stay out of the bundle. |
 | `verification` | The gateway's own result: `steps_passed` (0 to 6) and `chain_valid`. |
 | `bundle_signature` | The operator's signature over the whole bundle minus `bundle_signature`. |
 
@@ -309,12 +310,25 @@ chain is valid, and the bundle signature verifies:
    `content_hash` (where the event carries one) and whose signature verifies against the gateway's
    registry key, and the verifier **MUST** compare its `total`, its payee (`seller_name`) and its
    `checkout_hash` with the BPP-signed quote in `checkout`, and its `price_breakup_hash` with
-   `checkout.disclosures_hash`; a missing render or any mismatch fails the step. The
-   InstructionLog's first entry whose actor is `agent` is at stage `ai_disclosure`.
-   Any failure is `evidence_unverifiable`. Step 6 proves what the principal was shown, not where
-   the money went: neither the quote nor `ts_render` carries the payee's VPA or settlement
-   account, and comparing the PSP receipt's payee with seller-signed payment terms is not defined
-   in this version.
+   `checkout.disclosures_hash`; a missing render or any mismatch fails the step. Where the step-up's
+   `ts_render` carries `covers[]` (a summary step-up over a basket), the verifier instead finds the
+   `covers[]` entry whose `session_id` is the bundle's session and compares its `checkout_hash` and
+   `amount` with the BPP-signed quote and its `payee.vpa` with the payee VPA of the PSP payment receipt; the
+   summary's `total`, `seller_name` and `checkout_hash`, and the `Presentation.checkout_hash`
+   equality above, are not checked against this leg's quote. In a bundle that carries the summary
+   only as a `ts_render_digests[]` entry, the event's `content_hash` **MUST** equal its
+   `render_hash` and the same comparison is made with its `cover`; that the `cover` is an entry of the
+   render is checked by a reviewer that holds the full render (the principal, the grievance officer or
+   the ODR body). The InstructionLog's first entry whose actor is `agent` is at stage `ai_disclosure`.
+   Where the bundle carries `checkout.bpp_signed_payment_terms`, its `authorization` **MUST** verify
+   over its `body` against the registry key of the BPP that the body's `context.bpp_id` names, as of
+   the signature's `created` time, and the payee VPA of the PSP payment receipt **MUST** equal the
+   payee VPA in those terms; for a Reserve Pay payment the terms **MUST** be present and the open
+   Payment Mandate's `payee.vpa` and `payee.bpp_id` **MUST** equal the VPA and the `bpp_id` in them
+   ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)).
+   Any failure is `evidence_unverifiable`. Step 6 proves what the principal was shown and, through
+   [`EvidenceBundle.checkout.bpp_signed_payment_terms`](#contents), whom the seller asked to be
+   paid; neither the quote nor `ts_render` carries the payee's VPA or settlement account.
 
 The gateway runs this verification when it builds the bundle and records the result in
 `verification`. A reviewer **SHOULD** re-run it independently rather than trust `verification`.
@@ -343,7 +357,10 @@ it only to:
 - a regulator, on lawful request.
 
 Anyone else gets `403 evidence_forbidden`. Selective disclosure keeps the basket away from the PSP
-and the instrument away from the seller where the format allows it.
+and the instrument away from the seller where the format allows it. A summary step-up's full
+`ts_render`, which lists every seller of a basket, goes only to the principal (or the agent acting for
+the principal), the grievance officer, the ODR body and a regulator; a seller or a payer PSP gets its
+`ts_render_digests[]` entry instead.
 
 ## Retention {#retention}
 

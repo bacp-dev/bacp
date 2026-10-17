@@ -211,8 +211,9 @@ of two for negotiation messages; any other tag MUST be rejected with
 MUST accept only signatures under tag `bacp-ts` by the registry key of the
 step-up's Mandate Manager or payer PSP. For a session step-up these are the
 issuer of the session's mandate and the PSP named in `rail_binding.psp_id` of
-the open Payment Mandate whose `checkout_mandate_ref` is the session's mandate;
-for a `post_order` step-up, the issuer of the mandate the order was placed
+the leg's planned open Payment Mandate under the session's root; for a summary
+step-up over a multi-seller basket (one whose `ts_render` carries `covers[]`),
+only the issuer of the shared root, and no payer PSP; for a `post_order` step-up, the issuer of the mandate the order was placed
 under and the PSP named in `auth_binding.psp_id` of the order's closed Payment
 Mandate (any of them under split tender)
 ([Step-up signers](human-participants.md#ts-signers)). A request under

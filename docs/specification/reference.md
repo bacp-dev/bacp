@@ -42,7 +42,7 @@ The human-participant types in `common.json` (`LanguageTag`, `Participant`, `Par
 
 | Document | Format | Contents |
 |---|---|---|
-| [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) | OpenAPI 3.1.0 | The REST binding: 36 operations, 7 webhooks, 58 component schemas. See [REST](transports/rest.md). |
+| [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) | OpenAPI 3.1.0 | The REST binding: 36 operations, 7 webhooks, 66 component schemas. See [REST](transports/rest.md). |
 
 ## Payment-handler registry {#handler-registry}
 
@@ -115,7 +115,10 @@ device-bound, **D** deferred (COD), **N** non-paying.
 
 Each example is named `<schema>.<case>.json` and is checked against `<schema>.json` (`rfq.*` and `auction.*` against the `Rfq` and
 `AuctionSpec` definitions of `negotiation-session.json`, and `common.<definition>-<case>.json` against that definition of
-`common.json`, for example `common.presentation-*` against `#/$defs/Presentation`). Files ending in `.invalid.json`
+`common.json`, for example `common.presentation-*` against `#/$defs/Presentation`). A `<component>.<case>.json` whose
+`<component>` names no schema file is checked against the OpenAPI component schema of that name in PascalCase, for
+example `mandate-request.*` against `#/components/schemas/MandateRequest` and `ts-render.*` against `TsRender` in
+`bacp.openapi.yaml`. Files ending in `.invalid.json`
 are negative vectors: a conforming validator MUST reject them. The repository checks every vector, the registry and the
 OpenAPI document with `uv run python scripts/validate.py`.
 
@@ -143,6 +146,9 @@ OpenAPI document with `uv run python scripts/validate.py`.
 | [`credit-ledger-entry.payment-no-evidence.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment-no-evidence.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
 | [`credit-ledger-entry.payment.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
 | [`credit-ledger-entry.sale.json`](https://bacp.dev/latest/examples/credit-ledger-entry.sale.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
+| [`evidence-bundle.basket-leg-for-seller.json`](https://bacp.dev/latest/examples/evidence-bundle.basket-leg-for-seller.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/EvidenceBundle` | valid |
+| [`evidence-bundle.digest-no-render-hash.invalid.json`](https://bacp.dev/latest/examples/evidence-bundle.digest-no-render-hash.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/EvidenceBundle` | invalid (MUST fail) |
+| [`evidence-bundle.payment-terms-no-authorization.invalid.json`](https://bacp.dev/latest/examples/evidence-bundle.payment-terms-no-authorization.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/EvidenceBundle` | invalid (MUST fail) |
 | [`handler-descriptor.open-no-primitives.invalid.json`](https://bacp.dev/latest/examples/handler-descriptor.open-no-primitives.invalid.json) | [`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json) | invalid (MUST fail) |
 | [`handler-descriptor.upi-autopay.json`](https://bacp.dev/latest/examples/handler-descriptor.upi-autopay.json) | [`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json) | valid |
 | [`instruction-log-entry.ai-disclosure.json`](https://bacp.dev/latest/examples/instruction-log-entry.ai-disclosure.json) | [`instruction-log-entry.json`](https://bacp.dev/latest/schemas/instruction-log-entry.json) | valid |
@@ -151,11 +157,16 @@ OpenAPI document with `uv run python scripts/validate.py`.
 | [`mandate-negotiation.buyer.json`](https://bacp.dev/latest/examples/mandate-negotiation.buyer.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | valid |
 | [`mandate-negotiation.disclosed.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.disclosed.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |
 | [`mandate-negotiation.no-reservation.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.no-reservation.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |
+| [`mandate-request.block-amount-zero.invalid.json`](https://bacp.dev/latest/examples/mandate-request.block-amount-zero.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/MandateRequest` | invalid (MUST fail) |
+| [`mandate-request.checkout-mandate-ref-pattern.invalid.json`](https://bacp.dev/latest/examples/mandate-request.checkout-mandate-ref-pattern.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/MandateRequest` | invalid (MUST fail) |
+| [`mandate-request.payee-no-bpp-id.invalid.json`](https://bacp.dev/latest/examples/mandate-request.payee-no-bpp-id.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/MandateRequest` | invalid (MUST fail) |
+| [`mandate-request.sibling-reservepay.json`](https://bacp.dev/latest/examples/mandate-request.sibling-reservepay.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/MandateRequest` | valid |
 | [`mandate.open-payment-no-primitive.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-no-primitive.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
 | [`mandate.open-payment-no-registry-version.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-no-registry-version.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
 | [`mandate.open-payment-registry-version-not-date.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-registry-version-not-date.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
 | [`mandate.open-payment-reservepay.json`](https://bacp.dev/latest/examples/mandate.open-payment-reservepay.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | valid |
 | [`mandate.open-payment-unknown-primitive.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-unknown-primitive.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
+| [`mandate.payee-bpp-id-type.invalid.json`](https://bacp.dev/latest/examples/mandate.payee-bpp-id-type.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
 | [`negotiation-session.agreed.json`](https://bacp.dev/latest/examples/negotiation-session.agreed.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) | valid |
 | [`negotiation-session.old-state.invalid.json`](https://bacp.dev/latest/examples/negotiation-session.old-state.invalid.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) | invalid (MUST fail) |
 | [`offer.accept-with-terms.invalid.json`](https://bacp.dev/latest/examples/offer.accept-with-terms.invalid.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | invalid (MUST fail) |
@@ -166,8 +177,18 @@ OpenAPI document with `uv run python scripts/validate.py`.
 | [`offer.withdraw.json`](https://bacp.dev/latest/examples/offer.withdraw.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | valid |
 | [`payment-plan.gift-upi.json`](https://bacp.dev/latest/examples/payment-plan.gift-upi.json) | [`payment-plan.json`](https://bacp.dev/latest/schemas/payment-plan.json) | valid |
 | [`rfq.sealed.json`](https://bacp.dev/latest/examples/rfq.sealed.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/Rfq` | valid |
+| [`session.basket-id-pattern.invalid.json`](https://bacp.dev/latest/examples/session.basket-id-pattern.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/Session` | invalid (MUST fail) |
+| [`session.basket-id.json`](https://bacp.dev/latest/examples/session.basket-id.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/Session` | valid |
+| [`step-up.covers-missing-checkout-hash.invalid.json`](https://bacp.dev/latest/examples/step-up.covers-missing-checkout-hash.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/StepUp` | invalid (MUST fail) |
+| [`step-up.rail-fallback-covers.json`](https://bacp.dev/latest/examples/step-up.rail-fallback-covers.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/StepUp` | valid |
 | [`termsheet.b2b-net30.json`](https://bacp.dev/latest/examples/termsheet.b2b-net30.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | valid |
 | [`termsheet.b2c-saree.json`](https://bacp.dev/latest/examples/termsheet.b2c-saree.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | valid |
 | [`termsheet.emi-nocost.invalid.json`](https://bacp.dev/latest/examples/termsheet.emi-nocost.invalid.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | invalid (MUST fail) |
 | [`termsheet.net60-micro-trader.json`](https://bacp.dev/latest/examples/termsheet.net60-micro-trader.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | valid |
 | [`termsheet.net60-micro.invalid.json`](https://bacp.dev/latest/examples/termsheet.net60-micro.invalid.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | invalid (MUST fail) |
+| [`ts-render.action-unknown.invalid.json`](https://bacp.dev/latest/examples/ts-render.action-unknown.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/TsRender` | invalid (MUST fail) |
+| [`ts-render.basket-amount-fraction.invalid.json`](https://bacp.dev/latest/examples/ts-render.basket-amount-fraction.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/TsRender` | invalid (MUST fail) |
+| [`ts-render.basket-summary.json`](https://bacp.dev/latest/examples/ts-render.basket-summary.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/TsRender` | valid |
+| [`ts-render.no-grievance-contact.invalid.json`](https://bacp.dev/latest/examples/ts-render.no-grievance-contact.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/TsRender` | invalid (MUST fail) |
+| [`ts-render.no-revoke-route.invalid.json`](https://bacp.dev/latest/examples/ts-render.no-revoke-route.invalid.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/TsRender` | invalid (MUST fail) |
+| [`ts-render.post-order-cancel.json`](https://bacp.dev/latest/examples/ts-render.post-order-cancel.json) | [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) `#/components/schemas/TsRender` | valid |

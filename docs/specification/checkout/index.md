@@ -87,6 +87,8 @@ optionally the `mandate_ref`, `channel`, `language`, `participants` and `webhook
 sends `select` and returns `201` with the quote from `on_select`. With `channel: assisted`,
 `participants[]` **MUST** contain an `assisted_operator` entry; otherwise the gateway returns
 `400 invalid_request` at `$.participants` ([Assisted channel](../human-participants.md#assisted)).
+A session that is one leg of a [multi-seller basket](#multi-seller-basket) also carries the basket's
+`basket_id`.
 
 ```json
 {
@@ -232,7 +234,7 @@ Response (`200`, abridged):
     "price_breakup": [{"type": "total", "amount": {"value": 30200, "currency": "INR"}}],
     "hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4"
   },
-  "payment": {"handler": "in.upi.reservepay", "collected_by": "BAP", "type": "ON-ORDER",
+  "payment": {"handler": "in.upi.reservepay", "collected_by": "BPP", "type": "ON-ORDER",
               "status": "not_started"},
   "messages": [
     {"type": "disclosure", "code": "ai_disclosure",
@@ -484,7 +486,7 @@ Response (`200`, abridged):
   "totals": [{"type": "total", "amount": {"value": 30200, "currency": "INR"}}],
   "payment": {
     "handler": "in.upi.reservepay",
-    "collected_by": "BAP",
+    "collected_by": "BPP",
     "type": "ON-ORDER",
     "status": "confirmed",
     "receipt": {
@@ -632,6 +634,42 @@ Such sessions follow a **notice-gated** checkout:
 
 The agent **MUST** relay a pre-debit notice to the principal and **MUST NOT** dismiss it. See
 [Rail Bindings](../payments/rails.md).
+
+## Multi-seller basket {#multi-seller-basket}
+
+A session names one seller (`bpp_id`), binds one BPP-signed quote and allows one debit per
+`checkout_hash`. A purchase from several sellers is therefore a **basket** of sessions, one per
+seller, each of them a **leg** with its own quote, closed mandates, debit and receipt. BACP gives no
+atomicity across sellers: each leg completes or fails on its own.
+
+- **`basket_id`.** The agent groups the sessions with `basket_id` (pattern `^bkt_[A-Za-z0-9]{8,40}$`)
+  on `POST /sessions`. All sessions with one `basket_id` **MUST** have the same principal, presence
+  and root open Checkout Mandate; otherwise the gateway returns `400 invalid_request` at
+  `$.basket_id`. `basket_id` is gateway-local: it **MUST NOT** appear in `context.bacp`, in Beckn
+  tags or on the payment leg, so that no seller and no PSP learns the rest of the basket.
+- **No payment spans sellers.** No human-present payment and no BAP-collected payment covers more
+  than one seller. Each leg pays its own payee. A `complete` whose payment would cover several sellers
+  is refused with `403 mandate_scope_mismatch`.
+- **Plan before pay.** Before the first debit in a basket, the gateway plans a payment for every leg
+  under the [per-leg rule](../mandates.md#per-leg-rule). If any leg has no HNP handler, it raises one
+  summary step-up (`confirm`, reason `rail_fallback`) covering every leg, and no leg is debited until
+  that step-up is decided. A summary approves the plan; each human-present leg is then paid with its
+  own closed mandates and its own factor ([Step-up](../mandates.md#step-up)).
+- **Headroom check.** Before the first debit, the gateway **MUST** check every Reserve Pay leg: the
+  block's remaining amount (attested `block_amount` less matched debits) covers the leg, the block
+  has not expired, and the exposure of every block and leg fits the root's budgets
+  ([Usage ledger](../mandates.md#usage-ledger)). If any check fails, no leg is debited and the gateway
+  raises a `rail_fallback` step-up.
+- **Partial failure.** If one leg's debit fails (`payment_failed`), its reservation is released and
+  the other legs keep their receipts. The failed leg does not move again without a new step-up: the
+  principal chooses to drop it (the default when the step-up expires), pay that seller human-present,
+  or hand off to a human ([Human handoff](#handoff)). The gateway never re-routes a failed or
+  `in_doubt` leg to another handler on its own, and never offers a new block after a failed payment.
+- **Records.** Each leg keeps its own RRN and receipts. The gateway keeps the `basket_id` with the
+  sessions in its own records, and logs the rung chosen and skipped for each leg in `comparison[]`.
+
+The Trusted Surface rules for a basket (the number of sellers stated first, one line per seller) are
+in [Human participants](../human-participants.md#multi-seller).
 
 ## Idempotency, retries and races {#idempotency}
 

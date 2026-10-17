@@ -137,7 +137,10 @@ ledger.
    keyed on the root open checkout mandate id, or compare-and-reserve on a store with equivalent guarantees,
    satisfies this. The rail debit MUST run after the atomic section, never inside it.
 3. **What counts.** Budgets, `max_executions`, every rail-cap pre-check (period caps, first-24-hour caps, remaining
-   block) and split-order detection MUST count reservations as spent.
+   block) and split-order detection MUST count reservations as spent. Each Reserve Pay block counts as reserved spend
+   at its full attested amount until its revocation is confirmed or it expires, and the gateway applies the
+   activation of a sibling block in the same atomic section, so that an issuance and a `complete` never take the same
+   headroom ([Usage ledger](mandates.md#usage-ledger)).
 4. **Resolution.** A reservation becomes a settled spend only when a PSP-signed success receipt is applied. It MUST
    be released on a PSP-signed failure receipt or a refused debit, and kept while the payment is `in_doubt`. Once
    every payment on a mandate has resolved, no reservation may remain.

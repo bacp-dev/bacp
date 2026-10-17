@@ -310,12 +310,19 @@
     },
     "payee": {
       "type": "object",
+      "description": "The party a payment under this mandate is paid to. An open Payment Mandate whose rail_binding.primitive is sbmd_block (a UPI Reserve Pay block) MUST name the block's payee seller: vpa, equal to the VPA in that seller's BPP-signed payment terms, and bpp_id. The Mandate Manager refuses a Reserve Pay mandate request without it (403 mandate_scope_mismatch at $.payee).",
       "properties": {
         "vpa": {
-          "type": "string"
+          "type": "string",
+          "description": "The payee's UPI virtual payment address."
         },
         "bap_id": {
-          "type": "string"
+          "type": "string",
+          "description": "The buyer app, where the buyer app collects (collected_by BAP). Never the payee of a Reserve Pay block used human-not-present."
+        },
+        "bpp_id": {
+          "type": "string",
+          "description": "The seller app (BPP subscriber id) of the payee seller, for a payee-bound primitive such as a Reserve Pay block."
         }
       }
     },
@@ -354,7 +361,7 @@
         },
         "attestation": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee} hashed into this mandate"
+          "description": "PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee, funding} hashed into this mandate. funding is deposit or credit: the source of funds behind the primitive (for a Reserve Pay block, a savings, current or overdraft account is deposit; a RuPay credit card or a pre-sanctioned credit line is credit)."
         },
         "registry_version": {
           "type": "string",
@@ -374,11 +381,13 @@
               "$ref": "common.json#/$defs/Amount"
             },
             "block_amount": {
-              "$ref": "common.json#/$defs/Amount"
+              "$ref": "common.json#/$defs/Amount",
+              "description": "The amount of a Reserve Pay block as the payer PSP attests it. It is at most the block_amount the mandate request asked for; under a root open Checkout Mandate it counts as reserved spend at its full amount until its revocation at the rail is confirmed or it expires."
             },
             "expires_at": {
               "type": "string",
-              "format": "date-time"
+              "format": "date-time",
+              "description": "When the rail authority expires. For a Reserve Pay block bound under a root open Checkout Mandate it is no later than the root's valid_until."
             }
           }
         },

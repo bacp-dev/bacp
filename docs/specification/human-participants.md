@@ -48,11 +48,12 @@ assisted counter run by a PSP or Mandate Manager is a Trusted Surface if it meet
 ### Step-up signers {#ts-signers}
 
 Only two registry keys may fetch a step-up's render and post its result: those of the step-up's **Mandate Manager**
-and of its **payer PSP**. The gateway determines them from signed mandates, never from the request:
+and of its **payer PSP** (for a summary step-up, the Mandate Manager's only). The gateway determines them from signed mandates, never from the request:
 
 | Step-up | Mandate Manager | Payer PSP |
 |---|---|---|
-| A session step-up (`confirm`, `rail_auth`) | The issuer of the session's mandate (the open Checkout Mandate) | The PSP named in `rail_binding.psp_id` of the open Payment Mandate whose `checkout_mandate_ref` is the session's mandate |
+| A session step-up (`confirm`, `rail_auth`) | The issuer of the session's mandate (the open Checkout Mandate) | The PSP named in `rail_binding.psp_id` of the leg's planned open Payment Mandate: the one under the session's root that the gateway planned to pay this session with ([Per-leg rule](mandates.md#per-leg-rule)) |
+| A summary step-up over a [multi-seller basket](#multi-seller) (`covers[]` present) | The issuer of the shared root open Checkout Mandate | None: no payer PSP fetches or answers a summary, so that no PSP learns the rest of the basket |
 | A `post_order` step-up | The issuer of the mandate the order was placed under | The PSP named in `auth_binding.psp_id` of the order's closed Payment Mandate; under split tender, of any of the order's closed Payment Mandates |
 
 A Checkout Mandate carries no PSP binding, and a closed Payment Mandate exists only from `complete`, so the payer
@@ -95,6 +96,7 @@ The session's `step_up` object carries it, and the Trusted Surface fetches it wi
   looks up the `step_up_id`, so that a `429` never depends on whether the step-up exists.
 
 The `trusted_surface_url` that the agent delivers carries only a reference to the step-up, never the content to show.
+The payload is described as data by the OpenAPI component `TsRender`.
 
 | Payload field | Content |
 |---|---|
@@ -104,12 +106,14 @@ The `trusted_surface_url` that the agent delivers carries only a reference to th
 | `subject_hash` | For an issue action only: the sha-256 over the JCS form of the issue's `resolution` as the gateway showed it in `summary`. Absent when the issue has no `resolution`. |
 | `language` | The principal's language, as a BCP 47 tag (`LanguageTag`). |
 | `checkout_hash` | The `checkout_hash` of the quote the step-up is about (for `post_order`, the order's quote). |
-| `total` | The total price as a single figure (`Amount`, integer paise). |
+| `total` | The total price as a single figure (`Amount`, integer paise). On a summary step-up, the sum of `basket[].amount`. |
 | `price_breakup_hash` | The hash of the BPP-signed price breakup and disclosures (`disclosures.hash`). |
-| `seller_name` | The payee seller, from the BPP-signed quote. |
+| `seller_name` | The payee seller, from the BPP-signed quote. Absent on a summary step-up, whose sellers are in `basket[]`. |
 | `assisted_operators[]` | On an assisted session only: the `participant_id` and `ref` of each `assisted_operator` in the session's `participants[]`. |
 | `summary` | Gateway-written text (`LangText`) from the gateway's own templates, with no counterparty text in it. |
 | `counterparty_text[]` | Optional. Each entry is `{label, text}`: a seller-supplied string (an item name, a fee label), labelled by the gateway. |
+| `basket[]` | On a summary step-up over a [multi-seller basket](#multi-seller) only: one line per seller, `{bpp_id, payee_name, amount, handler, needs_pin, funds_locked, expires_at, funding}`. `payee_name` is the name the payer's bank returns for the payee VPA. `funds_locked` and `expires_at` are the amount a block reserves and when it is released. `funding` is `deposit` (the principal's own money) or `credit`. |
+| `covers[]` | On a summary step-up only: the legs the approval covers, each `{session_id, checkout_hash, payee, amount}` ([Step-up](mandates.md#step-up)). A summary's `session_id` and `checkout_hash` are those of the session whose `complete` raised it. |
 | `revoke_route` | Where the principal revokes the mandate or cancels, as a URI. |
 | `grievance_contact` | The agent operator's grievance officer contact. |
 | `expires_at` | As in the `step_up` object. |
@@ -168,7 +172,35 @@ When the gateway receives a `step_up.approved` event it **MUST** check, before a
 
 While the session is in `human_handoff` the gateway holds a `step_up.approved` event that passes these checks and does
 not apply it. After the handoff is released it applies a held approval only if the step-up has not expired and its
-`checkout_hash` still equals the session's ([Human handoff](#handoff)).
+`checkout_hash` still equals the session's ([Human handoff](#handoff)). For a summary step-up the re-check is per leg:
+a held approval applies to a released session only if that session's `covers[]` entry still equals its current
+`checkout_hash`, payee and amount.
+
+## Multi-seller basket on the Trusted Surface {#multi-seller}
+
+A [multi-seller basket](checkout/index.md#multi-seller-basket) reaches the principal as one summary step-up
+(reason `rail_fallback`) whose `ts_render` lists every seller in `basket[]`. The Trusted Surface:
+
+- states the **number of sellers first**, and for a human-present plan the number of payments and of PINs
+  needed (for example "3 sellers, 3 payments, 3 UPI PINs"), before any line;
+- then shows or reads each `basket[]` line: the bank-returned payee name, the amount, whether a PIN is needed,
+  for a block the amount locked and until when, and whether the money is the principal's own (`deposit`) or
+  `credit`; under TS-3, audio is read in full before the principal enters any factor;
+- for a block whose debits the gateway cannot see, gives the unseen-draw statement that the `ts_render` carries in
+  `summary`: that this seller can draw up to the stated amount unseen by BACP and can change the block's amount or
+  validity ([Usage ledger](mandates.md#usage-ledger)). The same statement is in the notice when such a block is
+  set up ([Issuance](mandates.md#issuance), step 4);
+- for a block whose mandate is paused for `unmatched_rail_debit`, shows the route to revoke the block in the UPI app
+  (NPCI UPI Consolidated Circular v1.0, para 16.10), because the pause stops BACP payments but not draws at the rail;
+- shows the summary as approval of a **plan**, never as a payment: each human-present leg is then a separate
+  step-up with its own `ts_render`, its own `content_hash` and the principal's own factor, and a summary
+  `Presentation` alone authorises no debit.
+
+A new per-seller block (3b in the [per-leg rule](mandates.md#per-leg-rule)) is offered only beside a one-time
+human-present payment to the same seller, with equal weight: the same number of steps, neither option preselected,
+and declining the block no harder than paying once (TS-2). It is never offered after a failed payment, and never on a
+step-up with `delivery: ivr_callback`. On `ivr_callback` and UPI 123PAY every leg is a human-present call of its own,
+read in full before its PIN.
 
 ## Assisted channel {#assisted}
 
@@ -358,3 +390,4 @@ How a summary is requested over REST is not defined in this version. A gateway *
 - [Q-62](open-questions.md#q-62): who certifies assisted operators.
 - [Q-63](open-questions.md#q-63): whether a PSP may render a third-party `ts_render`, and IVR callbacks.
 - [Q-64](open-questions.md#q-64): registry enrolment and revocation of `support_operator` keys.
+- [Q-65](open-questions.md#q-65): whether an agent-initiated draw on a Reserve Pay block is a customer action.

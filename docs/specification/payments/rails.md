@@ -55,7 +55,7 @@ UPI Circle lets a primary user delegate UPI payments to a secondary user, or to 
 - **Linking.** OTP, then QR or intent, then consent and limit setting in the primary user's UPI app, then PIN or biometric. AFA happens at linking; payments within the limits need no per-transaction PIN.
 - **Status.** NPCI states that "AI/Software driven IoT Payments are under pilot with limited users as a part of Closed User Group". The handler is therefore `pilot`, and a gateway MAY use it only when its conformance attestation lists it.
 - **Full delegation** to a human secondary went live on BHIM on 25-11-2025: up to ₹15,000 a month, with expiry from 1 month to 5 years, usable "after a short cooling period" (NBSL press release). The length of the cooling period and any per-transaction cap for human secondaries are not stated in any public NPCI text found as of 17-10-2026 ([Q-08](../open-questions.md#q-08)).
-- **Payee scope.** A Circle delegation is not tied to one merchant, so it is one of the two recommended rails for multi-seller agent shopping (with network agentic card tokens).
+- **Payee scope.** A Circle delegation is not tied to one merchant. While the handler is `pilot` it backs no open mandate until [Q-60](../open-questions.md#q-60) is settled, and where it does, it ranks below the principal's own preference in a multi-seller basket ([per-leg rule](../mandates.md#per-leg-rule)).
 
 Binding rules:
 
@@ -71,19 +71,31 @@ Handler: `in.upi.reservepay` (alias `upi.reservepay.block`). Class O.
 |---|---|---|
 | Basis | RBI decided to allow single-block-multiple-debit (SBMD) in UPI on 07-12-2022. | RBI Statement on Developmental and Regulatory Policies, 07-12-2022 |
 | Launch | NPCI launched UPI Reserve Pay on credit accounts on 08-10-2025: the payer blocks part of a credit card or pre-sanctioned credit-line limit for repeat purchases, with blocked and used amounts visible across apps. | NPCI GFF 2025 press release |
-| Account types | *(conflict)* The GFF 2025 release covers credit cards and credit lines; NPCI's product page says "your account" without restriction; Pine Labs lists savings accounts. | NPCI; *(vendor)* |
-| Block | At most ₹10,000 per block, reserved for at most 90 days; the merchant may debit several times up to the blocked amount. | NPCI UPI Reserve Pay product page |
-| Notice | The payer is notified each time money is deducted. The product page mentions no pre-debit notice. | NPCI UPI Reserve Pay product page |
-| Revocation | The payer can modify the reserved amount or cancel the reserve at any time before expiry; unused money is released on expiry or cancellation. | NPCI UPI Reserve Pay product page |
+| Account types | All UPI-permitted sources of funds, including savings, current and overdraft accounts, RuPay credit cards and pre-sanctioned credit lines. The extant pricing of RuPay credit cards and credit lines on UPI applies to executed debits. | [NPCI UPI OC 228](https://www.npci.org.in/uploads/UPI_OC_No_228_FY_2025_26_Enhancement_in_UPI_Single_Block_Multiple_Debits_UPI_Reserve_Pay_a9095c181d.pdf) (08-10-2025); [NPCI UPI Consolidated Circular v1.0](https://www.npci.org.in/uploads/UPI_Consolidated_Circular_0641e910f7.pdf) (18-09-2026), para 16.1 |
+| Merchants | To begin with, enabled only for "online verified merchants with low ticket and high frequency transactions". | NPCI UPI OC 228, acquiring entities para 1 |
+| Block | At most ₹10,000 per block, reserved for at most 90 days; the merchant may debit several times up to the blocked amount. One mobile number may hold only **one block at a time for a particular merchant**; no NPCI text caps blocks per user across merchants. A block is not a guarantee of payment. | NPCI UPI Reserve Pay product page; NPCI UPI OC 228, issuer banks paras 4 and 5; Consolidated Circular para 16.4 |
+| Creation | Payer-initiated, by QR, intent or SDK. | NPCI UPI OC 200 (31-07-2024), para b |
+| Timeouts | A timeout on a debit is treated as a decline, reversed in real time and not settled. For timeouts only, acquiring entities may retry at most 3 times in 24 hours; no retries for other declines. | NPCI UPI OC 228, acquiring entities para 3 |
+| Notice | The payer is notified of block creation, modification, debit, revoke and expiry. No NPCI text found states whether a pre-debit notice applies. | NPCI UPI OC 228, issuer banks para 2; Consolidated Circular para 16.11 |
+| Revocation | The payee PSP and the UPI app must give the payer a facility to revoke the block; the merchant gives a facility to modify its amount or validity. Unused money is released on expiry or cancellation. | Consolidated Circular paras 16.9 and 16.10; NPCI UPI Reserve Pay product page |
 | AFA | UPI PIN at block creation. | NPCI UPI Reserve Pay product page |
 
-Which issuers and account types support Reserve Pay is open ([Q-04](../open-questions.md#q-04)).
+Which issuers support Reserve Pay is open ([Q-04](../open-questions.md#q-04)). Whether an agent-initiated draw on a block counts as the customer action on the merchant's platform that NPCI describes is open ([Q-65](../open-questions.md#q-65)).
 
 **One block per seller.** An SBMD block's payee is one seller's collection VPA, or the seller's PA sub-merchant VPA. A buyer app cannot hold one block for many sellers.
 
-- An open payment mandate bound to Reserve Pay MUST name the block's payee. A debit against a block whose payee is another seller MUST be refused with `reservepay_block_wrong_payee` (the rail-level twin is `payee_mismatch`).
-- Multi-seller agent shopping therefore needs one of: one open payment mandate per seller block, all under one open checkout mandate whose budgets cap the total; an any-merchant primitive (`in.upi.circle`, `in.card.agentic`); or a human-present payment.
+- An open payment mandate bound to Reserve Pay MUST name the block's payee in `payee{vpa, bpp_id}`, and `payee.vpa` MUST equal the VPA in the seller's BPP-signed payment terms, which the gateway holds (or first obtains by a Beckn `init` it never confirms) for every block, including one set up outside a checkout ([Sibling Payment Mandates](../mandates.md#sibling-payment-mandates)). A block whose payee is the buyer app does not back an HNP payment (`rail_binding_not_open_eligible`). A debit against a block whose payee is another seller MUST be refused with `reservepay_block_wrong_payee` (the rail-level twin is `payee_mismatch`).
+- A block counts as reserved spend at its full amount in the mandate ledger until its revocation is confirmed or it expires ([Usage ledger](../mandates.md#usage-ledger)).
+- Multi-seller agent shopping follows the [per-leg rule](../mandates.md#per-leg-rule): per seller, the principal's preference, then the seller's existing block under the basket's root open checkout mandate, then a gift PPI the principal designated, then one planned human-present step before any debit.
 - The handler intersection excludes `in.upi.reservepay` unless a block payable to this seller exists.
+
+!!! note "Multi-seller HNP today"
+    As of 17-10-2026, hands-free buying across several sellers works only for sellers for which the principal
+    already holds a block (or another payee-bound mandate) set up in a UPI app, and only where the seller's acquirer
+    has enabled Reserve Pay, which OC 228 limits at first to online verified merchants with low-ticket,
+    high-frequency transactions. Every other leg is human-present: one payment and one UPI PIN per seller. Block
+    creation is by QR, intent or SDK (NPCI UPI OC 200, para b, which adds that other modes of initiation are
+    envisaged later); no NPCI text found as of 17-10-2026 describes block creation over UPI 123PAY or IVR.
 
 **Notice on repeat debits.** Whether the E-mandate Framework's 24-hour pre-debit notice applies to SBMD debits is open ([Q-03](../open-questions.md#q-03)). Until it is answered, the second and every later unattended debit on a Reserve Pay block MUST follow the 24-hour notice-gated checkout described in the [overview](index.md#binding-mandates-to-handlers). The first debit is covered by the block authorisation.
 

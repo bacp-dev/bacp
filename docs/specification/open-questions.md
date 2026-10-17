@@ -97,6 +97,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-62](#q-62) | Who certifies assisted operators | ONDC | Open |
 | [Q-63](#q-63) | PSP rendering of a third-party `ts_render`; IVR callbacks | NPCI | Open |
 | [Q-64](#q-64) | Registry enrolment and revocation of `support_operator` keys | BACP WG | Open |
+| [Q-65](#q-65) | Agent-initiated draw on a Reserve Pay block as a customer action | NPCI, Legal counsel | Open |
 
 ## Questions {#questions}
 
@@ -131,12 +132,17 @@ unattended debit on the block. See [Rail Bindings](payments/rails.md).
 
 ### Q-04 Reserve Pay issuers and account types {#q-04}
 
-**Question.** Which issuers and which account types (credit or savings) support Reserve Pay? NPCI's product page sets
-₹10,000 per block and 90 days but does not restrict account types; the Global Fintech Fest (GFF) 2025 release
-launched it on credit cards and pre-sanctioned credit lines.<br>
+**Question.** Which issuers support Reserve Pay, and do any issuers apply a practice stricter than NPCI's rule of one
+block at a time per merchant per mobile number?<br>
 **Owner.** NPCI.
 
-**Working position.** Support both and read the PSP's attestation.
+**Working position.** The account types are answered by NPCI UPI OC 228 (08-10-2025) and the UPI Consolidated
+Circular v1.0, para 16.1: all UPI-permitted sources of funds, including savings, current and overdraft accounts,
+RuPay credit cards and pre-sanctioned credit lines. OC 228 enables Reserve Pay, to begin with, only for "online
+verified merchants with low ticket and high frequency transactions". No public NPCI list of the issuers that
+support Reserve Pay was found as of 17-10-2026 (an absence finding, not a quotation), so the issuer list stays open, and a vendor page that reports issuers allowing only one block per user is not supported by any NPCI
+text found. BACP supports every account type, reads the source of funds (`deposit` or `credit`) from the PSP's
+attestation, and treats a credit-funded block as a credit leg. See [Rail Bindings](payments/rails.md).
 
 ### Q-05 UPI 123PAY limit {#q-05}
 
@@ -185,7 +191,9 @@ full-delegation release says only "a short cooling period".<br>
 **Owner.** NPCI, with PSPs.
 
 **Working position.** A PSP adapter inside the gateway's trust zone signs attestations. Start with a pilot with one
-PSP.
+PSP. Whether a payer PSP can report every debit on a Reserve Pay block to the gateway (a block-debit feed), and in what
+form, is part of this question; until it is answered, the pause reason `unmatched_rail_debit` applies only where a PSP
+attests such a feed ([Usage ledger](mandates.md#usage-ledger)).
 
 ### Q-11 `AI_AGENT` in IGM {#q-11}
 
@@ -719,7 +727,10 @@ the gateway to the agent, so BACP `2026-10-17` has no channel in this direction.
 gateway and can detect a status change itself. The gateway writes every addition and removal of a binding pause
 reason to the InstructionLog with the `registry_version`, and sends `mandate.status_changed` to the agent. No money
 moves on the MM's view: every gateway re-derives eligibility at step 1 of evaluation. See
-[Mandates and Consent](mandates.md#handler-binding).
+[Mandates and Consent](mandates.md#handler-binding). The same gap means that a relinquishment of a root open Checkout
+Mandate at the gateway does not reach the MM, which revokes the root's Reserve Pay blocks at the rail; the gateway
+treats the siblings as revoked at once and keeps each block as exposure until its revocation is confirmed or it
+expires ([Revocation](mandates.md#revocation)).
 
 ### Q-62 Certification of assisted operators {#q-62}
 
@@ -757,21 +768,28 @@ only from a key its registry resolves with that role, and only that key may rele
 is settled, `accepted_by` proves which registry key accepted, not that a vetted human holds it. See
 [Human participants](human-participants.md#handoff).
 
+### Q-65 Agent-initiated draw on a Reserve Pay block {#q-65}
+
+**Question.** NPCI UPI OC 228 describes a Reserve Pay debit as one "initiated by the customer action on merchant's
+platform", and the UPI Consolidated Circular v1.0, para 16.6, as one "initiated by the User action on Merchant's
+platform". Does a debit that an AI agent triggers for the principal,
+under a mandate, count as such a customer action?<br>
+**Owner.** NPCI, with Legal counsel.
+
+**Working position.** None of the rules depend on the answer. BACP counts every block as reserved spend at its full
+amount and binds it to one payee seller ([Usage ledger](mandates.md#usage-ledger),
+[Per-leg rule](mandates.md#per-leg-rule)) whichever way it is answered. A gateway uses an existing block for an HNP
+leg only under these rules. See [Rail Bindings](payments/rails.md).
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
-These two choices are written into BACP `2026-10-17`. They are flagged here because an owner may still overturn
-them in a later dated release. Design choice (a) is [settled](#proposed-a).
+This choice is written into BACP `2026-10-17`. It is flagged here because an owner may still overturn it in a later
+dated release. Design choices [(a)](#proposed-a) and [(d)](#proposed-d) are settled.
 
 ### (c) Acceptance revocation waived by default {#proposed-c}
 
 Every offer waives, by default, the acceptor's right to revoke an acceptance before it reaches the proposer
 (`acceptance_revocation: waived`). An offer may opt in to `allowed_until_receipt`. Decision owner: [Q-19](#q-19).
-
-### (d) Multi-seller hands-free shopping {#proposed-d}
-
-A Reserve Pay block serves exactly one seller. Human-not-present shopping across several sellers therefore uses UPI
-Circle, an agentic card token, several per-seller blocks under one open checkout mandate whose budgets cap the total,
-or falls back to a human-present payment. See [Rail Bindings](payments/rails.md).
 
 ## Settled {#settled}
 
@@ -849,6 +867,10 @@ depends?<br>
   version.
 - A counterparty that does not return valid CounterSignatures is treated as not supporting firm negotiation: the
   gateway MUST send it only non-firm offers (`firm: false`), so that formation follows the purchase-offer flow.
+- Evidence of what a seller sent rests on the same header signature: the gateway keeps the raw `on_init` body and
+  its `Authorization` header (`EvidenceBundle.checkout.bpp_signed_payment_terms`), which a verifier checks against
+  the BPP's registry key. A per-object JWS over `payments[]` would be a convenience, not a requirement
+  ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)).
 
 Whether ONDC validators accept the `bacp` TagGroups at all is [Q-09](#q-09). See
 [Beckn / ONDC Binding](transports/beckn.md#signing) and [Negotiation](negotiation/index.md).
@@ -920,6 +942,37 @@ authorities?<br>
   answered. Agentic card tokens stay pilot-gated ([Q-39](#q-39)).
 
 See [Mandates and Consent](mandates.md#handler-binding) and [Handler Registry](payments/handler-registry.md).
+
+### (d) Multi-seller hands-free shopping {#proposed-d}
+
+!!! success "Settled"
+    Was proposed design choice (d). Settled in `2026-10-17` by owner decision of 17-10-2026.
+
+**Question.** Given that a Reserve Pay block pays one seller, in what order does an agent fall back when it buys
+from several sellers with no human present, and what does each fallback mean for the principal?<br>
+**Owner.** BACP WG.
+
+**Answer.**
+
+- A multi-seller purchase is a basket of sessions, one per seller, grouped by a gateway-local `basket_id`. No payment
+  spans sellers, and there is no atomicity across sellers.
+- **Per leg**, the gateway plans the payment in this order: the principal's designated preference; then the seller's
+  existing payee-bound instrument, such as a block already held for that seller (3a); then a gift PPI the principal
+  designated; then one planned human-present step, raised for the whole basket before any debit. UPI Circle and
+  agentic card tokens back no open mandate while they are `pilot` ([Q-60](#q-60)), and no rung ranks above the
+  principal's preference.
+- A **new** per-seller block (3b) is offered only beside a one-time human-present payment to the same seller, with
+  equal weight, never after a failed payment and never on an IVR callback. A block set up outside a checkout is
+  exempt.
+- Every sibling Payment Mandate sits under one root open Checkout Mandate; a block names its payee
+  (`payee{vpa, bpp_id}`), bound to the seller's signed payment terms; the blocks under a root sum to no more than its
+  smallest budget; each block counts as reserved spend at its full amount; revoking the root revokes each block.
+- A change of a leg's funding, fee-bearer, payee or collector raises a `rail_fallback` step-up; an `in_doubt` leg is
+  never re-routed.
+
+See [Mandates and Consent](mandates.md#per-leg-rule) and
+[Sessions and Checkout](checkout/index.md#multi-seller-basket). Whether an agent draw on a block counts as a customer
+action is open ([Q-65](#q-65)).
 
 ### Other settled points {#settled-other}
 

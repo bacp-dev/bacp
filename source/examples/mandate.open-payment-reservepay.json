@@ -76,7 +76,8 @@
     "cod_allowed": false
   },
   "payee": {
-    "vpa": "ganeshkirana@examplebank"
+    "vpa": "ganeshkirana@examplebank",
+    "bpp_id": "bpp.kirana.example.in"
   },
   "rail_binding": {
     "type": "in.upi.reservepay",

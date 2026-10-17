@@ -183,6 +183,12 @@ An agent (and its operator) MUST:
   resume request and no re-issue request (`POST /mandates`) without a new
   instruction from the principal
   ([Handler binding](mandates.md#handler-binding)).
+- In a multi-seller basket, open one session per seller under one
+  `basket_id` and one root open Checkout Mandate, request a further block
+  only with `checkout_mandate_ref`, `payee` and `rail_limits.block_amount`, offer a new block only beside
+  a one-time human-present payment and never after a failed payment, and
+  never re-route an `in_doubt` leg
+  ([Per-leg rule](mandates.md#per-leg-rule)).
 - Keep its operator signing key separate from the agent's `cnf` key, and
   sign instruction-log entries asymmetrically.
 
@@ -227,6 +233,27 @@ A BACP gateway MUST:
   section, decrement budgets only from PSP-signed receipts, and leave no
   reservation behind once every payment has resolved.
 - Never rely on rail limits to bound BACP budgets.
+- Count every Reserve Pay block as reserved spend at its full attested
+  amount until its revocation is confirmed or it expires, also against any
+  new root of the same principal; apply the activation of a sibling block
+  inside the root's atomic section and refuse it (`403 mandate_exhausted`)
+  when the block no longer fits the headroom of every budget window; hold
+  the seller's BPP-signed payment terms (the raw `on_init` body and its
+  Beckn `Authorization` header) for every Reserve Pay block before the
+  request reaches the Trusted Surface, or refuse it
+  (`400 rail_binding_not_open_eligible`); where the payer PSP
+  attests a block-debit feed, count an unmatched debit as settled spend and
+  add the pause reason `unmatched_rail_debit`, which only the principal
+  removes ([Usage ledger](mandates.md#usage-ledger)).
+- For a multi-seller basket: refuse a `basket_id` shared across principals,
+  presence or root open Checkout Mandates (`400 invalid_request` at
+  `$.basket_id`) and never send it to the network or the PSP; plan every leg
+  under the per-leg rule, log chosen and skipped rungs in `comparison[]`, run
+  the headroom check on every block and raise any `rail_fallback` step-up
+  before the first debit; consume each `covers[]` entry once in the
+  root-Checkout-Mandate atomic section; never let one payment span sellers;
+  and never re-route an `in_doubt` leg
+  ([Multi-seller basket](checkout/index.md#multi-seller-basket)).
 - Move a session to `requires_escalation` for every step-up, with a
   Trusted Surface link valid for at most 15 minutes (at least 5 for
   `ivr_callback` and `assisted`), and complete only after a signed approval
@@ -352,6 +379,24 @@ A Mandate Manager MUST:
   [conformance attestation](#conformance-attestation) listing it. Take the
   registry from the dated release or a registry-signed snapshot, never from a
   gateway endpoint, and record its version in `rail_binding.registry_version`.
+- For a Reserve Pay mandate, require `payee{vpa, bpp_id}` equal to the
+  seller's BPP-signed payment terms and `rail_limits.block_amount`, and
+  refuse a buyer-app payee for HNP; for a request with
+  `checkout_mandate_ref`, build only a Payment Mandate under that `ACTIVE`
+  root of the same principal; keep the block amounts under a root, the
+  requested one included, within its smallest budget `max`; refuse an
+  attested block larger than requested or expiring after the root's
+  `valid_until`, and revoke at the rail any block created for a request it
+  then refuses, reporting `rail_revocation`; key the parallel-root rule on
+  the principal's account behind every pairwise `principal.ref` and refuse
+  a new root while another is `ACTIVE` unless its notice states every other
+  root's budgets and the combined total; show the requested block amount,
+  each budget's remaining amount and, without an attested block-debit feed,
+  the unseen-draw statement in the issuance notice; when a root ends in any
+  way, revoke each block at the rail and send one `mandate.revoked` per
+  sibling with `cascade_of` and `rail_revocation`; and be the only key that
+  fetches and answers a summary step-up
+  ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)).
 - Sign mandates as immutable artefacts. Open mandates carry `cnf`,
   `data_scopes`, `audit_uri`, a data-retention period and at least one
   budget or `max_executions`.
@@ -383,7 +428,9 @@ A payer PSP MUST:
 - Create the standing authority (block, delegation or mandate) on a
   primitive listed in the handler's `binding.open_primitives`, and sign a
   `rail_binding` attestation of its reference, type, primitive, limits,
-  expiry and payee.
+  expiry, payee and funding (`deposit` or `credit`); create no Reserve Pay
+  block larger than the requested `rail_limits.block_amount`; never fetch
+  or answer a summary step-up over a basket.
 - Refuse a second debit for the same closed payment mandate or
   `checkout_hash`, refuse any payment request that carries a basket, and
   refuse a Reserve Pay debit to any payee other than the block's.
@@ -401,7 +448,13 @@ A verifier of an evidence bundle (a grievance officer's tool, an ODR body, a
 PSP or a seller) MUST:
 
 - Run the six verification steps and the chain check, and report
-  `evidence_unverifiable` on any failure, including a step-up entry without a
+  `evidence_unverifiable` on any failure, including a payment receipt whose
+  payee VPA differs from `checkout.bpp_signed_payment_terms` where the bundle
+  carries them, a Reserve Pay payment whose bundle lacks those terms or whose
+  terms' Beckn `Authorization` header does not verify over their `body`, a
+  covered leg whose `covers[]` entry (or `ts_render_digests[]` entry, whose
+  `render_hash` must equal the event's `content_hash`) differs from the
+  leg's quote or payee, a step-up entry without a
   matching signed Trusted Surface event, an approval without a `Presentation`,
   a step-up event whose `ts_render` is missing from `ts_renders[]` or differs
   from the BPP-signed quote in `total`, payee or `checkout_hash`, or from the
@@ -712,9 +765,10 @@ Amounts are integer paise.
   fixture:
     checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}], settled: {value: 100000, currency: INR}}
     payment_mandates:
-      - {rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 150000, currency: INR}}
-      - {rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-b, block_amount: {value: 150000, currency: INR}}
-    sessions: {count: 2, amount: 150000, one_per_payment_mandate: true, state: ready_for_complete}
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 100000, currency: INR}, matched_debits: {value: 0, currency: INR}}
+      - {name: G1, rail: in.ppi.gift, primitive: balance_cap}
+      - {name: G2, rail: in.ppi.gift, primitive: balance_cap}
+    sessions: {count: 2, amount: 100000, payment_mandates: [G1, G2], state: ready_for_complete}
     gateway: {replicas: 2}
   steps:
     - parallel: 2
@@ -724,10 +778,11 @@ Amounts are integer paise.
     responses:
       - {status: 200, body.status: completed, count: 1}
       - {status: 403, code: mandate_exhausted, resolution: requires_buyer_input, count: 1}
+    state: {exposure: {value: 300000, currency: INR}}
     invariants: [INV-ONE-DEBIT-PER-CHECKOUT, INV-NO-WRONG-AMOUNT, INV-NO-RESERVATION-LEFT]
     rail:
       settled_debits: 1
-      settled_amount: {value: 150000, currency: INR}
+      settled_amount: {value: 100000, currency: INR}
 
 - case_id: T0-RT-08
   title: Loyalty points are not open-eligible in this version
@@ -766,9 +821,10 @@ Amounts are integer paise.
   fixture:
     registry_release: {in.upi.reservepay: {status: live}}
     gateway_payment_handlers: {in.upi.reservepay: {status: reserved}}
-    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block}
+    bpp_payment_terms: {bpp.dairy.example.in: {vpa: dairy@examplebank, collected_by: BPP}}
+    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block, payee: dairy@examplebank, block_amount: {value: 100000, currency: INR}, funding: deposit}
   steps:
-    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay}}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, payee: {vpa: dairy@examplebank, bpp_id: bpp.dairy.example.in}, rail_limits: {block_amount: {value: 100000, currency: INR}}}}
       gateway: forwards
       trusted_surface: approve
   expect:
@@ -819,22 +875,22 @@ Amounts are integer paise.
     checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}], settled: {value: 100000, currency: INR}}
     payment_mandates:
       - {rail: in.ppi.gift, primitive: balance_cap}
-      - {rail: in.upi.reservepay, primitive: sbmd_block, block_amount: {value: 300000, currency: INR}}
+      - {rail: in.upi.reservepay, primitive: sbmd_block, block_amount: {value: 100000, currency: INR}, matched_debits: {value: 0, currency: INR}}
     gateway: {replicas: 2}
   steps:
     - parallel: 2
       across_replicas: true
       calls:
-        - {complete_with_plan: {tenders: [{handler: in.ppi.gift, amount: {value: 120000, currency: INR}}, {handler: in.upi.reservepay, amount: {value: 120000, currency: INR}}]}}
-        - {complete: {handler: in.upi.reservepay, amount: {value: 120000, currency: INR}}}
+        - {complete_with_plan: {tenders: [{handler: in.ppi.gift, amount: {value: 120000, currency: INR}}, {handler: in.upi.reservepay, amount: {value: 60000, currency: INR}}]}}
+        - {complete: {handler: in.upi.reservepay, amount: {value: 60000, currency: INR}}}
   expect:
     responses:
-      - {status: 200, body.status: completed, count: 1}
-      - {status: 403, code: mandate_exhausted, resolution: requires_buyer_input, count: 1}
+      - {path: complete, status: 200, body.status: completed, count: 1}
+      - {path: complete_with_plan, status: 403, code: mandate_exhausted, resolution: requires_buyer_input, count: 1}
     invariants: [INV-NO-WRONG-AMOUNT, INV-NO-RESERVATION-LEFT]
     rail:
       settled_debits: 1
-      settled_amount: {value: 120000, currency: INR}
+      settled_amount: {value: 60000, currency: INR}
 
 - case_id: T0-RT-13b
   title: A split-tender plan that fits the budget and a single complete racing for it never both succeed
@@ -844,20 +900,20 @@ Amounts are integer paise.
     checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}], settled: {value: 100000, currency: INR}}
     payment_mandates:
       - {rail: in.ppi.gift, primitive: balance_cap}
-      - {rail: in.upi.reservepay, primitive: sbmd_block, block_amount: {value: 300000, currency: INR}}
+      - {rail: in.upi.reservepay, primitive: sbmd_block, block_amount: {value: 100000, currency: INR}, matched_debits: {value: 0, currency: INR}}
     gateway: {replicas: 2}
   steps:
     - parallel: 2
       across_replicas: true
       calls:
-        - {complete_with_plan: {tenders: [{handler: in.ppi.gift, amount: {value: 90000, currency: INR}}, {handler: in.upi.reservepay, amount: {value: 90000, currency: INR}}]}}
-        - {complete: {handler: in.upi.reservepay, amount: {value: 120000, currency: INR}}}
+        - {complete_with_plan: {tenders: [{handler: in.ppi.gift, amount: {value: 60000, currency: INR}}, {handler: in.upi.reservepay, amount: {value: 60000, currency: INR}}]}}
+        - {complete: {handler: in.ppi.gift, amount: {value: 60000, currency: INR}}}
   expect:
     exactly_one_of:
       - responses: [{path: complete_with_plan, status: 200, body.status: completed}, {path: complete, status: 403, code: mandate_exhausted}]
-        rail: {settled_debits: 2, settled_amount: {value: 180000, currency: INR}}
+        rail: {settled_debits: 2, settled_amount: {value: 120000, currency: INR}}
       - responses: [{path: complete, status: 200, body.status: completed}, {path: complete_with_plan, status: 403, code: mandate_exhausted}]
-        rail: {settled_debits: 1, settled_amount: {value: 120000, currency: INR}}
+        rail: {settled_debits: 1, settled_amount: {value: 60000, currency: INR}}
     invariants: [INV-NO-WRONG-AMOUNT, INV-NO-RESERVATION-LEFT]
 
 - case_id: T0-RT-14
@@ -981,15 +1037,24 @@ Amounts are integer paise.
 T0-RT-12 tests only the adoption of a downgrade, with the registry source
 reachable. The stale-copy branch (registry source unreachable for 25 hours,
 HNP refused with `registry_copy_stale` and no pause, HP not refused for
-staleness) is T0-RT-15. T0-RT-13b is the overspend variant of T0-RT-13: each
-side fits the ₹2,000 left on its own (₹1,800 for the plan, ₹1,200 for the
-single `complete`), together they do not, so exactly one succeeds.
+staleness) is T0-RT-15. T0-RT-13b is the overspend variant of T0-RT-13. The
+₹1,000 block counts as exposure at its full amount, so ₹1,000 of the budget is
+left. A debit on the block counts within its reservation, so only the gift-PPI
+amounts take headroom: each side fits on its own (₹600 for the plan's gift
+tender, ₹600 for the single `complete`), together they do not, so exactly one
+succeeds.
 T0-RT-19 tests only what an agent sends: it can show that the agent opens no
 re-issue or resume request, not what it says to the principal.
 
 T0-RT-13 is tested at library level, because payment plans have no wire
-binding until [Q-44](open-questions.md#q-44); the plan total (₹2,400) exceeds
-the ₹2,000 left, so the plan is refused whatever the order. T0-RT-14 tests the
+binding until [Q-44](open-questions.md#q-44). With the ₹1,000 block counted as
+exposure ([Usage ledger](mandates.md#usage-ledger)), ₹1,000 is left: the plan's
+gift tender (₹1,200) does not fit, so the plan is refused whatever the order,
+and its block tender, which alone would fit, is not debited either. The single
+`complete` on the block (₹600) counts within the block's reservation and
+succeeds. T0-RT-07 races two gift-PPI legs for the ₹1,000 left beside a
+₹1,000 block: without block exposure both would fit. T0-RT-10b uses the
+`bpp_payment_terms` fixture key of the [multi-seller cases](#multi-seller-cases). T0-RT-14 tests the
 outcome only: how the principal-keyed negotiation section and the
 root-checkout-mandate section are ordered is not specified in this version
 ([Q-36](open-questions.md#q-36)).
@@ -1847,4 +1912,818 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
   expect:
     responses:
       - {status: 200, body.status: requires_escalation, body.step_up.delivery: ivr_callback, body.step_up.expires_at: ">= +5m", count: 1}
+```
+
+## Multi-seller basket cases {#multi-seller-cases}
+
+The cases below cover the [per-leg rule](mandates.md#per-leg-rule) for a
+[multi-seller basket](checkout/index.md#multi-seller-basket): sibling Payment Mandates under one root open Checkout
+Mandate, the payee binding of a Reserve Pay block, the sum-of-blocks rule and block exposure in the
+[usage ledger](mandates.md#usage-ledger), the gateway-local `basket_id`, planning before the first debit, the summary
+step-up and its `covers[]`, the Trusted Surface rules for a basket, and the revocation cascade. They use the manifest
+form above. These cases also use:
+
+- `basket` (fixture): the sessions of one basket, each with its seller, amount and planned handler; `basket_id` is
+  shared;
+- `bpp_payment_terms` (fixture): the seller's BPP-signed payment terms as the gateway holds them (`vpa`,
+  `collected_by`);
+- `psp_attestation.block_debit_feed` (fixture): whether the payer PSP attests a block-debit feed;
+- `rail_event` (step): the mock PSP reports a debit on a block that the gateway did not send;
+- `principal_preference` (fixture): the handler the principal designated;
+- `summary_step_up` (fixture): a summary step-up (reason `rail_fallback`) over the named legs, with its `covers[]`;
+- `fixture_override` (step): fixture values that apply to that step only;
+- `plan_basket` (library call): the gateway's per-leg planning for a basket, without sending a request;
+- `state` keys `payment_mandate_<name>`, `session_<id>` and `exposure` (the exposure of the root open Checkout
+  Mandate in the window), and `rail` counts `calls`, `debit_requests`, `distinct_rrn`, `request_field_absent` and
+  `revocations` (blocks revoked at the rail);
+- `principal: {account, ref}` (fixture) and `as_principal` (request): the principal's account at the Mandate Manager
+  and the pairwise `principal.ref` that one request carries, so that two refs of one account can be told apart;
+- `bpp` (fixture): what the mock seller answers on the network, for example its `on_init` payment terms;
+- `mandate_request` (fixture): the mandate request whose notice a Trusted Surface renders;
+- `{transaction_id_<id>}` and `{render_hash_<step_up_id>}`: the transaction of a basket leg and the sha-256 of a
+  step-up's `ts_render`, taken from the fixture.
+
+T2-07 has two branches, chosen by `psp_attestation.block_debit_feed`: T2-07b, without an attested feed, is below;
+T2-07, with one, is Proposed because the feed has no wire form. T2-02b is the positive control of T2-02. T2-14b
+checks evidence verification for a covered leg that did not raise the summary. The cases T2-RT-11 to T2-RT-18 keep
+the ids of the red-team traces they close: the payee bound to BPP-signed terms on every block (T2-RT-11), headroom at
+issuance and the activation race (T2-RT-12, T2-RT-13), the requested block amount (T2-RT-14), the summary signer
+(T2-RT-15), the summary in a seller's bundle (T2-RT-16), block expiry and the cascade on every end of the root
+(T2-RT-17), the unseen-draw statement at issuance (T2-RT-18), a refused block with an unconfirmed rail revocation
+(T2-RT-19) and the first block of a new root (T2-RT-20). T2-24 is a regression case for the notice-gated repeat debit. T2-25 runs on two gateway replicas. Amounts are
+integer paise.
+
+```yaml
+- case_id: T2-01
+  title: A request with checkout_mandate_ref builds only a sibling Payment Mandate under the root
+  level: bacp.pay.upi.1
+  system_under_test: mandate_manager
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE, principal: pp_A, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    bpp_payment_terms: {bpp.dairy.example.in: {vpa: dairy@examplebank, collected_by: BPP}}
+    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block, payee: dairy@examplebank, block_amount: {value: 200000, currency: INR}, funding: deposit}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, checkout_mandate_ref: mdt_CHKA0000000001, payee: {vpa: dairy@examplebank, bpp_id: bpp.dairy.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 202, body.status: PENDING, count: 1}
+    state: {mandate_request: ACTIVE, root_checkout_mandates: 1, new_payment_mandate.checkout_mandate_ref: mdt_CHKA0000000001, new_checkout_mandates: 0}
+
+- case_id: T2-02
+  title: A new root for a principal who already holds active roots is refused with a code unless its notice states every root's budgets and the total
+  level: bacp.pay.upi.1
+  system_under_test: mandate_manager
+  fixture:
+    checkout_mandates:
+      - {mandate_id: mdt_CHKA0000000001, status: ACTIVE, principal: {account: acct_A, ref: pp_A1}, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+      - {mandate_id: mdt_CHKB0000000001, status: ACTIVE, principal: {account: acct_A, ref: pp_A2}, budgets: [{period: P1M, max: {value: 200000, currency: INR}}]}
+    bpp_payment_terms: {bpp.dairy.example.in: {vpa: dairy@examplebank, collected_by: BPP}}
+    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block, payee: dairy@examplebank, block_amount: {value: 200000, currency: INR}, funding: deposit}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, as_principal: {account: acct_A, ref: pp_A3}, body: {purpose_code: P-GRO-01, rail: in.upi.reservepay, payee: {vpa: dairy@examplebank, bpp_id: bpp.dairy.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    exactly_one_of:
+      - responses: [{status: 403, code: mandate_scope_mismatch, param: $.checkout_mandate_ref, resolution: requires_buyer_review}]
+        state: {root_checkout_mandates: 2}
+        rail: {calls: 0}
+      - responses: [{status: 202, body.status: PENDING}]
+        state: {mandate_request: ACTIVE, root_checkout_mandates: 3}
+        verdict: {notice: {states: [budgets_of_mdt_CHKA0000000001, budgets_of_mdt_CHKB0000000001, combined_total]}}
+
+- case_id: T2-02b
+  title: Positive control for T2-02, the parallel-root rule is keyed on the principal's account, not on the request
+  level: bacp.pay.upi.1
+  system_under_test: mandate_manager
+  fixture:
+    checkout_mandates:
+      - {mandate_id: mdt_CHKA0000000001, status: ACTIVE, principal: {account: acct_A, ref: pp_A1}, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    bpp_payment_terms: {bpp.dairy.example.in: {vpa: dairy@examplebank, collected_by: BPP}, bpp.handloom.example.in: {vpa: handloom@examplebank, collected_by: BPP}}
+    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block, payee: dairy@examplebank, block_amount: {value: 200000, currency: INR}, funding: deposit}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, as_principal: {account: acct_B, ref: pp_B1}, body: {purpose_code: P-GRO-01, rail: in.upi.reservepay, payee: {vpa: dairy@examplebank, bpp_id: bpp.dairy.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}}}
+      gateway: forwards
+      trusted_surface: approve
+      expect:
+        responses:
+          - {status: 202, body.status: PENDING, count: 1}
+        state: {mandate_request: ACTIVE}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, as_principal: {account: acct_A, ref: pp_A9}, body: {purpose_code: P-FAS-01, rail: in.upi.reservepay, payee: {vpa: handloom@examplebank, bpp_id: bpp.handloom.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}}}
+      fixture_override: {psp_attestation: {payee: handloom@examplebank}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    exactly_one_of:
+      - responses: [{status: 403, code: mandate_scope_mismatch, param: $.checkout_mandate_ref}]
+      - responses: [{status: 202, body.status: PENDING}]
+        verdict: {notice: {states: [budgets_of_mdt_CHKA0000000001, combined_total]}}
+
+- case_id: T2-03
+  title: A Reserve Pay request without a payee is refused
+  level: bacp.pay.upi.1
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay}}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, param: $.payee, resolution: requires_buyer_review, count: 1}
+    rail: {calls: 0}
+
+- case_id: T2-04
+  title: A block payee that is not the seller's signed VPA, or is the buyer app, is refused before the rail
+  level: bacp.pay.upi.1
+  fixture:
+    bpp_payment_terms: {bpp.dairy.example.in: {vpa: dairy@examplebank, collected_by: BPP}}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, presence_allowed: [HNP], payee: {vpa: other@examplebank, bpp_id: bpp.dairy.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}}}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, presence_allowed: [HNP], payee: {vpa: buyerapp@examplebank, bpp_id: bpp.dairy.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}}}
+      fixture_override: {bpp_payment_terms: {bpp.dairy.example.in: {vpa: buyerapp@examplebank, collected_by: BAP}}}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, count: 2}
+    rail: {calls: 0}
+
+- case_id: T2-05
+  title: A requested block that would take the blocks under a root past its smallest budget is refused before the rail
+  level: bacp.pay.upi.1
+  system_under_test: mandate_manager
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 300000, currency: INR}, status: ACTIVE, preinstalled: true}
+    bpp_payment_terms: {bpp.seller-b.example.in: {vpa: seller-b@examplebank, collected_by: BPP}}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, checkout_mandate_ref: mdt_CHKA0000000001, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 250000, currency: INR}}}}
+      gateway: forwards
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, param: $.checkout_mandate_ref, resolution: requires_buyer_review, count: 1}
+    rail: {calls: 0}
+
+- case_id: T2-06
+  title: Unused blocks count as reserved spend for a third seller
+  level: bacp.pay.all.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}], settled: {value: 0, currency: INR}}
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 200000, currency: INR}}
+      - {name: B, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-b, block_amount: {value: 200000, currency: INR}}
+      - {name: G, rail: in.ppi.gift, primitive: balance_cap}
+    sessions: {count: 1, seller: seller-c, amount: 150000, payment_mandate: G, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 403, code: mandate_exhausted, resolution: requires_buyer_input, count: 1}
+    state: {exposure: {value: 400000, currency: INR}}
+    rail: {settled_debits: 0}
+
+- case_id: T2-07b
+  title: Without a block-debit feed, the summary render states what the seller can draw unseen
+  level: bacp.pay.upi.1
+  fixture:
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 300000, currency: INR}, matched_debits: {value: 0, currency: INR}}
+    psp_attestation: {block_debit_feed: false}
+    basket:
+      - {seller: seller-a, amount: 30200, handler: in.upi.reservepay}
+      - {seller: seller-b, amount: 45000, handler: none}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id_a}/complete", tag: bacp-pay, presence: HNP}
+    - request: {method: GET, path: "/trusted-surface/step-ups/{step_up_id}", tag: bacp-ts}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: rail_fallback, count: 1}
+      - {status: 200, count: 1}
+    verdict: {ts_render: {summary: {states_unseen_draw: {seller: seller-a, up_to: {value: 300000, currency: INR}}}}}
+    rail: {settled_debits: 0}
+
+- case_id: T2-08
+  title: An in-doubt leg is not re-routed to another handler
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: B, seller: seller-b, amount: 45000, handler: in.upi.reservepay, payment: in_doubt}
+    payment_mandates:
+      - {name: G, rail: in.ppi.gift, primitive: balance_cap}
+  steps:
+    - request: {method: POST, path: "/sessions/B/complete", tag: bacp-pay, presence: HNP, body: {payment_mandate: closed_under_G}}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, count: 1}
+    state: {session_B: complete_in_progress, payment_B: in_doubt}
+    rail: {debit_requests: 1}
+    invariants: [INV-ONE-DEBIT-PER-CHECKOUT]
+
+- case_id: T2-09
+  title: Every leg is planned and the human-present step is raised before any debit
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.upi.reservepay}
+      - {id: B, seller: seller-b, amount: 45000, handler: none}
+      - {id: C, seller: seller-c, amount: 18000, handler: in.ppi.gift}
+  steps:
+    - request: {method: POST, path: "/sessions/A/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: rail_fallback, body.step_up.covers: {count: 3}, count: 1}
+    rail: {calls: 0}
+
+- case_id: T2-10
+  title: An unattested any-merchant handler is skipped with a reason and the leg falls back to a step-up
+  level: bacp.pay.upi.1
+  fixture:
+    gateway_attestation: {pilots: []}
+    registry: {in.upi.circle: {status: pilot}}
+    basket:
+      - {id: A, seller: seller-a, amount: 45000, handler: none, hp_handlers: [in.upi.intent]}
+  steps:
+    - request: {method: POST, path: "/sessions/A/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: rail_fallback, count: 1}
+    log: {comparison: [{handler_id: in.upi.circle, chosen: false, reason: pilot_not_attested}]}
+    rail: {settled_debits: 0}
+
+- case_id: T2-11
+  title: A failed leg releases its reservation and does not move again without a new step-up
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.ppi.gift, state: ready_for_complete}
+      - {id: B, seller: seller-b, amount: 45000, handler: in.upi.reservepay, state: ready_for_complete, rail_fault: decline}
+      - {id: C, seller: seller-c, amount: 18000, handler: in.ppi.gift, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/A/complete", tag: bacp-pay, presence: HNP}
+    - request: {method: POST, path: "/sessions/B/complete", tag: bacp-pay, presence: HNP}
+    - request: {method: POST, path: "/sessions/C/complete", tag: bacp-pay, presence: HNP}
+    - create_session: {seller: seller-b, basket: same, state: ready_for_complete}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {path: "/sessions/A/complete", status: 200, body.status: completed, count: 1}
+      - {path: "/sessions/B/complete", status: 200, body.status: cancelled, count: 1}
+      - {path: "/sessions/C/complete", status: 200, body.status: completed, count: 1}
+      - {path: "/sessions/{new_session_id}/complete", status: 200, body.status: requires_escalation, body.step_up.reason: rail_fallback, count: 1}
+    messages: [payment_failed]
+    state: {session_A: completed, session_B: cancelled, session_C: completed}
+    rail: {settled_debits: 2, distinct_rrn: 2}
+    invariants: [INV-NO-RESERVATION-LEFT]
+
+- case_id: T2-12
+  title: An expired step-up for a failed leg drops the leg and moves no money
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: B, seller: seller-b, amount: 45000, state: requires_escalation, step_up: {reason: rail_fallback, expires_at: "+10m"}}
+  steps:
+    - wait_for: {clock: "+11m"}
+  expect:
+    state: {session_B: cancelled}
+    messages: [step_up_expired]
+    rail: {settled_debits: 0}
+
+- case_id: T2-13
+  title: An approved summary authorises no debit without a per-payee factor
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.upi.reservepay}
+      - {id: B, seller: seller-b, amount: 45000, handler: none}
+    summary_step_up: {step_up_id: stp_S, covers: [A, B]}
+  steps:
+    - trusted_surface_event: {event: step_up.approved, step_up_id: stp_S, presentation: {user_action: tap_confirm}}
+    - request: {method: POST, path: "/sessions/B/complete", tag: bacp-pay, presence: HNP, body: {step_up_id: stp_S}}
+  expect:
+    responses:
+      - {status: 202, count: 1}
+      - {path: "/sessions/B/complete", status: 200, body.status: requires_escalation, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T2-14
+  title: A covers entry is consumed once and only for an unchanged, covered session
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.upi.reservepay, state: ready_for_complete}
+      - {id: B, seller: seller-b, amount: 18000, handler: in.ppi.gift, state: ready_for_complete}
+      - {id: D, seller: seller-d, amount: 12000, handler: in.ppi.gift, state: ready_for_complete}
+    summary_step_up: {step_up_id: stp_S, covers: [A, B], state: approved}
+  steps:
+    - request: {method: POST, path: "/sessions/A/complete", tag: bacp-pay, presence: HNP, body: {step_up_id: stp_S}}
+    - request: {method: POST, path: "/sessions/A/complete", tag: bacp-pay, presence: HNP, idempotency_key: fresh, body: {step_up_id: stp_S}}
+    - requote: {session: B, checkout_hash: H_B2, amount: 19000}
+    - request: {method: POST, path: "/sessions/B/complete", tag: bacp-pay, presence: HNP, body: {step_up_id: stp_S, checkout_hash: H_B2}}
+    - request: {method: POST, path: "/sessions/D/complete", tag: bacp-pay, presence: HNP, body: {step_up_id: stp_S}}
+  expect:
+    responses:
+      - {path: "/sessions/A/complete", status: 200, body.status: completed, count: 1}
+      - {path: "/sessions/A/complete", status: 403, code: mandate_scope_mismatch, count: 1}
+      - {path: "/sessions/B/complete", status: 200, body.status: requires_escalation, count: 1}
+      - {path: "/sessions/D/complete", status: 200, body.status: requires_escalation, count: 1}
+    rail: {settled_debits: 1}
+
+- case_id: T2-14b
+  title: The bundle of a covered leg that did not raise the summary verifies against its covers entry
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      leg: B
+      session_id: ses_B
+      checkout: {checkout_hash: H_B, quote_total: {value: 18000, currency: INR}, bpp_signed_payment_terms: {vpa: sabzi@examplebank, bpp_id: bpp.sabzi.example.in}}
+      receipts: [{type: payment, result: success, payee: sabzi@examplebank, amount: {value: 18000, currency: INR}}]
+      trusted_surface_events: [{event: step_up.approved, step_up_id: stp_S, signer: mandate_manager_of_root, presentation: {checkout_hash: H_A, content_hash: "{render_hash_stp_S}"}}]
+      ts_renders: [{step_up_id: stp_S, session_id: ses_A, checkout_hash: H_A, total: {value: 93200, currency: INR}, covers: [{session_id: ses_A, checkout_hash: H_A, payee: {vpa: ganeshkirana@examplebank, bpp_id: bpp.kirana.example.in}, amount: {value: 75200, currency: INR}}, {session_id: ses_B, checkout_hash: H_B, payee: {vpa: sabzi@examplebank, bpp_id: bpp.sabzi.example.in}, amount: {value: 18000, currency: INR}}]}]
+  steps:
+    - verify_bundle: {}
+      expect:
+        verdict: {code: pass}
+    - verify_bundle: {}
+      fixture_override: {bundle: {ts_renders: [{step_up_id: stp_S, covers: [{session_id: ses_B, amount: {value: 19000, currency: INR}}]}]}}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: T2-15
+  title: On an assisted basket every approval names the operator and carries the principal's own factor
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    sessions: {count: 3, channel: assisted, participants: [{participant_id: op1, role: assisted_operator}]}
+    ts_render: {kind: confirm, assisted_operators: [{participant_id: op1}], legs: 3}
+  steps:
+    - render: {each_leg: true}
+  expect:
+    verdict: {presentations: {count: 3, assisted_by: op1, user_action: [upi_pin, biometric]}}
+
+- case_id: T2-17
+  title: A new block is offered only beside an equal one-time payment, and never after a failure
+  level: bacp.pay.upi.1
+  system_under_test: trusted_surface
+  fixture:
+    basket:
+      - {id: B, seller: seller-b, amount: 45000, handler: none, block: none}
+  steps:
+    - render: {offer: [new_block, one_time_hp], steps_each: equal}
+      expect:
+        verdict: {code: pass}
+    - render: {offer: [new_block]}
+      expect:
+        verdict: {code: ts_conformance_fail, rule: TS-2}
+    - render: {offer: [new_block, one_time_hp], after: payment_failed}
+  expect:
+    verdict: {code: ts_conformance_fail, rule: TS-2}
+
+- case_id: T2-18
+  title: The basket_id never reaches the network or the payment leg
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.ppi.gift, state: ready_for_complete}
+      - {id: B, seller: seller-b, amount: 45000, handler: in.ppi.gift, state: ready_for_complete}
+      - {id: C, seller: seller-c, amount: 18000, handler: in.ppi.gift, state: ready_for_complete}
+  steps:
+    - parallel: [{method: POST, path: "/sessions/A/complete", tag: bacp-pay}, {method: POST, path: "/sessions/B/complete", tag: bacp-pay}, {method: POST, path: "/sessions/C/complete", tag: bacp-pay}]
+  expect:
+    beckn:
+      - {action: any, field_absent: basket_id}
+    rail: {request_field_absent: basket_id}
+
+- case_id: T2-19
+  title: A basket_id cannot join sessions under two root Checkout Mandates
+  level: bacp.core.1
+  fixture:
+    checkout_mandates: [mdt_CHKA0000000001, mdt_CHKB0000000001]
+    sessions:
+      - {id: A, mandate_ref: mdt_CHKA0000000001, basket_id: bkt_01HZXBASKET7}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, body: {mandate_ref: mdt_CHKB0000000001, basket_id: bkt_01HZXBASKET7}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.basket_id, count: 1}
+
+- case_id: T2-20
+  title: A cancelled and refunded leg does not restore budget
+  level: bacp.core.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.ppi.gift, state: completed, order: {state: Cancelled, refund: settled}}
+  steps:
+    - request: {method: GET, path: "/sessions/A", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 200, body.payment.budget_after: [{period: P1M, remaining: {value: 469800, currency: INR}}], count: 1}
+
+- case_id: T2-21
+  title: Revoking a root revokes each block and reports each rail revocation
+  level: bacp.pay.upi.1
+  system_under_test: mandate_manager
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE}
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a}
+      - {name: B, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-b}
+      - {name: C, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-c, rail_revoke: no_answer}
+  steps:
+    - trusted_surface: {revoke: mdt_CHKA0000000001}
+  expect:
+    verdict:
+      events_received:
+        - {event: mandate.revoked, mandate_id: A, cascade_of: mdt_CHKA0000000001, rail_revocation.status: confirmed}
+        - {event: mandate.revoked, mandate_id: B, cascade_of: mdt_CHKA0000000001, rail_revocation.status: confirmed}
+        - {event: mandate.revoked, mandate_id: C, cascade_of: mdt_CHKA0000000001, rail_revocation.status: unconfirmed}
+    state: {payment_mandate_A: REVOKED, payment_mandate_B: REVOKED, payment_mandate_C: REVOKED}
+
+- case_id: T2-21b
+  title: The gateway cancels the basket and keeps an unconfirmed block as exposure
+  level: bacp.pay.upi.1
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    payment_mandates:
+      - {name: C, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-c, block_amount: {value: 100000, currency: INR}}
+    basket:
+      - {id: C, seller: seller-c, amount: 18000, handler: in.upi.reservepay, state: ready_for_complete}
+  steps:
+    - trusted_surface_event: {event: mandate.revoked, mandate_id: C, cascade_of: mdt_CHKA0000000001, rail_revocation: {status: unconfirmed}}
+  expect:
+    webhooks: [{type: mandate.status_changed, status: REVOKED, cascade_of: mdt_CHKA0000000001, rail_revocation.status: unconfirmed}]
+    state: {session_C: cancelled, exposure: {value: 100000, currency: INR}}
+    messages: [mandate_revoked]
+    rail: {settled_debits: 0}
+
+- case_id: T2-22
+  title: Fallback rungs rank below the principal's preference and a seller lacking only a block is kept
+  level: bacp.pay.all.1
+  library_level: true
+  fixture:
+    principal_preference: in.upi.reservepay
+    gateway_attestation: {pilots: [in.card.agentic], verified: true}
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a}
+      - {name: T, rail: in.card.agentic, primitive: agentic_token_intent}
+    basket:
+      - {id: A, seller: seller-a, amount: 30200}
+      - {id: X, seller: seller-x, amount: 45000}
+  steps:
+    - calls:
+        - {plan_basket: {basket: same}}
+  expect:
+    verdict:
+      plan:
+        - {leg: A, chosen: in.upi.reservepay, rank_reason: user_preference, comparison: [{handler_id: in.card.agentic, chosen: false}]}
+        - {leg: X, kept: true, offered: [human_present]}
+
+- case_id: T2-23
+  title: A block without headroom for its leg stops the basket before the first debit
+  level: bacp.pay.upi.1
+  fixture:
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 100000, currency: INR}}
+      - {name: B, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-b, block_amount: {value: 30000, currency: INR}}
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.upi.reservepay, state: ready_for_complete}
+      - {id: B, seller: seller-b, amount: 45000, handler: in.upi.reservepay, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/A/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: rail_fallback, count: 1}
+    rail: {calls: 0}
+
+- case_id: T2-24
+  title: A second unattended debit on a block whose notice rule is unknown is notice-gated (regression)
+  level: bacp.pay.upi.1
+  fixture:
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, pre_debit_notice: unknown, debits_so_far: 1}
+    sessions: {count: 1, seller: seller-a, amount: 20000, payment_mandate: A, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 200, body.status: ready_for_complete, count: 1}
+    messages: [pre_debit_notice]
+    rail: {settled_debits: 0}
+
+- case_id: T2-25
+  title: Concurrent legs with one in doubt never exceed the root budget across replicas
+  level: bacp.pay.all.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}], settled: {value: 100000, currency: INR}}
+    payment_mandates:
+      - {name: G, rail: in.ppi.gift, primitive: balance_cap}
+    basket:
+      - {id: A, seller: seller-a, amount: 90000, handler: in.ppi.gift, state: ready_for_complete, rail_fault: timeout}
+      - {id: B, seller: seller-b, amount: 90000, handler: in.ppi.gift, state: ready_for_complete}
+      - {id: C, seller: seller-c, amount: 90000, handler: in.ppi.gift, state: ready_for_complete}
+    gateway: {replicas: 2}
+  steps:
+    - parallel: [{method: POST, path: "/sessions/A/complete", tag: bacp-pay}, {method: POST, path: "/sessions/B/complete", tag: bacp-pay}, {method: POST, path: "/sessions/C/complete", tag: bacp-pay}]
+      across_replicas: true
+  expect:
+    responses:
+      - {status: 403, code: mandate_exhausted, resolution: requires_buyer_input, count: 1}
+    state: {exposure: {lte: {value: 300000, currency: INR}}}
+    invariants: [INV-ONE-DEBIT-PER-CHECKOUT, INV-NO-WRONG-AMOUNT]
+
+- case_id: T2-26
+  title: A fallback that changes funding raises a rail_fallback step-up
+  level: bacp.pay.all.1
+  fixture:
+    payment_mandates:
+      - {name: C1, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-c, funding: deposit, expires_at: past}
+      - {name: C2, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-c, funding: credit, debits_so_far: 0}
+    basket:
+      - {id: C, seller: seller-c, amount: 18000, planned: C1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/C/complete", tag: bacp-pay, presence: HNP, body: {payment_mandate: closed_under_C2}}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: rail_fallback, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T2-26b
+  title: A fallback that changes only the rail is logged and raises no step-up
+  level: bacp.pay.all.1
+  fixture:
+    payment_mandates:
+      - {name: C1, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-c, funding: deposit, expires_at: past}
+      - {name: G, rail: in.ppi.gift, primitive: balance_cap, funding: deposit}
+    basket:
+      - {id: C, seller: seller-c, amount: 18000, planned: C1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/C/complete", tag: bacp-pay, presence: HNP, body: {payment_mandate: closed_under_G}}
+  expect:
+    responses:
+      - {status: 200, body.status: completed, count: 1}
+    log: {comparison: [{handler_id: in.upi.reservepay, chosen: false}, {handler_id: in.ppi.gift, chosen: true}]}
+    rail: {settled_debits: 1}
+
+- case_id: T2-27
+  title: One payment never spans several sellers
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, state: requires_escalation}
+      - {id: B, seller: seller-b, amount: 45000, state: requires_escalation}
+      - {id: C, seller: seller-c, amount: 18000, state: requires_escalation}
+  steps:
+    - trusted_surface_event: {event: step_up.approved, session_id: A, auth_binding: {type: upi.pin}, closed_payment_mandate: {amount: {value: 93200, currency: INR}, payee: {bap_id: bap.example.in}}}
+    - request: {method: POST, path: "/sessions/A/complete", tag: bacp-pay, presence: HNP, body: {payment_mandate: {amount: {value: 93200, currency: INR}, collected_by: BAP, covers_sessions: [A, B, C]}}}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, count: 2}
+    rail: {settled_debits: 0}
+- case_id: T2-RT-11
+  title: A Reserve Pay request for a seller whose BPP-signed payment terms the gateway does not hold binds no unverified payee
+  level: bacp.pay.upi.1
+  fixture:
+    bpp_payment_terms: {}
+    bpp: {bpp.kirana.example.in: {on_init: {payments: [{collected_by: BPP, params: {virtual_payment_address: ganeshkirana@examplebank}}]}}}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, presence_allowed: [HNP], payee: {vpa: ganesh-pay@examplebank, bpp_id: bpp.kirana.example.in}, rail_limits: {block_amount: {value: 300000, currency: INR}}}}
+      expect:
+        responses:
+          - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, count: 1}
+        rail: {calls: 0}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, presence_allowed: [HNP], payee: {vpa: ganeshkirana@examplebank, bpp_id: bpp.kirana.example.in}, rail_limits: {block_amount: {value: 300000, currency: INR}}}}
+      fixture_override: {bpp_payment_terms: {bpp.kirana.example.in: {vpa: ganeshkirana@examplebank, collected_by: BPP}}}
+  expect:
+    responses:
+      - {status: 202, body.status: PENDING, count: 1}
+    beckn:
+      - {action: confirm, bpp_id: bpp.kirana.example.in, count: 0}
+
+- case_id: T2-RT-12
+  title: A sibling block that does not fit the root's headroom is refused before the rail, and the notice shows what is left
+  level: bacp.pay.upi.1
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE, budgets: [{period: P1M, max: {value: 500000, currency: INR}}], settled: {value: 400000, currency: INR}}
+    bpp_payment_terms: {bpp.seller-b.example.in: {vpa: seller-b@examplebank, collected_by: BPP}}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, checkout_mandate_ref: mdt_CHKA0000000001, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 300000, currency: INR}}}}
+      expect:
+        responses:
+          - {status: 403, code: mandate_exhausted, param: $.checkout_mandate_ref, resolution: requires_buyer_input, count: 1}
+        rail: {calls: 0}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, checkout_mandate_ref: mdt_CHKA0000000001, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 100000, currency: INR}}}}
+  expect:
+    responses:
+      - {status: 202, body.status: PENDING, count: 1}
+    verdict: {notice: {states: [requested_block_amount, budget_remaining], budget_remaining: [{period: P1M, remaining: {value: 100000, currency: INR}}]}}
+
+- case_id: T2-RT-13
+  title: A sibling block activation and a complete racing for the same headroom never both succeed, across replicas
+  level: bacp.pay.upi.1
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE, budgets: [{period: P1M, max: {value: 500000, currency: INR}}], settled: {value: 300000, currency: INR}}
+    payment_mandates:
+      - {name: G, rail: in.ppi.gift, primitive: balance_cap}
+      - {name: B, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-b, block_amount: {value: 150000, currency: INR}, status: PENDING}
+    sessions: {count: 1, seller: seller-c, amount: 150000, payment_mandate: G, state: ready_for_complete}
+    gateway: {replicas: 2}
+  steps:
+    - parallel: [{trusted_surface_event: {event: mandate.activated, mandate_id: B}}, {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}]
+      across_replicas: true
+  expect:
+    exactly_one_of:
+      - responses: [{path: trusted_surface_event, status: 202}, {path: complete, status: 403, code: mandate_exhausted}]
+        state: {payment_mandate_B: ACTIVE, exposure: {value: 450000, currency: INR}}
+      - responses: [{path: complete, status: 200, body.status: completed}, {path: trusted_surface_event, status: 403, code: mandate_exhausted}]
+        state: {payment_mandate_B: {not: ACTIVE}, exposure: {value: 450000, currency: INR}}
+    invariants: [INV-NO-WRONG-AMOUNT]
+
+- case_id: T2-RT-14
+  title: An attested block larger than requested is refused and revoked at the rail
+  level: bacp.pay.upi.1
+  system_under_test: mandate_manager
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    bpp_payment_terms: {bpp.seller-b.example.in: {vpa: seller-b@examplebank, collected_by: BPP}}
+    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block, payee: seller-b@examplebank, block_amount: {value: 1000000, currency: INR}, funding: deposit}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, checkout_mandate_ref: mdt_CHKA0000000001, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 202, body.status: PENDING, count: 1}
+    state: {mandate_request: REJECTED}
+    verdict:
+      events_received:
+        - {event: mandate.rejected, rail_revocation.status: confirmed}
+    rail: {revocations: 1}
+
+- case_id: T2-RT-15
+  title: A payer PSP under the root can neither fetch nor answer a summary step-up
+  level: bacp.core.1
+  fixture:
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, psp_id: psp-a.example.in}
+      - {name: G, rail: in.ppi.gift, primitive: balance_cap, psp_id: psp-g.example.in}
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.upi.reservepay}
+      - {id: B, seller: seller-b, amount: 18000, handler: in.ppi.gift}
+      - {id: C, seller: seller-c, amount: 12000, handler: none}
+    summary_step_up: {step_up_id: stp_S, covers: [A, B, C]}
+  steps:
+    - request: {method: GET, path: /trusted-surface/step-ups/stp_S, tag: bacp-ts, signer: psp-a.example.in}
+    - trusted_surface_event: {event: step_up.approved, step_up_id: stp_S, signer: psp-a.example.in}
+    - request: {method: POST, path: "/sessions/B/complete", tag: bacp-pay, presence: HNP, body: {step_up_id: stp_S}}
+    - request: {method: GET, path: /trusted-surface/step-ups/stp_S, tag: bacp-ts, signer: mandate_manager_of_root}
+  expect:
+    responses:
+      - {path: /trusted-surface/step-ups/stp_S, signer: psp-a.example.in, status: 404, code: not_found, count: 1}
+      - {path: trusted_surface_event, status: 404, code: not_found, count: 1}
+      - {path: "/sessions/B/complete", status: 200, body.status: requires_escalation, count: 1}
+      - {path: /trusted-surface/step-ups/stp_S, signer: mandate_manager_of_root, status: 200, count: 1}
+    state: {summary_step_up: {covers_consumed: 0}}
+    rail: {settled_debits: 0}
+
+- case_id: T2-RT-16
+  title: A seller's evidence bundle carries the summary only as a hash and its own covers entry
+  level: bacp.core.1
+  fixture:
+    basket:
+      - {id: A, seller: seller-a, amount: 30200, handler: in.upi.reservepay, state: completed}
+      - {id: B, seller: seller-b, amount: 45000, handler: in.upi.intent, state: completed}
+      - {id: C, seller: seller-c, amount: 18000, handler: in.upi.intent, state: completed}
+    summary_step_up: {step_up_id: stp_S, covers: [A, B, C], state: approved}
+    issue: {transaction: B, raised: true}
+  steps:
+    - request: {method: GET, path: "/evidence/{transaction_id_B}", tag: bacp-browse, signer: bpp.seller-b.example.in}
+    - request: {method: GET, path: "/evidence/{transaction_id_B}", tag: bacp-browse, signer: agent_key}
+  expect:
+    responses:
+      - {signer: bpp.seller-b.example.in, status: 200, body.ts_renders: {step_up_id_absent: stp_S}, body.ts_render_digests: {count: 1, cover.session_id: B}, body.verification.steps_passed: 6, count: 1}
+      - {signer: agent_key, status: 200, body.ts_renders: {step_up_id_present: stp_S}, count: 1}
+    verdict: {bundle_for_seller_b: {basket_lines_of: [], code: pass}}
+
+- case_id: T2-RT-17
+  title: A block may not outlive its root, and every end of the root revokes its blocks
+  level: bacp.pay.upi.1
+  system_under_test: mandate_manager
+  fixture:
+    clock: D
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE, valid_until: D+30d, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 100000, currency: INR}, expires_at: D+30d, status: ACTIVE, preinstalled: true}
+    bpp_payment_terms: {bpp.seller-b.example.in: {vpa: seller-b@examplebank, collected_by: BPP}}
+    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block, payee: seller-b@examplebank, block_amount: {value: 100000, currency: INR}, expires_at: D+90d, funding: deposit}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, checkout_mandate_ref: mdt_CHKA0000000001, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 100000, currency: INR}}}}
+      gateway: forwards
+      trusted_surface: approve
+      expect:
+        state: {mandate_request: REJECTED}
+        verdict:
+          events_received:
+            - {event: mandate.rejected, rail_revocation.status: confirmed}
+    - wait_for: {clock: D+30d+1m}
+  expect:
+    state: {checkout_mandate: EXPIRED, payment_mandate_A: REVOKED}
+    verdict:
+      events_received:
+        - {event: mandate.revoked, mandate_id: A, cascade_of: mdt_CHKA0000000001, rail_revocation.status: confirmed}
+
+- case_id: T2-RT-18
+  title: The issuance notice of a block without an attested debit feed states what the seller can draw unseen
+  level: bacp.pay.upi.1
+  system_under_test: trusted_surface
+  fixture:
+    psp_attestation: {block_debit_feed: false}
+    notice_template: mandate_request
+    mandate_request: {rail: in.upi.reservepay, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 300000, currency: INR}}, language: hi-IN}
+  steps:
+    - render: {notice: mandate_request}
+  expect:
+    verdict: {notice: {language: hi-IN, states_unseen_draw: {seller: seller-b, up_to: {value: 300000, currency: INR}}, states_seller_may_modify: true}}
+
+- case_id: T2-RT-19
+  title: A refused block whose rail revocation is unconfirmed is exposure at its attested amount, never ₹0
+  level: bacp.pay.upi.1
+  fixture:
+    checkout_mandate: {mandate_id: mdt_CHKA0000000001, status: ACTIVE, budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    payment_mandates:
+      - {name: G, rail: in.ppi.gift, primitive: balance_cap}
+    mandate_request: {name: B, rail: in.upi.reservepay, checkout_mandate_ref: mdt_CHKA0000000001, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 200000, currency: INR}}, status: PENDING}
+    sessions: {count: 1, seller: seller-c, amount: 400000, payment_mandate: G, state: ready_for_complete}
+  steps:
+    - trusted_surface_event: {event: mandate.rejected, mandate_id: B, attestation: {primitive: sbmd_block, payee: seller-b@examplebank, block_amount: {value: 1000000, currency: INR}}, rail_revocation: {status: unconfirmed}}
+      expect:
+        state: {mandate_request: REJECTED, exposure: {value: 1000000, currency: INR}}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 403, code: mandate_exhausted, count: 1}
+    state: {exposure: {value: 1000000, currency: INR}}
+    rail: {settled_debits: 0}
+
+- case_id: T2-RT-20
+  title: The first Reserve Pay block of a new root is checked against the proposed budgets and the per-block limit
+  level: bacp.pay.upi.1
+  fixture:
+    checkout_mandate: null
+    bpp_payment_terms: {bpp.seller-b.example.in: {vpa: seller-b@examplebank, collected_by: BPP}}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, proposed_constraints: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 1000000, currency: INR}}}}
+      expect:
+        responses:
+          - {status: 403, code: mandate_scope_mismatch, param: $.rail_limits.block_amount, resolution: requires_buyer_input, count: 1}
+        rail: {calls: 0}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, proposed_constraints: {budgets: [{period: P1M, max: {value: 5000000, currency: INR}}]}, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 1200000, currency: INR}}}}
+      expect:
+        responses:
+          - {status: 403, code: mandate_scope_mismatch, param: $.rail_limits.block_amount, resolution: requires_buyer_input, count: 1}
+        rail: {calls: 0}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, proposed_constraints: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}, payee: {vpa: seller-b@examplebank, bpp_id: bpp.seller-b.example.in}, rail_limits: {block_amount: {value: 300000, currency: INR}}}}
+  expect:
+    responses:
+      - {status: 202, body.status: PENDING, count: 1}
+```
+
+!!! warning "Proposed"
+    T2-07 depends on a block-debit feed attested by the payer PSP, whose wire form `2026-10-17` does not define
+    ([Q-10](open-questions.md#q-10)); it can run only through the harness keys `psp_attestation.block_debit_feed` and
+    `rail_event`. T2-16 depends on `StepUp.delivery: ivr_callback`, which is Proposed until
+    [Q-63](open-questions.md#q-63) is answered. Both are published as data for review and are not run against this
+    version.
+
+```yaml
+- case_id: T2-07
+  title: With an attested block-debit feed, an unmatched debit is settled spend and pauses the block's mandate
+  level: bacp.pay.upi.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    payment_mandates:
+      - {name: A, rail: in.upi.reservepay, primitive: sbmd_block, payee: seller-a, block_amount: {value: 200000, currency: INR}}
+    psp_attestation: {block_debit_feed: true}
+    sessions: {count: 1, seller: seller-a, amount: 50000, payment_mandate: A, state: ready_for_complete}
+  steps:
+    - rail_event: {block: A, debit: {value: 90000, currency: INR}, matches_session: none}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+    - sweep: {replicas: all}
+  expect:
+    responses:
+      - {status: 403, code: mandate_paused, resolution: requires_buyer_input, count: 1}
+    state: {payment_mandate_A: PAUSED, pause_reasons: [unmatched_rail_debit], settled: {value: 90000, currency: INR}}
+    webhooks: [{type: mandate.status_changed, status: PAUSED, reason: unmatched_rail_debit, pause_reasons: [unmatched_rail_debit]}]
+    verdict: {trusted_surface: {shows: upi_app_revoke_route}}
+    rail: {settled_debits: 0}
+
+- case_id: T2-16
+  title: On an IVR callback each leg is its own render and no new block is offered
+  level: bacp.pay.upi.1
+  system_under_test: trusted_surface
+  fixture:
+    sessions: {count: 3, channel: upi123pay}
+    step_up: {delivery: ivr_callback, legs: 3}
+  steps:
+    - render: {each_leg: true}
+  expect:
+    verdict: {presentations: {count: 3, distinct_content_hash: true}, offers: {new_block: 0}, first_statement: {sellers: 3}}
 ```

@@ -185,6 +185,11 @@ paths:
       - session
       operationId: createSession
       summary: Create checkout session (UCP create_checkout, Beckn select)
+      description: 'One session per seller. The sessions of a multi-seller basket share a gateway-local `basket_id`; every session with one
+        `basket_id` MUST have the same principal, presence and root open Checkout Mandate, otherwise the gateway returns 400 invalid_request at
+        `$.basket_id`. The `basket_id` never leaves the gateway: it is not sent in `context.bacp`, in Beckn tags or on the payment leg.
+
+        '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -354,6 +359,12 @@ paths:
         Returns `completed` with order and payment receipt, `complete_in_progress` (payment in doubt or awaiting on_confirm),
 
         or `requires_escalation` with a step_up object. Retry ONLY with the same Idempotency-Key after GET /sessions/{id}.
+
+        In a multi-seller basket (`basket_id`) no leg is debited until every leg has a payment planned and every Reserve Pay leg has passed the
+        headroom check; a leg with no human-not-present handler raises one `rail_fallback` step-up before any debit. A `complete` after an
+        approved summary step-up consumes the session''s `covers[]` entry once, inside the atomic section keyed on the shared root open Checkout
+        Mandate; a used, changed or missing entry returns `requires_escalation`. A leg whose payment is `in_doubt` is never re-routed to another
+        handler.
 
         '
       parameters:
@@ -539,6 +550,24 @@ paths:
       - mandate
       operationId: requestMandate
       summary: Request a mandate. Returns PENDING plus a Trusted Surface link. The agent never signs or activates it.
+      description: 'With `checkout_mandate_ref` the request asks for a sibling open Payment Mandate under an existing ACTIVE root open Checkout
+        Mandate of the same principal (for example a Reserve Pay block for one more seller); the Mandate Manager builds only the Payment Mandate,
+        whose constraints narrow the root''s. A Reserve Pay request MUST carry `payee{vpa, bpp_id}` (403 mandate_scope_mismatch at `$.payee`)
+        and `rail_limits.block_amount` (403 mandate_scope_mismatch at `$.rail_limits.block_amount`). The gateway MUST hold the seller''s
+        BPP-signed payment terms for `payee.bpp_id` (the raw on_init body and its Beckn Authorization header), obtaining them first by a Beckn
+        init that it never follows with confirm, or refuse the request with 400 rail_binding_not_open_eligible; `payee.vpa` MUST equal the VPA
+        in those terms, and a block payable to the buyer app is refused for human-not-present use (400 rail_binding_not_open_eligible). The
+        block amounts under one root, the requested one included, MUST NOT sum to more than the root''s smallest `budgets[].max` (403
+        mandate_scope_mismatch at `$.checkout_mandate_ref`), and the requested block at its full amount MUST fit the root''s remaining headroom
+        in every budget window (403 mandate_exhausted at `$.checkout_mandate_ref`). Both rules, and the handler''s per-block limit in the
+        registry (403 mandate_scope_mismatch at `$.rail_limits.block_amount`), apply to every Reserve Pay request; a request without
+        `checkout_mandate_ref` is measured against its own `proposed_constraints.budgets` and the unconfirmed blocks that count against a
+        new root of the principal, with both errors at `$.rail_limits.block_amount`. These checks run before anything reaches the rail. A new
+        root open Checkout Mandate for a principal who already holds an ACTIVE root at the same Mandate Manager is refused (403
+        mandate_scope_mismatch at `$.checkout_mandate_ref`) unless the notice the principal approves states every other root''s budgets and
+        the combined total.
+
+        '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -591,6 +620,38 @@ paths:
                   - SHARE_DATA
                   validity: P30D
                   language: hi-IN
+                  webhook_url: https://agents.vaani.example.in/bacp/hooks
+              siblingReservePay:
+                value:
+                  purpose_code: P-GRO-01
+                  rail: in.upi.reservepay
+                  checkout_mandate_ref: mdt_CHK7Q2W9X4K1M3
+                  payee:
+                    vpa: dairy@examplebank
+                    bpp_id: bpp.dairy.example.in
+                  rail_limits:
+                    block_amount:
+                      value: 100000
+                      currency: INR
+                  presence_allowed:
+                  - HNP
+                  - HP
+                  proposed_constraints:
+                    amount_per_txn:
+                      value: 60000
+                      currency: INR
+                    budgets:
+                    - period: P1M
+                      max:
+                        value: 100000
+                        currency: INR
+                    categories_allow:
+                    - ONDC:RET10
+                    merchants_allow:
+                    - bpp_id: bpp.dairy.example.in
+                  validity: P30D
+                  language: hi-IN
+                  channel: app
                   webhook_url: https://agents.vaani.example.in/bacp/hooks
       responses:
         '202':
@@ -699,8 +760,9 @@ paths:
       description: 'Authenticated by the MM/PSP registry key (RFC 9421, tag `bacp-ts`). Agents calling this endpoint get 403.
 
         An event about a session or step-up is accepted only from the step-up''s Mandate Manager or payer PSP. For a session step-up these are
-        the issuer of the session''s mandate and the PSP named in `rail_binding.psp_id` of the open Payment Mandate whose `checkout_mandate_ref`
-        is the session''s mandate. For a `post_order` step-up (no session) they are the issuer of the mandate the order was placed under and the
+        the issuer of the session''s mandate and the PSP named in `rail_binding.psp_id` of the leg''s planned open Payment Mandate under the
+        session''s root. For a summary step-up over a multi-seller basket (one that carries `covers[]`) it is only the issuer of the shared root;
+        no payer PSP. For a `post_order` step-up (no session) they are the issuer of the mandate the order was placed under and the
         PSP named in `auth_binding.psp_id` of the order''s closed Payment Mandate (any of them under split tender). Any other registry key gets
         404 not_found, never 403, and nothing changes. A request under tag `bacp-ts` carries no BACP-Agent header.
 
@@ -712,6 +774,15 @@ paths:
         is assisted (channel assisted, or an AgentCredential of class assisted) and `presentation.user_action` is not the principal''s own factor
         or `presentation.assisted_by` is not an assisted operator of the session; and treats it as expired when `presentation.acted_at` is after
         the step-up''s `expires_at`. While the session is in human_handoff the approval is held, not applied, until the handoff is released.
+
+        When a root open Checkout Mandate ends (revoked by the principal, a rail safety switch or relinquishment, or expired), the Mandate
+        Manager sends one mandate.revoked per sibling open Payment Mandate, each with `cascade_of` (the root) and `rail_revocation.status` for
+        its rail primitive; a block whose revocation is unconfirmed stays exposure in the ledger, also against any new root of the same
+        principal. The gateway applies the mandate.activated of a sibling Reserve Pay block inside the atomic section keyed on the root and
+        refuses it with 403 mandate_exhausted when the block at its full amount no longer fits the root''s headroom; the Mandate Manager then
+        revokes the mandate and the block and reports `rail_revocation`. A mandate.rejected sent after the rail primitive was created carries
+        `rail_revocation` for it. A block reported with `rail_revocation.status` unconfirmed, including one refused at issuance or
+        activation that never became ACTIVE, is exposure at its attested block_amount until the revocation is confirmed or the block expires.
 
         On mandate.revoked or rail.safety_switch the gateway MUST stop all in-flight sessions under the mandate and notify
 
@@ -811,8 +882,9 @@ paths:
       summary: Fetch the gateway-signed ts_render of a step-up. Only the step-up's Mandate Manager or payer PSP may call it.
       description: 'Signed with a Mandate Manager or PSP registry key under tag `bacp-ts`, with no BACP-Agent header. Agents calling this endpoint
         get 403 trusted_surface_only. Only the step-up''s Mandate Manager or payer PSP gets the render: for a session step-up, the issuer of the
-        session''s mandate or the PSP named in `rail_binding.psp_id` of the open Payment Mandate whose `checkout_mandate_ref` is the session''s
-        mandate; for a `post_order` step-up (no session), the issuer of the mandate the order was placed under or the PSP named in
+        session''s mandate or the PSP named in `rail_binding.psp_id` of the leg''s planned open Payment Mandate under the session''s root; for a
+        summary step-up over a multi-seller basket (one whose ts_render carries `covers[]`), only the issuer of the shared root, and no payer
+        PSP; for a `post_order` step-up (no session), the issuer of the mandate the order was placed under or the PSP named in
         `auth_binding.psp_id` of the order''s closed Payment Mandate (any of them under split tender). Any other registry key gets 404 not_found,
         never 403, so that the endpoint does not reveal which step-ups exist. The gateway rate-limits the fetch (429), counting the limit per
         caller key before it looks up the step_up_id, so that a 429 never depends on whether the step-up exists.
@@ -1974,7 +2046,8 @@ paths:
                       $ref: '#/components/schemas/Message'
                   comparison:
                     type: array
-                    description: Every option and its all-in total (selection log)
+                    description: Every option and its all-in total (selection log). For a leg of a multi-seller basket it also records which option
+                      was chosen and why each other one was skipped.
                     items:
                       type: object
                       properties:
@@ -1984,6 +2057,11 @@ paths:
                           $ref: '#/components/schemas/Amount'
                         option_id:
                           type: string
+                        chosen:
+                          type: boolean
+                        reason:
+                          type: string
+                          description: Why the option was chosen (a rank_reason) or skipped (an excluded reason, or not_principal_preference).
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -3157,11 +3235,19 @@ components:
           description: 'Closed mandates only: exact payable amount, greater than zero'
         payee:
           type: object
+          description: The party a payment under this mandate is paid to. An open Payment Mandate whose rail_binding.primitive is sbmd_block (a
+            UPI Reserve Pay block) MUST name the block's payee seller (vpa, equal to the VPA in that seller's BPP-signed payment terms, and bpp_id).
+            The Mandate Manager refuses a Reserve Pay mandate request without it (403 mandate_scope_mismatch at $.payee).
           properties:
             vpa:
               type: string
+              description: The payee's UPI virtual payment address.
             bap_id:
               type: string
+              description: The buyer app, where the buyer app collects (collected_by BAP). Never the payee of a Reserve Pay block used human-not-present.
+            bpp_id:
+              type: string
+              description: The seller app (BPP subscriber id) of the payee seller, for a payee-bound primitive such as a Reserve Pay block.
         rail_binding:
           type: object
           required:
@@ -3190,7 +3276,9 @@ components:
               type: string
             attestation:
               $ref: '#/components/schemas/Jws'
-              description: PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee} hashed into this mandate
+              description: 'PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee, funding} hashed into this mandate. funding is
+                deposit or credit: the source of funds behind the primitive (for a Reserve Pay block, a savings, current or overdraft account is
+                deposit; a RuPay credit card or a pre-sanctioned credit line is credit).'
             registry_version:
               type: string
               pattern: ^\d{4}-\d{2}-\d{2}$
@@ -3209,9 +3297,14 @@ components:
                   $ref: '#/components/schemas/Amount'
                 block_amount:
                   $ref: '#/components/schemas/Amount'
+                  description: The amount of a Reserve Pay block as the payer PSP attests it. It is at most the block_amount the mandate request
+                    asked for; under a root open Checkout Mandate it counts as reserved spend at its full amount until its revocation at the rail is
+                    confirmed or it expires.
                 expires_at:
                   type: string
                   format: date-time
+                  description: When the rail authority expires. For a Reserve Pay block bound under a root open Checkout Mandate it is no later than
+                    the root's valid_until.
             pre_debit_notice:
               enum:
               - required_24h
@@ -4299,6 +4392,8 @@ components:
         webhook_url:
           type: string
           format: uri
+        basket_id:
+          $ref: '#/components/schemas/BasketId'
       allOf:
       - if:
           properties:
@@ -4477,6 +4572,212 @@ components:
                 $ref: '#/components/schemas/Amount'
         fx:
           $ref: ../schemas/fx.json
+    BasketId:
+      type: string
+      pattern: ^bkt_[A-Za-z0-9]{8,40}$
+      description: Groups the checkout sessions of one multi-seller basket at this gateway. It is gateway-local and never appears in context.bacp, in
+        Beckn tags or on the payment leg. Every session with one basket_id has the same principal, presence and root open Checkout Mandate;
+        otherwise POST /sessions returns 400 invalid_request at $.basket_id.
+    Payee:
+      type: object
+      required:
+      - vpa
+      - bpp_id
+      properties:
+        vpa:
+          type: string
+          description: The payee's UPI virtual payment address, as in the seller's BPP-signed payment terms.
+        bpp_id:
+          type: string
+          description: The seller app (BPP subscriber id) of the payee seller.
+    CoverEntry:
+      type: object
+      description: One leg covered by a summary step-up approval.
+      required:
+      - session_id
+      - checkout_hash
+      - payee
+      - amount
+      properties:
+        session_id:
+          type: string
+        checkout_hash:
+          $ref: '#/components/schemas/Hash'
+        payee:
+          $ref: '#/components/schemas/Payee'
+        amount:
+          $ref: ../schemas/common.json#/$defs/PositiveAmount
+    TsRenderDigest:
+      type: object
+      description: A summary step-up's ts_render as a seller or payer PSP receives it in an evidence bundle, so that the other sellers of the
+        basket stay out of the bundle. The approving event's presentation.content_hash equals render_hash.
+      required:
+      - step_up_id
+      - render_hash
+      - cover
+      properties:
+        step_up_id:
+          type: string
+        render_hash:
+          $ref: '#/components/schemas/Hash'
+          description: sha-256 of the compact JWS ts_render.
+        cover:
+          $ref: '#/components/schemas/CoverEntry'
+          description: The covers[] entry of the bundle's own leg.
+    BecknSignedMessage:
+      type: object
+      description: A Beckn message as the gateway received it, kept so that a verifier can check the sender's network signature without a
+        per-object JWS. body is the raw request body; authorization is its Beckn Authorization header (on Beckn 1.x and ONDC, Ed25519 over
+        created, expires and a BLAKE2b-512 digest of the body), which verifies against the registry key of the participant that the body's
+        context names, as of the signature's created time.
+      required:
+      - body
+      - authorization
+      properties:
+        body:
+          type: string
+          minLength: 1
+          description: The raw request body exactly as received, as UTF-8 text.
+        authorization:
+          type: string
+          minLength: 1
+          description: The Beckn Authorization header value exactly as received.
+    BasketLine:
+      type: object
+      description: One seller of a multi-seller basket as the Trusted Surface shows it (ts_render.basket[]).
+      required:
+      - bpp_id
+      - payee_name
+      - amount
+      - handler
+      - needs_pin
+      - funding
+      properties:
+        bpp_id:
+          type: string
+        payee_name:
+          type: string
+          description: The payee name the payer's bank returns for the payee VPA, not a name the seller or the agent supplies.
+        amount:
+          $ref: ../schemas/common.json#/$defs/PositiveAmount
+        handler:
+          $ref: ../schemas/common.json#/$defs/HandlerRef
+        needs_pin:
+          type: boolean
+          description: Whether paying this seller needs the principal's UPI PIN or another per-payment factor.
+        funds_locked:
+          $ref: ../schemas/common.json#/$defs/Amount
+          description: For a block, the amount it reserves in the principal's account or credit limit.
+        expires_at:
+          type: string
+          format: date-time
+          description: For a block, when it expires and the reserved amount is released.
+        funding:
+          enum:
+          - deposit
+          - credit
+          description: deposit when the principal's own money pays (a bank account or a prepaid balance); credit when a credit card or credit
+            line pays. This is the two-way split the principal is shown and the payer PSP attests, not the handler descriptor's funding
+            vocabulary (debit, prepaid and others), which describes a handler rather than one block or balance.
+    TsRender:
+      type: object
+      description: The payload of a ts_render, the compact JWS that the gateway signs once per step-up over the JCS form of this object and
+        serves to the step-up's Mandate Manager or payer PSP. The fields are defined on the Human participants page.
+      required:
+      - step_up_id
+      - kind
+      - reason
+      - language
+      - revoke_route
+      - grievance_contact
+      - expires_at
+      properties:
+        step_up_id:
+          type: string
+        session_id:
+          type: string
+        kind:
+          $ref: '#/components/schemas/StepUp/properties/kind'
+        reason:
+          $ref: '#/components/schemas/StepUp/properties/reason'
+        action:
+          enum:
+          - CANCEL
+          - RETURN
+          - RAISE_ISSUE
+          - INFO_PROVIDED
+          - RESOLUTION_ACCEPTED
+          - RESOLUTION_REJECTED
+          - ESCALATED
+          - CLOSED
+          - GRN
+          - CRAC
+          - MSMED_OBJECTION
+          - LEDGER_ACK
+          description: For kind post_order only, the write the principal confirms. No other value is valid.
+        order_id:
+          type: string
+        issue_id:
+          type: string
+        subject_hash:
+          $ref: '#/components/schemas/Hash'
+        language:
+          $ref: '#/components/schemas/LanguageTag'
+        checkout_hash:
+          $ref: '#/components/schemas/Hash'
+        total:
+          $ref: '#/components/schemas/Amount'
+          description: The total as one figure. On a summary step-up, the sum of basket[].amount.
+        price_breakup_hash:
+          $ref: '#/components/schemas/Hash'
+        seller_name:
+          type: string
+          description: The payee seller, from the BPP-signed quote. Absent on a summary step-up, whose sellers are in basket[].
+        assisted_operators:
+          type: array
+          items:
+            type: object
+            properties:
+              participant_id:
+                type: string
+              ref:
+                type: string
+        summary:
+          $ref: '#/components/schemas/LangText'
+        counterparty_text:
+          type: array
+          items:
+            type: object
+            required:
+            - label
+            - text
+            properties:
+              label:
+                type: string
+              text:
+                type: string
+        revoke_route:
+          type: string
+          format: uri
+        grievance_contact:
+          type: string
+        basket:
+          type: array
+          minItems: 2
+          description: On a summary step-up over a multi-seller basket, one line per seller, in the order the Trusted Surface states them. The
+            Trusted Surface states the number of sellers first.
+          items:
+            $ref: '#/components/schemas/BasketLine'
+        covers:
+          type: array
+          minItems: 1
+          description: On a summary step-up only, the legs the approval covers. Only the shared root's Mandate Manager fetches a render that
+            carries covers[] and posts its result.
+          items:
+            $ref: '#/components/schemas/CoverEntry'
+        expires_at:
+          type: string
+          format: date-time
     StepUp:
       type: object
       required:
@@ -4513,7 +4814,10 @@ components:
           - split_tender_afa_on_total
           - afa_crossborder_cnp
           - presence_proof
-          description: presence_proof is the reason of a post_order step-up.
+          - rail_fallback
+          description: presence_proof is the reason of a post_order step-up. rail_fallback is a confirm step-up raised when a leg of a
+            multi-seller basket has no human-not-present handler, or when the planned payment of a leg changes its funding, fee-bearer, payee or
+            collector; a rail-only change is logged in comparison[] and raises no step-up.
         summary:
           $ref: '#/components/schemas/LangText'
         trusted_surface_url:
@@ -4538,6 +4842,16 @@ components:
           type: string
           format: date-time
           description: At most 15 minutes ahead; at least 5 minutes ahead when delivery is ivr_callback or assisted.
+        covers:
+          type: array
+          minItems: 1
+          description: On a summary step-up (reason rail_fallback) over a multi-seller basket, the legs the approval covers. Each entry is consumed
+            at most once, inside the atomic section keyed on the shared root open Checkout Mandate, by the complete of the session it names, and
+            only while that session's checkout_hash, payee and amount still equal the entry. When the summary is declined or expires, every entry
+            is void. Only the shared root's Mandate Manager fetches the summary and posts its result. A summary approves a plan, never a payment;
+            each payee still gets its own closed mandate and its own per-payee factor.
+          items:
+            $ref: '#/components/schemas/CoverEntry'
         a2a_state:
           const: TASK_STATE_AUTH_REQUIRED
         mcp_error:
@@ -4705,6 +5019,8 @@ components:
             $ref: '#/components/schemas/Participant'
         handoff:
           $ref: '#/components/schemas/Handoff'
+        basket_id:
+          $ref: '#/components/schemas/BasketId'
         messages:
           type: array
           items:
@@ -4793,6 +5109,33 @@ components:
         parent_mandate_id:
           type: string
           description: For sub-agent delegation. May only narrow.
+        checkout_mandate_ref:
+          type: string
+          pattern: ^mdt_[A-Za-z0-9]{12,40}$
+          description: Requests a sibling open Payment Mandate under an existing root open Checkout Mandate, for example a Reserve Pay block for
+            one more seller. It MUST name an ACTIVE root open Checkout Mandate of the same principal. The Mandate Manager then builds only an open
+            Payment Mandate whose constraints narrow the root's, never a new Checkout Mandate or budget. The block amounts of all Reserve Pay
+            mandates under the root, the requested one included, MUST NOT exceed the smallest budgets[].max of the root (403
+            mandate_scope_mismatch), and the requested block at its full amount MUST fit the root's headroom (budget max less exposure) in every
+            window (403 mandate_exhausted). The attested block expiry MUST NOT be later than the root's valid_until.
+        payee:
+          $ref: '#/components/schemas/Payee'
+          description: The payee of a payee-bound primitive. REQUIRED when the requested rail is UPI Reserve Pay (primitive sbmd_block); without
+            it the request is refused with 403 mandate_scope_mismatch at $.payee. The gateway MUST hold the BPP-signed payment terms of the
+            seller bpp_id (obtaining them first by a Beckn init that it never follows with confirm) or refuse with 400
+            rail_binding_not_open_eligible, and payee.vpa MUST equal the VPA in those terms. A block whose payee is the buyer app (collected_by
+            BAP) is refused for human-not-present use with 400 rail_binding_not_open_eligible.
+        rail_limits:
+          type: object
+          description: The rail limits the request asks the payer PSP to set up. REQUIRED with block_amount when the requested rail is UPI
+            Reserve Pay; without it the request is refused with 403 mandate_scope_mismatch at $.rail_limits.block_amount.
+          properties:
+            block_amount:
+              $ref: ../schemas/common.json#/$defs/PositiveAmount
+              description: The Reserve Pay block the principal is asked to set up. It is checked against the handler's per-block limit
+                and the root's sum-of-blocks rule and headroom (the proposed budgets when the request has no checkout_mandate_ref) before
+                anything reaches the rail and shown in the notice; the payer PSP creates no larger block, and the Mandate
+                Manager refuses issuance, and revokes the block, if the attested block_amount is larger.
         webhook_url:
           type: string
           format: uri
@@ -4884,6 +5227,14 @@ components:
           type: string
         attestation:
           type: object
+        cascade_of:
+          type: string
+          description: On mandate.revoked of a sibling open Payment Mandate, the mandate_id of the root open Checkout Mandate whose revocation
+            caused it. The Mandate Manager sends one mandate.revoked per sibling Payment Mandate.
+        rail_revocation:
+          $ref: '#/components/schemas/RailRevocation'
+          description: On mandate.revoked of a sibling open Payment Mandate, and on mandate.rejected or mandate.revoked after a refusal that came
+            after the rail primitive was created, whether that primitive is revoked at the rail.
       allOf:
       - if:
           properties:
@@ -4913,6 +5264,19 @@ components:
                 user_action:
                   not:
                     const: decline
+    RailRevocation:
+      type: object
+      description: Whether the rail primitive behind a revoked open Payment Mandate (for example a Reserve Pay block) is revoked at the rail.
+        Reported per block. Until status is confirmed, or the primitive has expired, the block stays exposure in the mandate ledger.
+      required:
+      - status
+      properties:
+        status:
+          enum:
+          - confirmed
+          - unconfirmed
+        rail_ref:
+          type: string
     Order:
       type: object
       required:
@@ -5289,6 +5653,12 @@ components:
               $ref: '#/components/schemas/Hash'
             disclosures_hash:
               $ref: '#/components/schemas/Hash'
+            bpp_signed_payment_terms:
+              $ref: '#/components/schemas/BecknSignedMessage'
+              description: The seller's payment terms from on_init (Beckn payments[], including collected_by and the payee VPA in
+                params.virtual_payment_address), as the gateway received them (the raw on_init body and its Beckn Authorization header). REQUIRED for every Reserve Pay leg. Verification
+                step 6 checks the signature and compares the payee of the PSP payment receipt, and for Reserve Pay the open Payment Mandate's payee,
+                with it.
         receipts:
           type: array
           items:
@@ -5316,6 +5686,13 @@ components:
             content_hash and against the seller-signed quote.
           items:
             $ref: '#/components/schemas/Jws'
+        ts_render_digests:
+          type: array
+          description: Only in a bundle released to a seller or a payer PSP. For each summary step-up over a multi-seller basket, the sha-256 of
+            its ts_render and the covers[] entry of this leg, in place of the full render, which lists every seller of the basket and goes only to
+            the principal, the grievance officer, the ODR body and a regulator.
+          items:
+            $ref: '#/components/schemas/TsRenderDigest'
         verification:
           type: object
           description: Result of the dispute verification run by the gateway (the AP2 five steps plus step 6, Trusted Surface events)
@@ -5382,12 +5759,19 @@ components:
           description: Every reason for which the mandate is paused. The mandate stays PAUSED while this set is not empty. Only the principal,
             on the Trusted Surface, removes principal_paused; the gateway removes only binding_ineligible, and only on a strictly newer registry
             version (or conformance attestation) in which the binding is eligible; reissue_required is never removed, and the mandate is
-            re-issued instead. Empty or absent when the status is not PAUSED.
+            re-issued instead. unmatched_rail_debit (a debit on a Reserve Pay block that matches no BACP payment, reported by a payer PSP that
+            attests a block-debit feed) is removed only by the principal on the Trusted Surface. Empty or absent when the status is not PAUSED.
           items:
             enum:
             - principal_paused
             - binding_ineligible
             - reissue_required
+            - unmatched_rail_debit
+        cascade_of:
+          type: string
+          description: For a REVOKED sibling open Payment Mandate, the root open Checkout Mandate whose revocation caused it.
+        rail_revocation:
+          $ref: '#/components/schemas/RailRevocation'
         registry_version:
           type: string
           pattern: ^\d{4}-\d{2}-\d{2}$
@@ -5642,6 +6026,7 @@ components:
           cod_allowed: false
         payee:
           vpa: ganeshkirana@examplebank
+          bpp_id: bpp.kirana.example.in
         rail_binding:
           type: upi.reservepay.block
           primitive: sbmd_block
@@ -6083,7 +6468,7 @@ components:
             amount: *id001
         payment:
           handler: upi.reservepay.block
-          collected_by: BAP
+          collected_by: BPP
           type: ON-ORDER
           status: not_started
         messages:
@@ -6184,7 +6569,7 @@ components:
             currency: INR
         payment:
           handler: upi.reservepay.block
-          collected_by: BAP
+          collected_by: BPP
           type: ON-ORDER
           status: confirmed
           receipt:
@@ -6245,7 +6630,7 @@ components:
             currency: INR
         payment:
           handler: upi.reservepay.block
-          collected_by: BAP
+          collected_by: BPP
           type: ON-ORDER
           status: in_doubt
         messages:
