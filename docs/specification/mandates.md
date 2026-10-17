@@ -114,9 +114,11 @@ than its parent's.
   "payee": {"vpa": "ganeshkirana@examplebank"},
   "rail_binding": {
     "type": "in.upi.reservepay",
+    "primitive": "sbmd_block",
     "rail_ref": "SBMD-HDFX-000123456",
     "psp_id": "psp.example.in",
     "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl",
+    "registry_version": "2026-10-17",
     "rail_limits": {
       "block_amount": {"value": 300000, "currency": "INR"},
       "expires_at": "2026-11-11T10:00:00+05:30"
@@ -170,6 +172,10 @@ Manager** (MM) issues it.
    `QUOTE`, `ORDER`, `PAY`, `CANCEL`, `RETURN`, `RAISE_ISSUE`, `SHARE_DATA`) are requested, and the
    Trusted Surface shows that full scope to the principal before approval.
 2. Before anything reaches the Trusted Surface, the gateway or the MM **MUST** reject the request:
+    - with `400 rail_binding_not_open_eligible` if `rail` resolves to a handler that cannot back an open
+      mandate at this gateway: one that is not open-eligible or has no `binding.open_primitives`, a
+      `reserved` or `deprecated` descriptor, or a `pilot` descriptor that the gateway's conformance
+      attestation does not list ([Handler binding](#handler-binding));
     - with `403 constraint_unknown` if `proposed_constraints` has a key this page does not define
       (see [Fail-closed handling](#unknown-constraints));
     - with `403 mandate_scope_mismatch` if it has no `amount_per_txn`; has no periodic budget; has
@@ -185,10 +191,18 @@ Manager** (MM) issues it.
    withdrawal route and grievance route. The principal approves with an explicit action and the
    rail's own authentication (for UPI, the UPI PIN).
 5. The payer PSP creates or links the rail primitive (for example a Reserve Pay block, a UPI Circle
-   delegation or an AutoPay mandate) and signs a rail **attestation**: a JWS over
-   `{rail_ref, type, limits, expiry, payee}`.
-6. The MM checks that every BACP constraint is at or below the attested rail limits, then builds
-   the open Checkout and open Payment Mandates. The **principal** signs both
+   delegation or an AutoPay mandate). It **MUST** use a primitive listed in the handler descriptor's
+   `binding.open_primitives`, and signs a rail **attestation**: a JWS over
+   `{rail_ref, type, primitive, limits, expiry, payee}`.
+6. The MM checks [handler eligibility](#handler-binding) against the current registry, taken
+   from the dated BACP release or a registry-signed snapshot and never from a gateway endpoint,
+   records that registry's version in `rail_binding.registry_version`, and **MUST** refuse
+   issuance (`rail_binding_not_open_eligible`) if the attested `primitive` is not in the
+   descriptor's `binding.open_primitives`, the descriptor is not open-eligible, or its `status`
+   is neither `live` nor an attested `pilot`. For a `pilot` handler the MM **MUST** first verify the
+   gateway's [conformance attestation](conformance.md#conformance-attestation) and find the handler
+   in its `pilots[]`. The MM then checks that every BACP constraint is at or below the attested rail
+   limits, and builds the open Checkout and open Payment Mandates. The **principal** signs both
    (`signatures[].role: principal`) and the **MM countersigns** both
    (`role: mandate_manager`). The MM allocates a status-list entry per mandate and issues the
    ConsentReceipt.
@@ -198,7 +212,8 @@ Manager** (MM) issues it.
 
 A verifier **MUST** accept an open mandate only if a principal signature and an MM signature both
 verify against registry-resolvable keys of those roles, and the rail attestation verifies against
-a key of role PSP and matches `rail_binding.rail_ref` and `rail_binding.type`.
+a key of role PSP and matches `rail_binding.rail_ref`, `rail_binding.type` and
+`rail_binding.primitive`.
 
 ```mermaid
 sequenceDiagram
@@ -373,15 +388,92 @@ used one returns `403 mandate_scope_mismatch`.
 
 ## Handler binding of open mandates {#handler-binding}
 
-An open Payment Mandate's `rail_binding.type` names the payment handler that backs it. Handlers are
-grouped into binding classes in the [Handler Registry](payments/handler-registry.md).
+An open Payment Mandate's `rail_binding.type` names the payment handler that backs it, and
+`rail_binding.primitive` names the mandate primitive of that handler that carries the standing
+authority (one of its `mandate_primitives[].type`). Handlers are grouped into binding classes in the
+[Handler Registry](payments/handler-registry.md).
 
 - `rail_binding.type` **MUST** validate against the class-O id pattern (`RailTypeV1`) or a legacy
   alias of one. Ids of class C, A, D or N handlers fail schema validation and are refused.
+- **Rail- or issuer-enforced primitives only.** An open Payment Mandate **MAY** bind to any class-O
+  handler, but only through a mandate primitive whose limits the rail or the issuer enforces
+  (`limits_enforced_by` is `rail` or `issuer`). The descriptor lists those primitives in
+  `binding.open_primitives`. `rail_binding.primitive` **MUST** be one of them, and the PSP
+  attestation **MUST** cover it. For example, `in.ppi.wallet` lists only `ppi_emandate`, so a
+  wallet balance (`balance_cap`) never backs an open mandate.
 - Schema validity is not eligibility. After alias resolution the handler's descriptor **MUST**
-  have `open_eligible: true` and `status: live`, or `status: pilot` only where the gateway's
-  conformance attestation lists that pilot. A `reserved` or `deprecated` descriptor (for example
-  the reserved `in.upi.uap.*`) **MUST NOT** back a mandate.
+  have `open_eligible: true`, **MUST** list `rail_binding.primitive` in `binding.open_primitives`,
+  and **MUST** have `status: live`, or `status: pilot` only where the gateway's
+  [conformance attestation](conformance.md#conformance-attestation) lists that pilot in `pilots[]`
+  and has not expired. A `reserved` or `deprecated` descriptor (for example the reserved
+  `in.upi.uap.*`) **MUST NOT** back a mandate. A binding that fails any of these checks gets
+  `400 rail_binding_not_open_eligible`.
+- **Checked at issuance.** The MM **MUST** refuse to issue an open Payment Mandate whose binding
+  fails these checks, and **MUST** verify the gateway's conformance attestation before it issues
+  one on a `pilot` handler ([Issuance](#issuance), step 6). Until [Q-60](open-questions.md#q-60)
+  defines the conformance-authority role, no attestation verifies, so an MM refuses open mandates
+  on every `pilot` handler, including `in.upi.circle` and `in.card.agentic`.
+- **Registry source.** The MM and the gateway **MUST** take the registry from the dated BACP
+  release (its `source/handlers/registry.json`) or from a snapshot signed by the registry, and
+  **MUST NOT** take it from a gateway endpoint such as `GET /payment-handlers`, which is unsigned
+  ([Discovery](discovery.md)). The MM records the version it checked against in
+  `rail_binding.registry_version`.
+- **Re-checked at every `complete`.** Eligibility (status, attestation and primitive) is not fixed
+  at issuance. The gateway **MUST** re-check it at step 1 of [Deterministic evaluation](#evaluation)
+  on every `complete`, against the current registry, never against a copy taken when the mandate
+  was issued.
+- **24-hour freshness.** A gateway **MUST** adopt a status downgrade within 24 hours of the release
+  or snapshot that makes it. It **MUST** refuse an HNP `complete` on a handler whose descriptor copy
+  it last refreshed from the registry source more than 24 hours earlier, with
+  `400 rail_binding_not_open_eligible`, `reasons: [registry_copy_stale]` and
+  `resolution: recoverable`. A stale copy is a gateway condition, not a fault of the binding: the
+  gateway does not pause the mandate, the agent retries later without involving the principal, and
+  an HP `complete` is not refused for staleness.
+- **A downgrade pauses the mandate.** When a registry change, or a change to the gateway's
+  conformance attestation, makes the binding of a mandate ineligible (for example a handler moved
+  from `live` to `pilot` without an attested pilot, or to `reserved` or `deprecated`), the gateway
+  **MUST** add the pause reason `binding_ineligible` to every affected mandate, recording the
+  `registry_version` of the release or snapshot that made the binding ineligible. If the mandate
+  was `ACTIVE`, it becomes `PAUSED` and the gateway sends `mandate.status_changed` (`PAUSED`,
+  `reason: binding_ineligible`, with `pause_reasons` and `affected_sessions`) to the agent and
+  cancels every open session under the mandate with the message `rail_binding_not_open_eligible`.
+  Every later `complete` under it gets `400 rail_binding_not_open_eligible` with
+  `reasons: [binding_ineligible]` while the binding stays ineligible.
+- **Pause reasons form a set.** A paused mandate carries the set of reasons for which it is paused:
+  `principal_paused` (a pause by the principal on the Trusted Surface), `binding_ineligible` and
+  `reissue_required` (below). The mandate stays `PAUSED` while any reason remains. A principal pause
+  that arrives while a binding pause is in force is added to the set, never dropped, and a binding
+  pause that arrives while the principal has paused the mandate is added in the same way. Only the
+  principal, on the Trusted Surface, removes `principal_paused`. The gateway removes only
+  `binding_ineligible`, and only on a registry version strictly newer than the one recorded for the
+  pause in which the binding is eligible again (or, for a pause caused by the gateway's conformance
+  attestation, a newer attestation that lists the pilot); a replica that still holds the recorded
+  or an older version **MUST NOT** remove it. When the last reason is removed the mandate returns to `ACTIVE`
+  and the gateway sends `mandate.status_changed` (`ACTIVE`) to the agent; a change to the set of a
+  mandate that stays `PAUSED` is sent as `mandate.status_changed` (`PAUSED`) with the new
+  `pause_reasons`. While a binding reason is in the set, `complete` gets
+  `400 rail_binding_not_open_eligible` at step 1 of [evaluation](#evaluation); when
+  `principal_paused` is the only reason, it gets `403 mandate_paused`.
+- **The Mandate Manager is not notified by the gateway.** The MM reads the same registry and can
+  detect the change itself; a gateway-to-MM event is not defined in `2026-10-17`
+  ([Q-61](open-questions.md#q-61)). The gateway **MUST** record every addition and removal of
+  `binding_ineligible` or `reissue_required` as an InstructionLog entry at stage `mandate`
+  (actor `gateway`) whose content carries the reason and the `registry_version`, in the chain of
+  every session the change cancels, and otherwise in the `mandate` entry of the next session
+  opened under the mandate ([Evidence](evidence.md#stages)).
+- **The agent does not turn a binding pause into a request.** This binding pause is not a
+  principal pause: the principal does not resume it. On `binding_ineligible` the agent **MUST NOT**
+  open a Trusted-Surface resume request or a re-issue request (`POST /mandates`) unless the
+  principal gives a new instruction. It **MAY** tell the principal that payments under the mandate
+  are paused and offer another payment method or an HP checkout
+  ([Revocation, pause and expiry](#revocation)).
+- **Mandates issued before these rules are re-issued.** An open Payment Mandate issued without
+  `rail_binding.primitive` or `rail_binding.registry_version` cannot be amended, because the
+  principal and MM signatures cover its content. The gateway **MUST** pause it with the reason
+  `reissue_required`, and every `complete` under it gets `400 rail_binding_not_open_eligible` with
+  `reasons: [reissue_required]` (not `mandate_schema_invalid`), so that the agent is told to have
+  it re-issued. The gateway never removes `reissue_required`; the mandate **MUST** be re-issued
+  through [Issuance](#issuance) with an eligible `primitive` and `registry_version`.
 - BACP constraints **MUST** be at or below the descriptor's rail limits. The MM rejects a mandate
   that exceeds its binding. The rail is authoritative for its own limits, but **MUST NOT** be
   relied on to enforce BACP budgets ([Usage ledger](#usage-ledger)).
@@ -389,13 +481,17 @@ grouped into binding classes in the [Handler Registry](payments/handler-registry
   Mandate per seller block under one open Checkout Mandate whose budgets cap the total, or an
   any-merchant primitive such as UPI Circle, or HP.
 
+!!! note "Settled"
+    Binding open mandates to class-O handlers through rail- or issuer-enforced primitives is settled
+    in `2026-10-17` ([design choice (a)](open-questions.md#proposed-a)). Agentic card tokens stay
+    pilot-gated ([Q-39](open-questions.md#q-39)), and `in.erupi` is `pilot` until
+    [Q-38](open-questions.md#q-38) is answered.
+
 !!! warning "Proposed"
-    Binding an open mandate to **every** class-O handler (card e-mandates, agentic card tokens,
-    eNACH debit, PPI e-mandates, gift PPIs, store credit, loyalty, `bacp.credit_ledger` and the
-    rest of class O) is Proposed and awaits an owner decision; see
-    [Proposed design choice (a)](open-questions.md#proposed-a) and, for agentic card tokens,
-    [Q-39](open-questions.md#q-39). The UPI standing authorities (Reserve Pay, Circle, AutoPay)
-    are the baseline.
+    `in.store_credit` and `in.loyalty` (limits enforced by the merchant) and `bacp.credit_ledger`
+    (limits enforced by BACP) are class O but have `open_eligible: false` in `2026-10-17`. Letting
+    them back open mandates is Proposed and waits for [Q-59](open-questions.md#q-59) and
+    [Q-46](open-questions.md#q-46).
 
 ## Step-up {#step-up}
 
@@ -454,7 +550,13 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
    zero; a boolean is not an integer. Otherwise `403 amount_not_positive` (`unrecoverable`),
    before any other step and before any reservation.
 1. **Structure.** Unknown constraint keys give `403 constraint_unknown`. A schema failure gives
-   `400 mandate_schema_invalid`. A rail binding that is not open-eligible is refused.
+   `400 mandate_schema_invalid`. A rail binding that is not eligible against the current registry
+   and the gateway's conformance attestation, or an open Payment Mandate issued without
+   `rail_binding.primitive` or `rail_binding.registry_version`, gives
+   `400 rail_binding_not_open_eligible` ([Handler binding](#handler-binding)). For an open Payment
+   Mandate whose only schema failure is a missing `rail_binding.primitive` or
+   `rail_binding.registry_version`, `rail_binding_not_open_eligible` takes precedence over
+   `mandate_schema_invalid`.
 2. **Open mandate.** The principal and MM signatures verify (`403 mandate_invalid_signature`).
    The rail attestation verifies and matches the binding. The status list does not mark the
    mandate revoked (`403 mandate_revoked`). `status` is `ACTIVE` (otherwise `mandate_revoked`,
@@ -506,12 +608,18 @@ is a read-only view of it.
   usage. A receipt that fails these checks is refused (`400 receipt_invalid`).
 - **Reservations.** For every open Payment Mandate the ledger also holds in-flight reservations,
   keyed by closed Payment Mandate id, each with an amount and a time. Exposure is settled spend
-  plus reservations. Budgets, `max_executions`, every rail-cap pre-check and split-order detection
-  **MUST** count reservations as spent.
+  plus reservations. Exposure against an open Checkout Mandate's budgets is the settled spend and
+  reservations of every open Payment Mandate under it. Budgets, `max_executions`, every rail-cap
+  pre-check and split-order detection **MUST** count reservations as spent.
 - **Atomic section.** For `complete`, steps 5 to 8 and 13 of
-  [Deterministic evaluation](#evaluation) **MUST** run as one atomic, linearisable operation per
-  open mandate id: mutual exclusion keyed on `mandate_id`, or compare-and-reserve on a store with
-  equivalent guarantees. The rail debit **MUST** run after the atomic section, never inside it.
+  [Deterministic evaluation](#evaluation) **MUST** run as one atomic, linearisable operation keyed
+  on the **root open Checkout Mandate**: the open Checkout Mandate named by the open Payment
+  Mandate's `checkout_mandate_ref`, followed through `parent_mandate_id` to the top of any
+  delegation chain. Mutual exclusion keyed on that `mandate_id`, or compare-and-reserve on a store
+  with equivalent guarantees, satisfies this. Sibling open Payment Mandates under one open Checkout
+  Mandate therefore share one atomic section, and a split-tender payment plan reserves every
+  tender in one section. The rail debit **MUST** run after the atomic section, never inside it
+  ([Atomic reservation](security-and-privacy.md#atomic-reservation)).
 - **Resolution.** A reservation becomes settled spend only when a PSP-signed success receipt is
   applied. It is released on a PSP-signed failure receipt or a refused debit. While a payment is
   `in_doubt` its reservation is kept until reconciliation resolves it. When every payment on a
@@ -521,13 +629,14 @@ is a read-only view of it.
 - **The rail is not the backstop.** A gateway **MUST NOT** rely on rail-enforced limits to bound
   BACP budgets. A rail authority can be far larger than the budget.
 - **Replicas.** A gateway that runs as several instances **MUST** share the ledger and keep it
-  linearisable per mandate (a single writer or a transactional store). A per-process lock is not
-  enough. Keeping budgets atomic across gateways, for a principal with two BAPs, is open
-  ([Q-36](open-questions.md#q-36)).
+  linearisable per root open Checkout Mandate (a single writer or a transactional store). A
+  per-process lock is not enough. Keeping budgets atomic across gateways, for a principal with two
+  BAPs, is open ([Q-36](open-questions.md#q-36)).
 
-**Conformance.** N concurrent `complete` calls on one open mandate **MUST NOT** settle more than any
-`budgets[].max` allows, even when the rail authority is far larger than the budget, and **MUST
-NOT** leave reservations behind.
+**Conformance.** N concurrent `complete` calls on one open mandate, or on sibling open Payment
+Mandates under one open Checkout Mandate, **MUST NOT** settle more than any `budgets[].max` allows,
+even when the rail authority is far larger than the budget, and **MUST NOT** leave reservations
+behind.
 
 **Positive amounts only.** Every payable amount (a closed mandate `amount`, a payment Receipt
 `amount`, a split-plan tender) **MUST** be greater than zero. Direction is never carried by sign.
@@ -553,7 +662,7 @@ sequenceDiagram
     A->>A: Close open mandates with cnf key for checkout_hash and exact amount
     A->>G: POST complete with closed Checkout and Payment Mandates (tag bacp-pay)
     G->>G: Steps 0 to 4 and 9 to 12
-    G->>L: Lock the open mandate id
+    G->>L: Lock the root open Checkout Mandate id
     L-->>G: Exposure (settled spend plus reservations)
     G->>G: Constraints, split order, rail caps, step-up thresholds
     G->>L: Consume closed Payment Mandate and reserve the amount
@@ -574,8 +683,8 @@ stateDiagram-v2
     [*] --> PENDING: agent requests mandate
     PENDING --> ACTIVE: principal approves on Trusted Surface
     PENDING --> REJECTED: principal declines or request expires
-    ACTIVE --> PAUSED: principal pauses
-    PAUSED --> ACTIVE: principal resumes
+    ACTIVE --> PAUSED: a pause reason is added (principal, binding ineligible, re-issue required)
+    PAUSED --> ACTIVE: the last pause reason is removed
     ACTIVE --> EXHAUSTED: budget, block or max_executions used up
     ACTIVE --> REVOKED: principal, safety switch, rail or agent relinquish
     PAUSED --> REVOKED: principal revokes
@@ -595,13 +704,26 @@ stateDiagram-v2
   `affected_sessions`) within that time.
 - The gateway **MUST** then cancel every open session under the mandate (`incomplete`,
   `ready_for_complete`, `requires_escalation`) with message `mandate_revoked`, and refuse every new
-  commitment: `complete` returns `403 mandate_revoked`. Pause and expiry behave the same way with
-  `mandate_paused` and `mandate_expired`.
+  commitment: `complete` returns `403 mandate_revoked`. A pause by the principal and expiry behave
+  the same way with `mandate_paused` and `mandate_expired`. A principal pause adds the reason
+  `principal_paused`, and a principal resume removes only that reason
+  ([pause reasons](#handler-binding)).
 - Revocation stops **new** commitments only. Cancel, return and issue on orders already placed
   under the mandate stay allowed as protective actions, with `presence: HP`
   ([Post-order gate](checkout/post-order.md#post-order-gate)).
 - If a debit races a revocation, the rail rejects it, because the Trusted Surface revokes the rail
   primitive first.
+- A **binding pause** is different. The gateway adds the reason `binding_ineligible` when a
+  mandate's rail binding stops being eligible after a registry or conformance-attestation change,
+  and `reissue_required` to an open Payment Mandate issued without `rail_binding.primitive` or
+  `rail_binding.registry_version`. Sessions are cancelled with `rail_binding_not_open_eligible`,
+  and while a binding reason is in the set, `complete` returns
+  `400 rail_binding_not_open_eligible`, not `mandate_paused`. The gateway removes
+  `binding_ineligible` itself on a strictly newer registry version in which the binding is
+  eligible, never `principal_paused` or `reissue_required`, and the mandate stays `PAUSED` while any
+  reason remains. The gateway does not notify the MM; the MM reads the same registry
+  ([Q-61](open-questions.md#q-61)). Pause and lift are written to the InstructionLog with the
+  `registry_version` ([Handler binding](#handler-binding)).
 - A mandate becomes `EXPIRED` after `valid_until`, or when its rail binding expires
   (`rail_limits.expires_at`). Validity is bounded by the purpose's maximum validity.
 
@@ -751,6 +873,7 @@ machine-readable form. A REST export interface is not part of this version
 | `mandate_invalid_signature` | 403 | unrecoverable |
 | `mandate_invalid` | 403 | unrecoverable |
 | `mandate_schema_invalid` | 400 | unrecoverable |
+| `rail_binding_not_open_eligible` | 400 | requires_buyer_input; recoverable for `reasons: [registry_copy_stale]` |
 | `constraint_unknown` | 403 | unrecoverable |
 | `mandate_expired`, `mandate_revoked`, `mandate_paused`, `mandate_exhausted` | 403 | requires_buyer_input |
 | `mandate_scope_mismatch` | 403 | requires_buyer_review |

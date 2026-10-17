@@ -180,6 +180,14 @@
         "open_eligible": {
           "type": "boolean"
         },
+        "open_primitives": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.json#/$defs/MandatePrimitiveType"
+          },
+          "description": "The mandate primitives that may back an open (human-not-present) payment mandate on this handler. Each entry MUST be a mandate_primitives[].type of this descriptor whose limits_enforced_by is rail or issuer. An open payment mandate whose rail_binding.primitive is not listed here is refused with rail_binding_not_open_eligible. For example, in.ppi.wallet lists only ppi_emandate, so a wallet balance never backs an open mandate."
+        },
         "open_requires": {
           "type": "string",
           "description": "Condition for open eligibility, e.g. 'only with an AFA-registered e-mandate reference'."
@@ -218,30 +226,7 @@
         "type": "object",
         "properties": {
           "type": {
-            "enum": [
-              "sbmd_block",
-              "otm_block",
-              "circle_delegation",
-              "upi_autopay_umn",
-              "card_emandate",
-              "agentic_token_intent",
-              "nach_umrn",
-              "ppi_emandate",
-              "balance_cap",
-              "voucher",
-              "programmability_rules",
-              "upms_registration",
-              "topup_mandate",
-              "loan_sanction",
-              "payee_binding",
-              "approval_policy",
-              "assisted_session",
-              "credit_limit",
-              "factoring_unit",
-              "gpa_block",
-              "pps_registration",
-              "none"
-            ]
+            "$ref": "common.json#/$defs/MandatePrimitiveType"
           },
           "ref_name": {
             "type": "string",
@@ -611,6 +596,40 @@
             "properties": {
               "hnp": {
                 "const": "rail_enforced"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "An open-eligible descriptor names at least one open-eligible mandate primitive.",
+      "if": {
+        "properties": {
+          "binding": {
+            "properties": {
+              "open_eligible": {
+                "const": true
+              }
+            },
+            "required": [
+              "open_eligible"
+            ]
+          }
+        },
+        "required": [
+          "binding"
+        ]
+      },
+      "then": {
+        "properties": {
+          "binding": {
+            "required": [
+              "open_primitives"
+            ],
+            "properties": {
+              "open_primitives": {
+                "minItems": 1
               }
             }
           }

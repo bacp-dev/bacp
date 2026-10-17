@@ -209,7 +209,12 @@ accepted during its deprecation window, such as `upi.reservepay.block`.
   (`requires_buyer_input`).
 
 `GET /payment-handlers` (public, unsigned, cacheable with `ETag`) returns the
-registry as handler descriptors. `POST /payment-handlers/intersect` computes an
+registry as handler descriptors. The response **MUST** carry a
+`Cache-Control` header with a `max-age` of at most 86400 (for example
+`Cache-Control: max-age=86400`), so that no cache holds a copy for more than
+24 hours. Because the response is unsigned, a Mandate Manager or gateway
+**MUST NOT** use it as its registry source for open-mandate eligibility
+([Handler binding](mandates.md#handler-binding)). `POST /payment-handlers/intersect` computes an
 intersection. In BACP `2026-10-17` the intersect request MUST carry a
 `negotiation_id`; intersection for a plain checkout session is not yet
 supported ([Q-45](open-questions.md#q-45)). Details are on

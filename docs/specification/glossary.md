@@ -311,7 +311,8 @@ Rail binding { #rail-binding }
 Reservation ledger { #reservation-ledger }
 :   The gateway's per-mandate record of settled spends (from signed receipts)
     and in-flight reservations. Budget, usage and rail-cap checks count
-    reservations as spent, inside one atomic section per mandate.
+    reservations as spent, inside one atomic section keyed on the root open
+    Checkout Mandate.
 
 Revocation { #revocation }
 :   Ending a mandate, by the principal on the Trusted Surface, by the rail

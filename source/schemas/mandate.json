@@ -322,9 +322,11 @@
       "type": "object",
       "required": [
         "type",
+        "primitive",
         "rail_ref",
         "psp_id",
-        "attestation"
+        "attestation",
+        "registry_version"
       ],
       "properties": {
         "type": {
@@ -336,7 +338,11 @@
               "$ref": "common.json#/$defs/RailTypeV1"
             }
           ],
-          "description": "Any class-O handler (binding rule B-1; RailTypeV1) or a legacy RailType alias. Class C/A/D/N ids never validate here."
+          "description": "Any class-O handler (binding rule B-1; RailTypeV1) or a legacy RailType alias. Class C/A/D/N ids never validate here. Schema validity is not eligibility: the resolved descriptor's open_eligible, open_primitives and status decide."
+        },
+        "primitive": {
+          "$ref": "common.json#/$defs/MandatePrimitiveType",
+          "description": "The mandate primitive that carries this standing authority: one of the bound handler's mandate_primitives[].type, for example sbmd_block or ppi_emandate. Covered by the PSP attestation. It MUST be listed in the handler descriptor's binding.open_primitives; otherwise the Mandate Manager refuses issuance and the gateway refuses the binding with rail_binding_not_open_eligible."
         },
         "rail_ref": {
           "type": "string",
@@ -347,7 +353,12 @@
         },
         "attestation": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "PSP-signed statement {rail_ref, type, limits, expiry, payee} hashed into this mandate"
+          "description": "PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee} hashed into this mandate"
+        },
+        "registry_version": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "The handler-registry version against which the Mandate Manager checked this binding's eligibility at issuance: the identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A version format for registry-signed snapshots is not yet defined, so only a release date is valid. A record of the issuance check only; the gateway re-checks eligibility against the current registry at every complete."
         },
         "rail_limits": {
           "type": "object",
@@ -380,7 +391,7 @@
           ]
         }
       },
-      "description": "OPEN payment mandates only: binding to a live standing-authority primitive enforced by the rail. upi.uap.* reserved."
+      "description": "OPEN payment mandates only: binding to a live standing-authority primitive whose limits the rail or the issuer enforces (listed in the descriptor's binding.open_primitives). upi.uap.* reserved."
     },
     "auth_binding": {
       "type": "object",

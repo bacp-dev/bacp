@@ -297,7 +297,7 @@ stateDiagram-v2
 | `complete_in_progress` | Debited, `on_confirm` still missing after re-send | `complete_in_progress` | `debited_not_confirmed`; `payment.status: reversal_pending` |
 | `complete_in_progress` | PSP reports the refund credit as settled | `cancelled` | `payment.status: reversed` |
 | any open state | `POST /sessions/{id}/cancel` | `cancelled` | `session_cancelled` |
-| any open state | Mandate revoked, paused or expired | `cancelled` | `mandate_revoked`, `mandate_paused`, `mandate_expired` |
+| any open state | Mandate revoked, paused or expired | `cancelled` | `mandate_revoked`, `mandate_paused`, `mandate_expired`; `rail_binding_not_open_eligible` for a gateway pause of an ineligible binding ([Handler binding](../mandates.md#handler-binding)) |
 | `ready_for_complete` | Principal opts out of a pre-debit notice | `cancelled` | `pre_debit_opt_out` (`requires_buyer_input`); no rail traffic |
 
 The open states are `incomplete`, `ready_for_complete` and `requires_escalation`. Calling
@@ -386,9 +386,9 @@ The gateway, in order:
 4. **Checks the collector and bindings**: the collecting party is an authorised PA or bank, and
    `checkout_hash`, disclosures hash, closed-mandate amounts and `auth_binding` all match.
 5. **Verifies the InstructionLog chain** (`403 log_chain_invalid`).
-6. **Runs the atomic section** per open mandate: split-order detection, the authoritative
-   evaluation against exposure, consumption of the closed Payment Mandate, the budget
-   reservation, and the move to `complete_in_progress`
+6. **Runs the atomic section**, keyed on the root open Checkout Mandate: split-order detection,
+   the authoritative evaluation against exposure, consumption of the closed Payment Mandate, the
+   budget reservation, and the move to `complete_in_progress`
    ([Usage ledger](../mandates.md#usage-ledger)).
 7. **Debits the rail** after the atomic section. The debit instruction is basket-blind: payee,
    amount, closed-mandate reference and hash, `checkout_hash`, `transaction_id`.

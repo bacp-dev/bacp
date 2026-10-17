@@ -119,7 +119,7 @@ The gateway pushes state changes to the agent's webhook URL, given as `webhook_u
 
 | Event | When |
 |---|---|
-| `mandate.status_changed` | The mandate became ACTIVE, PAUSED, REVOKED, EXPIRED or EXHAUSTED. Delivered within 60 s of the Trusted Surface event, with the affected sessions. |
+| `mandate.status_changed` | The mandate became ACTIVE, PAUSED, REVOKED, EXPIRED or EXHAUSTED, or the set of pause reasons (`pause_reasons[]`, beside the single `reason`) of a PAUSED mandate changed. Delivered within 60 s of the Trusted Surface event, with the affected sessions. |
 | `session.updated` | Full session snapshot, for example step-up required or approved, or a payment resolved after being in doubt. |
 | `payment.receipt` | A payment or refund receipt was applied (as a `ReceiptRef`). |
 | `order.updated` | Full order snapshot after an unsolicited `on_status`, `on_cancel` or `on_update`. |

@@ -204,7 +204,7 @@ Disputes go to the lender's grievance officer and, after 30 days, to the RBI Int
 
 ## The khata credit ledger
 
-`bacp.credit_ledger` is a bilateral, hash-chained, signed ledger for credit between known parties: a kirana's khata, net-N trade credit, distributor credit, and GeM receivables. It is class O, so an HNP agent may book a sale on it within the agreed limit. **No money moves on a ledger entry.** Money moves on another handler, and the ledger records that handler's receipt.
+`bacp.credit_ledger` is a bilateral, hash-chained, signed ledger for credit between known parties: a kirana's khata, net-N trade credit, distributor credit, and GeM receivables. It is class O, but its limits are enforced by BACP rather than by a rail or issuer, so in BACP `2026-10-17` it is not open-eligible: an open (HNP) payment mandate cannot bind to it ([Handler binding](../mandates.md#handler-binding)). **No money moves on a ledger entry.** Money moves on another handler, and the ledger records that handler's receipt.
 
 Schemas: [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-entry.json), with `$defs/CreditLedger` for the ledger header.
 
@@ -241,7 +241,7 @@ Entry `status` values: `pending_ack`, `acknowledged`, `disputed`, `settled`, `pa
 
 ### Booking and settling
 
-- **Sale.** An HNP agent may book a `sale` only within `credit_limit − balance` **and** within the negotiation mandate's `payment.credit_ledger.max_outstanding`. Otherwise it gets `credit_limit_exceeded`. Whether credit-ledger deals also count against the checkout mandate's budgets is open ([Q-46](../open-questions.md#q-46)); the working position counts them against both.
+- **Sale.** A `sale` is booked only within `credit_limit − balance` **and** within the negotiation mandate's `payment.credit_ledger.max_outstanding`. Otherwise it gets `credit_limit_exceeded`. Whether credit-ledger deals also count against the checkout mandate's budgets is open ([Q-46](../open-questions.md#q-46)); the working position counts them against both. Proposed: an HNP agent may book a sale under an open mandate once [Q-59](../open-questions.md#q-59) and Q-46 are settled; until then a sale is booked with the principal present (HP).
 - **Payment.** A `payment` entry MUST cite a PSP-signed receipt from another handler: `settlement_evidence.receipt_id` with its RRN or UTR. The gateway verifies the receipt signature against the PSP's registry key, and checks that the amount, result and RRN or UTR match. A screenshot or any other evidence MUST be refused, and the sale stays unpaid. A receipt settles ledger entries at most once.
 - **Credit note.** An unpaid sale is reduced by a `credit_note` entry (`refund_state: credit_note_issued` where a refund is involved). A credit note cannot exceed the sale's open amount. A paid sale is refunded to the instrument that settled it.
 

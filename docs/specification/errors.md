@@ -40,6 +40,10 @@ Some validator and guard codes can appear on either channel. The rule is:
 For example, `handlers_incompatible` is a 200 message on `POST /payment-handlers/intersect` and a 403 error on an
 ACCEPT whose agreed payment option has no eligible handler. Registry rows marked "200 msg / 403" follow this rule.
 
+A code that also appears as a 200 `error` message on a session cancelled by a mandate event (`mandate_expired`,
+`mandate_revoked`, `mandate_paused`, `rail_binding_not_open_eligible`) mirrors that code's error status: the message
+reports the same condition that `complete` would return as an error.
+
 ## The Error object {#error-object}
 
 | Field | Type | Required | Meaning |
@@ -91,7 +95,9 @@ agent's AI notice and the human handoff URL in the principal's language.
 
 ## Resolution {#resolution}
 
-Every `Error` code and every message has exactly one `resolution`:
+Every `Error` code and every message has exactly one `resolution`. The one exception is
+`rail_binding_not_open_eligible`, whose registry row gives a resolution per cause; the `Error.resolution` field
+then carries the one that applies:
 
 | Value | Meaning for the agent |
 |---|---|
@@ -148,11 +154,11 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `mandate_invalid_signature` | 403 | mandate_error | A Mandate Manager, principal or agent signature over a mandate (or the closing key-binding JWT) does not verify, for example because the mandate was edited. | `$.mandates`, `$.kb_jwt` | unrecoverable |
 | `mandate_invalid` | 403 | mandate_error | The mandate is malformed in a way the verifier cannot evaluate; the verifier fails closed. | `$.mandates` | unrecoverable |
 | `mandate_schema_invalid` | 400 | invalid_request | The mandate fails its schema, for example an open payment mandate without `rail_binding`. | `$.mandates` | unrecoverable |
-| `rail_binding_not_open_eligible` | 400 | invalid_request | The open payment mandate's `rail_binding` resolves to a handler that cannot back standing authority: a reserved or deprecated descriptor, a pilot the gateway has not attested, or a handler that is not open-eligible. | `$.mandates` | requires_buyer_input (bind another rail) |
+| `rail_binding_not_open_eligible` | 400 (also a 200 `error` message on a checkout session cancelled by a binding pause) | invalid_request | The open payment mandate's `rail_binding` (or the `rail` of a mandate request) resolves to a handler that cannot back standing authority: a reserved or deprecated descriptor, a pilot that the gateway's conformance attestation does not list in an unexpired `pilots[]`, a handler that is not open-eligible, or a `rail_binding.primitive` that is not in the descriptor's `binding.open_primitives`. Also returned for an open payment mandate issued without `rail_binding.primitive` or `rail_binding.registry_version`, and for an HNP `complete` when the gateway's descriptor copy is more than 24 hours old. Evaluated against the current registry at issuance and at every `complete`. On `complete` the error carries `reasons[]` with the cause: `binding_ineligible`, `reissue_required` or `registry_copy_stale`. The 400 status is deliberate (see the note below this table). | `$.mandates`, `$.rail` | requires_buyer_input at `POST /mandates`, for `reissue_required` (have the mandate re-issued on an eligible binding) and for `binding_ineligible` (offer another payment method; the agent opens no resume or re-issue request without a new principal instruction); recoverable for `registry_copy_stale` (a gateway condition: retry later, the principal is not asked) |
 | `constraint_unknown` | 403 | mandate_error | The mandate carries a constraint key the verifier does not know. Unknown constraints fail closed. | `$.proposed_constraints` | unrecoverable |
 | `mandate_expired` | 403 (also a 200 `error` message on a checkout session cancelled by the expiry) | mandate_error | The mandate is past `valid_until` or its rail authority has expired. | `$.mandate_ref` | requires_buyer_input |
 | `mandate_revoked` | 403 (also a 200 message: `error` on a checkout session cancelled by the revocation, `warning` on negotiation sessions) | mandate_error | The mandate was revoked by the principal, by a rail safety switch or by agent relinquishment. | `$.mandate_ref` | requires_buyer_input |
-| `mandate_paused` | 403 (also a 200 `error` message on a checkout session cancelled by the pause) | mandate_error | The principal paused the mandate. | `$.mandate_ref` | requires_buyer_input |
+| `mandate_paused` | 403 (also a 200 `error` message on a checkout session cancelled by the pause) | mandate_error | The principal paused the mandate, and `principal_paused` is its only pause reason. While a gateway pause reason (`binding_ineligible`, `reissue_required`) is also in force, `rail_binding_not_open_eligible` is returned instead. | `$.mandate_ref` | requires_buyer_input |
 | `mandate_exhausted` | 403 | mandate_error | A budget, the rail block or `max_executions` is used up, counting in-flight reservations. | `$.mandate_ref` | requires_buyer_input |
 | `mandate_scope_mismatch` | 403 | mandate_error | The request falls outside the mandate: amount, category, merchant, PIN code, line items, `checkout_hash`, data shared outside `data_scopes`, reuse of a closed payment mandate, purpose bounds at mandate request, or a handler that does not resolve. | `$.checkout_hash`, `$.mandate_ref` | requires_buyer_review |
 | `amount_not_positive` | 403 | mandate_error | A payable amount, a tender or a ledger posting is zero, negative or not an integer number of paise. | `$.amount` | unrecoverable |
@@ -166,6 +172,13 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `evidence_unverifiable` | 422 | invalid_request | The evidence bundle fails verification (signatures or chain). | — | unrecoverable |
 | `cancel_not_allowed` | 403 | authorization_error | The seller refuses the cancellation under its cancellation terms (`@ondc/org/cancellable`, `cancellation_terms`). A mandate or scope failure is `mandate_scope_mismatch`, and a presence failure is `presence_not_allowed`. | `$.order_id` | requires_buyer_review |
 | `return_not_allowed` | 403 | authorization_error | The return is outside the return window, the item is not returnable, or the quantity exceeds what was ordered and not yet returned. | `$.items[n]` | requires_buyer_review |
+
+**Why `rail_binding_not_open_eligible` is 400.** On `complete`, this code can be a refusal by the deterministic
+verifier of a well-formed, signed mandate (for example after a registry downgrade), which would normally be a 403
+`mandate_error`. BACP keeps it on 400 `invalid_request` deliberately, so that one code keeps one status at
+`POST /mandates` and at `complete` and the registry entry stays unchanged. Moving the code to 403 was considered and
+not adopted. Both statuses are on the protocol-failure channel and carry the same resolution, so a client handles
+them the same way.
 
 ### Session and payment messages {#registry-session}
 

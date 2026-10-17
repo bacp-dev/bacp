@@ -91,6 +91,9 @@ are involved, the owner is the one that must give the answer.
 | [Q-56](#q-56) | Retention of negotiation transcripts | Legal counsel | Open |
 | [Q-57](#q-57) | IGM SLA timelines and auto-escalation | ONDC | Open |
 | [Q-58](#q-58) | Signature tag for gateway-signed webhooks | BACP WG | Open, fail-safe default |
+| [Q-59](#q-59) | Open mandates on merchant- and BACP-enforced handlers | BACP WG | Open, fail-safe default |
+| [Q-60](#q-60) | Issuer and payload of the conformance attestation | BACP WG | Open, fail-safe default |
+| [Q-61](#q-61) | Gateway-to-MM mandate events | BACP WG | Open |
 
 ## Questions {#questions}
 
@@ -491,7 +494,9 @@ the Mandate Manager publishes outstanding exposure. See
 **Question.** How do agent redemption of e-RUPI and refunds after redemption work?<br>
 **Owner.** NPCI.
 
-**Working position.** Open-eligible only where redemption without the beneficiary present is supported.
+**Working position.** Open-eligible only where redemption without the beneficiary present is supported. Until this
+is answered, `in.erupi` has registry status `pilot`, so it backs an open mandate only at a gateway whose
+[conformance attestation](conformance.md#conformance-attestation) lists it.
 
 ### Q-39 Agentic card tokens {#q-39}
 
@@ -543,7 +548,8 @@ See [Credit and Split Tender](payments/credit-and-split-tender.md).
 budgets or against `credit_ledger.max_outstanding`?<br>
 **Owner.** BACP WG.
 
-**Working position.** Count against both `total_max` and the checkout mandate's budgets.
+**Working position.** Count against both `total_max` and the checkout mandate's budgets. `bacp.credit_ledger` is not
+open-eligible until this question and [Q-59](#q-59) are settled.
 
 ### Q-48 Agent signature on negotiation messages {#q-48}
 
@@ -656,18 +662,54 @@ verify every webhook against a key in the gateway profile's `keys` and MUST NOT 
 verification; it MUST NOT reject a webhook only because its signature has no `tag` or an unknown one. See
 [Identity and Request Signing](identity-and-signing.md#signature-tags) and [REST](transports/rest.md).
 
+### Q-59 Merchant- and BACP-enforced handlers {#q-59}
+
+**Question.** May an open payment mandate bind to `in.store_credit`, `in.loyalty` or `bacp.credit_ledger`, whose
+limits are enforced by the merchant or by BACP rather than by a rail or an issuer? If so, who may sign their
+attestations and receipts when the payee is also the party that acts, and how does a credit-ledger sale, which has no
+payment receipt, resolve its budget reservation?<br>
+**Owner.** BACP WG.
+
+**Working position.** Fail-safe default: the three handlers have `open_eligible: false` in `2026-10-17` and back no
+open payment mandate. Candidate conditions for opening them, not rules of this version: attestations and receipts for
+a merchant-enforced handler are never signed by the payee's key, and a failure receipt signed by the payee keeps the
+reservation counted as spent until the principal confirms; a credit-ledger sale under an open mandate is settled
+spend when posted, released only by a `credit_note` or a resolved dispute, and is acknowledged with the principal's
+or the Mandate Manager's key, never the agent's `cnf` key. Depends on [Q-46](#q-46). See
+[Mandates and Consent](mandates.md#handler-binding) and [Conformance](conformance.md#handler-binding-cases).
+
+### Q-60 Conformance attestation {#q-60}
+
+**Question.** Which registry role signs a conformance attestation, who may hold that role, and is the proposed payload
+(`iss`, `sub`, `levels[]`, `pilots[]`, `exp`, `status`) final, and which explicit JOSE `typ` does the attestation carry?<br>
+**Owner.** BACP WG.
+
+**Working position.** Proposed: the payload in [Conformance](conformance.md#conformance-attestation), signed by a
+registry key of a conformance-authority role, with `iss` never equal to `sub` or run by the same operator. Fail-safe
+default: a Mandate Manager that cannot verify a gateway's attestation refuses to issue an open mandate on a `pilot`
+handler, and a gateway offers a `pilot` handler only when its own unexpired attestation lists it. Until this question
+is settled no key qualifies, so, as of 17-10-2026, no open mandate can be issued on any `pilot` handler, including
+`in.upi.circle` and `in.card.agentic`.
+
+### Q-61 Gateway-to-MM mandate events {#q-61}
+
+**Question.** Should a gateway tell the Mandate Manager that issued a mandate when it pauses that mandate because its
+rail binding is no longer eligible (`binding_ineligible`, `reissue_required`) or lifts such a pause, so that the
+Trusted Surface can show the principal why the agent cannot pay and can offer re-issue? If so, through which signed
+event and endpoint? `POST /trusted-surface/events` runs from the MM or PSP to the gateway, and every webhook runs from
+the gateway to the agent, so BACP `2026-10-17` has no channel in this direction.<br>
+**Owner.** BACP WG.
+
+**Working position.** A gateway-to-MM event is not defined in `2026-10-17`. The MM reads the same registry as the
+gateway and can detect a status change itself. The gateway writes every addition and removal of a binding pause
+reason to the InstructionLog with the `registry_version`, and sends `mandate.status_changed` to the agent. No money
+moves on the MM's view: every gateway re-derives eligibility at step 1 of evaluation. See
+[Mandates and Consent](mandates.md#handler-binding).
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
-These three choices are written into BACP `2026-10-17`. They are flagged here because an owner may still overturn
-them in a later dated release.
-
-### (a) Open mandates on any class-O handler {#proposed-a}
-
-An open (human-not-present) payment mandate may bind to any handler of binding class O: a standing authority whose
-limits the rail, the issuer or both parties enforce (UPI Reserve Pay, Circle, AutoPay and OTM, card e-mandates,
-agentic card tokens in pilot, eNACH debit, PPI e-mandates and gift PPIs, and others), not only to the three UPI
-primitives. Pilot handlers are eligible only when the gateway's conformance attestation lists them; reserved handlers
-never are. Related: [Q-39](#q-39). See [Handler Registry](payments/handler-registry.md).
+These two choices are written into BACP `2026-10-17`. They are flagged here because an owner may still overturn
+them in a later dated release. Design choice (a) is [settled](#proposed-a).
 
 ### (c) Acceptance revocation waived by default {#proposed-c}
 
@@ -799,6 +841,35 @@ The corrigendum G.S.R. 892(E) (10-12-2025) and the DPDP (Removal of Difficulties
 and the reported corrigendum G.S.R. 113(E) appear only in secondary sources; no amending notification had been found
 as of 17-10-2026. See [Security and Privacy](security-and-privacy.md#commencement).
 
+### (a) Open mandates on class-O handlers {#proposed-a}
+
+!!! success "Settled"
+    Was proposed design choice (a). Settled in `2026-10-17` by owner decision of 17-10-2026, in a narrowed form.
+
+**Question.** May an open (human-not-present) payment mandate bind to any class-O handler, or only to the UPI standing
+authorities?<br>
+**Owner.** BACP WG.
+
+**Answer.**
+
+- An open payment mandate may bind to any class-O handler, but only through a mandate primitive whose limits the rail
+  or the issuer enforces (`limits_enforced_by` `rail` or `issuer`). Each descriptor lists these primitives in
+  `binding.open_primitives`. The mandate names the primitive it uses in `rail_binding.primitive`, the PSP attestation
+  covers it, and the Mandate Manager refuses issuance otherwise (`rail_binding_not_open_eligible`). For
+  `in.ppi.wallet` only `ppi_emandate` is open-eligible, never the wallet balance.
+- The descriptor's `status` must be `live`, or `pilot` only when the gateway's
+  [conformance attestation](conformance.md#conformance-attestation) lists the pilot in `pilots[]`; the Mandate
+  Manager verifies this before issuing. The attestation payload is Proposed ([Q-60](#q-60)).
+- Eligibility is re-checked against the current registry at every `complete`. A registry downgrade pauses the
+  affected mandates and cancels their open sessions.
+- The atomic reservation is keyed on the root open checkout mandate, so sibling open payment mandates cannot together
+  exceed its budgets.
+- `in.store_credit`, `in.loyalty` and `bacp.credit_ledger`, whose limits the merchant or BACP enforces, are not
+  open-eligible in this version ([Q-59](#q-59), [Q-46](#q-46)). `in.erupi` is `pilot` until [Q-38](#q-38) is
+  answered. Agentic card tokens stay pilot-gated ([Q-39](#q-39)).
+
+See [Mandates and Consent](mandates.md#handler-binding) and [Handler Registry](payments/handler-registry.md).
+
 ### Other settled points {#settled-other}
 
 | Question | Answer |
@@ -810,4 +881,4 @@ as of 17-10-2026. See [Security and Privacy](security-and-privacy.md#commencemen
 | Is a rail-cap breach an escalation or an error? | Only AFA thresholds escalate; other caps return 403 `rail_limit_exceeded` ([Errors](errors.md#registry-mandate)). |
 | How are colliding handler aliases resolved? | Exact beats glob; see [Handler Registry](payments/handler-registry.md). Naming governance is settled in [Q-28](#q-28). |
 | What evidence do non-UPI receipts carry? | `rail.evidence` keyed by the descriptor's evidence references; see [Rail Bindings](payments/rails.md). |
-| Is per-mandate evaluation atomic? | Yes, within one gateway ([Security and Privacy](security-and-privacy.md#atomic-reservation)); across gateways see [Q-36](#q-36). |
+| Is per-mandate evaluation atomic? | Yes, within one gateway, keyed on the root open checkout mandate ([Security and Privacy](security-and-privacy.md#atomic-reservation)); across gateways see [Q-36](#q-36). |

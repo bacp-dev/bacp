@@ -50,7 +50,7 @@ Every descriptor carries `binding.class`. The class decides whether a handler ma
 
 | Class | Meaning | Presence | Examples |
 |---|---|---|---|
-| **O** (open-eligible) | A standing authority whose limits the rail, the issuer or both parties enforce. It MAY back an open (HNP) payment mandate. | HP or HNP | `in.upi.reservepay`, `in.upi.circle`, `in.upi.autopay`, `in.upi.otm`, `in.card.mandate`, `in.nach.debit`, `in.ppi.gift`, `in.erupi`, `bacp.credit_ledger` |
+| **O** (open-eligible) | A standing authority whose limits the rail, the issuer or both parties enforce. It MAY back an open (HNP) payment mandate, but only through a primitive whose limits the rail or the issuer enforces, listed in `binding.open_primitives`. | HP or HNP | `in.upi.reservepay`, `in.upi.circle`, `in.upi.autopay`, `in.upi.otm`, `in.card.mandate`, `in.nach.debit`, `in.ppi.gift`, `in.erupi` (pilot) |
 | **C** (closed, HP only) | Needs a human-completed 2FA or approval bound to this one transaction. It backs only a closed, HP payment mandate. | HP | `in.upi.intent`, `in.card.token`, `in.netbanking`, `in.a2a.neft`, `in.credit.bnpl` |
 | **A** (assisted or device-bound) | HP on the payer's own device or at an assisted touchpoint. Never usable by a remote agent. | HP, assisted | `in.upi.lite`, `in.card.present`, `in.pos.tap`, `in.aeps.assisted` |
 | **D** (deferred) | The order may be placed HNP, but payment happens later with a human (cash or UPI at the door). | Order HNP, payment HP | `in.cod`, `in.cod.upi` |
@@ -60,10 +60,13 @@ The full assignment of all 57 handlers is in the [registry table](handler-regist
 
 **Why only class O is open-eligible.** The RBI Authentication Directions 2025 (RBI/2025-26/79) require every digital payment to be authenticated with at least two factors, at least one of them dynamic for every payment other than a card-present one. The exemptions in Annexure-1 include recurring e-mandate debits after the first one, small-value contactless and offline payments, gift PPIs and PPI-MTS, and UPI Tap & Pay. So an unattended agent debit is lawful only when it runs under a standing authority that the rail or issuer recognises and enforces, such as an AFA-registered e-mandate, a UPI Circle delegation or an SBMD block. Class O names exactly those handlers. Every other payment needs a fresh, human-performed 2FA, which makes it class C or A.
 
-The descriptor schema enforces two consistency rules:
+The descriptor schema enforces three consistency rules:
 
 - `binding.open_eligible: true` implies `presence.hnp: rail_enforced`;
+- `binding.open_eligible: true` implies a non-empty `binding.open_primitives`;
 - `presence.device_bound: true` implies `binding.open_eligible: false`.
+
+`in.store_credit`, `in.loyalty` and `bacp.credit_ledger` are class O, but their limits are enforced by the merchant or by BACP, not by a rail or issuer. In BACP `2026-10-17` they have `open_eligible: false` and do not back open (HNP) payment mandates. Opening them to open mandates is Proposed ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)).
 
 ## Binding mandates to handlers
 
@@ -71,13 +74,13 @@ A payment mandate is either **open** (a standing HNP authority the agent may dra
 
 | Mandate | Carries | Rule |
 |---|---|---|
-| Open payment mandate | `rail_binding{type, rail_ref, attestation, pre_debit_notice}` | `type` MUST resolve to a class O handler whose descriptor has `open_eligible: true` and `status: live`, or `status: pilot` only when the gateway's conformance attestation lists that pilot. `rail_ref` is the delegation id, SBMD block id, UMN, UMRN or equivalent. `attestation` is a PSP-signed statement of `{rail_ref, limits, expiry, payee}`, hashed into the mandate. |
+| Open payment mandate | `rail_binding{type, primitive, rail_ref, attestation, registry_version, pre_debit_notice}` | `type` MUST resolve to a class O handler whose descriptor has `open_eligible: true` and `status: live`, or `status: pilot` only when the gateway's [conformance attestation](../conformance.md#conformance-attestation) lists that pilot. `primitive` MUST be in the descriptor's `binding.open_primitives`. `rail_ref` is the delegation id, SBMD block id, UMN, UMRN or equivalent. `attestation` is a PSP-signed statement of `{rail_ref, type, primitive, limits, expiry, payee}`, hashed into the mandate. `registry_version` records the registry release or registry-signed snapshot the Mandate Manager checked at issuance. Eligibility is re-checked against the current registry at every `complete` ([Handler binding](../mandates.md#handler-binding)). |
 | Closed payment mandate (HNP) | `auth_binding{type: parent_rail_binding}` | The debit executes under the parent open mandate's rail binding. |
 | Closed payment mandate (HP) | `auth_binding{type}` with `type` in the handler's `binding.closed_auth` | E.g. `upi.pin`, `card.3ds`, `netbanking.login_otp`, `maker_checker`, `kfs_esign`. Created on the Trusted Surface. |
 
 The rules below apply after the handler reference has been resolved to its canonical id ([alias resolution](handler-registry.md#alias-resolution)).
 
-1. **Open eligibility.** An open payment mandate whose `rail_binding.type` resolves to a class C, A, D or N handler MUST fail schema validation and MUST be refused. A `reserved` or `deprecated` descriptor MUST NOT back a payment, and a `pilot` descriptor only when attested.
+1. **Open eligibility.** An open payment mandate whose `rail_binding.type` resolves to a class C, A, D or N handler MUST fail schema validation and MUST be refused. A `reserved` or `deprecated` descriptor MUST NOT back a payment, and a `pilot` descriptor only when attested. A `rail_binding.primitive` that is not in the descriptor's `binding.open_primitives`, or a descriptor with `open_eligible: false`, gets `rail_binding_not_open_eligible`.
 2. **Rail limits are authoritative.** The mandate's constraints (per-transaction amount, budgets, validity) MUST be at or below the descriptor's rail limits. The Mandate Manager rejects a mandate whose constraints exceed its rail binding.
 3. **Class C.** A class C handler backs only a closed, HP payment mandate whose `auth_binding.type` is in `binding.closed_auth`. An HNP request gets `presence_handler_mismatch`.
 4. **Class A.** A class A handler needs presence HP, an assisted channel and an assisted-session binding: operator id, terminal id, and an order hash shown to the payer before capture. A remote agent is refused.
@@ -266,6 +269,7 @@ The payment-specific codes are listed in [Errors](../errors.md). The ones this p
 | Code | HTTP when surfaced | Resolution |
 |---|---|---|
 | `presence_handler_mismatch` | 403 | requires_buyer_review |
+| `rail_binding_not_open_eligible` | 400 | requires_buyer_input; recoverable for `reasons: [registry_copy_stale]` |
 | `reservepay_block_wrong_payee` | 403 | requires_buyer_input |
 | `rail_limit_exceeded` | 403 | requires_buyer_review |
 | `handlers_incompatible` | 200 message (intersect) or 403 (ACCEPT) | requires_buyer_input |

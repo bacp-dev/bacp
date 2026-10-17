@@ -24,7 +24,7 @@ A descriptor has the fields below. Required fields are marked **R**.
 | `rail` | R | `operator` (required), `network`, and `params` such as `qr_type`, `network`, `kyc`, `funding`, `direction`. |
 | `regulator[]` | R | One or more `{body, instrument, ref}`, e.g. `{"body": "RBI", "instrument": "E-mandate Framework 2026"}`. |
 | `presence` | R | `human_presence` (`required`, `mandate` or `none`), `hp` (may run with a human present), `hnp` (`none`, `rail_enforced` or `order_only`), `device_bound`, `assisted_only`. `rail_enforced` means a standing authority whose limits the rail or issuer enforces. `order_only` means the order may be placed HNP but payment happens later with a human (COD). |
-| `binding` | R | `class` (`O`, `C`, `A`, `D` or `N`; see [handler classes](index.md#handler-classes)), `open_eligible`, `open_requires` (a condition in words, e.g. "only with an AFA-registered PPI e-mandate"), and `closed_auth[]`: the per-transaction authorisations a closed HP payment may use (`upi.pin`, `upi.biometric`, `card.3ds`, `card.otp`, `card.passkey`, `netbanking.login_otp`, `maker_checker`, `aadhaar_biometric`, `voucher_code`, `wallet_pin`, `kfs_esign`, `dsc`, `cash_at_door`, `parent_rail_binding`). |
+| `binding` | R | `class` (`O`, `C`, `A`, `D` or `N`; see [handler classes](index.md#handler-classes)), `open_eligible`, `open_primitives[]` (the `mandate_primitives[].type` values that may back an open mandate; only primitives whose `limits_enforced_by` is `rail` or `issuer`, and at least one when `open_eligible` is `true`), `open_requires` (a condition in words, e.g. "only with an AFA-registered PPI e-mandate"), and `closed_auth[]`: the per-transaction authorisations a closed HP payment may use (`upi.pin`, `upi.biometric`, `card.3ds`, `card.otp`, `card.passkey`, `netbanking.login_otp`, `maker_checker`, `aadhaar_biometric`, `voucher_code`, `wallet_pin`, `kfs_esign`, `dsc`, `cash_at_door`, `parent_rail_binding`). |
 | `mandate_primitives[]` | R | The rail object that carries the standing authority: `type` (e.g. `sbmd_block`, `otm_block`, `circle_delegation`, `upi_autopay_umn`, `card_emandate`, `agentic_token_intent`, `nach_umrn`, `ppi_emandate`, `balance_cap`, `voucher`, `programmability_rules`, `upms_registration`, `topup_mandate`, `loan_sanction`, `payee_binding`, `approval_policy`, `assisted_session`, `credit_limit`, `factoring_unit`, `gpa_block`, `pps_registration`), `ref_name` (what `rail_binding.rail_ref` holds, e.g. UMN, UMRN, SBMD block id), `limits_enforced_by` (`rail`, `issuer`, `merchant`, `lender`, `bacp`, `none`), `payee_scope` (`single_merchant`, `single_biller`, `single_creditor`, `any_merchant`, `purpose_locked`, `lender`, `n_a`) and `multi_capture`. |
 | `limits[]` | R | Each limit has a `name` (`per_txn`, `per_txn_min`, `per_day`, `per_month`, `per_year`, `first_24h`, `balance`, `block_amount`, `mandate_max`, `voucher_max`, `no_afa_debit`, `no_afa_debit_special_categories`, `validity`, `devices`, `pps_threshold`, `cash_threshold`), one of `amount` (integer paise), `duration` (ISO 8601) or `count`, an `applies_to` note, a `source` citation, a `verification` grade (`verified`, `secondary`, `vendor`, `unverified`, `conflict`), a `conflict_note` where sources disagree, and `configurable`. |
 | `afa` | R | `model` (`per_txn_2fa`, `at_registration_and_first_debit`, `at_registration_only`, `at_block_creation`, `at_provisioning`, `exempt`, `exempt_below_threshold`, `biometric_assisted`, `maker_checker`, `loan_acceptance`, `voucher_code`, `none_cash`, `n_a`), `threshold` and `threshold_special` (amounts above which AFA is needed), and `pre_debit_notice` (`required_24h`, `bacp_policy_24h`, `exempt`, `unknown`, `not_applicable`). |
@@ -39,11 +39,14 @@ A descriptor has the fields below. Required fields are marked **R**.
 | `sources[]` | R | Citations for the descriptor's content. |
 | `notes` | | Free text. |
 
-The schema enforces three cross-field rules:
+The schema enforces four cross-field rules:
 
 1. `binding.open_eligible: true` requires `presence.hnp: rail_enforced`.
-2. `presence.device_bound: true` requires `binding.open_eligible: false`.
-3. `funding` of `credit` or `loan` requires `credit_disclosure_required: true`.
+2. `binding.open_eligible: true` requires a non-empty `binding.open_primitives`.
+3. `presence.device_bound: true` requires `binding.open_eligible: false`.
+4. `funding` of `credit` or `loan` requires `credit_disclosure_required: true`.
+
+That every `binding.open_primitives` entry is one of the descriptor's own `mandate_primitives[].type` values with `limits_enforced_by` `rail` or `issuer` cannot be expressed in JSON Schema; registry review MUST check it.
 
 An abridged descriptor (the `in.upi.autopay` entry, with optional fields and the per-field citations shortened) looks like this:
 
@@ -58,7 +61,7 @@ An abridged descriptor (the `in.upi.autopay` entry, with optional fields and the
   "rail": {"operator": "NPCI"},
   "regulator": [{"body": "RBI", "instrument": "E-mandate Framework 2026"}],
   "presence": {"human_presence": "mandate", "hp": true, "hnp": "rail_enforced"},
-  "binding": {"class": "O", "open_eligible": true, "closed_auth": ["upi.pin"]},
+  "binding": {"class": "O", "open_eligible": true, "open_primitives": ["upi_autopay_umn"], "closed_auth": ["upi.pin"]},
   "mandate_primitives": [{"type": "upi_autopay_umn", "ref_name": "UMN", "limits_enforced_by": "rail", "payee_scope": "single_merchant", "multi_capture": true}],
   "limits": [
     {"name": "no_afa_debit", "amount": {"value": 1500000, "currency": "INR"},
@@ -86,7 +89,7 @@ The registry is maintained in the specification repository as `source/handlers/r
 | Status | Meaning | May back a payment |
 |---|---|---|
 | `live` | The rail or instrument is generally available, and its rules are documented. | Yes, subject to its class |
-| `pilot` | The rail runs as a pilot or closed user group, or has no general availability (e.g. UPI Circle software delegates, network agentic card tokens, retail and programmable e₹, OCEN). | Only when the gateway's conformance attestation lists that pilot |
+| `pilot` | The rail runs as a pilot or closed user group, or has no general availability (e.g. UPI Circle software delegates, network agentic card tokens, retail and programmable e₹, OCEN), or BACP has not verified how agents may use it (e-RUPI, until [Q-38](../open-questions.md#q-38) is answered). | Only when the gateway's [conformance attestation](../conformance.md#conformance-attestation) lists that pilot in `pilots[]` |
 | `reserved` | The id is held for a rail that is not yet published or not open to agents (`in.upi.uap`, `in.cbdc.wholesale`). | No |
 | `deprecated` | The handler is being withdrawn. | No |
 
@@ -97,6 +100,7 @@ Rules for registry content:
 - A registry in which an exact alias maps to two descriptors, or a canonical id is also declared as an alias, MUST be rejected at load.
 - Every descriptor MUST validate against [`handler-descriptor.json`](https://bacp.dev/schemas/handler-descriptor.json).
 - Status changes (`pilot` to `live`, `reserved` to `pilot`) are registry changes and follow the [proposal process](#proposing-a-new-handler).
+- Eligibility is evaluated against the current registry at every `complete`, not when a mandate was issued. A change that makes an active mandate's binding ineligible (a downgrade from `live` to `pilot`, `reserved` or `deprecated`, or a primitive removed from `binding.open_primitives`) pauses the affected mandates ([Handler binding](../mandates.md#handler-binding)). Mandate Managers and gateways take the registry from the dated release or a registry-signed snapshot, never from a gateway's `GET /payment-handlers`, and a gateway adopts a downgrade within 24 hours of the release.
 
 ## Alias resolution
 
@@ -111,7 +115,7 @@ A **handler reference** (`HandlerRef`) is a canonical id, an exact alias, or a s
 4. **One target.** An exact alias MUST map to exactly one canonical id.
 5. **Emit canonical.** Producers MUST emit canonical ids in new artefacts: receipts, payment state, profiles, intersection results. Consumers MUST accept any handler reference and MUST compare handlers only after resolution, for example a session's handler against its mandate's `rail_binding.type`.
 6. **Unknown fails closed.** A reference that does not resolve is not eligible: the intersection excludes it with `not_in_registry`, and at PUT or `complete` it gets 403 `mandate_scope_mismatch`.
-7. **Resolution is not eligibility.** After resolution, the binding rules still apply: a `reserved` or `deprecated` descriptor MUST NOT back a payment, and a `pilot` descriptor only when attested.
+7. **Resolution is not eligibility.** After resolution, the binding rules still apply: a `reserved` or `deprecated` descriptor MUST NOT back a payment, a `pilot` descriptor only when attested, and an open mandate only through a primitive in `binding.open_primitives`.
 8. **Deprecation window.** Legacy aliases are accepted for one deprecation window: at least two dated releases after the release that deprecates them, and at least 180 days after that release, whichever is later ([versioning policy](https://bacp.dev/versioning/#deprecation)). Removing an alias is a breaking change and gets at least 90 days' notice. The registry SHOULD publish each alias's end date (a proposed descriptor field `aliases_deprecated_after`, not yet in the schema).
 
 The registry declares two exact aliases of `in.upi.intent` for the deprecation window: `upi.pin` and `upi.uap.pin` (listed after the [registry table](#registry-table)). They identify a human-present one-off UPI payment authorised by UPI PIN. `auth_binding.type` stays `upi.pin`.
@@ -123,7 +127,7 @@ A new handler, or a change to an existing one (a new limit, a status change, a n
 1. **Open an issue** in the BACP repository titled `handler: <proposed id>`, with the rail, its operator and regulator, and the primary sources (circulars, master directions, operator product pages).
 2. **Choose the id.** Use `in.<family>.<variant>` for an Indian rail or instrument and `bacp.<construct>` for a BACP-native construct. The id MUST match `HandlerId`, MUST NOT collide with an existing id or alias, and MUST NOT be matched by an existing glob alias.
 3. **Write the descriptor** with every required field. Grade each limit honestly. A limit that comes only from a vendor or the press is `vendor` or `secondary`; one with no source is `unverified`.
-4. **Classify it.** State the class and justify it against the RBI Authentication Directions 2025: a handler is class O only if a standing authority exists that the rail, issuer or both parties enforce, and the descriptor then has `hnp: rail_enforced`. A device-bound handler is never open-eligible.
+4. **Classify it.** State the class and justify it against the RBI Authentication Directions 2025: a handler is class O only if a standing authority exists that the rail, issuer or both parties enforce, and the descriptor then has `hnp: rail_enforced`. An open-eligible descriptor lists in `binding.open_primitives` only primitives whose `limits_enforced_by` is `rail` or `issuer`. A device-bound handler is never open-eligible.
 5. **Start at `pilot` or `reserved`** unless the rail is generally available with published rules.
 6. **Add conformance cases.** A handler that a gateway claims under a conformance level needs cases for its binding, limits, AFA and refund route. See [Conformance](../conformance.md).
 7. **Validate.** The pull request MUST pass schema validation of the whole registry and the alias rules above.
@@ -179,7 +183,7 @@ The table below is generated from `source/handlers/registry.json`. "Presence all
 | 41 | `in.bbps.bill` | BBPS / Bharat Connect bill payment | C | HP | — | `source` | live |
 | 42 | `in.bbps.b2b_invoice` | Bharat Connect for Business (B2B invoice) | C | HP | `approval_policy` | `source` | live |
 | 43 | `in.bbps.upms` | BBPS UPMS recurring registration | O | HP, HNP (rail-enforced) | `upms_registration` | `source` | live |
-| 44 | `in.erupi` | e-RUPI purpose-bound voucher | O | HP, HNP (rail-enforced) | `voucher` | `issuer_or_sponsor` | live |
+| 44 | `in.erupi` | e-RUPI purpose-bound voucher | O | HP, HNP (rail-enforced) | `voucher` | `issuer_or_sponsor` | pilot |
 | 45 | `in.cbdc.retail` | e₹ retail wallet | C | HP | — | `new_credit_push` | pilot |
 | 46 | `in.cbdc.programmed` | Programmable e₹ (sponsor-locked) | O | HP, HNP (rail-enforced) | `programmability_rules` | `issuer_or_sponsor` | pilot |
 | 47 | `in.cbdc.wholesale` | Wholesale e₹ settlement (reserved) | N | none (non-paying) | — | `n_a` | reserved |
@@ -193,6 +197,31 @@ The table below is generated from `source/handlers/registry.json`. "Presence all
 | 55 | `in.pa.settlement` | PA settlement status (read-only) | N | none (non-paying) | — | `source` | live |
 | 56 | `in.cheque.positive_pay` | Cheque with Positive Pay (record and track) | C | HP | `pps_registration` | `n_a` | live |
 | 57 | `bacp.credit_ledger` | Bilateral credit ledger (khata, net-N trade credit) | O | HP, HNP (rail-enforced) | `credit_limit` | `ledger_credit_note` | live |
+
+### Open-eligible primitives {#open-primitives}
+
+Generated from `binding.open_primitives` in the same file. An open payment mandate on a class-O handler MUST name one of these primitives in `rail_binding.primitive` ([Handler binding](../mandates.md#handler-binding)).
+
+| Handler id | `open_primitives` | Notes |
+|---|---|---|
+| `in.upi.otm` | `otm_block` | — |
+| `in.upi.reservepay` | `sbmd_block` | — |
+| `in.upi.circle` | `circle_delegation` | `pilot`: only when attested |
+| `in.upi.autopay` | `upi_autopay_umn` | — |
+| `in.upi.uap` | — | `reserved` |
+| `in.card.mandate` | `card_emandate` | — |
+| `in.card.agentic` | `agentic_token_intent` | `pilot`: only when attested |
+| `in.nach.debit` | `nach_umrn` | — |
+| `in.ppi.wallet` | `ppi_emandate` | A wallet balance (`balance_cap`) never backs an open mandate |
+| `in.ppi.gift` | `balance_cap` | — |
+| `in.store_credit` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
+| `in.loyalty` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
+| `in.ppi.netc_topup` | `topup_mandate` | — |
+| `in.ppi.ncmc_topup` | `topup_mandate` | — |
+| `in.bbps.upms` | `upms_registration` | — |
+| `in.erupi` | `voucher` | `pilot` until [Q-38](../open-questions.md#q-38) is answered: only when attested |
+| `in.cbdc.programmed` | `programmability_rules` | `pilot`: only when attested |
+| `bacp.credit_ledger` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
 
 ### Declared aliases
 

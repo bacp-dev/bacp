@@ -283,6 +283,7 @@ Handlers: `in.ppi.wallet` (class O, only with a PPI e-mandate), `in.ppi.card` (c
 Binding rules:
 
 - A wallet runs HNP only under an AFA-registered PPI e-mandate. Otherwise every debit needs 2FA, and an HNP request gets `presence_handler_mismatch`.
+- `in.ppi.wallet` lists only `ppi_emandate` in `binding.open_primitives`. An open payment mandate whose `rail_binding.primitive` is `balance_cap` (the wallet balance) is refused at issuance and at `complete` with `rail_binding_not_open_eligible` ([Handler binding](../mandates.md#handler-binding)).
 - The gateway MUST enforce the small-PPI and full-KYC caps and MUST NOT accept a credit line as a funding source for a PPI load.
 - A pre-funded wallet balance is a natural hard cap on agent spending.
 - PPI complaints raised through BACP are forwarded to the issuer and tracked against the 30-day limit. Unauthorised-debit reports are time-stamped, because liability depends on reporting within 3 or 7 days (PPI MD para 17.4: the issuer's alert system records the time and date of delivery and of the customer's response; liability bands in para 17.5).
@@ -292,8 +293,8 @@ Binding rules:
 | Handler | Class | Rule | Source |
 |---|---|---|---|
 | `in.ppi.gift` | O | Gift PPI: ≤ ₹10,000 per instrument, not reloadable, no cash-out; validity at least one year. **AFA-exempt**, so an agent may spend it HNP up to the balance. Reload and cash-out MUST be refused. | PPI MD para 10.1, 15.3(5) |
-| `in.store_credit` | O | A closed-system gift card or store credit usable only at the issuer is not an RBI payment system. Consumer-protection law and the E-Commerce Rules apply. Usable HNP at that merchant. | PPI MD para 2.1 |
-| `in.loyalty` | O | Loyalty or reward points. No RBI regime was found. Usable HNP only where the programme allows redemption by API; the agent MUST disclose the conversion value. | Programme terms *(not verified)* |
+| `in.store_credit` | O | A closed-system gift card or store credit usable only at the issuer is not an RBI payment system. Consumer-protection law and the E-Commerce Rules apply. The merchant alone enforces its limits, so in BACP `2026-10-17` it is not open-eligible and cannot back an open (HNP) payment mandate; Proposed: usable HNP at that merchant once [Q-59](../open-questions.md#q-59) is settled. | PPI MD para 2.1 |
+| `in.loyalty` | O | Loyalty or reward points. No RBI regime was found. The agent MUST disclose the conversion value. The programme alone enforces its limits, so in BACP `2026-10-17` it is not open-eligible and cannot back an open (HNP) payment mandate; Proposed: usable HNP where the programme allows redemption by API, once [Q-59](../open-questions.md#q-59) is settled. | Programme terms *(not verified)* |
 
 - Gift and voucher codes are held in the Trusted Surface or the PSP-adapter vault and redeemed by the gateway's PSP adapter. The agent never sees them. Whether a PSP adapter may redeem gift-PPI codes on the user's behalf is open ([Q-30](../open-questions.md#q-30)).
 - In a [split tender](credit-and-split-tender.md#split-tender-payment-plans), stored-value tenders are captured first.
@@ -415,7 +416,7 @@ Binding rules:
 
 ## e-RUPI
 
-Handler: `in.erupi` (alias `erupi`). Class O.
+Handler: `in.erupi` (alias `erupi`). Class O, status `pilot` until [Q-38](../open-questions.md#q-38) is answered.
 
 e-RUPI is a purpose-bound prepaid voucher on UPI rails, launched in August 2021 with a cap of ₹10,000 per voucher, redeemable once (RBI, 10-02-2022).
 
@@ -431,7 +432,7 @@ Binding rules:
 - The voucher is the mandate: purpose, eligible merchant or merchant category, remaining balance and expiry are mirrored into the BACP mandate. The handler MUST enforce them before redemption, and MUST support partial multi-use redemption for multi-use vouchers.
 - Issuer-type caps (government, corporate, individual; bank or non-bank) are configuration, pending confirmation of the 2023 changes.
 - Voucher codes are never shown to the agent.
-- e-RUPI is open-eligible only where redemption without the beneficiary present is supported ([Q-38](../open-questions.md#q-38)).
+- e-RUPI is open-eligible only where redemption without the beneficiary present is supported ([Q-38](../open-questions.md#q-38)). Until Q-38 is answered the descriptor's status is `pilot`, so an open mandate may bind to it only at a gateway whose [conformance attestation](../conformance.md#conformance-attestation) lists `in.erupi` in `pilots[]`.
 
 ## e₹ (CBDC)
 

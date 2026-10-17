@@ -93,7 +93,7 @@ device-bound, **D** deferred (COD), **N** non-paying.
 | `in.bbps.bill` | BBPS / Bharat Connect bill payment | payment | C | live | `bbps`, `bacp.pay.bbps.bill` |
 | `in.bbps.b2b_invoice` | Bharat Connect for Business (B2B invoice) | payment | C | live | `bacp.pay.bbps.b2b_invoice` |
 | `in.bbps.upms` | BBPS UPMS recurring registration | mandate_registration | O | live | `bacp.mandate.bbps.upms` |
-| `in.erupi` | e-RUPI purpose-bound voucher | payment | O | live | `erupi`, `bacp.pay.erupi` |
+| `in.erupi` | e-RUPI purpose-bound voucher | payment | O | pilot | `erupi`, `bacp.pay.erupi` |
 | `in.cbdc.retail` | e₹ (Digital Rupee) retail wallet | payment | C | pilot | `erupee`, `bacp.pay.cbdc.retail` |
 | `in.cbdc.programmed` | Programmable e₹ (sponsor-locked) | payment | O | pilot | `bacp.pay.cbdc.programmed` |
 | `in.cbdc.wholesale` | Wholesale e₹ settlement (reserved) | tracker | N | reserved | `bacp.settle.cbdc.wholesale` |
@@ -124,9 +124,16 @@ OpenAPI document with `uv run python scripts/validate.py`.
 | [`credit-ledger-entry.payment-no-evidence.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment-no-evidence.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
 | [`credit-ledger-entry.payment.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
 | [`credit-ledger-entry.sale.json`](https://bacp.dev/latest/examples/credit-ledger-entry.sale.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
+| [`handler-descriptor.open-no-primitives.invalid.json`](https://bacp.dev/latest/examples/handler-descriptor.open-no-primitives.invalid.json) | [`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json) | invalid (MUST fail) |
+| [`handler-descriptor.upi-autopay.json`](https://bacp.dev/latest/examples/handler-descriptor.upi-autopay.json) | [`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json) | valid |
 | [`mandate-negotiation.buyer.json`](https://bacp.dev/latest/examples/mandate-negotiation.buyer.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | valid |
 | [`mandate-negotiation.disclosed.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.disclosed.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |
 | [`mandate-negotiation.no-reservation.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.no-reservation.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |
+| [`mandate.open-payment-no-primitive.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-no-primitive.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
+| [`mandate.open-payment-no-registry-version.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-no-registry-version.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
+| [`mandate.open-payment-registry-version-not-date.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-registry-version-not-date.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
+| [`mandate.open-payment-reservepay.json`](https://bacp.dev/latest/examples/mandate.open-payment-reservepay.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | valid |
+| [`mandate.open-payment-unknown-primitive.invalid.json`](https://bacp.dev/latest/examples/mandate.open-payment-unknown-primitive.invalid.json) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | invalid (MUST fail) |
 | [`negotiation-session.agreed.json`](https://bacp.dev/latest/examples/negotiation-session.agreed.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) | valid |
 | [`negotiation-session.old-state.invalid.json`](https://bacp.dev/latest/examples/negotiation-session.old-state.invalid.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) | invalid (MUST fail) |
 | [`offer.accept-with-terms.invalid.json`](https://bacp.dev/latest/examples/offer.accept-with-terms.invalid.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | invalid (MUST fail) |

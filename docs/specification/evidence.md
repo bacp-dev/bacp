@@ -50,7 +50,7 @@ operator, and is released only inside an evidence bundle to a party entitled to 
 | `discover` | A search is sent and results arrive | `agent`, `gateway` |
 | `cart` | Items are selected; the handler comparison is logged here | `agent`, `gateway` |
 | `disclosure` | The BPP's signed quote and disclosures arrive; records `checkout_hash` and the disclosures hash | `bpp` |
-| `mandate` | A mandate is activated, used or changes status; records mandate hashes | `gateway`, `trusted_surface` |
+| `mandate` | A mandate is activated, used or changes status, including each gateway pause reason (`binding_ineligible`, `reissue_required`) added or removed, with the `registry_version` ([Handler binding](mandates.md#handler-binding)); records mandate hashes | `gateway`, `trusted_surface` |
 | `step_up` | A step-up is requested, approved, declined or expires | `gateway`, `trusted_surface` |
 | `payment` | A debit is initiated (basket-blind instruction), a receipt arrives, an in-doubt debit is reconciled, a refund is issued | `gateway`, `psp` |
 | `order` | `on_confirm` creates the order | `bpp` |

@@ -494,6 +494,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "otm_block"
+   ],
    "closed_auth": [
     "upi.pin"
    ]
@@ -644,6 +647,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "sbmd_block"
+   ],
    "closed_auth": [
     "upi.pin"
    ],
@@ -803,6 +809,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "circle_delegation"
+   ],
    "closed_auth": [
     "upi.pin"
    ]
@@ -989,6 +998,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "upi_autopay_umn"
+   ],
    "closed_auth": [
     "upi.pin"
    ]
@@ -2093,6 +2105,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "card_emandate"
+   ],
    "closed_auth": [
     "card.3ds",
     "card.otp",
@@ -2261,6 +2276,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "agentic_token_intent"
+   ],
    "closed_auth": [
     "card.passkey",
     "card.3ds"
@@ -3060,6 +3078,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "nach_umrn"
+   ],
    "closed_auth": [
     "netbanking.login_otp",
     "card.otp",
@@ -3367,11 +3388,14 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "ppi_emandate"
+   ],
    "closed_auth": [
     "wallet_pin",
     "card.otp"
    ],
-   "open_requires": "Open only with an AFA-registered PPI e-mandate reference. Otherwise 2FA per debit."
+   "open_requires": "Open only through the ppi_emandate primitive: an AFA-registered PPI e-mandate reference. A wallet balance (balance_cap) never backs an open mandate; without an e-mandate every debit needs 2FA."
   },
   "mandate_primitives": [
    {
@@ -3671,6 +3695,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "balance_cap"
+   ],
    "closed_auth": [
     "voucher_code"
    ],
@@ -3811,8 +3838,8 @@
   },
   "binding": {
    "class": "O",
-   "open_eligible": true,
-   "open_requires": "Merchant-scoped balance."
+   "open_eligible": false,
+   "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Held pending Q-59 and Q-46."
   },
   "mandate_primitives": [
    {
@@ -3929,8 +3956,8 @@
   },
   "binding": {
    "class": "O",
-   "open_eligible": true,
-   "open_requires": "Only where the programme allows API redemption."
+   "open_eligible": false,
+   "open_requires": "Only where the programme allows API redemption. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Held pending Q-59 and Q-46."
   },
   "mandate_primitives": [
    {
@@ -4037,6 +4064,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "topup_mandate"
+   ],
    "closed_auth": [
     "upi.pin",
     "card.otp"
@@ -4168,6 +4198,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "topup_mandate"
+   ],
    "closed_auth": [
     "upi.pin",
     "card.otp"
@@ -5828,6 +5861,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "upms_registration"
+   ],
    "closed_auth": [
     "upi.pin",
     "card.otp"
@@ -5922,7 +5958,7 @@
   },
   "family": "voucher",
   "kind": "payment",
-  "status": "live",
+  "status": "pilot",
   "rail": {
    "operator": "NPCI"
   },
@@ -5942,10 +5978,13 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "voucher"
+   ],
    "closed_auth": [
     "voucher_code"
    ],
-   "open_requires": "Voucher is the mandate. Agent redemption without the beneficiary is not verified as of 17-10-2026."
+   "open_requires": "Voucher is the mandate. Pilot until Q-38 is answered: agent redemption without the beneficiary is not verified as of 17-10-2026."
   },
   "mandate_primitives": [
    {
@@ -6205,6 +6244,9 @@
   "binding": {
    "class": "O",
    "open_eligible": true,
+   "open_primitives": [
+    "programmability_rules"
+   ],
    "closed_auth": [
     "wallet_pin"
    ],
@@ -7510,8 +7552,8 @@
   },
   "binding": {
    "class": "O",
-   "open_eligible": true,
-   "open_requires": "Within a both-party-signed credit_limit. No money moves at order. Settlement entries cite another handler's receipt."
+   "open_eligible": false,
+   "open_requires": "Within a both-party-signed credit_limit. No money moves at order. Settlement entries cite another handler's receipt. Not open-eligible in BACP 2026-10-17: its limits are enforced by BACP, not by a rail or issuer. Held pending Q-59 and Q-46."
   },
   "mandate_primitives": [
    {

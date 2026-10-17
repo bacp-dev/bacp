@@ -227,6 +227,33 @@
       "description": "Handlers that may back an OPEN (HNP) payment mandate (binding class O). Supersedes the legacy RailType.",
       "pattern": "^(in\\.upi\\.(reservepay|circle|autopay|otm)|in\\.card\\.(mandate|agentic)|in\\.nach\\.debit|in\\.ppi\\.(wallet|gift|netc_topup|ncmc_topup)|in\\.store_credit|in\\.loyalty|in\\.erupi|in\\.cbdc\\.programmed|in\\.bbps\\.upms|bacp\\.credit_ledger|in\\.upi\\.uap\\.[a-z0-9_.]+|upi\\.circle\\.delegate|upi\\.reservepay\\.block|upi\\.autopay|upi\\.uap\\.[a-z0-9_.]+)$"
     },
+    "MandatePrimitiveType": {
+      "description": "Type of the rail object that carries a standing authority, as listed in a handler descriptor's mandate_primitives[].type, for example sbmd_block (UPI Reserve Pay block), upi_autopay_umn, card_emandate, nach_umrn, ppi_emandate or balance_cap.",
+      "enum": [
+        "sbmd_block",
+        "otm_block",
+        "circle_delegation",
+        "upi_autopay_umn",
+        "card_emandate",
+        "agentic_token_intent",
+        "nach_umrn",
+        "ppi_emandate",
+        "balance_cap",
+        "voucher",
+        "programmability_rules",
+        "upms_registration",
+        "topup_mandate",
+        "loan_sanction",
+        "payee_binding",
+        "approval_policy",
+        "assisted_session",
+        "credit_limit",
+        "factoring_unit",
+        "gpa_block",
+        "pps_registration",
+        "none"
+      ]
+    },
     "UdyamCategory": {
       "enum": [
         "micro",

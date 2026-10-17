@@ -124,12 +124,18 @@ ledger.
 
 1. **Reservation ledger.** For every open payment mandate the gateway MUST keep (a) settled spends, derived only
    from PSP-signed receipts, and (b) in-flight reservations keyed by closed payment mandate id, each with an amount
-   and a time. Exposure for a budget window is settled spends plus reservations in that window.
-2. **Atomic section.** For `complete`, the following MUST run as one atomic, linearisable operation per open mandate
-   id: the split-order check; the authoritative mandate evaluation (including the positive-amount rule) against
-   exposure; consumption of the closed payment mandate; creation of the reservation; and the session's move to
-   `complete_in_progress`. A lock keyed on the mandate id, or compare-and-reserve on a store with equivalent
-   guarantees, satisfies this. The rail debit MUST run after the atomic section, never inside it.
+   and a time. Exposure for a budget window is settled spends plus reservations in that window. Exposure against an
+   open checkout mandate's budgets is the settled spends and reservations of every open payment mandate under it.
+2. **Atomic section.** For `complete`, the following MUST run as one atomic, linearisable operation keyed on the
+   **root open checkout mandate** id: the split-order check; the authoritative mandate evaluation (including the
+   positive-amount rule) against exposure; consumption of the closed payment mandate; creation of the reservation;
+   and the session's move to `complete_in_progress`. The root open checkout mandate is the open checkout mandate
+   named by the open payment mandate's `checkout_mandate_ref`, followed through `parent_mandate_id` to the top of
+   any delegation chain. Keying on it, not on the payment mandate id, serialises sibling open payment mandates
+   under one checkout mandate (for example one Reserve Pay block per seller), whose only common cap is the
+   checkout mandate's budgets. A split-tender payment plan MUST reserve every tender in one atomic section. A lock
+   keyed on the root open checkout mandate id, or compare-and-reserve on a store with equivalent guarantees,
+   satisfies this. The rail debit MUST run after the atomic section, never inside it.
 3. **What counts.** Budgets, `max_executions`, every rail-cap pre-check (period caps, first-24-hour caps, remaining
    block) and split-order detection MUST count reservations as spent.
 4. **Resolution.** A reservation becomes a settled spend only when a PSP-signed success receipt is applied. It MUST
@@ -138,8 +144,8 @@ ledger.
 5. **The rail is not the backstop.** A gateway MUST NOT rely on rail-enforced limits to bound BACP budgets: the
    rail authority may legitimately exceed the BACP caps, and the multi-seller rails (UPI Circle, agentic card
    tokens) are exactly the loose ones.
-6. **Replicas.** A gateway running as several instances MUST share a ledger that is linearisable per mandate. A
-   per-process lock is not enough. Cross-gateway atomicity is open ([Q-36](open-questions.md#q-36)).
+6. **Replicas.** A gateway running as several instances MUST share a ledger that is linearisable per root open
+   checkout mandate. A per-process lock is not enough. Cross-gateway atomicity is open ([Q-36](open-questions.md#q-36)).
 7. **Negotiation exposure.** The guard's cross-session exposure check, and the emission of the firm COUNTER, ACCEPT
    or bid it guards, MUST run in the same kind of atomic section, keyed on the principal. Each outstanding firm
    commitment holds a reservation until it is rejected, expires, is withdrawn or superseded, or is paid.
