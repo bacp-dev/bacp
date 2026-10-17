@@ -1409,13 +1409,17 @@ paths:
       operationId: sendNegotiationMessage
       summary: Send offer, counter_offer, reject, withdraw, terminate, request_extension or accept_revoke
       description: "The agent submits an unsigned draft in a request signed with its own key (RFC 9421, tag bacp-negotiate for firm messages,\
-        \ bacp-browse for non-firm ones). The gateway verifies that signature before parsing and records it as the agent's act in the transcript,\
+        \ withdraw and accept_revoke, bacp-browse for other non-firm ones). The gateway verifies that signature before parsing and records it as the agent's act in the transcript,\
         \ runs guard N-1..N-11 and validators V-01..V-14, signs the message with the BAP registry key only, and sends Beckn select (buyer) carrying\
         \ a bacp.neg TagGroup. The gateway never holds or uses an agent key.\n- A firm counter outside the negotiation mandate is never sent.\
         \ The response is 200 with `requires_escalation`, or the agent may resend with subject_to_principal_approval true (forces firm false).\n\
         - A counter that cites a non-live offer returns 409 NEG_STALE_OFFER. A counter on an expired offer returns 200\n  message NEG_OFFER_EXPIRED\
         \ (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt. The crossing rule (earlier CounterSignature\
-        \ timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n"
+        \ timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n- A firm offer, counter_offer or bid draft without\
+        \ acceptance_revocation returns 400 NEG_SCHEMA_INVALID; the gateway never inserts a value. waived needs waiver_basis (a contract\
+        \ or the buyer's own RFQ, with hash). A draft with acceptance_revocation allowed_until_receipt is refused with 403 capabilities_incompatible\
+        \ and nothing is sent.\n- An accept_revoke draft carries accept_msg_hash and offer_hash. In this version no offer sets allowed_until_receipt,\
+        \ so the outcome is accept_revoke_not_allowed (countersigned, logged, refused).\n"
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -1433,6 +1437,11 @@ paths:
                   in_reply_to: sha-256:Wc6l4R0gH0b0dXzcrZmLtJ3x3yQ6m5PZb1oS2kA9VQo
                   firm: true
                   expires_in: PT30M
+                  acceptance_revocation: waived
+                  waiver_basis:
+                    doc_type: contract
+                    id: RC-2026-114
+                    hash: sha-256:M5UfYcafnlsmBR85CRvl7P0xBxMx19WS5F0r33UstjI
                   term_sheet_patch:
                   - op: replace
                     path: /lines/0/unit_price/value
@@ -4012,6 +4021,8 @@ components:
         ai_disclosure:
           const: true
           description: Always true. REQUIRED, and mirrored in the bacp tag group where context.bacp may be stripped.
+        profile:
+          $ref: ../schemas/beckn-context-bacp.json#/properties/profile
         acting_for:
           type: object
           description: Whom the agent acts for, as told to the seller. OPTIONAL. gstin and display_name are sent only when the mandate's data_scopes
@@ -4775,9 +4786,26 @@ components:
             carries covers[] and posts its result.
           items:
             $ref: '#/components/schemas/CoverEntry'
+        offer_hash:
+          $ref: '#/components/schemas/Hash'
+          description: On a negotiation confirm step-up, the offer_hash of the offer the principal is asked to approve.
+        acceptance_revocation:
+          enum:
+          - waived
+          - allowed_until_receipt
+          description: On a negotiation confirm step-up about a firm offer, the offer's acceptance_revocation value, copied unchanged. The Trusted
+            Surface never shows the token; it shows the fixed consequence sentence for the value, followed by the offer's cancellation terms.
+            In this version only waived occurs. Present only together with offer_hash.
         expires_at:
           type: string
           format: date-time
+      dependentRequired:
+        acceptance_revocation:
+        - offer_hash
+      not:
+        required:
+        - checkout_hash
+        - offer_hash
     StepUp:
       type: object
       required:
@@ -4794,7 +4822,7 @@ components:
           - confirm
           - rail_auth
           - post_order
-          description: confirm = the principal confirms this checkout on the Trusted Surface. rail_auth = a fresh per-transaction factor (for
+          description: confirm = the principal confirms this checkout or, in a negotiation, this offer on the Trusted Surface. rail_auth = a fresh per-transaction factor (for
             example the UPI PIN) because an AFA threshold applies. post_order = the principal confirms one post-order write or trade act, named
             in the ts_render, to obtain hp_proof (carried in Error.step_up of 403 presence_not_proven). At most one post_order step-up is pending
             per (order_id, action, issue_id), and a repeat of the refused write returns the same step_up_id; their creation is rate-limited per
@@ -5209,8 +5237,9 @@ components:
           $ref: '#/components/schemas/Mandate/properties/auth_binding'
         presentation:
           $ref: '#/components/schemas/Presentation'
-          description: What the Trusted Surface presented and what the principal did. REQUIRED on step_up.approved, mandate.activated, loan.accepted
-            and payment.afa_completed. On step_up.approved it MUST carry checkout_hash, and its user_action is never decline.
+          description: What the Trusted Surface presented and what the principal did. REQUIRED on step_up.approved, negotiation.step_up.approved,
+            mandate.activated, loan.accepted and payment.afa_completed. On step_up.approved it MUST carry checkout_hash; on negotiation.step_up.approved
+            it MUST carry offer_hash; never both. On either approval its user_action is never decline.
         source:
           type: object
           additionalProperties: true
@@ -5222,7 +5251,9 @@ components:
         negotiation_id:
           type: string
         offer_hash:
-          type: string
+          $ref: '#/components/schemas/Hash'
+          description: On negotiation.step_up.approved, the offer_hash of the offer the step-up names. Equals presentation.offer_hash; a mismatch
+            is refused with 403 ts_render_mismatch.
         diff_ack:
           type: string
         attestation:
@@ -5241,6 +5272,7 @@ components:
             event:
               enum:
               - step_up.approved
+              - negotiation.step_up.approved
               - mandate.activated
               - loan.accepted
               - payment.afa_completed
@@ -5260,6 +5292,21 @@ components:
             presentation:
               required:
               - checkout_hash
+              properties:
+                user_action:
+                  not:
+                    const: decline
+      - if:
+          properties:
+            event:
+              const: negotiation.step_up.approved
+          required:
+          - event
+        then:
+          properties:
+            presentation:
+              required:
+              - offer_hash
               properties:
                 user_action:
                   not:
@@ -5896,6 +5943,30 @@ components:
         advisory_text:
           type: string
           description: Logged with binding false and returned to the counterparty only as untrusted text
+        acceptance_revocation:
+          enum:
+          - waived
+          - allowed_until_receipt
+          description: REQUIRED on a firm offer, counter_offer or bid draft. The gateway copies it into the signed message unchanged and never
+            inserts or normalises a value; a firm draft without it is refused with 400 NEG_SCHEMA_INVALID. waived is permitted only with
+            waiver_basis and only outside consumer trade profiles. A draft with allowed_until_receipt is refused with 403 capabilities_incompatible
+            and nothing is sent.
+        waiver_basis:
+          description: REQUIRED when acceptance_revocation is waived. The signed contract or the buyer's own RFQ under which the offer excludes
+            revocation of acceptance; hash is REQUIRED.
+          allOf:
+          - $ref: ../schemas/common.json#/$defs/DocumentRef
+          - properties:
+              doc_type:
+                enum:
+                - contract
+                - rfq
+            required:
+            - hash
+        accept_msg_hash:
+          $ref: ../schemas/common.json#/$defs/Hash
+          description: For accept_revoke, REQUIRED with offer_hash. The msg_hash of the accept to revoke; offer_hash is the offer that accept
+            names.
       allOf:
       - if:
           properties:
@@ -5907,6 +5978,40 @@ components:
           properties:
             firm:
               const: false
+      - if:
+          properties:
+            type:
+              enum:
+              - offer
+              - counter_offer
+              - bid
+            firm:
+              const: true
+          required:
+          - type
+          - firm
+        then:
+          required:
+          - acceptance_revocation
+      - if:
+          properties:
+            acceptance_revocation:
+              const: waived
+          required:
+          - acceptance_revocation
+        then:
+          required:
+          - waiver_basis
+      - if:
+          properties:
+            type:
+              const: accept_revoke
+          required:
+          - type
+        then:
+          required:
+          - accept_msg_hash
+          - offer_hash
     AcceptRequest:
       type: object
       required:

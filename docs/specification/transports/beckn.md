@@ -67,6 +67,8 @@ state remains Beckn's authoritative machine (`Created → Accepted → In-progre
 | Purchase order | `confirm` with `offer_hash` and `BAP_TERMS.ACCEPT_BPP_TERMS` | `confirm` | The PO MUST NOT alter terms |
 | PO acceptance | `on_confirm` → CONTRACTED | `on_confirm`, contract ACTIVE | |
 | REJECT | `on_select` / `on_init` error (for example 50005) or `bacp.neg.reject` | same | Typed reasons |
+| ACCEPT_REVOKE | Not carried in this version | — | A firm offer with `acceptance_revocation: allowed_until_receipt` is refused with `capabilities_incompatible`, on every leg in this version and on a Beckn leg until a carrier exists ([Q-22](../open-questions.md#q-22)) |
+| Firm offer with `waived` and no `waiver_basis`, or in a consumer session any `waived` offer (interim) | `on_select` or `select` with the `bacp.neg.offer` TagGroup | same | The only schema error excused is the missing `waiver_basis`. Never accepted by an agent. The buyer accepts only through a Trusted Surface step-up (`requires_buyer_review`); a human seller only in the BPP app with the consequence sentence shown ([Acceptance revocation](../negotiation/index.md#acceptance-revocation)) |
 | Auction | AuctionSpec in `on_search` from the auctioneer's endpoint; bids are `select` to the auctioneer; award by `on_select`, then `init` / `confirm` with the winner | `Offer` + `availableTo` | [Q-25](../open-questions.md#q-25) |
 
 `context.bacp.mandate_ref` always points to the **checkout** mandate. The negotiation mandate never travels; only the
@@ -92,6 +94,7 @@ The key is `bacp`, not `agent`, because "agent" in Beckn means a fulfilment agen
 | `ai_disclosure` | yes | Constant `true`: an AI agent originated the message. Also mirrored in the `bacp` tag group ([Mirroring](#mirroring)) |
 | `acting_for` | no | `{kind, gstin, display_name}`: whom the agent acts for, `kind` being `individual` or `business`. `gstin` and `display_name` are sent only when the mandate's `data_scopes` include `ACTING_FOR`, and otherwise omitted; a sole proprietor's GSTIN or name is personal data |
 | `operator_name`, `operator_grievance_contact` | no | The agent operator's legal name and its grievance officer's contact |
+| `profile` | no | The one [trade profile](../trade-profiles.md#profile-table) the session declares, fixed when the session opens; a later message with another profile is refused with `capabilities_incompatible`. With none, or when the buyer side's `acting_for.kind` is `individual` or it sends no `acting_for`, the session is a consumer session for [acceptance revocation](../negotiation/index.md#acceptance-revocation) |
 | `channel`, `language` | no | For example `voice`, `hi-IN` |
 | `version` | no | Extension version |
 

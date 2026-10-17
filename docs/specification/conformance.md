@@ -343,6 +343,21 @@ A BACP gateway MUST:
 - Run the negotiation guard on every outgoing firm counter-offer, ACCEPT,
   bid and award, and never reveal the reservation price or `total_max`
   (Negotiation level and above).
+- Refuse a firm offer without `acceptance_revocation` and never insert a
+  value; refuse `allowed_until_receipt` on every leg, incoming or in the
+  principal's own draft (`capabilities_incompatible`); apply the value rules
+  by leg and session, with the profile fixed at session open and the
+  `acting_for` cross-check for consumer sessions; accept a `waived` offer
+  without the principal only against a basis document obtained from the
+  principal before the offer arrived; on a Beckn leg excuse no schema error
+  other than a missing `waiver_basis`; release exposure once per
+  reservation; refuse every `accept_revoke` with
+  `accept_revoke_not_allowed`; apply the tag and presence rules for
+  `accept_revoke`; and accept a negotiation approval only as
+  `negotiation.step_up.approved` whose `presentation.offer_hash` equals the
+  `ts_render`'s and the offer's (`403 ts_render_mismatch`)
+  ([Acceptance revocation](negotiation/index.md#acceptance-revocation);
+  cases T3-01 to T3-30 outside the Proposed (sunset) block).
 
 ### Seller (BPP)
 
@@ -460,7 +475,11 @@ PSP or a seller) MUST:
   from the BPP-signed quote in `total`, payee or `checkout_hash`, or from the
   disclosures hash in `price_breakup_hash`, and a log
   whose first agent entry is not `ai_disclosure`
-  ([Evidence bundle](evidence.md#ap2-verification)).
+  ([Evidence bundle](evidence.md#ap2-verification)), a negotiation
+  step-up whose `ts_render` or `presentation` carries an `offer_hash` or an
+  `acceptance_revocation` that differs from the signed offer, and a negotiation
+  transcript in which a later entry has an earlier `received_at`
+  ([Clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew)).
 - Never accept a summary rendered under `in.bacp.evidence.summary.1` as
   evidence ([Evidence summary](human-participants.md#evidence-summary)).
 
@@ -2726,4 +2745,625 @@ integer paise.
     - render: {each_leg: true}
   expect:
     verdict: {presentations: {count: 3, distinct_content_hash: true}, offers: {new_block: 0}, first_statement: {sellers: 3}}
+```
+
+## Acceptance-revocation cases {#acceptance-revocation-cases}
+
+The cases below cover [acceptance revocation](negotiation/index.md#acceptance-revocation): the REQUIRED
+`acceptance_revocation` term and its `waiver_basis`, the value rules by leg and session, the refusal of
+`allowed_until_receipt` on every leg, consumer sessions, the Beckn exception for a missing basis, exposure release,
+the tag rule for `accept_revoke`, the negotiation `ts_render` rows and their approval with `Presentation.offer_hash`,
+and the RFQ and auction rules. The cases that need a live or accepted offer with `allowed_until_receipt` test the
+[sunset text](negotiation/index.md#acceptance-revocation-sunset) and are in the
+[Proposed (sunset) block](#acceptance-revocation-sunset-cases) below. They use the manifest form above. These cases
+also use:
+
+- `leg` (fixture): the binding that carries negotiation messages between the parties, `rest` (the REST, MCP or A2A
+  bindings) or `beckn`;
+- `profile` (fixture): the session's `context.bacp.profile`, or `none` when it declares none;
+- `acting_for` (fixture): the buyer side's `context.bacp.acting_for`, or `none` when it sends none; where a case does
+  not set it, the buyer side sends `{kind: business}`;
+- `offer` (fixture): the offer as the gateway under test holds it, with its `state`, `firm`, `acceptance_revocation`,
+  `waiver_basis` and `offer_hash`, the guard `verdict` shown to the agent, `proposer: gateway_under_test` when the
+  gateway under test made the offer, and `accepted_after: negotiation.step_up.approved` when the principal approved
+  the acceptance on the Trusted Surface;
+- `negotiations`, `rfq`, `auction` and `bids` (fixtures): several negotiations of one principal with their offers and
+  revoke outcomes, an RFQ with its comparison set, and an auction with its bids;
+- `held_documents` (fixture): the documents the acceptor's gateway obtained from its own principal, each with its
+  `hash`, the counterparties it names (`names`, by `np_id` or GSTIN) and `waiver_basis: true` when the principal marked
+  it as a waiver basis;
+  `counterparty_documents` (fixture): documents the counterparty serves, by `uri`, with their hashes;
+- `incoming` (step): the mock counterparty sends the given negotiation message to the gateway under test; `at` is
+  the receipt time relative to the first `incoming` step, a field set to `omit` is left out, `repeat: n` delivers
+  the same signed message n times, and `across_replicas: true` delivers the copies to different gateway replicas;
+- `counterparty_receipt` (step): the mock counterparty returns its CounterSignature for the gateway's own message,
+  with the given payload fields;
+- `state` keys `offer`, `negotiation`, `live_offer`, `rfq`, `auction` and `exposure`; `exposure_releases` counts the
+  releases of one reservation.
+
+T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a verifier. Amounts are integer paise.
+
+```yaml
+- case_id: T3-01
+  title: A firm offer without acceptance_revocation is refused and never becomes LIVE
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: omit}
+  expect:
+    responses:
+      - {status: 400, code: NEG_SCHEMA_INVALID, param: $.acceptance_revocation, count: 1}
+    state: {live_offer: none, negotiation: NEGOTIATING}
+
+- case_id: T3-02
+  title: An acceptance_revocation value outside the enum is refused
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: revocable}
+  expect:
+    responses:
+      - {status: 400, code: NEG_SCHEMA_INVALID, param: $.acceptance_revocation, count: 1}
+    state: {live_offer: none}
+
+- case_id: T3-03
+  title: A waived offer without a hashed contract or RFQ basis is refused on a REST leg
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: omit}
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114}}
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: po, id: PO-2026-0457, hash: H_PO}}
+  expect:
+    responses:
+      - {status: 400, code: NEG_SCHEMA_INVALID, count: 3}
+    state: {live_offer: none}
+
+- case_id: T3-04
+  title: An agent cannot accept a waived offer whose basis document its gateway does not hold
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}, verdict: acceptable}
+    held_documents: []
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
+  expect:
+    responses:
+      - {path: accept, status: 200, state: ESCALATED, resolution: requires_buyer_review, count: 1}
+    state: {offer: LIVE, negotiation: ESCALATED}
+
+- case_id: T3-05
+  title: A waived offer is refused in a consumer session and in a session with no profile
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+      fixture_override: {profile: b2c.ecom}
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+      fixture_override: {profile: none}
+  expect:
+    messages: [capabilities_incompatible, capabilities_incompatible]
+    state: {live_offer: none, negotiation: NEGOTIATING}
+
+- case_id: T3-06
+  title: On a Beckn consumer leg a waived offer without a basis is recorded and accepted only after a Trusted Surface approval
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    profile: b2c.ecom
+    acting_for: {kind: individual}
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: omit}
+      expect:
+        messages: []
+        state: {live_offer: present, negotiation: NEGOTIATING}
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
+      expect:
+        responses:
+          - {path: accept, status: 200, state: ESCALATED, resolution: requires_buyer_review, count: 1}
+        beckn: []
+    - trusted_surface_event: {event: negotiation.step_up.approved, step_up_id: "{step_up_id}", offer_hash: "{offer_hash}", presentation: {offer_hash: "{offer_hash}"}}
+  expect:
+    verdict: {ts_render: {kind: confirm, reason: constraint_unresolved, acceptance_revocation: waived, offer_hash: "{offer_hash}"}}
+    beckn:
+      - {action: init, after: negotiation.step_up.approved, tags.bacp.neg.accept: present}
+
+- case_id: T3-07
+  title: An approval of a negotiation step-up whose ts_render lacks or garbles acceptance_revocation is refused
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+    negotiation: {state: ESCALATED, step_up: {step_up_id: stp_N1, kind: confirm}}
+    ts_renders:
+      - {step_up_id: stp_N1, offer_hash: "{offer_hash}", acceptance_revocation: omit}
+      - {step_up_id: stp_N2, offer_hash: "{offer_hash}", acceptance_revocation: true}
+  steps:
+    - trusted_surface_event: {event: negotiation.step_up.approved, step_up_id: stp_N1, offer_hash: "{offer_hash}", presentation: {offer_hash: "{offer_hash}"}}
+    - trusted_surface_event: {event: negotiation.step_up.approved, step_up_id: stp_N2, offer_hash: "{offer_hash}", presentation: {offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 403, code: ts_render_mismatch, count: 2}
+    state: {offer: LIVE, negotiation: ESCALATED}
+
+- case_id: T3-12
+  title: Under waived a revoke is countersigned, logged and refused
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: ACCEPTED, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}, proposer: gateway_under_test}
+    negotiation: {state: AGREED}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}"}
+  expect:
+    messages: [accept_revoke_not_allowed]
+    state: {offer: ACCEPTED, negotiation: AGREED}
+    log: {entry: {msg_type: accept_revoke, counter_signature: present}}
+
+- case_id: T3-13
+  title: An accept_revoke without offer_hash is refused
+  level: bacp.neg.1
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-negotiate, body: {type: accept_revoke, accept_msg_hash: H_A}}
+  expect:
+    responses:
+      - {status: 400, code: NEG_SCHEMA_INVALID, param: $.offer_hash, count: 1}
+
+- case_id: T3-14
+  title: An accept_revoke or withdraw signed under bacp-browse is refused
+  level: bacp.neg.1
+  fixture:
+    profile: b2b.procurement
+    offer: {state: ACCEPTED, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-browse, body: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}"}}
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-browse, body: {type: withdraw, offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 401, code: signature_invalid, count: 2}
+    state: {offer: ACCEPTED}
+
+- case_id: T3-18
+  title: On a Beckn leg an offer with allowed_until_receipt is refused
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    profile: b2b.procurement
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: allowed_until_receipt}
+  expect:
+    messages: [capabilities_incompatible]
+    state: {live_offer: none, negotiation: NEGOTIATING}
+
+- case_id: T3-19
+  title: Exposure is released once on a failed condition and once on a reject delivered twice to two replicas
+  level: bacp.neg.1
+  fixture:
+    profile: b2b.procurement
+    gateway: {replicas: 2}
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    negotiations:
+      - {name: N2, offer: {state: LIVE, all_in_total: {value: 120000, currency: INR}, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}, proposer: gateway_under_test}}
+      - {name: N3, offer: {state: LAPSED_CONDITION, all_in_total: {value: 90000, currency: INR}}}
+      - {name: N4, offer: {state: LIVE, all_in_total: {value: 150000, currency: INR}, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}, proposer: gateway_under_test}}
+  steps:
+    - incoming: {negotiation: N4, type: reject, reason_code: price, repeat: 2, across_replicas: true}
+    - request: {method: GET, path: "/negotiations/N2", tag: bacp-browse}
+  expect:
+    state: {exposure: {value: 120000, currency: INR}, exposure_releases: {N4: 1}}
+
+- case_id: T3-21
+  title: A bid retraction follows the auction's retraction rule, not acceptance_revocation
+  level: bacp.auction.1
+  fixture:
+    profile: agri
+    acting_for: {kind: business}
+    auction: {mode: english, retraction_rule: before_close_outside_window, state: OPEN}
+    bids:
+      - {name: B1, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+      - {name: B2, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+      - {name: B3, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+  steps:
+    - request: {method: POST, path: "/auctions/{auction_id}/bids", tag: bacp-negotiate, body: {type: bid_retract, bid: B1}}
+    - request: {method: POST, path: "/auctions/{auction_id}/bids", tag: bacp-negotiate, body: {type: bid_retract, bid: B2}}
+    - wait_for: {auction: CLOSED}
+    - request: {method: POST, path: "/auctions/{auction_id}/bids", tag: bacp-negotiate, body: {type: bid_retract, bid: B3}}
+  expect:
+    responses:
+      - {status: 200, count: 2}
+      - {status: 403, code: NEG_RETRACTION_REFUSED, count: 1}
+
+- case_id: T3-22
+  title: A firm draft without acceptance_revocation gets 400 and the gateway inserts nothing
+  level: bacp.neg.1
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-negotiate, body: {type: counter_offer, in_reply_to: "{offer_hash}", firm: true, expires_in: PT30M}}
+  expect:
+    responses:
+      - {status: 400, code: NEG_SCHEMA_INVALID, param: $.acceptance_revocation, count: 1}
+    beckn: []
+
+- case_id: T3-23
+  title: On a REST leg an offer with allowed_until_receipt is refused in a business session
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: allowed_until_receipt}
+  expect:
+    messages: [capabilities_incompatible]
+    state: {live_offer: none, negotiation: NEGOTIATING}
+
+- case_id: T3-24
+  title: The gateway refuses its own principal's draft with allowed_until_receipt and sends nothing
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-negotiate, body: {type: counter_offer, in_reply_to: "{offer_hash}", firm: true, expires_in: PT30M, acceptance_revocation: allowed_until_receipt}}
+  expect:
+    responses:
+      - {status: 403, code: capabilities_incompatible, param: $.acceptance_revocation, count: 1}
+    beckn: []
+
+- case_id: T3-25
+  title: A negotiation approval whose presentation.offer_hash differs from the ts_render's is refused
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+    negotiation: {state: ESCALATED, step_up: {step_up_id: stp_N1, kind: confirm}}
+    ts_renders:
+      - {step_up_id: stp_N1, offer_hash: "{offer_hash}", acceptance_revocation: waived}
+  steps:
+    - trusted_surface_event: {event: negotiation.step_up.approved, step_up_id: stp_N1, offer_hash: H_OTHER, presentation: {offer_hash: H_OTHER}}
+  expect:
+    responses:
+      - {status: 403, code: ts_render_mismatch, count: 1}
+    state: {offer: LIVE, negotiation: ESCALATED}
+    beckn: []
+
+- case_id: T3-26
+  title: A step_up.approved posted for a negotiation step-up is refused
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+    negotiation: {state: ESCALATED, step_up: {step_up_id: stp_N1, kind: confirm}}
+  steps:
+    - trusted_surface_event: {event: step_up.approved, step_up_id: stp_N1, presentation: {offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, count: 1}
+    state: {offer: LIVE, negotiation: ESCALATED}
+
+- case_id: T3-27
+  title: A basis document fetched from a uri the seller serves does not let the agent accept a waived offer
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, uri: "https://bpp.seller.example.in/contracts/RC-2026-114", hash: H_RC}, verdict: acceptable}
+    held_documents: []
+    counterparty_documents: [{uri: "https://bpp.seller.example.in/contracts/RC-2026-114", hash: H_RC}]
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
+  expect:
+    responses:
+      - {path: accept, status: 200, state: ESCALATED, resolution: requires_buyer_review, count: 1}
+    state: {offer: LIVE, negotiation: ESCALATED}
+    beckn: []
+
+- case_id: T3-28
+  title: A business profile with an individual buyer, or a changed profile, does not unlock waived
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    acting_for: {kind: individual}
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+      fixture_override: {acting_for: none}
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}, context.bacp.profile: fmcg.distribution}
+      fixture_override: {acting_for: {kind: business}}
+  expect:
+    messages: [capabilities_incompatible, capabilities_incompatible, capabilities_incompatible]
+    state: {live_offer: none, negotiation: NEGOTIATING}
+
+- case_id: T3-29
+  title: On a Beckn leg the only schema error excused is the missing waiver_basis, so a relative expires_at is refused
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    profile: b2c.ecom
+    acting_for: {kind: individual}
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: omit, expires_at: PT30M}
+  expect:
+    messages: [NEG_SCHEMA_INVALID]
+    state: {live_offer: none, negotiation: NEGOTIATING}
+
+- case_id: T3-30
+  title: A bundle whose negotiation ts_render shows another acceptance_revocation than the signed offer does not verify
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      offer: {offer_hash: H_O, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}}
+      ts_renders: [{step_up_id: stp_N1, offer_hash: H_O, acceptance_revocation: allowed_until_receipt}]
+      trusted_surface_events: [{event: negotiation.step_up.approved, step_up_id: stp_N1, offer_hash: H_O, presentation: {offer_hash: H_O}}]
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+```
+
+### Proposed (sunset) cases {#acceptance-revocation-sunset-cases}
+
+!!! warning "Proposed (sunset)"
+    These cases test the [sunset text](negotiation/index.md#acceptance-revocation-sunset) for
+    `allowed_until_receipt`. Each needs a live or accepted offer with that value, which no receiver creates in this
+    version, so they carry no conformance level and are not run against `2026-10-17`. They are published as data, and passing them is sunset condition (f). The non-monotonic chain check
+    that T3-16 exercises also applies in this version ([Clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew)).
+    In these cases `log.entries[].counter_signature.returned: sync_response` means that the CounterSignature came
+    back in the synchronous response to that message, and `before_step` names the step that it preceded; `replica`
+    (step) names the gateway replica that receives the message; `outcome` (an `incoming` type) is the proposer's
+    outcome message for a revoke.
+
+```yaml
+- case_id: T3-08
+  title: A revoke received before its matching accept within the hold is honoured, with receipts committed in each response
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", dispatched_at: "-0.2s", at: "+0s"}
+    - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", dispatched_at: "-0.7s", at: "+1s"}
+  expect:
+    messages: [accept_revoke_honoured]
+    state: {offer: ACCEPT_REVOKED, negotiation: NEGOTIATING}
+    log:
+      entries:
+        - {seq: n, msg_type: accept_revoke, counter_signature: {log_entry_hash: present, returned: sync_response, before_step: 2}}
+        - {seq: n+1, msg_type: accept, counter_signature: {log_entry_hash: present, returned: sync_response}}
+        - {seq: n+2, msg_type: outcome, code: accept_revoke_honoured}
+
+- case_id: T3-09
+  title: An unmatched revoke is discarded after the hold and nothing changes
+  fixture:
+    leg: rest
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}"}
+    - wait_for: {clock: "+6s"}
+  expect:
+    state: {offer: LIVE, negotiation: NEGOTIATING}
+    log: {entry: {msg_type: accept_revoke, outcome: discarded}}
+
+- case_id: T3-10
+  title: A revoke dispatched before the accept it names is void
+  fixture:
+    leg: rest
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", dispatched_at: "-1s", at: "+0s"}
+    - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", dispatched_at: "+0s", at: "+1s"}
+  expect:
+    state: {offer: ACCEPTED, negotiation: AGREED}
+    log: {entry: {msg_type: accept_revoke, outcome: void}}
+
+- case_id: T3-11
+  title: A revoke received after its accept leaves the agreement standing
+  fixture:
+    leg: rest
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
+  steps:
+    - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", at: "+0s"}
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", at: "+1s"}
+  expect:
+    messages: [agreed_by_counterparty, accept_revoke_after_receipt]
+    state: {offer: ACCEPTED, negotiation: AGREED}
+
+- case_id: T3-15
+  title: Revoking an acceptance the principal approved needs hp_proof
+  fixture:
+    offer: {state: ACCEPTED, firm: true, acceptance_revocation: allowed_until_receipt, accepted_after: negotiation.step_up.approved}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-negotiate, body: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, param: $.hp_proof, count: 1}
+    state: {offer: ACCEPTED}
+
+- case_id: T3-16
+  title: A bundle whose receipts go back in time along the chain does not verify
+  system_under_test: verifier
+  fixture:
+    bundle:
+      transcript:
+        - {seq: 7, msg_type: accept_revoke, at: "2026-10-13T11:05:11.200+05:30", log_entry_hash: L7}
+        - {seq: 8, msg_type: accept, at: "2026-10-13T11:05:11.000+05:30", log_entry_hash: L8}
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: T3-17
+  title: Under allowed_until_receipt a receipt of an accept without log_entry_hash does not count
+  fixture:
+    leg: rest
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, verdict: acceptable}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
+    - counterparty_receipt: {for: accept, log_entry_hash: omit}
+  expect:
+    messages: [evidence_unverifiable]
+    state: {negotiation: ACCEPT_PENDING}
+
+- case_id: T3-19b
+  title: Exposure is released on a countersigned revoke and held while contested
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    negotiations:
+      - {name: N1, offer: {state: ACCEPTED, all_in_total: {value: 150000, currency: INR}, acceptance_revocation: allowed_until_receipt}, outcome: accept_revoke_honoured, outcome_countersigned: true}
+      - {name: N2, offer: {state: ACCEPTED, all_in_total: {value: 120000, currency: INR}, acceptance_revocation: allowed_until_receipt}, outcome: none}
+  steps:
+    - request: {method: GET, path: "/negotiations/N2", tag: bacp-browse}
+  expect:
+    state: {exposure: {value: 120000, currency: INR}}
+
+- case_id: T3-20
+  title: A revoked RFQ award cancels the RFQ and a second award is refused
+  fixture:
+    rfq: {award_rule: l1_landed_cost, state: AWARDED, comparison: [{rank: 1, seller: seller-a}, {rank: 2, seller: seller-b}]}
+    offer: {seller: seller-a, state: ACCEPTED, acceptance_revocation: allowed_until_receipt}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-negotiate, body: {type: accept_revoke, accept_msg_hash: H_AWARD, offer_hash: "{offer_hash}"}}
+    - counterparty_receipt: {for: accept_revoke, outcome: accept_revoke_honoured}
+    - request: {method: POST, path: "/rfqs/{rfq_id}/award", tag: bacp-negotiate, body: {seller: seller-b}}
+  expect:
+    messages: [accept_revoke_honoured, NEG_COLLUSION_SCREEN]
+    responses:
+      - {status: 403, code: NEG_AWARD_RULE, count: 1}
+    state: {rfq: CANCELLED}
+
+- case_id: T3-31
+  title: The proposer commits to receipt order in the synchronous response to each message
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", at: "+0s"}
+    - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", at: "+1s"}
+  expect:
+    log:
+      entries:
+        - {seq: n, msg_type: accept_revoke, counter_signature: {log_entry_hash: present, returned: sync_response, before_step: 2}}
+        - {seq: n+1, msg_type: accept, counter_signature: {log_entry_hash: present, returned: sync_response}}
+
+- case_id: T3-32
+  title: A CounterSignature that names a transcript position holding another message does not verify
+  system_under_test: verifier
+  fixture:
+    bundle:
+      counter_signatures: [{for: accept_revoke, seq: 7, log_entry_hash: L7}]
+      transcript:
+        - {seq: 7, msg_type: accept, log_entry_hash: L7}
+        - {seq: 8, msg_type: accept_revoke, log_entry_hash: L8}
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: T3-33
+  title: A revoke held on one replica matches its accept received on another
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    gateway: {replicas: 2}
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", replica: 1, at: "+0s"}
+    - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", replica: 2, at: "+1s"}
+  expect:
+    messages: [accept_revoke_honoured]
+    state: {offer: ACCEPT_REVOKED, negotiation: NEGOTIATING}
+
+- case_id: T3-34
+  title: The hold ends 5 seconds after the revoke's own dispatch, not after its receipt
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", dispatched_at: "+4s", at: "+0s"}
+    - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", dispatched_at: "+3.5s", at: "+5.5s"}
+  expect:
+    messages: [accept_revoke_honoured]
+    state: {offer: ACCEPT_REVOKED, negotiation: NEGOTIATING}
+
+- case_id: T3-35
+  title: A revoked reverse-L1 award cancels the auction and an award to the next bid is refused
+  fixture:
+    profile: b2b.procurement
+    auction: {mode: reverse_l1, award_rule: l1, state: AWARDED, bids: [{rank: 1, seller: seller-a}, {rank: 2, seller: seller-b}]}
+    offer: {seller: seller-a, state: ACCEPTED, acceptance_revocation: allowed_until_receipt}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-negotiate, body: {type: accept_revoke, accept_msg_hash: H_AWARD, offer_hash: "{offer_hash}"}}
+    - counterparty_receipt: {for: accept_revoke, outcome: accept_revoke_honoured}
+    - request: {method: POST, path: "/auctions/{auction_id}/award", tag: bacp-negotiate, body: {seller: seller-b}}
+  expect:
+    messages: [accept_revoke_honoured, NEG_COLLUSION_SCREEN]
+    responses:
+      - {status: 403, code: NEG_AWARD_RULE, count: 1}
+    state: {auction: CANCELLED}
+
+- case_id: T3-36
+  title: An honoured outcome delivered twice releases exposure once, and a contested outcome past expires_at goes to the principal
+  fixture:
+    gateway: {replicas: 2}
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 500000, currency: INR}}]}
+    negotiations:
+      - {name: N1, offer: {state: ACCEPTED, all_in_total: {value: 150000, currency: INR}, acceptance_revocation: allowed_until_receipt, revoke_sent: true}}
+      - {name: N2, offer: {state: ACCEPTED, all_in_total: {value: 120000, currency: INR}, acceptance_revocation: allowed_until_receipt, revoke_sent: true, expires_at: "+2s"}, outcome: none}
+  steps:
+    - incoming: {negotiation: N1, type: outcome, code: accept_revoke_honoured, countersigned: true, repeat: 2, across_replicas: true}
+    - wait_for: {clock: "+3s"}
+    - request: {method: GET, path: "/negotiations/N2", tag: bacp-browse}
+  expect:
+    messages: [accept_revoke_honoured]
+    responses:
+      - {status: 200, resolution: requires_buyer_review, count: 1}
+    state: {exposure: {value: 120000, currency: INR}, exposure_releases: {N1: 1}}
+
+- case_id: T3-37
+  title: A held document that does not name the counterparty, or that the principal did not mark as a waiver basis, does not let the agent accept a waived offer
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    counterparty: {np_id: bpp.seller-s.example.in, gstin: 29ABCDE1234F1Z5}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: TERMS-BAP-2026, hash: H_D}, verdict: acceptable}
+    held_documents: [{hash: H_D, names: [bap.buyer-app.example.in], waiver_basis: true}]
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
+      expect:
+        responses:
+          - {path: accept, status: 200, state: ESCALATED, resolution: requires_buyer_review, count: 1}
+        state: {offer: LIVE, negotiation: ESCALATED}
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
+      fixture_override: {held_documents: [{hash: H_D, names: [bpp.seller-s.example.in], waiver_basis: false}], negotiation: NEGOTIATING}
+  expect:
+    responses:
+      - {path: accept, status: 200, state: ESCALATED, resolution: requires_buyer_review, count: 1}
+    state: {offer: LIVE, negotiation: ESCALATED}
+    beckn: []
 ```

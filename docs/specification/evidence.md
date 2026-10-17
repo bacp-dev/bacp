@@ -306,6 +306,11 @@ chain is valid, and the bundle signature verifies:
    carries. Every `step_up.approved`, `mandate.activated`, `loan.accepted` and
    `payment.afa_completed` event carries a `Presentation`, and for a step-up its `content_hash` is
    the hash of the step-up's `ts_render` and its `checkout_hash` is the bundle's `checkout_hash`.
+   A `negotiation.step_up.approved` event carries a `Presentation` with `offer_hash` instead of
+   `checkout_hash`: the verifier **MUST** check that it equals the `offer_hash` of the step-up's
+   `ts_render` and of the signed offer in the bundle's negotiation transcript, and that the
+   `ts_render`'s `acceptance_revocation`, where present, equals that offer's value; the quote
+   comparisons below do not apply to such an event.
    For every step-up event, `ts_renders[]` **MUST** hold a `ts_render` whose sha-256 is that
    `content_hash` (where the event carries one) and whose signature verifies against the gateway's
    registry key, and the verifier **MUST** compare its `total`, its payee (`seller_name`) and its

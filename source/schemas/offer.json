@@ -133,7 +133,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -198,8 +198,28 @@
             "waived",
             "allowed_until_receipt"
           ],
-          "default": "waived",
-          "description": "ICA s.5 lets an acceptor revoke until the acceptance reaches the proposer. waived = expressly excluded by protocol terms (default). allowed_until_receipt = accept_revoke is honoured if received before the ACCEPT."
+          "description": "REQUIRED when firm is true. There is no default, and a gateway MUST NOT insert or normalise the value before hashing. Indian Contract Act, 1872 s.5 lets an acceptor revoke an acceptance until its communication is complete as against the acceptor, which under s.4 is when it comes to the knowledge of the proposer. allowed_until_receipt = an accept_revoke that the proposer receives before the acceptance it names is honoured. waived = the offer excludes that right; permitted only with waiver_basis and only outside consumer trade profiles. Neither value restricts cancellation after the contract is formed, which follows cancellation.terms. In this version every receiver refuses an offer that sets allowed_until_receipt with capabilities_incompatible, on every binding; the offer never becomes LIVE."
+        },
+        "waiver_basis": {
+          "description": "The signed agreement under which this offer sets acceptance_revocation = waived: a contract between the parties (doc_type contract) or the buyer's own RFQ (doc_type rfq). REQUIRED when acceptance_revocation is waived, and hash is REQUIRED. Inside offer_hash it is a commitment to that document, not proof of it: the acceptor's gateway MUST NOT accept a waived offer without the principal unless it holds the document that hashes to it, obtained from its own principal before the offer arrived, naming the offer's counterparty (its np_id or GSTIN) and marked by the principal as a waiver basis.",
+          "allOf": [
+            {
+              "$ref": "common.json#/$defs/DocumentRef"
+            },
+            {
+              "properties": {
+                "doc_type": {
+                  "enum": [
+                    "contract",
+                    "rfq"
+                  ]
+                }
+              },
+              "required": [
+                "hash"
+              ]
+            }
+          ]
         },
         "extends": {
           "$ref": "common.json#/$defs/Hash",
@@ -309,6 +329,40 @@
               "auction_id"
             ]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "firm": {
+                "const": true
+              }
+            },
+            "required": [
+              "firm"
+            ]
+          },
+          "then": {
+            "required": [
+              "acceptance_revocation"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "acceptance_revocation": {
+                "const": "waived"
+              }
+            },
+            "required": [
+              "acceptance_revocation"
+            ]
+          },
+          "then": {
+            "required": [
+              "waiver_basis"
+            ]
+          }
         }
       ]
     },
@@ -405,7 +459,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -581,7 +635,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -738,7 +792,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -879,7 +933,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -1018,7 +1072,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -1063,7 +1117,7 @@
     },
     "AcceptRevoke": {
       "type": "object",
-      "description": "Revocation of an ACCEPT before it reaches the proposer (ICA s.5). Valid only if the offer set acceptance_revocation = allowed_until_receipt and this is received first (earlier CounterSignature timestamp wins).",
+      "description": "Revocation of an ACCEPT before the acceptance reaches the proposer (Indian Contract Act, 1872 s.5). In this version every accept_revoke is countersigned, logged and refused (accept_revoke_not_allowed); the rules below apply only under the sunset text for allowed_until_receipt. Honoured only if the offer sets acceptance_revocation = allowed_until_receipt and the proposer receives this message before the accept it names, receipt order being the order of the proposer's hash-chained log, committed by the CounterSignature the proposer returns in its synchronous response to each message; a revoke received first is appended to that log and held for that accept until 5 seconds after the revoke's own dispatched_at, and is discarded, logged, if the accept does not arrive. Its dispatched_at MUST NOT be earlier than the dispatched_at of the accept it names; otherwise it is void. Under waived it is countersigned, logged and refused (accept_revoke_not_allowed). Sent under signature tag bacp-negotiate. It never governs bid_retract.",
       "properties": {
         "type": {
           "const": "accept_revoke"
@@ -1154,7 +1208,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -1176,7 +1230,12 @@
           "additionalProperties": false
         },
         "accept_msg_hash": {
-          "$ref": "common.json#/$defs/Hash"
+          "$ref": "common.json#/$defs/Hash",
+          "description": "msg_hash of the accept this message revokes."
+        },
+        "offer_hash": {
+          "$ref": "common.json#/$defs/Hash",
+          "description": "offer_hash of the offer whose acceptance this message revokes. MUST equal the offer_hash of the accept named in accept_msg_hash."
         }
       },
       "required": [
@@ -1188,7 +1247,8 @@
         "dispatched_at",
         "from",
         "signatures",
-        "accept_msg_hash"
+        "accept_msg_hash",
+        "offer_hash"
       ],
       "additionalProperties": false
     },
@@ -1285,7 +1345,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -1426,7 +1486,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",
@@ -1567,7 +1627,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
         },
         "advisory": {
           "type": "object",

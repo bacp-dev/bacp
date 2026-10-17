@@ -65,7 +65,7 @@ response body in `structuredContent`.
 | `bacp_negotiation_open` | `POST /negotiations` | `bacp-browse` |
 | `bacp_negotiation_get` | `GET /negotiations/{negotiation_id}` | `bacp-browse` |
 | `bacp_negotiation_messages` (Proposed name) | `GET /negotiations/{negotiation_id}/offers` | `bacp-browse` |
-| `bacp_offer_send` | `POST /negotiations/{negotiation_id}/offers` | `bacp-negotiate` for firm messages, else `bacp-browse` |
+| `bacp_offer_send` | `POST /negotiations/{negotiation_id}/offers` | `bacp-negotiate` for firm messages, `withdraw` and `accept_revoke`, else `bacp-browse` |
 | `bacp_offer_accept` | `POST /negotiations/{negotiation_id}/accept` | `bacp-negotiate` |
 | `bacp_rfq_create` | `POST /rfqs` | `bacp-browse` |
 | `bacp_rfq_get` | `GET /rfqs/{rfq_id}` | `bacp-browse` |

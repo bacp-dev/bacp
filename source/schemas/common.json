@@ -621,7 +621,11 @@
         },
         "checkout_hash": {
           "$ref": "#/$defs/Hash",
-          "description": "checkout_hash of the quote the content showed: the session's quote, or for a post_order step-up the order's. REQUIRED on a step_up.approved event (the gateway refuses one without it with 400 invalid_request); the gateway applies an approval only while the session's checkout_hash equals it."
+          "description": "checkout_hash of the quote the content showed: the session's quote, or for a post_order step-up the order's. REQUIRED on a step_up.approved event (the gateway refuses one without it with 400 invalid_request); never present with offer_hash. The gateway applies an approval only while the session's checkout_hash equals it."
+        },
+        "offer_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "offer_hash of the offer a negotiation confirm step-up showed. REQUIRED on a negotiation.step_up.approved event and never present with checkout_hash. The gateway checks that it equals the ts_render's offer_hash and the offer the step-up names, or refuses the event with 403 ts_render_mismatch."
         },
         "user_action": {
           "enum": [
@@ -691,6 +695,14 @@
                 "description": "On channel assisted the principal approves with the principal's own factor (UPI PIN, or biometric meaning the principal's own biometric enrolled for the principal on the Trusted Surface device), never a tap (BACP policy)."
               }
             }
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "checkout_hash",
+              "offer_hash"
+            ]
           }
         }
       ]

@@ -1,0 +1,20 @@
+{
+  "step_up_id": "stp_01HZYN",
+  "kind": "confirm",
+  "reason": "negotiation_between_reservation_and_max",
+  "language": "hi-IN",
+  "offer_hash": "sha-256:WKKmq8K0e3cRnS6iOO5kEBXsGKuGOw9FdzlnlmLsPgA",
+  "acceptance_revocation": true,
+  "total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "seller_name": "Bunkar Handlooms",
+  "summary": {
+    "hi-IN": "बनारसी साड़ी, कुल ₹2,160। सामने वाले पक्ष तक पहुँचते ही सौदा पक्का; उसके बाद रद्द करना नीचे की शर्तों से होगा। रद्द करने की शर्तें: पैक होने से पहले कोई शुल्क नहीं; पैक होने के बाद ₹216।",
+    "en-IN": "Banarasi saree, ₹2,160 in all. Final once the other party receives it; cancelling afterwards follows the cancellation terms below. Cancellation terms: no charge before packing; ₹216 after packing."
+  },
+  "revoke_route": "https://mm.example.in/mandates/mdt_NEG7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-13T11:17:00+05:30"
+}

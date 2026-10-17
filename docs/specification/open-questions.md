@@ -335,13 +335,37 @@ against, or must the buyer app attest?<br>
 **Owner.** Legal counsel.
 
 **Findings.** Section 5 reads: "An acceptance may be revoked at any time before the communication of the acceptance is
-complete as against the acceptor, but not afterwards." No statute or other source found permits a waiver of that
-right. The Uttar Pradesh amendment to s.5 (U.P. Act 57 of 1976) concerns proposals that must be kept open for a
-specified time, not acceptances.
+complete as against the acceptor, but not afterwards." Under s.4 that communication is complete as against the
+acceptor "when it comes to the knowledge of the proposer". Neither section says "unless otherwise agreed", and no
+statute or other source found permits a waiver of that right. The Information Technology Act, 2000, s.10A covers "the
+revocation of proposals and acceptances" in electronic form; s.13 fixes, "save as otherwise agreed", only when an
+electronic record is despatched and received. The Uttar Pradesh amendment to s.5 (U.P. Act 57 of 1976) concerns
+proposals that must be kept open for a specified time, not acceptances.
 
-**Working position.** Waived by default (`acceptance_revocation: waived`); `allowed_until_receipt` and the
-`ACCEPT_REVOKED` state are supported. The default is a BACP design choice and the waiver may not hold. This is also
-listed as [proposed design choice (c)](#proposed-c).
+**Working position** (settled as design choice [(c)](#proposed-c) by owner decision of 17-10-2026). A firm offer
+MUST state `acceptance_revocation`; there is no default. In this version every receiver refuses
+`allowed_until_receipt` with `capabilities_incompatible`, on every binding: a review of the matched-pair rule found
+that the proposer could still choose the receipt order after seeing both the acceptance and the revoke. The rules that
+would honour it are kept as [sunset text](negotiation/index.md#acceptance-revocation-sunset), with the conditions under
+which a later version may lift the refusal. `waived` is permitted only with a signed `waiver_basis` (a contract or the
+buyer's own RFQ) and only outside consumer sessions; on Beckn, a `waived` offer with no basis, and in a consumer
+session any `waived` offer, may be accepted only by a human shown the consequence sentence. In a consumer session on
+REST, MCP or A2A no value is permitted, so only non-firm offers are possible there. The waiver may still not hold. See
+[Acceptance revocation](negotiation/index.md#acceptance-revocation).
+
+**Asked of counsel.**
+
+1. Can a proposal, a protocol default or a prior framework agreement exclude the right under s.5, second paragraph?
+2. Is the time of receipt under the Information Technology Act, 2000, s.13(2) the "knowledge" of the proposer under
+   s.4?
+3. Is a countersigned HTTP exchange an instantaneous communication in the sense of *Bhagwandas Goverdhandas Kedia v.
+   Girdharilal* (1966 AIR 543)?
+4. Does the Uttar Pradesh Explanation to s.5 bind a quotation made in response to an RFQ?
+5. Does a waiver set by the offeror bind a human acceptor who joined only through a seller app's terms and
+   conditions?
+6. Is a right that is advertised but not enforced worse, for the acceptor, than a waiver that is shown?
+7. Does a "delete for everyone" in a messaging app, or a call asking the other party to stop before the message is
+   read, count as a revocation under ss.4–5?
 
 ### Q-20 Fees and the MRP ceiling {#q-20}
 
@@ -398,6 +422,12 @@ the delivery date and any written objection.
 **Owner.** ONDC.
 
 **Working position.** An IGM issue plus a reputation event; the buyer may cancel without penalty.
+
+**Also asked of ONDC.** Whether the RET cancellation terms govern a BACP firm contract after `CONTRACTED`; and a Beckn
+carrier for `accept_revoke` (an `init` with a `bacp.neg.accept_revoke` TagGroup in the same `transaction_id`) that
+network validators accept. In this version an offer with `acceptance_revocation: allowed_until_receipt` is refused on
+every leg; on a Beckn leg the refusal stays until such a carrier exists
+([sunset condition (e)](negotiation/index.md#acceptance-revocation-sunset)).
 
 ### Q-23 Transcript escrow key {#q-23}
 
@@ -489,7 +519,10 @@ beneficiary?<br>
 `no_retraction` rule?<br>
 **Owner.** Legal counsel.
 
-**Working position.** `before_close_outside_window` is the default for English auctions.
+**Working position.** `before_close_outside_window` is the default for English auctions. `accept_revoke` never
+governs `bid_retract`: a bid's retraction follows the auction's `retraction_rule`, whatever its
+`acceptance_revocation` value ([Acceptance revocation](negotiation/index.md#acceptance-revocation)). Also asked of
+counsel: does the Sale of Goods Act, 1930, s.62 reach a bidder's retraction before the sale is complete?
 
 ### Q-36 Atomicity across gateways {#q-36}
 
@@ -783,13 +816,8 @@ leg only under these rules. See [Rail Bindings](payments/rails.md).
 
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
-This choice is written into BACP `2026-10-17`. It is flagged here because an owner may still overturn it in a later
-dated release. Design choices [(a)](#proposed-a) and [(d)](#proposed-d) are settled.
-
-### (c) Acceptance revocation waived by default {#proposed-c}
-
-Every offer waives, by default, the acceptor's right to revoke an acceptance before it reaches the proposer
-(`acceptance_revocation: waived`). An offer may opt in to `allowed_until_receipt`. Decision owner: [Q-19](#q-19).
+No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
+[(d)](#proposed-d) are settled.
 
 ## Settled {#settled}
 
@@ -942,6 +970,50 @@ authorities?<br>
   answered. Agentic card tokens stay pilot-gated ([Q-39](#q-39)).
 
 See [Mandates and Consent](mandates.md#handler-binding) and [Handler Registry](payments/handler-registry.md).
+
+### (c) Acceptance revocation {#proposed-c}
+
+!!! success "Settled"
+    Was proposed design choice (c), "acceptance revocation waived by default". Settled in `2026-10-17` by owner
+    decision of 17-10-2026, amended the same day after review: `allowed_until_receipt` is refused everywhere, and the
+    rules that would honour it are kept as sunset text.
+
+**Question.** Should every firm offer waive, by default, the acceptor's right under Indian Contract Act s.5 to revoke
+an acceptance before it reaches the proposer, or should the waiver be opt-in per offer?<br>
+**Owner.** BACP WG; the validity of any waiver stays with Legal counsel ([Q-19](#q-19)).
+
+**Answer.**
+
+- `acceptance_revocation` is REQUIRED on every firm offer, and there is no default. A gateway never inserts or
+  normalises the value before hashing.
+- In this version every receiver refuses `allowed_until_receipt` with `capabilities_incompatible`, on every
+  binding. The value stays in the schemas. A matched-pair rule that would honour it on the REST, MCP and A2A bindings
+  is kept as [sunset text](negotiation/index.md#acceptance-revocation-sunset): the revoke names the acceptance and the
+  offer and is dispatched no earlier than the acceptance; the proposer appends a revoke it receives first to its
+  transcript and holds it until 5 seconds after the revoke's dispatch; and the receiver returns its CounterSignature,
+  with `log_entry_hash`, in the synchronous response to each message, so that it commits to receipt order before it
+  sees the next message. A later version lifts the refusal only when the sunset conditions hold.
+- `accept_revoke` and `withdraw` are sent under `bacp-negotiate`. Every `accept_revoke` is countersigned, logged and
+  refused (`accept_revoke_not_allowed`). Exposure release is idempotent, keyed on `offer_hash`.
+- `waived` needs a signed `waiver_basis` (a contract, or the buyer's own RFQ) that the acceptor's gateway obtained
+  from its own principal before the offer arrived, that names the counterparty (`np_id` or GSTIN) and that the
+  principal marked as a waiver basis, and is refused in consumer sessions: sessions whose profile is a
+  consumer profile, that declare none, or whose buyer side acts for an individual or sends no `acting_for`. The
+  profile is fixed when the session opens.
+- On Beckn legs, a `waived` offer with no basis, and in a consumer session any `waived` offer, may be accepted only by
+  a human shown the consequence sentence; the only schema error excused is the missing basis. In a consumer session on
+  REST, MCP or A2A no value is permitted, so only non-firm offers are possible there.
+- A negotiation approval is posted as `negotiation.step_up.approved` with `Presentation.offer_hash`, never with
+  `checkout_hash`.
+- The Trusted Surface shows the value only as a fixed consequence sentence followed by the cancellation terms, never
+  as "cannot cancel". BACP does not yet say which value an offer SHOULD use.
+- RFQ awards have no fixed value. The comparison set is frozen at close (for `rfq_iterated`, the close of the final
+  shortlist round); a revoked award, possible only under the sunset text, cancels the RFQ or auction
+  (`NEG_COLLUSION_SCREEN`), and it cannot be awarded again (`NEG_AWARD_RULE`). `accept_revoke` never governs
+  `bid_retract`.
+
+See [Acceptance revocation](negotiation/index.md#acceptance-revocation),
+[Award](negotiation/rfq-and-auctions.md#award) and [Trade Profiles](trade-profiles.md#profile-table).
 
 ### (d) Multi-seller hands-free shopping {#proposed-d}
 

@@ -1,0 +1,5 @@
+{
+  "type": "accept_revoke",
+  "accept_msg_hash": "abc",
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ"
+}

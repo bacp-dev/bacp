@@ -118,6 +118,25 @@
       "type": "string",
       "minLength": 1,
       "description": "Contact of the agent operator's grievance officer (email address, tel: URI or https: URL)."
+    },
+    "profile": {
+      "enum": [
+        "b2c.ecom",
+        "kirana.khata",
+        "fmcg.distribution",
+        "b2b.procurement",
+        "gem",
+        "agri",
+        "services",
+        "subscription",
+        "social",
+        "assisted.rural",
+        "crossborder",
+        "c2c.rental",
+        "high_value",
+        "ticketing"
+      ],
+      "description": "The one trade profile the session declares. OPTIONAL. Fixed when the session opens; a later message of the session with another profile is refused with capabilities_incompatible. For acceptance revocation a session is a consumer session, whatever its profile, if it declares no profile, if the buyer side's acting_for.kind is individual, or if the buyer side sends no acting_for; an offer with acceptance_revocation = waived is refused in it."
     }
   },
   "additionalProperties": false

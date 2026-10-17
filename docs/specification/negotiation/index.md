@@ -68,6 +68,8 @@ A negotiation is bounded by a **negotiation mandate** that is separate from the 
 
 Both mandates are evaluated, and **the stricter bound wins**: the checkout mandate's budgets, allow-lists and step-up rules still apply to a negotiated deal.
 
+**Autonomous acceptance.** The notice that the principal approves on the Trusted Surface when the negotiation mandate is set up MUST say that the agent may accept a firm offer without the principal when the guard returns `acceptable`. It MUST also give the fixed consequence sentence of each [`acceptance_revocation`](#acceptance-revocation) value ([Render input](../human-participants.md#ts-render)), so that the principal knows what such an acceptance means before any is sent.
+
 The negotiation mandate is verified only by the principal's own guard and credential provider. It is **never** disclosed to the counterparty. It travels to the seller only as a `within_bounds` attestation (see [Binding to checkout](#binding-to-checkout)).
 
 ```json title="mandate-negotiation.buyer.json"
@@ -209,14 +211,22 @@ Every message carries `msg_id`, `negotiation_id`, `transaction_id` (the Beckn `c
 | `valid_from`, `expires_at` | `expires_at` is **absolute**, never a relative TTL. `expires_at − valid_from` MUST be at least the effective `min_offer_validity` (floor `PT5M`). Otherwise `NEG_FALSE_URGENCY`. |
 | `inventory_hold_until` | How long stock is held for this offer |
 | `acceptance_manner` | The constant `bacp.neg.accept`. Every other form of acceptance is non-conforming. |
-| `acceptance_revocation` | `waived` (default) or `allowed_until_receipt`. See [Acceptance revocation](#acceptance-revocation). |
+| `acceptance_revocation` | REQUIRED when `firm` is `true`, with no default: `allowed_until_receipt` or `waived`. A gateway MUST NOT insert or normalise the value before hashing. In this version every receiver refuses `allowed_until_receipt` with `capabilities_incompatible`. See [Acceptance revocation](#acceptance-revocation). |
+| `waiver_basis` | REQUIRED when `acceptance_revocation` is `waived`: a `DocumentRef` with `doc_type` `contract` or `rfq` and a `hash`. |
 | `extends` | The hash of an earlier offer by the same offeror that this offer re-issues with a later `expires_at`. Terms MUST be identical. |
 | `agreed_issues[]` | JSON Pointers already in `Agree`. They narrow the open set and do not bind. |
 | `rfq_parent_id`, `bid_deposit_ref`, `auction_id` | RFQ and auction links |
 
-```json title="offer.b2c-counter.json (seller's firm counter-offer, round 2)"
+```json title="offer.b2c-counter.json (seller's firm counter-offer, round 2; valid shape; receivers refuse allowed_until_receipt in this version)"
 --8<-- "source/examples/offer.b2c-counter.json"
 ```
+
+??? failure "Invalid: firm offer without `acceptance_revocation` (`offer.firm-no-acceptance-revocation.invalid.json`)"
+    A firm offer states its acceptance-revocation term in the signed bytes. There is no default.
+
+    ```json
+    --8<-- "source/examples/offer.firm-no-acceptance-revocation.invalid.json"
+    ```
 
 ??? failure "Invalid: escalated counter marked firm (`offer.escalate-but-firm.invalid.json`)"
     The guard returned `needs_escalation`, so the counter-offer carries `subject_to_principal_approval: true`, which forbids `firm: true`.
@@ -278,7 +288,8 @@ stateDiagram-v2
     LIVE --> REJECTED: reject received
     LIVE --> EXPIRED: expires_at passed with no accept
     LIVE --> LAPSED_CONDITION: condition precedent failed
-    ACCEPTED --> ACCEPT_REVOKED: accept_revoke received first and revocation allowed
+    LIVE --> ACCEPT_REVOKED: sunset only, matched accept_revoke and accept
+    ACCEPTED --> ACCEPT_REVOKED: sunset only, proposer countersigns accept_revoke_honoured
     ACCEPTED --> WITHDRAWN: earlier-received withdraw processed late
     WITHDRAWN --> LIVE: our withdraw lost the crossing to an earlier accept
     ACCEPTED --> [*]
@@ -292,6 +303,7 @@ stateDiagram-v2
 
 - **One live offer.** At most one offer is `LIVE` per negotiation. A counter-offer MUST cite the live hash in `in_reply_to`, otherwise it is refused with `NEG_STALE_OFFER` (409). Accepting a superseded offer is also `NEG_STALE_OFFER`.
 - The two crossing edges (`ACCEPTED → WITHDRAWN`, `WITHDRAWN → LIVE`) follow the [crossing rule](#indian-contract-act-timing) and are annotated in the offer's history.
+- **`ACCEPT_REVOKED` is dormant in this version.** Both edges into it exist only under `acceptance_revocation: allowed_until_receipt`, which every receiver refuses, so no offer reaches `ACCEPT_REVOKED`. The edges are defined by the [sunset text](#acceptance-revocation-sunset): the matched pair (`LIVE → ACCEPT_REVOKED`, the proposer's view) and the proposer's countersigned `accept_revoke_honoured` (`ACCEPTED → ACCEPT_REVOKED`, the acceptor's view).
 
 ### Negotiation state
 
@@ -377,6 +389,8 @@ Counter-offers follow two rules:
 On `needs_escalation`, the session moves to `ESCALATED` and carries a `step_up` object with `kind: confirm` and `reason` ∈ `negotiation_out_of_mandate` | `negotiation_between_reservation_and_max`. In the A2A binding this maps to the task state `TASK_STATE_AUTH_REQUIRED` (A2A 1.0), and in MCP to `insufficient_scope` (see [MCP and A2A](../transports/mcp-a2a.md)).
 
 - The **diff card** (issue, offered value, the principal's own bound, all-in total, offer expiry) is rendered **only on the Trusted Surface**. The agent and the counterparty never receive the bound. In the REST view, `step_up.diff[]` carries only `issue_path`, `offered` and `within_bounds`.
+- The step-up's `ts_render` carries the `offer_hash` of the offer to approve and, for a firm offer, its `acceptance_revocation` value, which the Trusted Surface shows only as a fixed consequence sentence followed by the cancellation terms ([Render input](../human-participants.md#ts-render)).
+- The Trusted Surface posts the principal's approval as a `negotiation.step_up.approved` event, never `step_up.approved`. Its `presentation` MUST carry `offer_hash` and MUST NOT carry `checkout_hash`, because no quote exists yet. The gateway refuses the event with `403 ts_render_mismatch` unless `presentation.offer_hash` equals the `ts_render`'s `offer_hash` and the offer the step-up names ([Presentation record](../human-participants.md#presentation)).
 - The principal approves with an RBI-compliant factor such as the UPI PIN or a device biometric. The Mandate Manager then issues a one-off `within_bounds` attestation bound to that exact `offer_hash`.
 - The step-up link lives for `min(15 minutes, expires_at − now)`. An offer that expires while the negotiation is `ESCALATED` cannot be revived by the approval. The approval can then be used only for a fresh offer, and an acceptance attempt returns `NEG_OFFER_EXPIRED`.
 - A **seller's acceptance of the buyer's non-firm offer** is the seller's purchase offer, not a contract. It escalates, and it binds only after the principal approves on the Trusted Surface and the terms are within the mandate's bounds.
@@ -439,6 +453,8 @@ Dispatch and receipt times decide contract formation, so BACP bounds them:
 - The same 5-second check, plus an origin check, applies to the **counterparty's receipts for our own messages**. A receipt counts only if its CounterSignature is by the counterparty participant's registry key, covers exactly that `received_at`, and falls within 5 seconds of our dispatch. Otherwise it is not recorded, because a false receipt time could change who wins a crossing.
 - A **seller's acceptance** of a buyer offer counts only if the buyer gateway countersigned it. It is refused with `NEG_OFFER_EXPIRED` if the offer had expired by the buyer gateway's own receipt time, **even if the acceptance claims an earlier dispatch time**. Because of the skew bound, a claimed dispatch can precede receipt by at most 5 seconds.
 - A buyer `accept` received after `expires_at` likewise returns `NEG_OFFER_EXPIRED`.
+- **Receipt order is chain order.** The order in which a participant received two messages of a negotiation is the order of their entries in its hash-chained [transcript](#legal-effect-and-evidence), and `received_at` MUST NOT decrease along that chain. A verifier that finds a later entry with an earlier `received_at` than an entry before it reports `evidence_unverifiable`.
+- **`log_entry_hash` in a receipt.** A CounterSignature payload MAY carry `log_entry_hash`, the hash of the receiver's transcript entry that records the receipt. The [sunset text](#acceptance-revocation-sunset) makes it REQUIRED, with a timing rule, on the receipts of an offer that sets `acceptance_revocation: allowed_until_receipt`; no such offer is live in this version.
 
 ## Per-principal exposure
 
@@ -447,7 +463,7 @@ An agent that sends firm counter-offers to several sellers at once could commit 
 - Exposure is the sum of `all_in_total` over the principal's outstanding firm counter-offers, `ACCEPT_PENDING` acceptances and `AGREED`-but-unpaid deals, across **all** of that principal's negotiation mandates and concurrent negotiations, including every session under the same `rfq_parent_id`, plus the message being guarded.
 - Exposure MUST be at most `total_max` **and** at most every remaining checkout-mandate budget period, whatever the payment handler. Whether B2B credit-ledger deals should instead count against `credit_ledger.max_outstanding` is open ([Q-46](../open-questions.md#q-46)).
 - Over the limit, the verdict is `needs_escalation` with `NEG_EXPOSURE_EXCEEDED`.
-- **Atomicity.** Computing exposure and emitting the firm message it guards MUST run as one atomic, linearisable operation keyed on the **principal**. Each outstanding commitment holds an exposure reservation. It is released when its offer reaches `REJECTED`, `EXPIRED`, `WITHDRAWN`, `SUPERSEDED` or `TERMINATED`, and converted when the deal is paid. A gateway that runs as several instances MUST share a linearisable exposure store. Exposure across two different gateways serving one principal is not yet counted ([Q-36](../open-questions.md#q-36)).
+- **Atomicity.** Computing exposure and emitting the firm message it guards MUST run as one atomic, linearisable operation keyed on the **principal**. Each outstanding commitment holds an exposure reservation. It is released when its offer reaches `REJECTED`, `EXPIRED`, `WITHDRAWN`, `SUPERSEDED`, `TERMINATED` or `LAPSED_CONDITION`, or `ACCEPT_REVOKED` on the proposer's countersigned `accept_revoke_honoured`, and converted when the deal is paid. Release is idempotent: it is keyed on the offer's `offer_hash` and happens at most once per reservation, however often the event that releases it is delivered or replayed. While the outcome of an `accept_revoke` is contested (the proposer has not countersigned an outcome), the reservation is held. If the outcome is still contested when the offer's `expires_at` passes, the gateway surfaces it to the principal (`requires_buyer_review`) and the reservation stays counted. A gateway that runs as several instances MUST share a linearisable exposure store. Exposure across two different gateways serving one principal is not yet counted ([Q-36](../open-questions.md#q-36)).
 - The session view reports only amounts (`exposure.principal_outstanding_firm`, `counted_against[]`), never the bound.
 
 ## Binding to checkout
@@ -474,9 +490,12 @@ On Beckn, the acceptance is an `init` carrying `bacp.neg.accept`, `BOUND` is the
 |---|---|---|
 | Proposal (s.2(a), (b)) | A person who signifies willingness to do or abstain from something, "with a view to obtaining the assent of that other", makes a proposal. A proposal, when accepted, becomes a promise. | `firm: true` is a proposal. `firm: false` is an invitation to treat. That term is not in the Act; it comes from case law. Accepting a non-firm offer has `legal_effect: purchase_offer`: it is the buyer's proposal, and the seller's echoing `on_init` or `on_confirm` is the acceptance. |
 | Communication (s.4) | A proposal is communicated "when it comes to the knowledge of the person to whom it is made". An acceptance is complete against the proposer "when it is put in a course of transmission to him, so as to be out of the power of the acceptor", and against the acceptor "when it comes to the knowledge of the proposer". | A proposal is communicated when the offeree's CounterSignature exists. Acceptance is complete **against the proposer on dispatch** (`dispatched_at`), and **against the acceptor on receipt** (`received_at`). |
-| Revocation of a proposal (ss.4, 5) | A proposal "may be revoked at any time before the communication of its acceptance is complete as against the proposer, but not afterwards". A revocation is complete against the person it is made to "when it comes to his knowledge". | The offeror may `withdraw` only until the offeree **dispatches** an acceptance. A `withdraw` takes effect on **receipt**. |
+| Communication of a revocation (s.4) | The communication of a revocation is complete "as against the person who makes it, when it is put into a course of transmission to the person to whom it is made, so as to be out of the power of the person who makes it", and "as against the person to whom it is made, when it comes to his knowledge". | A `withdraw` or an `accept_revoke` is dispatched at its `dispatched_at` and received at the receiver's `received_at`. |
+| Revocation of a proposal (ss.5, 6(1)) | A proposal "may be revoked at any time before the communication of its acceptance is complete as against the proposer, but not afterwards". A proposal is revoked "by the communication of notice of revocation by the proposer to the other party". | The offeror may `withdraw` only until the offeree **dispatches** an acceptance. A `withdraw` takes effect on **receipt**. |
+| Revocation of an acceptance (s.5) | "An acceptance may be revoked at any time before the communication of the acceptance is complete as against the acceptor, but not afterwards." | Governed by the offer's `acceptance_revocation` term. See [Acceptance revocation](#acceptance-revocation). |
+| Proposal kept open (s.5, Explanation, Uttar Pradesh) | Inserted by the Uttar Pradesh Act 57 of 1976: "Where an invitation to a proposal contains a condition that any proposal made in response to such invitation shall be kept open for a specified time and a proposal is thereupon made accepting such condition, such proposal may not be revoked within such time." | BACP has no rule for it and does not refuse a `withdraw` on that ground. Whether it binds a quotation made in response to an RFQ is open ([Q-19](../open-questions.md#q-19)). |
 | Crossing (BACP rule) | The Act gives no tie-break. | When a `withdraw` and an `accept` cross, compare the withdrawal's `received_at` at the offeree with the acceptance's `dispatched_at`. **The earlier timestamp wins. On an exact tie the acceptance wins.** A losing withdrawal is a breach event and is reported (`withdraw_lost_crossing`). A losing acceptance is void (`accept_void_withdrawn`, `seller_accept_void`). |
-| Lapse (s.6(2), (3)) | A proposal is revoked "by the lapse of the time prescribed in such proposal for its acceptance", and "by the failure of the acceptor to fulfil a condition precedent to acceptance". | An offer lapses at `expires_at`, and silence leads to `EXPIRED`. A counter-offer that cites an expired offer is refused with `NEG_OFFER_EXPIRED`. Either party MAY send a fresh offer while rounds and the deadline remain. If a `conditions_precedent[]` entry fails (e.g. `lc_opened`), the offer becomes `LAPSED_CONDITION`. Treating every condition precedent as one of the kind s.6(3) describes is a BACP choice. |
+| Lapse (s.6(2), (3), (4)) | A proposal is revoked "by the lapse of the time prescribed in such proposal for its acceptance", "by the failure of the acceptor to fulfil a condition precedent to acceptance", and "by the death or insanity of the proposer, if the fact of his death or insanity comes to the knowledge of the acceptor before acceptance". | An offer lapses at `expires_at`, and silence leads to `EXPIRED`. A counter-offer that cites an expired offer is refused with `NEG_OFFER_EXPIRED`. Either party MAY send a fresh offer while rounds and the deadline remain. If a `conditions_precedent[]` entry fails (e.g. `lc_opened`), the offer becomes `LAPSED_CONDITION`. Treating every condition precedent as one of the kind s.6(3) describes is a BACP choice. BACP has no message for the case of s.6(4). |
 | Absolute acceptance (s.7(1)) | The acceptance must "be absolute and unqualified". | An acceptance mirrors `offer_hash` and carries no terms. A changed term is a counter-offer. That a counter-offer rejects the prior offer comes from case law, not from the text of s.7. |
 | Manner of acceptance (s.7(2)) | If an acceptance is not made in the prescribed manner, the proposer "may, within a reasonable time after the acceptance is communicated to him, insist" on that manner, "but if he fails to do so, he accepts the acceptance". | Every offer prescribes `acceptance_manner: bacp.neg.accept`. Any other form is non-conforming and is refused promptly with `NEG_ACCEPT_NONCONFORMING`, so that the proposer insists on the prescribed manner within a reasonable time. |
 
@@ -484,10 +503,79 @@ The Information Technology Act, 2000, s.13 fixes when an electronic record is de
 
 ### Acceptance revocation
 
-!!! warning "Proposed"
-    Proposed: under Indian Contract Act s.5, "an acceptance may be revoked at any time before the communication of the acceptance is complete as against the acceptor, but not afterwards", that is, until it reaches the proposer. BACP proposes to **waive this right by default** through the protocol terms of each offer (`acceptance_revocation: waived`). The default is a BACP design choice, not a rule of the Act. No statute or other source found so far says that an offer can validly waive the right, so the waiver may not hold. The question is open: see [Q-19](../open-questions.md#q-19).
+!!! warning "Legal basis pending review"
+    Whether an offer, an earlier agreement between the parties or a protocol term can validly exclude the acceptor's right under s.5 is open ([Q-19](../open-questions.md#q-19)). BACP permits `waived` only under the conditions below. Showing the term to a principal does not make the exclusion valid.
 
-If an offer sets `acceptance_revocation: allowed_until_receipt`, an `accept_revoke` that the proposer receives **before** the acceptance itself is honoured: the offer moves to `ACCEPT_REVOKED`, and the negotiation returns from `ACCEPT_PENDING` to `NEGOTIATING`. Under `waived`, an `accept_revoke` has no effect.
+The Indian Contract Act, 1872, s.5 says: "An acceptance may be revoked at any time before the communication of the acceptance is complete as against the acceptor, but not afterwards." Under s.4 that communication is complete as against the acceptor "when it comes to the knowledge of the proposer". Neither section says "unless otherwise agreed". The Information Technology Act, 2000, s.10A covers "the revocation of proposals and acceptances" expressed in electronic form. Section 13 fixes only when an electronic record is despatched and received, "save as otherwise agreed"; it does not mention knowledge or revocation. BACP takes the proposer's receipt time (`received_at`) as the time of that knowledge. Whether s.13 receipt is s.4 knowledge is open ([Q-19](../open-questions.md#q-19), [Q-52](../open-questions.md#q-52)).
+
+Here "acceptance" means acceptance of a proposal (ICA ss.4–5), not acceptance of goods under MSMED s.15.
+
+**The term.** Every firm offer MUST carry `acceptance_revocation`. There is no default, and a gateway MUST NOT insert or normalise the value before hashing, so the term is always inside the signed bytes and `offer_hash`. A firm offer without it is refused with `400 NEG_SCHEMA_INVALID` and never becomes `LIVE`.
+
+- **`allowed_until_receipt`.** The acceptor may revoke an acceptance until the proposer receives it. In this version no receiver honours this value: every receiver refuses it, on every binding and in every trade profile (table below). The value stays in the schemas so that a later version can lift the refusal without a schema change; the rules that would then apply are the [sunset text](#acceptance-revocation-sunset).
+- **`waived`.** The offer excludes that right. It MUST carry `waiver_basis`: the signed contract between the parties (`doc_type: contract`) or the buyer's own RFQ (`doc_type: rfq`, see [Award](rfq-and-auctions.md#award)), with its `hash`. Inside `offer_hash` this is a commitment to the document, not proof of it. The acceptor's gateway MUST NOT accept a `waived` offer without the principal unless it holds the document that hashes to `waiver_basis.hash`; otherwise it escalates to the principal (`requires_buyer_review`). "Holds" means all three of: the gateway obtained the document from its own principal before the offer arrived; the document names the offer's counterparty, by its `np_id` or its GSTIN; and the principal marked the document as a waiver basis. If any of the three is missing, the gateway escalates to the principal (`requires_buyer_review`). A document fetched from `waiver_basis.uri`, taken from the offer, or supplied by the counterparty in any other way does not count.
+
+```json title="offer.waived-contract-basis.json (B2B offer under a rate contract)"
+--8<-- "source/examples/offer.waived-contract-basis.json"
+```
+
+??? failure "Invalid: `waived` without `waiver_basis` (`offer.waived-no-basis.invalid.json`)"
+    ```json
+    --8<-- "source/examples/offer.waived-no-basis.invalid.json"
+    ```
+
+**Consumer sessions.** The value rules depend on the session's trade profile (`context.bacp.profile`, see [Trade Profiles](../trade-profiles.md#declaring-a-profile)). A consumer profile is one that the profile table marks "waiver permitted: no". The profile is fixed when the session opens; a later message of the session that declares another profile is refused with `capabilities_incompatible` and changes nothing. A session is a **consumer session**, whatever profile it declares, if it declares no profile, if the buyer side's `context.bacp.acting_for.kind` is `individual`, or if the buyer side sends no `acting_for`. Who chooses the profile, and how a seller refuses a profile that misdescribes the trade, is not yet specified.
+
+**Where each value is permitted.** The rules also depend on the binding that carries the offer between the parties. In this version:
+
+| Leg | Session | `allowed_until_receipt` | `waived` with `waiver_basis` | `waived` without `waiver_basis` |
+|---|---|---|---|---|
+| REST, MCP or A2A | Business | Refused, `capabilities_incompatible` | Permitted. The acceptor's gateway accepts without the principal only if it holds the hashed document as a waiver basis naming the counterparty. | Refused, `NEG_SCHEMA_INVALID` |
+| REST, MCP or A2A | Consumer | Refused, `capabilities_incompatible` | Refused, `capabilities_incompatible` | Refused, `NEG_SCHEMA_INVALID` |
+| Beckn / ONDC | Business | Refused, `capabilities_incompatible` | Permitted, with the same hash rule | Accepted only by a human shown the consequence sentence |
+| Beckn / ONDC | Consumer | Refused, `capabilities_incompatible` | Accepted only by a human shown the consequence sentence, as in the next column | Accepted only by a human shown the consequence sentence: the buyer through a Trusted Surface step-up, never autonomously (`requires_buyer_review`); a human seller in the BPP app |
+
+- **Refused** means that the receiving gateway answers the offer with the code shown (`capabilities_incompatible` with param `$.acceptance_revocation`). The offer never becomes `LIVE`, and the negotiation state does not change. The gateway also refuses its own principal's draft with the same value and code (`403`), and sends nothing.
+- **No firm offer in a consumer session off Beckn.** In a consumer session on REST, MCP or A2A no value is permitted in this version. A seller there makes only non-firm offers (`firm: false`), and the buyer's acceptance of one is a purchase offer (`legal_effect: purchase_offer`, [Acceptance](#acceptance)).
+- **The Beckn rows are a network limit.** No Beckn carrier exists for `accept_revoke` in this version ([Beckn / ONDC Binding](../transports/beckn.md#mapping-negotiation)).
+- **`waived` without a basis on Beckn.** Such an offer fails the schema. On a Beckn leg only, the receiving gateway excuses exactly one schema error: the missing `waiver_basis` of a firm offer with `acceptance_revocation: waived`. It refuses an offer with any other schema error, including one that also lacks `waiver_basis`, with `NEG_SCHEMA_INVALID`. It records an offer whose only error is the missing basis, and no agent may accept it. In a consumer session on Beckn it treats a `waived` offer that carries a basis in the same way.
+- **Human acceptance on Beckn.** The buyer gateway escalates such an offer to the principal with a `confirm` step-up (reason `constraint_unresolved`) whose `ts_render` carries `acceptance_revocation` and `offer_hash`, and sends the acceptance only after a `negotiation.step_up.approved` event whose `presentation.offer_hash` is that offer's ([Step-up to the Trusted Surface](#step-up-to-the-trusted-surface)). On the seller side only a human may accept it, in the BPP app, after the app shows the consequence sentence.
+- **Never "cannot cancel".** Neither value restricts cancellation, and a value MUST NOT be rendered or relied on as a restriction on cancellation. Cancelling after `CONTRACTED` follows the agreed `cancellation.terms` only ([Negotiation state](#negotiation-state)). The Trusted Surface shows the value only as its fixed consequence sentence, followed by the cancellation terms ([Render input](../human-participants.md#ts-render)).
+
+**`accept_revoke` in this version.** Because no offer with `allowed_until_receipt` is live, the proposer countersigns, logs and refuses every `accept_revoke` with `accept_revoke_not_allowed`. Nothing else changes, and the acceptance stands. The message keeps its schema: `accept_msg_hash` (the `msg_hash` of the acceptance) and `offer_hash` (the offer it names) are REQUIRED.
+
+**Bids.** `accept_revoke` never governs `bid_retract`. A bidder's retraction follows the auction's [retraction rules](rfq-and-auctions.md#retraction) whatever the bid's `acceptance_revocation` value. An award is an acceptance; a revoked award is handled under [Award](rfq-and-auctions.md#award) and [Who may run and award](rfq-and-auctions.md#who-may-run-and-award).
+
+`accept_revoke` and `withdraw` are always sent under the signature tag `bacp-negotiate`, and an `accept_revoke` of an acceptance that the principal approved on the Trusted Surface needs `hp_proof` ([Operations](#operations)).
+
+```json title="offer.accept-revoke.json"
+--8<-- "source/examples/offer.accept-revoke.json"
+```
+
+#### Sunset text for `allowed_until_receipt` {#acceptance-revocation-sunset}
+
+!!! warning "Proposed (sunset)"
+    The rules in this subsection are not in force in this version. They state when a later version may lift the
+    refusal of `allowed_until_receipt` and how the value is then honoured. The conformance cases that need a live
+    offer with `allowed_until_receipt` are published as data in the [Proposed (sunset) block](../conformance.md#acceptance-revocation-sunset-cases).
+
+**Conditions for lifting the refusal.** A later version lifts the refusal on a binding only when all of these hold:
+
+- **(a) The revoke names its acceptance and offer.** `accept_revoke` carries `accept_msg_hash` and `offer_hash`, and a revoke whose `dispatched_at` is earlier than the `dispatched_at` of the acceptance it names is void. (Specified in this version.)
+- **(b) The receiver commits to receipt order before it sees the next message.** The receiver returns its CounterSignature, carrying `log_entry_hash`, in the synchronous response to **each** negotiation message, before it appends any later message of that negotiation to its transcript. The outcome of an `accept_revoke` is a separate message. A CounterSignature that reaches the sender outside the sender's own window from sending the message to receiving the response is contested and does not count. A verifier that holds a CounterSignature naming transcript position *n* for one message and a transcript with a different message at *n* reports `evidence_unverifiable`.
+- **(c) The matched-pair rule** below is implemented, with the hold kept in the transcript.
+- **(d) Exposure release** on a countersigned `accept_revoke_honoured` is idempotent ([Per-principal exposure](#per-principal-exposure)). (Specified in this version.)
+- **(e) Beckn.** A Beckn carrier for `accept_revoke` exists, or Beckn legs keep refusing the value ([Q-22](../open-questions.md#q-22)).
+- **(f) Tested.** The sunset conformance cases pass against an implementation.
+
+**Revocation under `allowed_until_receipt` (sunset).** Call the acceptance A and the revocation R.
+
+1. R carries `accept_msg_hash` (the `msg_hash` of A) and `offer_hash` (the offer A names). R's `dispatched_at` MUST NOT be earlier than A's `dispatched_at`; otherwise R is void.
+2. The proposer orders the two by its transcript ([receipt order is chain order](#signed-seller-acceptance-and-clock-skew)), and commits to that order under condition (b): its CounterSignature on each message, with `log_entry_hash`, is in the synchronous response to that message.
+3. If R is received first, the proposer appends R to the negotiation's transcript on receipt and holds it, keyed on `accept_msg_hash`, until 5 seconds after R's own `dispatched_at`. Every instance of the proposer that handles A reads the transcript for a held R. If A (same `msg_hash` and `offer_hash`) arrives within the hold, the pair matches: the offer moves `LIVE → ACCEPT_REVOKED`, the negotiation stays in or returns to `NEGOTIATING`, and the outcome is `accept_revoke_honoured`. If A does not arrive, R is discarded at the end of the hold and the discard is logged. The hold is the 5-second [skew bound](#signed-seller-acceptance-and-clock-skew), not a separate revocation window.
+4. If A is received first, the acceptance stands (`AGREED`), and the outcome is `accept_revoke_after_receipt`.
+5. The proposer countersigns and logs every R, whatever the outcome, and sends the outcome code as a separate message. A receipt of A or R without `log_entry_hash` is not recorded (`evidence_unverifiable`), and the negotiation does not move to `AGREED` on it.
+6. The acceptor's offer moves `ACCEPTED → ACCEPT_REVOKED`, and its negotiation from `ACCEPT_PENDING` to `NEGOTIATING`, only on the proposer's countersigned `accept_revoke_honoured`. Until then the outcome is contested, and the [exposure](#per-principal-exposure) reservation is held.
 
 ### Mandate revocation
 
@@ -510,10 +598,13 @@ Each operation is defined once and bound to REST, MCP and A2A (see [REST](../tra
 |---|---|---|
 | `POST /negotiations` | `bacp_negotiation_open` | `bacp-browse` |
 | `GET /negotiations/{id}` | `bacp_negotiation_get` | `bacp-browse` |
-| `POST /negotiations/{id}/offers` (offer, counter_offer, reject, withdraw, terminate, request_extension, accept_revoke) | `bacp_offer_send` | `bacp-negotiate` for firm messages, otherwise `bacp-browse` |
+| `POST /negotiations/{id}/offers` (offer, counter_offer, reject, withdraw, terminate, request_extension, accept_revoke) | `bacp_offer_send` | `bacp-negotiate` for firm messages, `withdraw` and `accept_revoke`; otherwise `bacp-browse` |
 | `POST /negotiations/{id}/accept` | `bacp_offer_accept` | `bacp-negotiate` |
 | `POST /rfqs`, `GET /rfqs/{id}`, `POST /rfqs/{id}/award` | `bacp_rfq_create`, `bacp_rfq_get`, `bacp_rfq_award` | `bacp-negotiate` (award) |
 | `POST /auctions`, `GET /auctions/{id}`, `POST /auctions/{id}/bids`, `POST /auctions/{id}/award` | `bacp_auction_create`, `bacp_auction_get`, `bacp_auction_bid`, `bacp_auction_award` | `bacp-negotiate` |
+
+- **Tag rule.** A `withdraw` or an `accept_revoke` changes whether a contract exists, so it is always signed under `bacp-negotiate`, whether or not the offer it concerns is firm. One signed under any other tag is refused with `401 signature_invalid` ([Signature tags](../transports/rest.md#signature-tags)).
+- **Revoking an approved acceptance.** If the principal approved the acceptance on the Trusted Surface, an `accept_revoke` of it MUST carry `hp_proof` ([Presence proof](../human-participants.md#hp-proof)); without one it is refused with `403 presence_not_proven` and nothing is sent. No operation in this version lets an agent obtain a step-up that names an `accept_revoke`, so such a revoke is refused.
 
 MCP results return the `NegotiationSession` in `structuredContent`. A2A 1.0 task states map as: `TASK_STATE_WORKING` (waiting on the counterparty), `TASK_STATE_INPUT_REQUIRED` (a counter-offer to answer), `TASK_STATE_AUTH_REQUIRED` (`ESCALATED`), `TASK_STATE_COMPLETED` (`CONTRACTED`), `TASK_STATE_CANCELED` or `TASK_STATE_FAILED` (`REJECTED`, `TERMINATED`, `CANCELLED`). Versions of A2A before 1.0 use the lowercase names `working`, `input-required`, `auth-required`, `completed`, `canceled` and `failed`. These are A2A's own values and are used verbatim; BACP's own spelling is "cancelled", so A2A `TASK_STATE_CANCELED` (or `canceled`) maps to the BACP negotiation state `CANCELLED` and to the checkout session status `cancelled`. Agent-to-agent negotiation over A2A without a network participant's signature can produce only `firm: false` offers.
 
@@ -545,6 +636,9 @@ Negotiation codes follow the two-channel rule of [Errors](../errors.md): a code 
 | `handlers_incompatible` | 200 msg (intersection) / 403 (acceptance) | requires_buyer_input |
 | `untrusted_counterparty_text` | 200 msg (`info`) | recoverable |
 | `withdraw_lost_crossing`, `accept_void_withdrawn`, `seller_accept_void` | 200 msg | recoverable |
+| `accept_revoke_honoured` | 200 msg (sunset only) | recoverable |
+| `accept_revoke_after_receipt` | 200 msg (sunset only) | requires_buyer_review |
+| `accept_revoke_not_allowed` | 200 msg | requires_buyer_review |
 | `agreed_by_counterparty` | 200 msg | requires_buyer_review |
 | `seller_counter_at_init` | 200 msg | requires_buyer_input |
 | `negotiation_terminated` | 200 msg | requires_buyer_input |

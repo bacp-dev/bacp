@@ -1,0 +1,13 @@
+{
+  "event": "negotiation.step_up.approved",
+  "step_up_id": "stp_01HZYN",
+  "negotiation_id": "neg_01HZYM8Q2W9X",
+  "offer_hash": "sha-256:WKKmq8K0e3cRnS6iOO5kEBXsGKuGOw9FdzlnlmLsPgA",
+  "at": "2026-10-13T11:02:49+05:30",
+  "signature": {
+    "role": "mandate_manager",
+    "kid": "mm.example.in|ukid-3|ed25519",
+    "alg": "EdDSA",
+    "value": "eyJhbGciOiJFZERTQSJ9.eyJldmVudCI6Im5lZ290aWF0aW9uLnN0ZXBfdXAuYXBwcm92ZWQifQ.c2lnbmF0dXJl"
+  }
+}

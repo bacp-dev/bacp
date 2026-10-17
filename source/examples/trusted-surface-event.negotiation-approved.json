@@ -1,0 +1,26 @@
+{
+  "event": "negotiation.step_up.approved",
+  "step_up_id": "stp_01HZYN",
+  "negotiation_id": "neg_01HZYM8Q2W9X",
+  "offer_hash": "sha-256:WKKmq8K0e3cRnS6iOO5kEBXsGKuGOw9FdzlnlmLsPgA",
+  "presentation": {
+    "surface": "mm.example.in",
+    "channel": "app",
+    "language": "hi-IN",
+    "modality": "visual",
+    "content_hash": "sha-256:T9L5DCDq-5e0R-HEe-xg_B-ZPpk2EtZqmVQ_S--eesE",
+    "content_ref": "https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZYN",
+    "template_id": "mm.example.in/app/negotiation-confirm/1",
+    "offer_hash": "sha-256:WKKmq8K0e3cRnS6iOO5kEBXsGKuGOw9FdzlnlmLsPgA",
+    "user_action": "upi_pin",
+    "shown_at": "2026-10-13T11:02:10+05:30",
+    "acted_at": "2026-10-13T11:02:48+05:30"
+  },
+  "at": "2026-10-13T11:02:49+05:30",
+  "signature": {
+    "role": "mandate_manager",
+    "kid": "mm.example.in|ukid-3|ed25519",
+    "alg": "EdDSA",
+    "value": "eyJhbGciOiJFZERTQSJ9.eyJldmVudCI6Im5lZ290aWF0aW9uLnN0ZXBfdXAuYXBwcm92ZWQifQ.c2lnbmF0dXJl"
+  }
+}

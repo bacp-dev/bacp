@@ -1,0 +1,11 @@
+{
+  "type": "offer",
+  "firm": true,
+  "expires_in": "PT8H",
+  "acceptance_revocation": "waived",
+  "waiver_basis": {
+    "doc_type": "contract",
+    "id": "RC-2026-114",
+    "hash": "sha-256:M5UfYcafnlsmBR85CRvl7P0xBxMx19WS5F0r33UstjI"
+  }
+}

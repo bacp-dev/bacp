@@ -341,7 +341,7 @@
           },
           "counter_signature": {
             "$ref": "common.json#/$defs/Jws",
-            "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
+            "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
           },
           "log_entry_hash": {
             "$ref": "common.json#/$defs/Hash"

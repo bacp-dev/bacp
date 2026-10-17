@@ -55,7 +55,10 @@ In `rfq_iterated`, the sealed round is followed by alternating rounds with a **s
 - **No early award.** The buyer MUST NOT award before `response_by` unless every invitee has responded. An early award is refused with `NEG_EARLY_AWARD`. This counters the first-proposal bias of LLM negotiators.
 - **Minimum responses.** An award with fewer valid quotations than `min_responses` is refused with `NEG_AWARD_RULE`.
 - **Award rule.** Under `l1_landed_cost`, the award MUST go to the L1 landed-cost quotation. Any other choice is refused with `NEG_AWARD_RULE`.
-- **Award is acceptance.** An award is an `accept` of the winning quotation's `offer_hash`, signed under the tag `bacp-negotiate`, guarded like any acceptance and carrying the `within_bounds` attestation.
+- **Award is acceptance.** An award is an `accept` of the winning quotation's `offer_hash`, signed under the tag `bacp-negotiate`, guarded like any acceptance and carrying the `within_bounds` attestation. The quotation's [`acceptance_revocation`](index.md#acceptance-revocation) term applies to the award as to any acceptance; BACP fixes no value for RFQ modes.
+- **Frozen comparison set.** The award rule is evaluated over the comparison set frozen when the RFQ closes; under `rfq_iterated` that is the close of the final shortlist round. Nothing that arrives later joins it, and it does not change when an award is revoked.
+- **Revoked award.** An award can be revoked only under the [sunset text](index.md#acceptance-revocation-sunset) for `allowed_until_receipt`; in this version every `accept_revoke` of an award is refused (`accept_revoke_not_allowed`). If an award is revoked (`accept_revoke_honoured`), the RFQ moves to `CANCELLED` and is flagged `NEG_COLLUSION_SCREEN` for review. It is not awarded again: any later award on it is refused with `NEG_AWARD_RULE`. A buyer that still wants the goods publishes a new RFQ.
+- **Buyer-prescribed `waived`.** A buyer that wants its awards to be final MAY require in its own RFQ that quotations carry `acceptance_revocation: waived` with a `waiver_basis` naming that RFQ (`doc_type: rfq`, the RFQ's id and the hash of the published RFQ). The buyer then gives up its own right to revoke the award, on terms it set itself. The profile rules of [Acceptance revocation](index.md#acceptance-revocation) still apply.
 - **Losers.** Every other child negotiation receives `terminate` with reason `rfq_not_awarded`, and its deposit is released.
 - **Audit trail.** The comparison set is kept with the award (for example, offers from at least three different manufacturers for an L1 purchase), together with who awarded it, under which mandate and why.
 
@@ -215,6 +218,7 @@ Sealed RFQs and sealed auctions MUST require a bid deposit. The instrument (`bid
 - **Award authority.** Only the auction's **creator** or the neutral **auctioneer** itself may award. Any other caller gets `NEG_AWARD_RULE`. An award MUST be signed under the tag `bacp-negotiate`.
 - **Award timing and rule.** Except in Dutch auctions, an award is possible only after close by the auctioneer's clock (`NEG_EARLY_AWARD` otherwise), and only to the bid that the `award_rule` selects at close (`NEG_AWARD_RULE` otherwise).
 - **Forward auctions.** Only the seller's explicit acceptance awards a forward auction.
+- **Revoked award.** The award rule is evaluated over the bids standing at close, frozen then. In every auction type, if an award is revoked (`accept_revoke_honoured`, possible only under the [sunset text](index.md#acceptance-revocation-sunset)), the auction moves to `CANCELLED` and is flagged `NEG_COLLUSION_SCREEN` for review. It is not awarded again: an award to the next bid, or any later award on it, is refused with `NEG_AWARD_RULE`. A lot that is still for sale goes to a new auction.
 - Seller-paced messages (ticks, a seller counter-offer after silence) travel as unsolicited `on_select` within the transaction, with buyer polling as a fallback. Whether ONDC validators accept this is open ([Q-26](../open-questions.md#q-26)).
 
 ## Retraction
@@ -228,6 +232,8 @@ The `retraction_rule` decides whether a bidder may retract a bid with `bid_retra
 | `obvious_error_only` | Only with reason `obvious_error`, before close and outside the window | — |
 
 Under every rule, a retraction inside the anti-sniping window, or after close, is refused with `NEG_RETRACTION_REFUSED`.
+
+**Not an acceptance revocation.** `accept_revoke` never governs `bid_retract`. A bid's retraction follows the `retraction_rule` above whatever the bid's `acceptance_revocation` value, and an `accept_revoke` cannot retract a bid.
 
 **Retraction isolation.** A retraction voids **only the retracting bidder's own bid**. Other bidders' bids stand. The previous best bid is not re-published as the standing price: the standing price stays hidden until the next bid. Repeated retractions by one bidder are flagged to the shill and collusion screens.
 
@@ -273,10 +279,10 @@ Under the Competition Act, 2002, s.3(3)(d), an agreement between enterprises "en
 | `NEG_SHILL_BID` | 403 (or a screen flag) | unrecoverable for that action | Bid by the seller or a non-independent party |
 | `NEG_DUTCH_PRICE_INCREASE` | 403 | unrecoverable for that action | A Dutch tick rises |
 | `NEG_RETRACTION_REFUSED` | 403 | unrecoverable for that action | Retraction not allowed by the rule, inside the window or after close |
-| `NEG_AWARD_RULE` | 403 | unrecoverable for that action | Award to the wrong bid, by the wrong party, or with too few responses |
+| `NEG_AWARD_RULE` | 403 | unrecoverable for that action | Award to the wrong bid, by the wrong party, with too few responses, or on an RFQ or auction cancelled after a revoked award |
 | `NEG_DEPOSIT_REQUIRED` | 400 | recoverable | Sealed RFQ or auction without a deposit |
 | `NEG_DEPOSIT_INVALID` | 403 | recoverable | Deposit not confirmed by its holder |
-| `NEG_COLLUSION_SCREEN` | 200 msg (flag) | requires_buyer_review | Screen flag |
+| `NEG_COLLUSION_SCREEN` | 200 msg (flag) | requires_buyer_review | Screen flag, including an RFQ or auction cancelled after a revoked award |
 | `bid_not_improving` | 409 | recoverable | Bid does not improve by the increment |
 | `auction_not_open` | 409 | recoverable | Bid outside `OPEN` / `EXTENDED` |
 | `auction_closed_no_award` | `terminate` reason / 200 msg | unrecoverable | Losing bidder, or a later Dutch acceptance |

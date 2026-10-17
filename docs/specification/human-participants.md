@@ -114,6 +114,8 @@ The payload is described as data by the OpenAPI component `TsRender`.
 | `counterparty_text[]` | Optional. Each entry is `{label, text}`: a seller-supplied string (an item name, a fee label), labelled by the gateway. |
 | `basket[]` | On a summary step-up over a [multi-seller basket](#multi-seller) only: one line per seller, `{bpp_id, payee_name, amount, handler, needs_pin, funds_locked, expires_at, funding}`. `payee_name` is the name the payer's bank returns for the payee VPA. `funds_locked` and `expires_at` are the amount a block reserves and when it is released. `funding` is `deposit` (the principal's own money) or `credit`. |
 | `covers[]` | On a summary step-up only: the legs the approval covers, each `{session_id, checkout_hash, payee, amount}` ([Step-up](mandates.md#step-up)). A summary's `session_id` and `checkout_hash` are those of the session whose `complete` raised it. |
+| `offer_hash` | On a negotiation `kind: confirm` step-up only: the `offer_hash` of the offer the principal is asked to approve ([Step-up to the Trusted Surface](negotiation/index.md#step-up-to-the-trusted-surface)). Never present with `checkout_hash`. |
+| `acceptance_revocation` | On a negotiation `kind: confirm` step-up about a firm offer only: the offer's [`acceptance_revocation`](negotiation/index.md#acceptance-revocation) value, copied unchanged; in this version only `waived` occurs, because receivers refuse `allowed_until_receipt`. Present only with `offer_hash`. It is hashed into `Presentation.content_hash` with the rest of the render. |
 | `revoke_route` | Where the principal revokes the mandate or cancels, as a URI. |
 | `grievance_contact` | The agent operator's grievance officer contact. |
 | `expires_at` | As in the `step_up` object. |
@@ -128,6 +130,24 @@ Content rules for `ts_render` and every Trusted Surface template:
    information of that person to be published and given in every response ([Legal time bands](#time-bands)).
 3. No add-on is preselected, and no text creates urgency.
 4. Seller free text appears only in `counterparty_text[]`.
+5. On a negotiation step-up that carries `acceptance_revocation`, the Trusted Surface shows the value only as the
+   fixed consequence sentence below, in the principal's language, followed by the offer's cancellation terms, which
+   the gateway states in `summary`. It never shows the token, and it never says or implies that the order cannot be
+   cancelled: cancelling after the contract is formed follows the cancellation terms.
+
+| Value | `en-IN` | `hi-IN` |
+|---|---|---|
+| `waived` | "Final once sent; it cannot be taken back. Cancelling afterwards follows the terms below." | "भेजते ही सौदा पक्का, वापस नहीं होगा; रद्द करना नीचे की शर्तों से होगा।" |
+| `allowed_until_receipt` (sunset only) | "Final once the other party receives it; cancelling afterwards follows the cancellation terms below." | "सामने वाले पक्ष तक पहुँचते ही सौदा पक्का; उसके बाद रद्द करना नीचे की शर्तों से होगा।" (draft wording, under review) |
+
+The `hi-IN` sentences say, in English: "The deal is final as soon as it is sent and will not be reversed; cancelling
+follows the terms below" (`waived`), and "The deal is final as soon as it reaches the other party; after that,
+cancelling follows the terms below" (`allowed_until_receipt`). A Trusted Surface in another language uses a fixed
+translation of the same sentence from its own templates.
+
+```json title="ts-render.negotiation-confirm.json (payload of a negotiation confirm step-up)"
+--8<-- "source/examples/ts-render.negotiation-confirm.json"
+```
 
 ### Presentation record {#presentation}
 
@@ -145,27 +165,35 @@ Trusted Surface showed, how, and what the principal did:
 | `user_action` | yes | `tap_confirm`, `upi_pin`, `biometric`, `passkey`, `voice_confirm_plus_device` or `decline`. `biometric` is the principal's own biometric enrolled for the principal on the Trusted Surface device, never an operator's. |
 | `shown_at`, `acted_at` | yes | When it was shown and when the principal acted. |
 | `template_id` | no | The Trusted Surface template and its version. |
-| `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the order's. |
+| `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the order's. Never present with `offer_hash`. |
+| `offer_hash` | on `negotiation.step_up.approved` | The offer a negotiation `confirm` step-up showed. Never present with `checkout_hash`. |
 | `device_signature` | no | The principal's device signature over the JCS form of `{step_up_id, content_hash, acted_at}` (for a step-up) or `{content_hash, acted_at}`. |
 | `voice_evidence` | no | Audio and transcript hashes and the translation model, for a voice confirmation. |
 | `assisted_by` | on `assisted` | The `participant_id` of the assisted operator, taken by the Trusted Surface from `ts_render.assisted_operators[]`, never from the agent. |
 
-A `TrustedSurfaceEvent` of type `step_up.approved`, `mandate.activated`, `loan.accepted` or `payment.afa_completed`
-**MUST** carry `presentation`. Without it the gateway refuses the event with `400 invalid_request` and nothing changes.
-On `step_up.approved` the `presentation` **MUST** carry `checkout_hash`, and its `user_action` **MUST NOT** be
-`decline`; the gateway refuses such an event with `400 invalid_request` and nothing changes. A decline is posted only
+A `TrustedSurfaceEvent` of type `step_up.approved`, `negotiation.step_up.approved`, `mandate.activated`,
+`loan.accepted` or `payment.afa_completed` **MUST** carry `presentation`. Without it the gateway refuses the event with
+`400 invalid_request` and nothing changes. On `step_up.approved` the `presentation` **MUST** carry `checkout_hash`; on
+`negotiation.step_up.approved`, the approval of a negotiation `confirm` step-up, it **MUST** carry `offer_hash`; it
+never carries both. On either approval its `user_action` **MUST NOT** be `decline`. The gateway refuses an event that
+breaks one of these rules with `400 invalid_request` and nothing changes; this includes a `step_up.approved` posted
+for a negotiation step-up. A decline is posted only
 as `step_up.declined`, which **SHOULD** carry a `Presentation` with `user_action: decline`. A ConsentReceipt **MAY**
 carry the same record in `captured_via.presentation`.
 
-When the gateway receives a `step_up.approved` event it **MUST** check, before any state change:
+When the gateway receives a `step_up.approved` or `negotiation.step_up.approved` event it **MUST** check, before any
+state change:
 
 - that the event is signed by the step-up's Mandate Manager or payer PSP ([Step-up signers](#ts-signers)); any other
   registry key gets `404 not_found`, never `403`, and nothing changes;
 - that `presentation.content_hash` is the sha-256 of that step-up's `ts_render`, or refuse the event with
   `403 ts_render_mismatch`;
-- that `presentation.checkout_hash` equals the session's current `checkout_hash` (for a `post_order` step-up, the
-  order's `checkout_hash`); an approval for an earlier quote approves nothing
+- on `step_up.approved`, that `presentation.checkout_hash` equals the session's current `checkout_hash` (for a
+  `post_order` step-up, the order's `checkout_hash`); an approval for an earlier quote approves nothing
   ([Deterministic evaluation](mandates.md#evaluation), step 8);
+- on `negotiation.step_up.approved`, that `presentation.offer_hash` equals the `ts_render`'s `offer_hash` and the
+  hash of the offer the step-up names, and, for a firm offer, that the `ts_render`'s `acceptance_revocation` equals
+  that offer's value; otherwise it refuses the event with `403 ts_render_mismatch`, and nothing is sent;
 - that `presentation.acted_at` is not after the step-up's `expires_at`, or treat the step-up as expired
   (`step_up_expired`, no money moves);
 - on an assisted session, the [assisted channel](#assisted) rules.

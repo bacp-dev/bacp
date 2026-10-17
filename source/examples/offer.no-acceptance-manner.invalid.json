@@ -197,7 +197,7 @@
   "valid_from": "2026-10-13T11:02:00+05:30",
   "expires_at": "2026-10-13T11:32:00+05:30",
   "inventory_hold_until": "2026-10-13T11:32:00+05:30",
-  "acceptance_revocation": "waived",
+  "acceptance_revocation": "allowed_until_receipt",
   "agreed_issues": [
     "/lines/0/quantity",
     "/delivery/deliver_by"

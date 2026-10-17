@@ -68,7 +68,7 @@ MUST be listed in the AgentCredential's `purposes`; otherwise the gateway return
 | `bacp-browse` | Reads, discovery, building a cart, mandate requests, non-firm negotiation messages | Every agent endpoint not listed below |
 | `bacp-pay` | Moving money | `POST /sessions/{session_id}/complete` |
 | `bacp-post-order` | Protective writes on an existing order | `POST /orders/{order_id}/cancel`, `POST /orders/{order_id}/returns`, `POST /issues`, `POST /issues/{issue_id}/actions` |
-| `bacp-negotiate` | Binding negotiation acts: firm offers and counters, ACCEPT, bids, awards | `POST /negotiations/{negotiation_id}/offers` when the message is firm, `POST /negotiations/{negotiation_id}/accept`, `POST /rfqs/{rfq_id}/award`, `POST /auctions`, `POST /auctions/{auction_id}/bids`, `POST /auctions/{auction_id}/award` |
+| `bacp-negotiate` | Binding negotiation acts: firm offers and counters, ACCEPT, bids, awards, and the acts that undo them (WITHDRAW, ACCEPT_REVOKE) | `POST /negotiations/{negotiation_id}/offers` when the message is firm or is a `withdraw` or `accept_revoke`, `POST /negotiations/{negotiation_id}/accept`, `POST /rfqs/{rfq_id}/award`, `POST /auctions`, `POST /auctions/{auction_id}/bids`, `POST /auctions/{auction_id}/award` |
 | `bacp-ts` | Trusted Surface events and render fetches, signed by the step-up's Mandate Manager or payer PSP, never by an agent | `POST /trusted-surface/events`, `GET /trusted-surface/step-ups/{step_up_id}` |
 | `bacp-handoff` | A human support operator accepting or releasing a handoff, signed by a registry key of role support operator, never by an agent | `POST /sessions/{session_id}/handoff` with `action: accept` or `release` |
 
@@ -180,7 +180,7 @@ endpoint requires. This table is generated from `source/services/bacp.openapi.ya
 | POST | `/negotiations` | negotiation | `bacp-browse` | required | Open a negotiation with one seller (Beckn select with bacp.negotiation capability tag) |
 | GET | `/negotiations/{negotiation_id}` | negotiation | `bacp-browse` | — | Authoritative full state, offer states, transcript hashes and guard verdicts (constraint IDs only) |
 | GET | `/negotiations/{negotiation_id}/offers` | negotiation | `bacp-browse` | — | Signed negotiation messages in this session (transcript), oldest first |
-| POST | `/negotiations/{negotiation_id}/offers` | negotiation | `bacp-negotiate (firm) / bacp-browse` | required | Send offer, counter_offer, reject, withdraw, terminate, request_extension or accept_revoke |
+| POST | `/negotiations/{negotiation_id}/offers` | negotiation | `bacp-negotiate (firm, withdraw, accept_revoke) / bacp-browse` | required | Send offer, counter_offer, reject, withdraw, terminate, request_extension or accept_revoke |
 | POST | `/negotiations/{negotiation_id}/accept` | negotiation | `bacp-negotiate` | required | Absolute, unqualified ACCEPT of the live offer (bacp.neg.accept, sent on Beckn init) |
 | POST | `/rfqs` | rfq | `bacp-browse` | required | Publish a structured RFQ to invitees or by broadcast (one Beckn select per BPP, parent rfq_id) |
 | GET | `/rfqs/{rfq_id}` | rfq | `bacp-browse` | — | RFQ state. Before close, shows only commit counts. After reveal, the landed-cost comparison set. |
