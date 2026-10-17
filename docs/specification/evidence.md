@@ -26,7 +26,8 @@ operator being able to rewrite history afterwards.
 | `seq` | 0 for the first entry of the session, then +1 per entry, with no gaps. |
 | `session_id`, `transaction_id` | The session and the Beckn transaction, end to end. |
 | `stage` | What kind of step this is (see [Stages](#stages)). |
-| `actor` | Who performed the step: `user`, `agent`, `gateway`, `trusted_surface`, `bpp`, `psp`. |
+| `actor` | Who performed the step: `user`, `agent`, `gateway`, `trusted_surface`, `bpp`, `psp`, or a session participant: `assisted_operator`, `seller_operator`, `sub_agent` ([Human participants](human-participants.md#roles)). |
+| `actor_ref` | The participant's `participant_id` (REQUIRED for `assisted_operator`, `seller_operator` and `sub_agent`), or on a handoff entry the key id of the support operator who accepted or released it. |
 | `at` | When it happened. |
 | `channel`, `language` | For example `voice` and `hi-IN`. |
 | `content_hash` | `sha-256` of the raw content (a transcript, audio, a structured intent, a quote, a receipt). |
@@ -45,6 +46,7 @@ operator, and is released only inside an evidence bundle to a party entitled to 
 
 | `stage` | Recorded when | Typical `actor` |
 |---|---|---|
+| `ai_disclosure` | The agent presents the AI disclosure and the routes to a human. It is the first entry whose actor is `agent`, before `intent` ([Human participants](human-participants.md#ai-disclosure)) | `agent` |
 | `prompt` | The principal instructs the agent (text or voice; voice records channel, language and translation model) | `user` |
 | `intent` | The agent turns the instruction into a structured intent or mandate request | `agent` |
 | `discover` | A search is sent and results arrive | `agent`, `gateway` |
@@ -54,13 +56,15 @@ operator, and is released only inside an evidence bundle to a party entitled to 
 | `step_up` | A step-up is requested, approved, declined or expires | `gateway`, `trusted_surface` |
 | `payment` | A debit is initiated (basket-blind instruction), a receipt arrives, an in-doubt debit is reconciled, a refund is issued | `gateway`, `psp` |
 | `order` | `on_confirm` creates the order | `bpp` |
-| `post_order` | Cancels, returns, status changes and post-order refunds | `agent`, `bpp`, `psp` |
+| `post_order` | Cancels, returns, status changes and post-order refunds | `agent`, `assisted_operator`, `bpp`, `psp` |
 | `grievance` | An IGM issue is raised and every action on it | `agent`, `bpp` |
 | `negotiation` | Every negotiation message and counter-signature | `agent`, `bpp` |
 | `guard` | Every negotiation guard verdict (constraint ids only) | `gateway` |
-| `ledger` | Credit-ledger postings and acknowledgements | `gateway` |
+| `ledger` | Credit-ledger postings and acknowledgements | `gateway`, `seller_operator` |
+| `handoff` | A handoff to a human is requested, accepted by a registered support operator, or released ([Human handoff](checkout/index.md#handoff)) | `agent`, `gateway` |
 
-The `negotiation`, `guard` and `ledger` stages are described in
+The stage `disclosure` is the seller's quote; the AI disclosure is always `ai_disclosure`. The
+`negotiation`, `guard` and `ledger` stages are described in
 [Negotiation](negotiation/index.md) and [Credit and Split Tender](payments/credit-and-split-tender.md).
 
 ### Signer roles
@@ -73,7 +77,9 @@ The `negotiation`, `guard` and `ledger` stages are described in
   non-repudiation.
 - The acts of other parties are proved by their own signatures on the artefacts the entry hashes
   and references: the BPP's signature on the quote, the PSP's on the Receipt, the principal's and
-  MM's on the mandate, the Trusted Surface's on a step-up event.
+  MM's on the mandate, the Trusted Surface's on a step-up event. A human act is never proved by
+  the operator's signature alone: the bundle carries the signed Trusted Surface events themselves
+  ([Bundle contents](#bundle)).
 
 ### Hash chain {#hash-chain}
 
@@ -259,8 +265,15 @@ trusting the agent or its operator.
 | `receipts[]` | The full signed receipts: the BPP's checkout receipt, the PSP's payment receipt, and any refund receipts. |
 | `consent_receipts[]` | The ConsentReceipts under which data was shared. |
 | `instruction_log[]` | The session's full InstructionLog. |
-| `verification` | The gateway's own result: `steps_passed` (0 to 5) and `chain_valid`. |
+| `trusted_surface_events[]` | Every signed Trusted Surface event of the transaction, verbatim as received at `/trusted-surface/events` (step-up results, mandate activation, credit acceptance, AFA completion), each with its [`Presentation`](human-participants.md#presentation). |
+| `ts_renders[]` | The gateway-signed [`ts_render`](human-participants.md#ts-render) (compact JWS) of every step-up that a `step_up.approved` or `step_up.declined` event in `trusted_surface_events[]` names, byte-identical to what the Trusted Surface fetched. |
+| `verification` | The gateway's own result: `steps_passed` (0 to 6) and `chain_valid`. |
 | `bundle_signature` | The operator's signature over the whole bundle minus `bundle_signature`. |
+
+A human-readable rendering of a bundle, the informative summary profile
+`in.bacp.evidence.summary.1`, is described in
+[Human participants](human-participants.md#evidence-summary). It is built only from the signed
+artefacts in the bundle and is never itself evidence.
 
 For a negotiated purchase the bundle also carries the negotiation transcript, the accepted offer,
 the `within_bounds` attestation and the bound `on_init`, so that a reviewer can check what was
@@ -268,8 +281,8 @@ offered and agreed without seeing the principal's reservation price ([Negotiatio
 
 ### AP2 five-step verification {#ap2-verification}
 
-A bundle verifies only if all five steps pass, the InstructionLog chain is valid, and the bundle
-signature verifies:
+A bundle verifies only if all six steps pass (the five AP2 steps and step 6), the InstructionLog
+chain is valid, and the bundle signature verifies:
 
 1. **Closed Checkout Mandate.** It is signed by the open Checkout Mandate's `cnf` key (HNP) or by
    the principal who signed the parent (HP); its `parent_mandate_id` is the open mandate; and the
@@ -286,6 +299,22 @@ signature verifies:
 5. **Payment receipt.** The PSP-signed payment receipt is a success; its `reference` equals the
    hash of the closed Payment Mandate; its `checkout_hash` and `amount` match; and it carries the
    rail evidence required for its handler ([Rail evidence](#rail-evidence)).
+6. **Trusted Surface events.** Every `trusted_surface_events[]` entry verifies against a
+   registry key of role Mandate Manager or PSP. Every InstructionLog entry at stage `step_up` that
+   records an approval or a decline has a matching event, whose hash the entry's `content_hash`
+   carries. Every `step_up.approved`, `mandate.activated`, `loan.accepted` and
+   `payment.afa_completed` event carries a `Presentation`, and for a step-up its `content_hash` is
+   the hash of the step-up's `ts_render` and its `checkout_hash` is the bundle's `checkout_hash`.
+   For every step-up event, `ts_renders[]` **MUST** hold a `ts_render` whose sha-256 is that
+   `content_hash` (where the event carries one) and whose signature verifies against the gateway's
+   registry key, and the verifier **MUST** compare its `total`, its payee (`seller_name`) and its
+   `checkout_hash` with the BPP-signed quote in `checkout`, and its `price_breakup_hash` with
+   `checkout.disclosures_hash`; a missing render or any mismatch fails the step. The
+   InstructionLog's first entry whose actor is `agent` is at stage `ai_disclosure`.
+   Any failure is `evidence_unverifiable`. Step 6 proves what the principal was shown, not where
+   the money went: neither the quote nor `ts_render` carries the payee's VPA or settlement
+   account, and comparing the PSP receipt's payee with seller-signed payment terms is not defined
+   in this version.
 
 The gateway runs this verification when it builds the bundle and records the result in
 `verification`. A reviewer **SHOULD** re-run it independently rather than trust `verification`.
@@ -293,7 +322,7 @@ The gateway runs this verification when it builds the bundle and records the res
 ### Attaching evidence to an IGM issue {#igm-attachment}
 
 - Before raising an issue the gateway **MUST** assemble the bundle and verify it fully. If it does
-  not pass all five steps with a valid chain, `POST /issues` returns `422 evidence_unverifiable`
+  not pass all six verification steps with a valid chain, `POST /issues` returns `422 evidence_unverifiable`
   and nothing is sent ([Orders and Post-order](checkout/post-order.md#igm)).
 - The Beckn `issue` carries the bundle by reference: `evidence_bundle_ref` (the
   `/evidence/{transaction_id}` URI) and `evidence_bundle_hash` (`sha-256` over the JCS form of the

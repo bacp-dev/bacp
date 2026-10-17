@@ -104,6 +104,16 @@ any Beckn message is sent:
    mandate error (`mandate_paused`, `mandate_expired`, `mandate_exhausted`).
 5. **Presence.** `presence` **MUST** be in the mandate's `presence_allowed`
    (`403 presence_not_allowed`), plus the per-action presence rules below.
+6. **Presence proof.** A write with `presence: HP` **MUST** carry `hp_proof{ts_event_hash, step_up_id}`:
+   a step-up of kind `post_order` whose `ts_render` names this write (`action`, `order_id` and, for
+   an issue action, `issue_id` and the `subject_hash` of the issue's `resolution` as shown), and
+   the hash of its signed `step_up.approved` event, not used for another write. Without `hp_proof`
+   the gateway returns `403 presence_not_proven` (`requires_buyer_review`) carrying `step_up` (kind
+   `post_order`, reason `presence_proof`) for the principal to confirm, and the same pending
+   step-up on a repeat; with a proof for another action, order or issue, one already used, or one
+   for an issue whose current `resolution` does not hash to its `subject_hash`, the same code. The gateway consumes the proof inside the atomic section keyed on the order's root
+   Checkout Mandate. No Beckn or IGM message is sent until the proof passes
+   ([Presence proof](../human-participants.md#hp-proof)).
 
 **Revocation does not strand an order.** Revoking a mandate stops new commitments only. Cancel,
 return and issue on orders already placed under it stay allowed, with the principal present,
@@ -118,6 +128,7 @@ because they protect the principal and the seller's take-back and refund duties 
   "reason_code": "001",
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
   "presence": "HP",
+  "hp_proof": {"ts_event_hash": "sha-256:Rk3mW8qZ1tY5vB9nC2xL6pD0sH4jF7gA3eU8iO1kM5w", "step_up_id": "stp_01HZPOCAN01"},
   "note": {"hi-IN": "गलती से ऑर्डर हो गया", "en-IN": "Ordered by mistake"},
   "bpp_id": "bpp.kirana.example.in"
 }
@@ -147,6 +158,7 @@ because they protect the principal and the seller's take-back and refund duties 
   "reason_code": "002",
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
   "presence": "HP",
+  "hp_proof": {"ts_event_hash": "sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU", "step_up_id": "stp_01HZPORET01"},
   "evidence": [
     {"type": "image",
      "hash": "sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A",
@@ -156,8 +168,11 @@ because they protect the principal and the seller's take-back and refund duties 
 }
 ```
 
-- Returns are **`presence: HP`**: the principal confirms (by voice or on screen) and the
-  confirmation is logged. An HNP return gets `403 presence_not_allowed`.
+- Returns are **`presence: HP`**: the principal confirms the return on the Trusted Surface, through
+  the `post_order` step-up that the first attempt returns, and the request carries `hp_proof` of
+  that confirmation (gate step 6). An HNP return gets
+  `403 presence_not_allowed`; an HP return without valid `hp_proof` gets
+  `403 presence_not_proven`.
 - The request **MUST** be made before `return_window_ends`. After it, the gateway returns
   `403 return_not_allowed`.
 - **Partial quantities** are allowed. Each item **MUST** be on the order, and for each item the
@@ -243,7 +258,7 @@ bundle attached.
 
 1. The gateway passes the [post-order gate](#post-order-gate). `presence` defaults to `HNP`; on an
    order whose mandate is `REVOKED` it **MUST** be `HP`.
-2. It assembles the transaction's **evidence bundle** and runs the five-step verification and the
+2. It assembles the transaction's **evidence bundle** and runs the verification (the five AP2 steps and step 6, Trusted Surface events) and the
    InstructionLog chain check ([Evidence bundle](../evidence.md#bundle)). If the bundle does not
    verify fully, it returns `422 evidence_unverifiable` and sends nothing.
 3. It sends Beckn IGM 2.0 `issue` with the agent as an `actors[]` entry of `type` `AI_AGENT`
@@ -278,8 +293,10 @@ plus `ESCALATED`, a BACP agent action that raises the issue level (`ISSUE` → `
 The agent acts with `POST /issues/{issue_id}/actions` (`INFO_PROVIDED`, `RESOLUTION_ACCEPTED`,
 `RESOLUTION_REJECTED`, `ESCALATED`, `CLOSED`), through the same gate:
 
-- `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED` **MUST** be `presence: HP`: only the principal
-  accepts or rejects a remedy. `RESOLUTION_ACCEPTED` is followed by `CLOSED`, and the issue becomes
+- `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED` **MUST** be `presence: HP`, with `hp_proof`
+  (gate step 6): only the principal accepts or rejects a remedy, and only the remedy the principal
+  was shown. If the seller revises the `resolution` after the principal confirmed, the proof no
+  longer applies (`403 presence_not_proven`). `RESOLUTION_ACCEPTED` is followed by `CLOSED`, and the issue becomes
   `CLOSED`.
 - Acting on a `CLOSED` issue returns `409 session_state_conflict`.
 - `ESCALATED` moves the issue from level `ISSUE` to level `GRIEVANCE`, handled by the grievance
@@ -342,7 +359,7 @@ sequenceDiagram
 |---|---|
 | 400 | `invalid_request` (including an ambiguous order without `bpp_id`, at `$.bpp_id`), `idempotency_key_required` |
 | 401 | `signature_invalid`, `replay_detected`, `agent_unregistered`, `agent_credential_revoked` |
-| 403 | `mandate_scope_mismatch`, `presence_not_allowed`, mandate status errors, `cancel_not_allowed`, `return_not_allowed`, `refund_to_ppi_forbidden`, `refund_not_to_source` |
+| 403 | `mandate_scope_mismatch`, `presence_not_allowed`, `presence_not_proven`, mandate status errors, `cancel_not_allowed`, `return_not_allowed`, `refund_to_ppi_forbidden`, `refund_not_to_source` |
 | 404 | `not_found` |
 | 409 | `idempotency_in_flight`, `session_state_conflict` |
 | 413 | `request_too_large` |

@@ -96,9 +96,12 @@ the capabilities `in.bacp.mandate`, `in.bacp.discover`, `in.bacp.checkout` and
 
 Sakhi's first message in every session discloses that Meera is talking to an
 AI and offers a human: *"Aap ek AI sahayak se baat kar rahe hain…"* ("You are
-talking to an AI assistant…"). The text
-and the handoff link come from Sakhi's AgentCredential (`disclosure.ai_notice`,
-`disclosure.human_handoff_url`).
+talking to an AI assistant…"). The text and the routes to a human come from
+Sakhi's AgentCredential (`disclosure.ai_notice`, `disclosure.handoff_routes`).
+Because Sakhi is a voice agent, one route is a phone number with "press 0",
+not only a web link. The operator logs the disclosure at stage `ai_disclosure`,
+the first entry whose actor is the agent. See
+[Human Participants and the Trusted Surface](human-participants.md).
 
 Meera says: *"Har mahine ka kirana tum mangwa dena, teen hazaar tak."* ("Order
 the groceries every month, up to three thousand.") Sakhi's operator records
@@ -404,8 +407,13 @@ Meera says *"Doodh ka packet phata hua aaya, wapas karo."* ("The milk packet
 arrived torn, send it back.") Sakhi reads back the return (1 L milk, ₹68 back
 to the same UPI account) and Meera says *"Haan"* ("Yes"). Both transcripts are
 tagged `hi-Latn-IN`.
-The voice confirmation is logged. Returns are always human-present
-(`presence: HP`).
+Returns are always human-present (`presence: HP`), and a voice "Haan" is not
+proof of presence. Sakhi's first attempt, without `hp_proof`, gets
+`403 presence_not_proven` with a `post_order` step-up whose signed render names
+this return on this order. Meera confirms the return on her UPI app (the
+Trusted Surface), and Sakhi retries with `hp_proof`: that step-up's id and the
+hash of the signed approval event. The proof works for this return only, and
+only once ([Presence proof](human-participants.md#hp-proof)).
 
 `POST /orders/ORD-KIR-88231/returns` — tag **`bacp-post-order`**.
 
@@ -415,6 +423,7 @@ The voice confirmation is logged. Returns are always human-present
   "reason_code": "002",
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
   "presence": "HP",
+  "hp_proof": {"ts_event_hash": "sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU", "step_up_id": "stp_01HZPORET01"},
   "evidence": [
     {
       "type": "image",
@@ -460,7 +469,7 @@ an evidence bundle reference. The gateway assembles and signs the evidence
 bundle (mandates, the BPP-signed quote, receipts and the instruction-log
 chain) and raises an ONDC IGM 2.0 `issue` on Meera's behalf, with the agent as
 the complainant in `actors[]` (type `AI_AGENT`, Proposed: [Q-11](open-questions.md#q-11)). Accepting a proposed resolution is an issue action
-(`POST /issues/{issue_id}/actions`) with `presence: HP`. Payment-side disputes
+(`POST /issues/{issue_id}/actions`) with `presence: HP` and `hp_proof`. Payment-side disputes
 are cross-referenced to the RRN for the UPI dispute channel. See
 [Evidence and Instruction Log](evidence.md).
 

@@ -243,6 +243,13 @@
               "buyer"
             ]
           },
+          "actor": {
+            "$ref": "#/$defs/Actor"
+          },
+          "hp_proof": {
+            "$ref": "common.json#/$defs/HpProof",
+            "description": "REQUIRED when actor.kind is agent: proof of the principal's confirmation of this acknowledgement on the Trusted Surface."
+          },
           "method": {
             "enum": [
               "signature",
@@ -258,7 +265,8 @@
             "format": "date-time"
           },
           "evidence_hash": {
-            "$ref": "common.json#/$defs/Hash"
+            "$ref": "common.json#/$defs/Hash",
+            "description": "Hash of the evidence of the acknowledgement, for example the counterparty's signature."
           }
         },
         "required": [
@@ -266,7 +274,52 @@
           "method",
           "at"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "auto_from_rail_receipt"
+                }
+              },
+              "required": [
+                "method"
+              ]
+            },
+            "then": {},
+            "else": {
+              "required": [
+                "actor"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "actor": {
+                  "properties": {
+                    "kind": {
+                      "const": "agent"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              },
+              "required": [
+                "actor"
+              ]
+            },
+            "then": {
+              "required": [
+                "hp_proof"
+              ]
+            }
+          }
+        ],
+        "description": "Every acknowledgement other than one taken automatically from a rail receipt names who acted (actor): a human or an agent, and in which role. An agent may acknowledge only with hp_proof of the principal's confirmation on the Trusted Surface; no mandate scope authorises an agent acknowledgement."
       }
     },
     "status": {
@@ -463,6 +516,10 @@
       ],
       "description": "Ledger header, signed by both parties at opening.",
       "additionalProperties": false
+    },
+    "Actor": {
+      "$ref": "common.json#/$defs/Actor",
+      "description": "The Actor definition of common.json, kept here so that this reference resolves."
     }
   }
 }

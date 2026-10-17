@@ -441,6 +441,98 @@ paths:
           $ref: '#/components/responses/QuotaExceeded'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /sessions/{session_id}/handoff:
+    parameters:
+    - $ref: '#/components/parameters/SessionId'
+    post:
+      tags:
+      - session
+      operationId: humanHandoff
+      summary: Hand the session to a human (bacp.human_handoff). Requested by the agent; accepted only by a registered human support operator.
+      description: 'The agent requests a handoff (tag `bacp-browse`, `action: request`) with one of the routes in `Session.ai_disclosure.handoff_routes`.
+        The gateway MUST accept the request in every session state and whatever the mandate''s status, including after the mandate is revoked.
+        An open session moves to status `human_handoff`, and the gateway then refuses `PUT` and `complete` from the agent with
+        `409 session_state_conflict` at `$.status`. A session in any other state keeps its status and records `handoff`.
+
+        A human support operator accepts (`action: accept`) with a request signed by a registry key whose role is support operator, under tag
+        `bacp-handoff`. Only then does the gateway set `handoff.accepted_by` (that key''s id) and `handoff.accepted_at`. An acceptance signed by
+        any other key, or under any other tag, leaves the handoff requested. While the session is in `human_handoff`, a `step_up.approved` event
+        is held, not applied.
+
+        `action: release` ends the handoff. The gateway accepts it from the `accepted_by` key under tag `bacp-handoff`, or from the agent under
+        tag `bacp-browse` only while `accepted_by` is absent; a release from any other key leaves the session in `human_handoff`. A session in
+        `human_handoff` returns to `incomplete`, and `handoff.ended_at` is set. A held approval then applies only if its step-up has not expired
+        and its `checkout_hash` still equals the session''s. Every act is written to the InstructionLog at stage `handoff`.
+
+        `accept` and `release` are each one compare-and-set on `handoff.accepted_by` and `handoff.ended_at`. An accept sets `accepted_by` only
+        while both are absent; an agent''s release sets `ended_at` only while `accepted_by` is still absent, and otherwise changes nothing. An
+        accept after `ended_at` is set gets 409 session_state_conflict at $.status and changes nothing. A race between an agent release and an
+        accept therefore ends either released with no `accepted_by`, or connected in human_handoff, never both.
+
+        A request under tag `bacp-handoff` is signed with the support operator''s registry key and carries no `BACP-Agent` header.
+
+        '
+      security:
+      - httpSignature: []
+        agentCredential: []
+      - httpSignature: []
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HandoffRequest'
+            examples:
+              ivrRoute:
+                value:
+                  action: request
+                  route:
+                    channel: ivr
+                    uri: tel:+91-80-00000001
+                    dtmf: '0'
+                    languages:
+                    - hi-IN
+                    - en-IN
+                    hours: Mo-Su 08:00-20:00
+              accept:
+                value:
+                  action: accept
+              release:
+                value:
+                  action: release
+      responses:
+        '200':
+          description: Handoff accepted by a human support operator, or released (a session in human_handoff returns to incomplete)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '201':
+          description: Handoff requested; the session is in human_handoff (or keeps its closed status)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/InFlight'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
   /mandates:
     post:
       tags:
@@ -606,6 +698,21 @@ paths:
       summary: Signed event from a Mandate Manager or payer PSP (mandate activated, paused, resumed, revoked, step-up result, rail event)
       description: 'Authenticated by the MM/PSP registry key (RFC 9421, tag `bacp-ts`). Agents calling this endpoint get 403.
 
+        An event about a session or step-up is accepted only from the step-up''s Mandate Manager or payer PSP. For a session step-up these are
+        the issuer of the session''s mandate and the PSP named in `rail_binding.psp_id` of the open Payment Mandate whose `checkout_mandate_ref`
+        is the session''s mandate. For a `post_order` step-up (no session) they are the issuer of the mandate the order was placed under and the
+        PSP named in `auth_binding.psp_id` of the order''s closed Payment Mandate (any of them under split tender). Any other registry key gets
+        404 not_found, never 403, and nothing changes. A request under tag `bacp-ts` carries no BACP-Agent header.
+
+        step_up.approved, mandate.activated, loan.accepted and payment.afa_completed MUST carry `presentation`; without it the event is refused
+        with 400 invalid_request and nothing changes. On step_up.approved, `presentation.checkout_hash` is REQUIRED (the session''s quote, or for
+        a `post_order` step-up the order''s) and `presentation.user_action` is never decline (a decline is posted as step_up.declined); otherwise
+        the event is refused with 400 invalid_request and nothing changes. On step_up.approved the gateway refuses the event with 403 ts_render_mismatch, and changes
+        nothing, when `presentation.content_hash` is not the sha-256 of the step-up''s `ts_render`; with 403 presence_not_proven when the session
+        is assisted (channel assisted, or an AgentCredential of class assisted) and `presentation.user_action` is not the principal''s own factor
+        or `presentation.assisted_by` is not an assisted operator of the session; and treats it as expired when `presentation.acted_at` is after
+        the step-up''s `expires_at`. While the session is in human_handoff the approval is held, not applied, until the handoff is released.
+
         On mandate.revoked or rail.safety_switch the gateway MUST stop all in-flight sessions under the mandate and notify
 
         the agent (webhook mandate.status_changed) within 60 s.
@@ -650,6 +757,19 @@ paths:
                     type: upi.pin
                     ref: PSPAUTH-55120
                     psp_id: psp.example.in
+                  presentation:
+                    surface: psp.example.in
+                    channel: app
+                    language: hi-IN
+                    modality: visual
+                    content_hash: sha-256:t1dVn6mjcxJp1xBJ6Q1uN3lvlK1D5oQh0pX8wv5cY4E
+                    content_ref: https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZXA
+                    template_id: psp.example.in/app/step-up-confirm/3
+                    checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
+                    user_action: upi_pin
+                    shown_at: '2026-10-22T18:31:02+05:30'
+                    acted_at: '2026-10-22T18:31:38+05:30'
+                    device_signature: eyJhbGciOiJFUzI1NiJ9.eyJkIjoxfQ.c2ln
                   at: '2026-10-22T18:31:40+05:30'
                   signature:
                     role: psp
@@ -673,6 +793,53 @@ paths:
           $ref: '#/components/responses/RequestTooLarge'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /trusted-surface/step-ups/{step_up_id}:
+    parameters:
+    - name: step_up_id
+      in: path
+      required: true
+      schema:
+        type: string
+    get:
+      tags:
+      - trusted-surface
+      operationId: getStepUpRender
+      summary: Fetch the gateway-signed ts_render of a step-up. Only the step-up's Mandate Manager or payer PSP may call it.
+      description: 'Signed with a Mandate Manager or PSP registry key under tag `bacp-ts`, with no BACP-Agent header. Agents calling this endpoint
+        get 403 trusted_surface_only. Only the step-up''s Mandate Manager or payer PSP gets the render: for a session step-up, the issuer of the
+        session''s mandate or the PSP named in `rail_binding.psp_id` of the open Payment Mandate whose `checkout_mandate_ref` is the session''s
+        mandate; for a `post_order` step-up (no session), the issuer of the mandate the order was placed under or the PSP named in
+        `auth_binding.psp_id` of the order''s closed Payment Mandate (any of them under split tender). Any other registry key gets 404 not_found,
+        never 403, so that the endpoint does not reveal which step-ups exist. The gateway rate-limits the fetch (429), counting the limit per
+        caller key before it looks up the step_up_id, so that a 429 never depends on whether the step-up exists.
+
+        The `ts_render` is signed once, when the step-up is created, and served byte-identical on every fetch; it never changes for a `step_up_id`.
+        The Trusted Surface renders a step-up only from the `ts_render` it fetches here by `step_up_id`, never from content that reaches it through
+        the agent, and records `Presentation.content_hash` as the sha-256 of the compact JWS.
+
+        '
+      security:
+      - httpSignature: []
+      parameters:
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      responses:
+        '200':
+          description: The step-up's signed render input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StepUpRender'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '429':
           $ref: '#/components/responses/QuotaExceeded'
         '503':
@@ -790,6 +957,9 @@ paths:
                   reason_code: '002'
                   mandate_ref: mdt_CHK7Q2W9X4K1M3
                   presence: HP
+                  hp_proof:
+                    ts_event_hash: sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU
+                    step_up_id: stp_01HZPORET01
                   evidence:
                   - type: image
                     hash: sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A
@@ -990,11 +1160,16 @@ paths:
                   $ref: '#/components/schemas/LangText'
                 presence:
                   $ref: '#/components/schemas/Presence'
+                hp_proof:
+                  $ref: '#/components/schemas/HpProof'
             examples:
               escalate:
                 value:
                   action: ESCALATED
                   presence: HP
+                  hp_proof:
+                    ts_event_hash: sha-256:Jq7Kx0n2Yb3s4V9cR1mT8wQ6eL5uH2pF0gD7aZ3kN1o
+                    step_up_id: stp_01HZPOISS01
                   note:
                     en-IN: No response in 48 hours
       responses:
@@ -1998,15 +2173,19 @@ components:
       name: Signature
       description: 'RFC 9421 HTTP Message Signature with RFC 9530 Content-Digest. Covered components MUST include @method, @authority,
 
-        @path, content-digest and bacp-agent; idempotency-key on every non-GET request; and @query whenever the target URI has
+        @path, content-digest and bacp-agent (except under tags bacp-ts and bacp-handoff, where the request is signed with a registry key and
 
-        a query component. content-type SHOULD be covered whenever the request has a body. A signature that lacks a required
+        the BACP-Agent header is absent and not covered);
 
-        component is rejected with 401 signature_invalid. Parameters MUST include created, expires (expires - created <= 300 s),
+        idempotency-key on every non-GET request; and @query whenever the target URI has a query component. content-type SHOULD be
 
-        nonce, keyid and tag (bacp-browse, bacp-pay, bacp-post-order, bacp-negotiate or bacp-ts). Keys: AgentCredential.cnf.jwk
+        covered whenever the request has a body. A signature that lacks a required component is rejected with 401 signature_invalid.
 
-        (agents) or the registry record (MM, PSP, BAP). Algorithms: every verifier MUST support both ES256 and EdDSA (Ed25519); every signer
+        Parameters MUST include created, expires (expires - created <= 300 s), nonce, keyid and tag (bacp-browse, bacp-pay,
+
+        bacp-post-order, bacp-negotiate, bacp-ts or bacp-handoff). Keys: AgentCredential.cnf.jwk (agents) or the registry record
+
+        (MM, PSP, BAP, support operator). Algorithms: every verifier MUST support both ES256 and EdDSA (Ed25519); every signer
 
         MUST use one of the two, and any other algorithm is rejected with 401 signature_invalid (settled in Q-42).
 
@@ -2126,7 +2305,8 @@ components:
                 message: AgentCredential is revoked on its status list
                 resolution: unrecoverable
     Forbidden:
-      description: Caller is not allowed to use this endpoint or resource (trusted_surface_only, evidence_forbidden).
+      description: Caller is not allowed to use this endpoint or resource (trusted_surface_only, evidence_forbidden), or a Trusted Surface
+        event does not match what the gateway asked the Trusted Surface to show (ts_render_mismatch, presence_not_proven).
       content:
         application/json:
           schema:
@@ -2142,6 +2322,13 @@ components:
                 type: authorization_error
                 code: evidence_forbidden
                 message: Not a party of record for this transaction
+                resolution: unrecoverable
+            renderMismatch:
+              value:
+                type: authorization_error
+                code: ts_render_mismatch
+                message: presentation.content_hash is not the hash of the ts_render of stp_01HZXA
+                param: $.presentation.content_hash
                 resolution: unrecoverable
     MandateRejected:
       description: Deterministic mandate verification, the post-order gate or a guard refused the request (fail closed). Carries a 403 code from
@@ -2165,6 +2352,21 @@ components:
                 message: Category ONDC:RET12 not in categories_allow
                 param: $.items[0]
                 resolution: requires_buyer_review
+            presenceNotProven:
+              value:
+                type: mandate_error
+                code: presence_not_proven
+                message: presence HP without hp_proof of a Trusted Surface confirmation of this write
+                param: $.hp_proof
+                resolution: requires_buyer_review
+                step_up:
+                  step_up_id: stp_01HZPO7K2M
+                  kind: post_order
+                  reason: presence_proof
+                  trusted_surface_url: https://psp.example.in/approve/stp_01HZPO7K2M
+                  ts_render: eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpQTzdLMk0ifQ.c2ln
+                  delivery: app_push
+                  expires_at: '2026-10-23T09:15:00+05:30'
             railCap:
               value:
                 type: mandate_error
@@ -2286,7 +2488,7 @@ components:
                 message: Request body exceeds 262144 bytes
                 resolution: unrecoverable
     QuotaExceeded:
-      description: Per-agent idempotency-key quota exhausted (quota_exceeded).
+      description: Per-agent idempotency-key quota exhausted, or a rate limit exceeded (render fetches per caller key, post_order step-up creation per agent) (quota_exceeded).
       content:
         application/json:
           schema:
@@ -2375,6 +2577,7 @@ components:
           - bpp
           - registry
           - operator
+          - support_operator
         kid:
           type: string
           description: Registry-resolvable key id, e.g. 'bap.example.in|ukid-7|ed25519' or a did:web#fragment
@@ -2403,14 +2606,75 @@ components:
       type: string
       pattern: ^(upi\.circle\.delegate|upi\.reservepay\.block|upi\.autopay|upi\.uap\.[a-z0-9_.]+)$
     Channel:
-      enum:
-      - app
-      - voice
-      - ivr
-      - upi123pay
-      - whatsapp
-      - web
-      - assisted
+      $ref: ../schemas/common.json#/$defs/Channel
+    LanguageTag:
+      $ref: ../schemas/common.json#/$defs/LanguageTag
+    Presentation:
+      $ref: ../schemas/common.json#/$defs/Presentation
+    Participant:
+      $ref: ../schemas/common.json#/$defs/Participant
+    ParticipantRole:
+      $ref: ../schemas/common.json#/$defs/ParticipantRole
+    HandoffRoute:
+      $ref: ../schemas/common.json#/$defs/HandoffRoute
+    HpProof:
+      $ref: ../schemas/common.json#/$defs/HpProof
+    StepUpRender:
+      type: object
+      description: Response of GET /trusted-surface/step-ups/{step_up_id}. The gateway-signed render input of one step-up, served byte-identical
+        on every fetch.
+      required:
+      - step_up_id
+      - ts_render
+      - expires_at
+      properties:
+        step_up_id:
+          type: string
+        ts_render:
+          $ref: '#/components/schemas/Jws'
+        expires_at:
+          type: string
+          format: date-time
+    Handoff:
+      type: object
+      description: A handoff of the session to a human. Requested while accepted_by is absent; connected once a registered human support operator
+        has accepted it; ended once ended_at is set by a release.
+      required:
+      - route
+      - requested_at
+      properties:
+        route:
+          $ref: '#/components/schemas/HandoffRoute'
+        requested_at:
+          type: string
+          format: date-time
+        accepted_by:
+          type: string
+          description: Registry key id of the human support operator who accepted, verified from a request signed under tag bacp-handoff by a
+            key whose registry role is support operator. Never an agent key.
+        accepted_at:
+          type: string
+          format: date-time
+        ended_at:
+          type: string
+          format: date-time
+          description: When the handoff was released (action release) and the session returned to incomplete.
+    HandoffRequest:
+      type: object
+      required:
+      - action
+      properties:
+        action:
+          enum:
+          - request
+          - accept
+          - release
+          description: request (by the agent, tag bacp-browse), accept (by a human support operator, tag bacp-handoff) or release (by the
+            support operator who accepted, tag bacp-handoff, or by the agent, tag bacp-browse, only while the handoff is not yet accepted).
+        route:
+          $ref: '#/components/schemas/HandoffRoute'
+          description: One of the routes in Session.ai_disclosure.handoff_routes. REQUIRED with action request when the session lists
+            handoff_routes; otherwise omitted.
     Handler:
       enum:
       - upi.circle.delegate
@@ -2571,6 +2835,14 @@ components:
             human_handoff_url:
               type: string
               format: uri
+              description: Web page that leads to a human. Kept for compatibility; typed routes are in handoff_routes.
+            handoff_routes:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/HandoffRoute'
+              description: Typed routes to a human. MUST contain a tel route (with or without DTMF digits) when agent.channels includes voice, ivr
+                or upi123pay. A route stays usable after the principal's mandate is revoked.
         data_residency:
           type: object
           description: "Optional data-residency statement (fail-safe default until Q-15 is settled). A gateway MUST NOT treat a missing or incomplete data_residency statement as permission to send payment data outside India; a gateway, Mandate Manager or PSP adapter stores and processes payment data only in India."
@@ -2626,6 +2898,36 @@ components:
                 idx:
                   type: integer
                   minimum: 0
+      allOf:
+      - description: When agent.channels includes voice, ivr or upi123pay, disclosure.handoff_routes MUST contain a tel URI route (with or
+          without DTMF digits).
+        if:
+          properties:
+            agent:
+              properties:
+                channels:
+                  contains:
+                    enum:
+                    - voice
+                    - ivr
+                    - upi123pay
+              required:
+              - channels
+          required:
+          - agent
+        then:
+          properties:
+            disclosure:
+              required:
+              - handoff_routes
+              properties:
+                handoff_routes:
+                  contains:
+                    properties:
+                      uri:
+                        pattern: '^tel:'
+                    required:
+                    - uri
     Mandate:
       title: Mandate
       description: AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status,
@@ -2753,6 +3055,7 @@ components:
             - EMAIL
             - AGE_OVER_18
             - GSTIN
+            - ACTING_FOR
         presence_allowed:
           type: array
           minItems: 1
@@ -3229,6 +3532,10 @@ components:
                   $ref: '#/components/schemas/Hash'
                 translation_model:
                   type: string
+            presentation:
+              $ref: '#/components/schemas/Presentation'
+              description: What the Trusted Surface presented and how. OPTIONAL. When present, its user_action equals captured_via.user_action and
+                its language equals notice.language.
         withdrawal:
           type: object
           required:
@@ -3458,6 +3765,7 @@ components:
           type: string
         stage:
           enum:
+          - ai_disclosure
           - prompt
           - intent
           - discover
@@ -3472,6 +3780,10 @@ components:
           - negotiation
           - guard
           - ledger
+          - handoff
+          description: ai_disclosure is the agent presenting the AI disclosure and the human-handoff routes; it is the first entry whose actor is
+            agent, before intent. handoff is a handoff to a human being requested, accepted or ended. disclosure is the seller's signed quote and
+            disclosures arriving, not the AI disclosure.
         actor:
           enum:
           - user
@@ -3480,6 +3792,14 @@ components:
           - trusted_surface
           - bpp
           - psp
+          - assisted_operator
+          - seller_operator
+          - sub_agent
+          description: Who performed the step. assisted_operator, seller_operator and sub_agent name a session participant through actor_ref.
+        actor_ref:
+          type: string
+          description: participant_id of the acting participant in the session's participants[] (REQUIRED when actor is assisted_operator,
+            seller_operator or sub_agent), or, on a handoff entry, the registry key id of the support operator who accepted it.
         at:
           type: string
           format: date-time
@@ -3528,6 +3848,19 @@ components:
           $ref: '#/components/schemas/Hash'
         signature:
           $ref: '#/components/schemas/Signature'
+      allOf:
+      - if:
+          properties:
+            actor:
+              enum:
+              - assisted_operator
+              - seller_operator
+              - sub_agent
+          required:
+          - actor
+        then:
+          required:
+          - actor_ref
     BecknContextBacp:
       title: 'Beckn context extension: context.bacp'
       description: Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp]
@@ -3537,6 +3870,7 @@ components:
       - agent
       - presence
       - idempotency_key
+      - ai_disclosure
       properties:
         agent:
           type: object
@@ -3584,6 +3918,33 @@ components:
           type: string
         ai_disclosure:
           const: true
+          description: Always true. REQUIRED, and mirrored in the bacp tag group where context.bacp may be stripped.
+        acting_for:
+          type: object
+          description: Whom the agent acts for, as told to the seller. OPTIONAL. gstin and display_name are sent only when the mandate's data_scopes
+            include ACTING_FOR; otherwise they are omitted. A sole proprietor's GSTIN or name is personal data.
+          required:
+          - kind
+          properties:
+            kind:
+              enum:
+              - individual
+              - business
+            gstin:
+              type: string
+              pattern: ^[0-9]{2}[A-Z0-9]{10}[0-9A-Z]{3}$
+            display_name:
+              type: string
+              minLength: 1
+          additionalProperties: false
+        operator_name:
+          type: string
+          minLength: 1
+          description: Legal name of the agent operator, as in its AgentCredential.
+        operator_grievance_contact:
+          type: string
+          minLength: 1
+          description: Contact of the agent operator's grievance officer (email address, tel URI or https URL).
         log_head:
           $ref: '#/components/schemas/Hash'
           description: Current InstructionLog head at send time
@@ -3630,6 +3991,10 @@ components:
           - bpp_timeout
           - bpp_nack
           - trusted_surface_only
+          - ts_render_mismatch
+          - presence_not_proven
+          - evidence_unverifiable
+          - session_state_conflict
         message:
           type: string
         param:
@@ -3651,6 +4016,11 @@ components:
           - confirm
           - rail_auth
           description: REQUIRED on rail-cap and step-up errors; rail_auth for rail_limit_exceeded.
+        step_up:
+          $ref: '#/components/schemas/StepUp'
+          description: On 403 presence_not_proven for a post-order write with presence HP and no valid hp_proof, a step-up of kind post_order
+            (reason presence_proof) whose ts_render names this write. The principal confirms it on the Trusted Surface, and the agent retries with
+            hp_proof naming its step_up_id and the hash of the signed step_up.approved event.
     Message:
       type: object
       description: ACP messages[] entry. resolution tells the agent whether it may self-fix, must ask the user, or must get user review.
@@ -3681,8 +4051,35 @@ components:
           - pre_debit_opt_out
           - cod_open_orders_cap
           - ai_disclosure
+          - untrusted_counterparty_text
+        origin:
+          enum:
+          - gateway
+          - counterparty
+          default: gateway
+          description: Who wrote content. A gateway-written message never contains counterparty text; counterparty text travels only in args[]
+            with origin counterparty, or as a whole message with code untrusted_counterparty_text and origin counterparty.
         content:
           $ref: '#/components/schemas/LangText'
+        args:
+          type: array
+          description: Values inserted into content at {name} placeholders. A value taken from the seller or another counterparty (an item name,
+            a fee label) MUST be here with origin counterparty and never in the text of content.
+          items:
+            type: object
+            required:
+            - name
+            - origin
+            - text
+            properties:
+              name:
+                type: string
+              origin:
+                enum:
+                - gateway
+                - counterparty
+              text:
+                type: string
         param:
           type: string
         resolution:
@@ -3893,9 +4290,33 @@ components:
           $ref: '#/components/schemas/Channel'
         language:
           type: string
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+          description: Humans and sub-agents taking part besides the agent. With channel assisted it MUST contain an assisted_operator entry
+            (BACP policy); otherwise the gateway returns 400 invalid_request at $.participants.
         webhook_url:
           type: string
           format: uri
+      allOf:
+      - if:
+          properties:
+            channel:
+              const: assisted
+          required:
+          - channel
+        then:
+          required:
+          - participants
+          properties:
+            participants:
+              contains:
+                properties:
+                  role:
+                    const: assisted_operator
+                required:
+                - role
     SessionUpdate:
       type: object
       required:
@@ -4071,8 +4492,12 @@ components:
           enum:
           - confirm
           - rail_auth
+          - post_order
           description: confirm = the principal confirms this checkout on the Trusted Surface. rail_auth = a fresh per-transaction factor (for
-            example the UPI PIN) because an AFA threshold applies. Other rail caps never escalate; they return 403 rail_limit_exceeded.
+            example the UPI PIN) because an AFA threshold applies. post_order = the principal confirms one post-order write or trade act, named
+            in the ts_render, to obtain hp_proof (carried in Error.step_up of 403 presence_not_proven). At most one post_order step-up is pending
+            per (order_id, action, issue_id), and a repeat of the refused write returns the same step_up_id; their creation is rate-limited per
+            agent (429). Other rail caps never escalate; they return 403 rail_limit_exceeded.
         reason:
           enum:
           - above_step_up_threshold
@@ -4087,17 +4512,43 @@ components:
           - credit_acceptance
           - split_tender_afa_on_total
           - afa_crossborder_cnp
+          - presence_proof
+          description: presence_proof is the reason of a post_order step-up.
         summary:
           $ref: '#/components/schemas/LangText'
         trusted_surface_url:
           type: string
+          description: Opaque link or reference for the principal's Trusted Surface. It carries the step_up_id, never the content to show; the agent
+            delivers it to the principal and never fetches it.
+        ts_render:
+          $ref: '#/components/schemas/Jws'
+          description: Gateway-signed render input for the Trusted Surface (compact JWS over the JCS form of the payload defined on the Human
+            participants page). Signed once when the step-up is created and never changed for its step_up_id. The Trusted Surface fetches it by
+            step_up_id with the key of the step-up's Mandate Manager or payer PSP and never takes it from the agent.
+        delivery:
+          enum:
+          - deep_link
+          - app_push
+          - ivr_callback
+          - assisted
+          description: How the step-up reaches the principal. ivr_callback is Proposed until it is confirmed that an IVR or UPI 123PAY flow can carry
+            the confirmation. For ivr_callback and assisted, expires_at is at least 5 minutes ahead (a BACP design floor, not an external
+            requirement).
         expires_at:
           type: string
           format: date-time
+          description: At most 15 minutes ahead; at least 5 minutes ahead when delivery is ivr_callback or assisted.
         a2a_state:
           const: TASK_STATE_AUTH_REQUIRED
         mcp_error:
           const: insufficient_scope
+          description: Present when mcp_signal is insufficient_scope.
+        mcp_signal:
+          enum:
+          - url_elicitation
+          - insufficient_scope
+          description: How the MCP binding surfaced the step-up. url_elicitation when the MCP client declared URL-mode elicitation; otherwise
+            insufficient_scope.
     PaymentState:
       type: object
       required:
@@ -4157,6 +4608,7 @@ components:
       - presence
       - line_items
       - totals
+      - ai_disclosure
       - messages
       properties:
         id:
@@ -4164,7 +4616,9 @@ components:
         transaction_id:
           type: string
         status:
-          description: Session status. Values follow the UCP checkout statuses, except that UCP `canceled` maps to BACP `cancelled`.
+          description: Session status. Values follow the UCP checkout statuses, except that UCP `canceled` maps to BACP `cancelled`. human_handoff
+            is a BACP status, entered from an open status by POST /sessions/{session_id}/handoff and left by a release (to incomplete) or by
+            cancel, TTL or a stopped mandate (to cancelled).
           enum:
           - incomplete
           - requires_escalation
@@ -4172,6 +4626,7 @@ components:
           - complete_in_progress
           - completed
           - cancelled
+          - human_handoff
         presence:
           $ref: '#/components/schemas/Presence'
         bpp_id:
@@ -4230,6 +4685,26 @@ components:
         expires_at:
           type: string
           format: date-time
+        ai_disclosure:
+          type: object
+          description: The AI disclosure the first message presents, with typed routes to a human (from the AgentCredential's disclosure). Always
+            present. handoff_routes is absent when the AgentCredential lists none.
+          required:
+          - notice
+          properties:
+            notice:
+              $ref: '#/components/schemas/LangText'
+            handoff_routes:
+              type: array
+              minItems: 1
+              items:
+                $ref: '#/components/schemas/HandoffRoute'
+        participants:
+          type: array
+          items:
+            $ref: '#/components/schemas/Participant'
+        handoff:
+          $ref: '#/components/schemas/Handoff'
         messages:
           type: array
           items:
@@ -4311,6 +4786,10 @@ components:
           description: ISO 8601 duration
         language:
           type: string
+        channel:
+          $ref: '#/components/schemas/Channel'
+          description: Channel on which the principal will approve, so that the Trusted Surface link can be delivered in a form the principal can
+            use (for example an IVR callback for upi123pay).
         parent_mandate_id:
           type: string
           description: For sub-agent delegation. May only narrow.
@@ -4385,6 +4864,10 @@ components:
           $ref: '#/components/schemas/Jws'
         auth_binding:
           $ref: '#/components/schemas/Mandate/properties/auth_binding'
+        presentation:
+          $ref: '#/components/schemas/Presentation'
+          description: What the Trusted Surface presented and what the principal did. REQUIRED on step_up.approved, mandate.activated, loan.accepted
+            and payment.afa_completed. On step_up.approved it MUST carry checkout_hash, and its user_action is never decline.
         source:
           type: object
           additionalProperties: true
@@ -4401,6 +4884,35 @@ components:
           type: string
         attestation:
           type: object
+      allOf:
+      - if:
+          properties:
+            event:
+              enum:
+              - step_up.approved
+              - mandate.activated
+              - loan.accepted
+              - payment.afa_completed
+          required:
+          - event
+        then:
+          required:
+          - presentation
+      - if:
+          properties:
+            event:
+              const: step_up.approved
+          required:
+          - event
+        then:
+          properties:
+            presentation:
+              required:
+              - checkout_hash
+              properties:
+                user_action:
+                  not:
+                    const: decline
     Order:
       type: object
       required:
@@ -4500,6 +5012,8 @@ components:
           type: string
         presence:
           $ref: '#/components/schemas/Presence'
+        hp_proof:
+          $ref: '#/components/schemas/HpProof'
         note:
           $ref: '#/components/schemas/LangText'
         bpp_id:
@@ -4526,6 +5040,8 @@ components:
           type: string
         presence:
           $ref: '#/components/schemas/Presence'
+        hp_proof:
+          $ref: '#/components/schemas/HpProof'
         evidence:
           type: array
           items:
@@ -4629,6 +5145,8 @@ components:
         presence:
           $ref: '#/components/schemas/Presence'
           description: Presence of this write. Defaults to HNP. HP is required on an order whose mandate is REVOKED.
+        hp_proof:
+          $ref: '#/components/schemas/HpProof'
     Issue:
       type: object
       required:
@@ -4723,6 +5241,9 @@ components:
                 format: date-time
         resolution:
           type: object
+          description: The remedy the respondent currently proposes. A presence-proof step-up for an issue action binds it by subject_hash (sha-256
+            over its JCS form as shown to the principal); if it changes before the action is submitted, the proof is refused with 403
+            presence_not_proven.
           properties:
             action_triggered:
               enum:
@@ -4782,13 +5303,26 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/InstructionLogEntry'
+        trusted_surface_events:
+          type: array
+          description: Every signed Trusted Surface event of the transaction, verbatim as received at /trusted-surface/events (step-up results,
+            mandate activation, credit acceptance, AFA completion), with their Presentation.
+          items:
+            $ref: '#/components/schemas/TrustedSurfaceEvent'
+        ts_renders:
+          type: array
+          description: The gateway-signed ts_render (compact JWS) of every step-up that a step_up.approved or step_up.declined event in
+            trusted_surface_events names, byte-identical to what the Trusted Surface fetched. Verification step 6 checks each against its event's
+            content_hash and against the seller-signed quote.
+          items:
+            $ref: '#/components/schemas/Jws'
         verification:
           type: object
-          description: Result of the AP2 5-step dispute verification run by the gateway
+          description: Result of the dispute verification run by the gateway (the AP2 five steps plus step 6, Trusted Surface events)
           properties:
             steps_passed:
               type: integer
-              maximum: 5
+              maximum: 6
             chain_valid:
               type: boolean
         bundle_signature:
@@ -5281,6 +5815,20 @@ components:
             hi-IN: आप एक AI सहायक से बात कर रहे हैं।
             en-IN: You are talking to an AI assistant.
           human_handoff_url: https://vaani.example.in/human
+          handoff_routes:
+          - channel: voice
+            uri: tel:+91-80-00000001
+            dtmf: '0'
+            languages:
+            - hi-IN
+            - en-IN
+            hours: Mo-Su 08:00-20:00
+          - channel: app
+            uri: https://vaani.example.in/human
+            languages:
+            - hi-IN
+            - en-IN
+            hours: 24x7
         conformance:
           levels:
           - bacp.core.1
@@ -5383,6 +5931,8 @@ components:
         channel: voice
         language: hi-IN
         ai_disclosure: true
+        operator_name: Vaani Voice Commerce Pvt Ltd
+        operator_grievance_contact: grievance@vaani.example.in
         log_head: sha-256:LbxjqEpNNB0__yQii0EQoD075bGKSD5idqqLneyswXg
         version: '2026-10-17'
     SessionQuoted:
@@ -5391,6 +5941,18 @@ components:
         transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
         status: incomplete
         presence: HNP
+        ai_disclosure:
+          notice:
+            hi-IN: यह ऑर्डर एक AI सहायक द्वारा बनाया जा रहा है।
+            en-IN: This order is being placed by an AI assistant.
+          handoff_routes:
+          - channel: ivr
+            uri: tel:+91-80-00000001
+            dtmf: '0'
+            languages:
+            - hi-IN
+            - en-IN
+            hours: Mo-Su 08:00-20:00
         bpp_id: bpp.kirana.example.in
         provider_id: P-112
         mandate_ref: mdt_CHK7Q2W9X4K1M3
@@ -5440,7 +6002,7 @@ components:
           code: ai_disclosure
           content:
             hi-IN: यह ऑर्डर एक AI सहायक द्वारा बनाया जा रहा है।
-          param: $.human_handoff_url
+          param: $.ai_disclosure
           resolution: recoverable
     SessionReady:
       value:
@@ -5448,6 +6010,18 @@ components:
         transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
         status: ready_for_complete
         presence: HNP
+        ai_disclosure:
+          notice:
+            hi-IN: यह ऑर्डर एक AI सहायक द्वारा बनाया जा रहा है।
+            en-IN: This order is being placed by an AI assistant.
+          handoff_routes:
+          - channel: ivr
+            uri: tel:+91-80-00000001
+            dtmf: '0'
+            languages:
+            - hi-IN
+            - en-IN
+            hours: Mo-Su 08:00-20:00
         bpp_id: bpp.kirana.example.in
         mandate_ref: mdt_CHK7Q2W9X4K1M3
         line_items:
@@ -5515,8 +6089,13 @@ components:
         messages:
         - type: warning
           code: preticked_addon_removed
+          origin: gateway
           content:
-            en-IN: Removed pre-selected 'Delivery insurance ₹15' (not in mandate)
+            en-IN: Removed a pre-selected add-on that is not in the mandate ({addon})
+          args:
+          - name: addon
+            origin: counterparty
+            text: Delivery insurance ₹15
           param: $.line_items[3]
           resolution: recoverable
     SessionStepUp:
@@ -5525,6 +6104,18 @@ components:
         transaction_id: 0b9d3f4a-1111-4c1e-8a7b-2d3e4f5a6b7c
         status: requires_escalation
         presence: HNP
+        ai_disclosure:
+          notice:
+            hi-IN: यह ऑर्डर एक AI सहायक द्वारा बनाया जा रहा है।
+            en-IN: This order is being placed by an AI assistant.
+          handoff_routes:
+          - channel: ivr
+            uri: tel:+91-80-00000001
+            dtmf: '0'
+            languages:
+            - hi-IN
+            - en-IN
+            hours: Mo-Su 08:00-20:00
         line_items:
         - id: I-OIL-5L
           quantity: 1
@@ -5546,9 +6137,12 @@ components:
           summary:
             hi-IN: ₹1,350 का ऑर्डर आपकी ₹1,200 की सीमा से ज़्यादा है। कृपया UPI ऐप में पुष्टि करें।
           trusted_surface_url: https://psp.example.in/approve/stp_01HZXA
+          ts_render: eyJhbGciOiJFUzI1NiIsImtpZCI6ImJhcC52YWFuaS5leGFtcGxlLmlufHVraWQtN3xlczI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQSJ9.c2ln
+          delivery: deep_link
           expires_at: '2026-10-22T18:40:00+05:30'
           a2a_state: TASK_STATE_AUTH_REQUIRED
           mcp_error: insufficient_scope
+          mcp_signal: insufficient_scope
         messages:
         - type: error
           code: step_up_required
@@ -5561,6 +6155,18 @@ components:
         transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
         status: completed
         presence: HNP
+        ai_disclosure:
+          notice:
+            hi-IN: यह ऑर्डर एक AI सहायक द्वारा बनाया जा रहा है।
+            en-IN: This order is being placed by an AI assistant.
+          handoff_routes:
+          - channel: ivr
+            uri: tel:+91-80-00000001
+            dtmf: '0'
+            languages:
+            - hi-IN
+            - en-IN
+            hours: Mo-Su 08:00-20:00
         order_id: ORD-KIR-88231
         line_items:
         - id: I-ATTA-2KG
@@ -5619,6 +6225,18 @@ components:
         transaction_id: 7a7a7a7a-2222-4b4b-9c9c-3d3d3d3d3d3d
         status: complete_in_progress
         presence: HNP
+        ai_disclosure:
+          notice:
+            hi-IN: यह ऑर्डर एक AI सहायक द्वारा बनाया जा रहा है।
+            en-IN: This order is being placed by an AI assistant.
+          handoff_routes:
+          - channel: ivr
+            uri: tel:+91-80-00000001
+            dtmf: '0'
+            languages:
+            - hi-IN
+            - en-IN
+            hours: Mo-Su 08:00-20:00
         line_items: []
         totals:
         - type: total

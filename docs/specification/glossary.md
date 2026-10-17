@@ -146,12 +146,21 @@ Registry { #registry }
     [Discovery and Profiles](discovery.md#registry-lookup).
 
 Trusted Surface { #trusted-surface }
-:   A **non-agentic** user interface, typically the payer's UPI app, on which
+:   A **role**, not an app: a **non-agentic** surface run by a payer PSP or a
+    Mandate Manager (an app, an IVR callback or an assisted counter) on which
     the principal reads notices in their language, approves mandates and
     step-ups, and enters a PIN or biometric. No agent can drive it, read the
-    PIN, or post its events. Events from the Trusted Surface reach the gateway
-    only at `POST /trusted-surface/events`, signed with a Mandate Manager or
-    PSP registry key under tag `bacp-ts`.
+    PIN, or post its events. It renders a step-up only from the gateway-signed
+    `ts_render` it fetches by `step_up_id`, meets requirements TS-1 to TS-5,
+    and records a `Presentation` of what it showed. Events from the Trusted
+    Surface reach the gateway only at `POST /trusted-surface/events`, signed
+    under tag `bacp-ts` with the registry key of the step-up's Mandate
+    Manager or payer PSP: for a session step-up, the PSP named in
+    `rail_binding.psp_id` of the open Payment Mandate under the session's
+    mandate; for a `post_order` step-up, the PSP named in
+    `auth_binding.psp_id` of the order's closed Payment Mandate(s)
+    ([Step-up signers](human-participants.md#ts-signers)). See
+    [Human Participants and the Trusted Surface](human-participants.md).
 
 ## Identity and signing
 
@@ -432,7 +441,8 @@ Checkout hash { #checkout-hash }
 Checkout session { #checkout-session }
 :   The synchronous session that the gateway runs over asynchronous Beckn
     messages. Its statuses are `incomplete`, `requires_escalation`,
-    `ready_for_complete`, `complete_in_progress`, `completed` and `cancelled`.
+    `ready_for_complete`, `complete_in_progress`, `completed`, `cancelled`
+    and `human_handoff`.
     See [Sessions and Checkout](checkout/index.md).
 
 `context.bacp` { #context-bacp }

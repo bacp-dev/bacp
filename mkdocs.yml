@@ -46,6 +46,7 @@ nav:
       - Discovery and Profiles: specification/discovery.md
       - Identity and Request Signing: specification/identity-and-signing.md
       - Mandates and Consent: specification/mandates.md
+      - Human Participants and the Trusted Surface: specification/human-participants.md
       - Checkout:
           - Sessions and Checkout: specification/checkout/index.md
           - Orders and Post-order: specification/checkout/post-order.md

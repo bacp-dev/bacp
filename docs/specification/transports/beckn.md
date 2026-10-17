@@ -89,7 +89,9 @@ The key is `bacp`, not `agent`, because "agent" in Beckn means a fulfilment agen
 | `idempotency_key` | yes | The agent's `Idempotency-Key`, carried end to end (22–64 characters) |
 | `mandate_ref` | on `init`, `confirm`, `update`, `cancel` and IGM `issue`; optional on `search` and `select` | `{id, hash}` of the open checkout mandate, plus `kb_jwt`: the agent's key-binding JWT with `aud` = `bpp_id` and `nonce` = the `confirm` `message_id` |
 | `log_head` | on every committing message | The current InstructionLog head, which anchors the log to network-signed traffic |
-| `ai_disclosure` | no | Constant `true` |
+| `ai_disclosure` | yes | Constant `true`: an AI agent originated the message. Also mirrored in the `bacp` tag group ([Mirroring](#mirroring)) |
+| `acting_for` | no | `{kind, gstin, display_name}`: whom the agent acts for, `kind` being `individual` or `business`. `gstin` and `display_name` are sent only when the mandate's `data_scopes` include `ACTING_FOR`, and otherwise omitted; a sole proprietor's GSTIN or name is personal data |
+| `operator_name`, `operator_grievance_contact` | no | The agent operator's legal name and its grievance officer's contact |
 | `channel`, `language` | no | For example `voice`, `hi-IN` |
 | `version` | no | Extension version |
 
@@ -130,13 +132,20 @@ agent call re-sends an identical message. The gateway MUST publish the namespace
 ONDC 1.x validators may reject unknown `context` keys, because the ONDC core context schema is fixed. Until ONDC
 accepts `context.bacp` ([Q-09](../open-questions.md#q-09)), the gateway MUST also mirror it into
 `message.order.tags[]` as a TagGroup with `descriptor.code = "bacp"` (FQDN-namespaced tag keys are allowed), and into
-the IGM issue's description tags. The mirror carries at least `presence`, `mandate_ref` (the mandate id) and
-`log_head`:
+the IGM issue's description tags. The mirror MUST carry at least `presence`, `mandate_ref` (the mandate id),
+`log_head` and `ai_disclosure` (`"true"`), so that a seller learns that an AI agent is ordering even when a validator
+strips `context.bacp`. It MAY also carry `acting_for` (as `acting_for.kind`, `acting_for.gstin` and
+`acting_for.display_name`), `operator_name` and `operator_grievance_contact`. `acting_for` names whom the agent acts
+for. The gateway sends `acting_for.gstin` and `acting_for.display_name`, in `context.bacp` and in the mirror, only
+when the mandate's `data_scopes` include `ACTING_FOR`; without that scope it omits both tags. A sole proprietor's
+GSTIN or name is personal data ([Human participants](../human-participants.md#ai-disclosure)).
 
 ```json
 {
   "descriptor": {"code": "bacp"},
   "list": [
+    {"descriptor": {"code": "ai_disclosure"}, "value": "true"},
+    {"descriptor": {"code": "operator_name"}, "value": "Vaani Voice Commerce Pvt Ltd"},
     {"descriptor": {"code": "presence"}, "value": "HNP"},
     {"descriptor": {"code": "mandate_ref"}, "value": "mdt_CHK7Q2W9X4K1M3"},
     {"descriptor": {"code": "log_head"}, "value": "sha-256:LCa0a2j_xo_5m0U8HTBBNBNCLXBkg7-g-YpeiGJm564"}

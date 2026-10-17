@@ -1,0 +1,19 @@
+{
+  "agent": {
+    "id": "did:web:agents.annapurna.example.in:proc",
+    "credential_hash": "sha-256:MzZF-fu1izBSIblFp_K6OTZQf7VE9dr0pLOJq6YvKa8",
+    "operator": "CIN:U15400KA2025PTC000001",
+    "class": "shopping",
+    "uap_agent_id": null
+  },
+  "presence": "HNP",
+  "mandate_ref": {
+    "id": "mdt_NEGANNA000000001",
+    "hash": "sha-256:HLng1_Uuo2cdwrYWn-C1gewMCEmh7FVLiQ1nk1UrY3c"
+  },
+  "idempotency_key": "01HZX9A1B2C3D4E5F6G7H8J9K0",
+  "channel": "app",
+  "language": "en-IN",
+  "log_head": "sha-256:0-WxLieTht9gA7R_HDuH-thkqtfLjbmB--QILoBB7AI",
+  "version": "2026-10-17"
+}

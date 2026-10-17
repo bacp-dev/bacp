@@ -1,0 +1,26 @@
+{
+  "seq": 7,
+  "session_id": "ses_01HZXB",
+  "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
+  "stage": "handoff",
+  "actor": "support_staff",
+  "at": "2026-10-20T19:00:00+05:30",
+  "channel": "voice",
+  "language": "hi-IN",
+  "content_hash": "sha-256:5R5YV42u8cWSWEkIw_yT7g0pTndTpMPtiJWFcDNJZgI",
+  "content_ref": "https://logs.vaani.example.in/blobs/ses_01HZXB/0",
+  "summary": {
+    "hi-IN": "सहायता कर्मी ने बातचीत सँभाली।",
+    "en-IN": "A support executive took over the conversation."
+  },
+  "refs": {},
+  "prev_hash": "sha-256:nYFT-BZqY_JvvdHhDPO1q0wmn2psCj-G7T1B6ktJ0Dg",
+  "entry_hash": "sha-256:f2c7gmJHp2pMbNIm16YVpMR9MAd7Q027EzgUFM8Nu-8",
+  "signature": {
+    "role": "operator",
+    "kid": "bap.vaani.example.in|ukid-7|ed25519",
+    "alg": "EdDSA",
+    "value": "eyJhbGciOiJFZERTQSJ9.eyJsIjowfQ.c2ln"
+  },
+  "actor_ref": "support.vaani.example.in|ukid-3|es256"
+}

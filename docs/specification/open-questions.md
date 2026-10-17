@@ -94,6 +94,9 @@ are involved, the owner is the one that must give the answer.
 | [Q-59](#q-59) | Open mandates on merchant- and BACP-enforced handlers | BACP WG | Open, fail-safe default |
 | [Q-60](#q-60) | Issuer and payload of the conformance attestation | BACP WG | Open, fail-safe default |
 | [Q-61](#q-61) | Gateway-to-MM mandate events | BACP WG | Open |
+| [Q-62](#q-62) | Who certifies assisted operators | ONDC | Open |
+| [Q-63](#q-63) | PSP rendering of a third-party `ts_render`; IVR callbacks | NPCI | Open |
+| [Q-64](#q-64) | Registry enrolment and revocation of `support_operator` keys | BACP WG | Open |
 
 ## Questions {#questions}
 
@@ -196,7 +199,9 @@ the IGM 2.0 enum has only `AGENT`, which means a fulfilment agent?<br>
 
 !!! note "Non-blocking: fail-safe default"
     Was Blocking. The protocol rule is settled in `2026-10-17`; the legal question stays open with the fail-safe
-    default below.
+    default below. The default is relaxed only in a dated release
+    ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance case T1-27 (cases T1-27 to
+    T1-32 cover the six fail-safe defaults).
 
 **Question.** Does a class ConsentReceipt (recipient `*`) meet DPDP Rule 3 for human-not-present orders to sellers
 who are unknown when the mandate is set up? Must the per-seller receipt at `init` be normative before any data is
@@ -235,7 +240,9 @@ PIN on the Trusted Surface.
 ### Q-15 Payment-data localisation {#q-15}
 
 !!! note "Non-blocking: fail-safe default"
-    Was Blocking. Made non-blocking by the fail-safe default below.
+    Was Blocking. Made non-blocking by the fail-safe default below. The default is relaxed only in a dated release
+    ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance case T1-28 (cases T1-27
+    to T1-32 cover the six fail-safe defaults).
 
 **Question.** RBI payment-data localisation is in force. Where must mandates, receipts, the InstructionLog and
 evidence bundles be stored, and in which region may the language model process payment data?<br>
@@ -263,7 +270,9 @@ Still open: where an agent operator's own model may process the payment data it 
 ### Q-16 Mandate Manager as Consent Manager {#q-16}
 
 !!! note "Non-blocking: fail-safe default"
-    Was Blocking. Made non-blocking by the fail-safe default below.
+    Was Blocking. Made non-blocking by the fail-safe default below. The default is relaxed only in a dated release
+    ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance case T1-29 (cases T1-27
+    to T1-32 cover the six fail-safe defaults).
 
 **Question.** DPDP Rule 4 applies from 13-11-2026. Should the Mandate Manager register as a Consent
 Manager, or integrate with one? Is co-locating the Mandate Manager with the payer PSP, and giving it the role of
@@ -329,7 +338,9 @@ listed as [proposed design choice (c)](#proposed-c).
 ### Q-20 Fees and the MRP ceiling {#q-20}
 
 !!! note "Non-blocking: fail-safe default"
-    Was Blocking. Made non-blocking by the fail-safe default below.
+    Was Blocking. Made non-blocking by the fail-safe default below. The default is relaxed only in a dated release
+    ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance case T1-30 (cases T1-27
+    to T1-32 cover the six fail-safe defaults).
 
 **Question.** Do delivery, packing or convenience fees count toward the MRP? What exactly is the Legal Metrology
 Rule 3 exemption (industrial or institutional packs, packs above 25 kg)?<br>
@@ -518,7 +529,9 @@ para 10(f)?<br>
 ### Q-44 Binding for plans, ledgers and documents {#q-44}
 
 !!! note "Non-blocking: fail-safe default"
-    Was Blocking. Made non-blocking by keeping these features off the wire in `2026-10-17`.
+    Was Blocking. Made non-blocking by keeping these features off the wire in `2026-10-17`. The default is relaxed
+    only in a dated release ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance
+    case T1-31 (cases T1-27 to T1-32 cover the six fail-safe defaults).
 
 **Question.** What are the REST, MCP and A2A bindings for split-tender payment plans, credit ledgers and trade
 documents (GRN, CRAC, invoices)?<br>
@@ -588,7 +601,9 @@ the seller?<br>
 ### Q-52 Contract Act timing {#q-52}
 
 !!! note "Non-blocking: fail-safe default"
-    Was Blocking. Made non-blocking by the fail-safe default below.
+    Was Blocking. Made non-blocking by the fail-safe default below. The default is relaxed only in a dated release
+    ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance case T1-32 (cases T1-27
+    to T1-32 cover the six fail-safe defaults).
 
 **Question.** The dispatch and receipt timing of negotiation messages, the WITHDRAW/ACCEPT crossing rule and the
 dispatch-time assumption rest on Indian Contract Act ss.4–7. Do they hold for electronic negotiation messages?<br>
@@ -705,6 +720,42 @@ gateway and can detect a status change itself. The gateway writes every addition
 reason to the InstructionLog with the `registry_version`, and sends `mandate.status_changed` to the agent. No money
 moves on the MM's view: every gateway re-derives eligibility at step 1 of evaluation. See
 [Mandates and Consent](mandates.md#handler-binding).
+
+### Q-62 Certification of assisted operators {#q-62}
+
+**Question.** Who certifies the human assisted operators (village-level entrepreneurs at Common Service Centres,
+bank business correspondents, buyer-app agents) who complete sessions for principals on `channel: assisted`, and what
+identifier does that body issue, so that `Participant.ref` of an `assisted_operator` can be checked?<br>
+**Owner.** ONDC.
+
+**Working position.** An `assisted_operator` entry is REQUIRED on every assisted session and every Trusted Surface
+approval names it (`Presentation.assisted_by`), but its `ref` is asserted by the agent operator and not verified
+against a registry. The principal approves with the principal's own factor, never the operator's tap (BACP policy).
+See [Human participants](human-participants.md#assisted).
+
+### Q-63 Third-party render input on PSP surfaces {#q-63}
+
+**Question.** Do NPCI's rules for PSP apps allow a payer PSP's app or IVR to render a step-up from a third-party,
+gateway-signed `ts_render`? Can an IVR or UPI 123PAY flow carry a confirm-only callback, and in which languages?<br>
+**Owner.** NPCI, through a member bank.
+
+**Working position.** The Trusted Surface renders only from `ts_render` and its own templates (TS-1).
+`StepUp.delivery: ivr_callback` is **Proposed** until this question is answered; a gateway offers it only where its
+PSP confirms the flow. See [Human participants](human-participants.md#ts-render).
+
+### Q-64 Support-operator keys in the registry {#q-64}
+
+**Question.** How does a registry enrol and revoke keys of role `support_operator`, the keys with which a human
+support operator of an agent operator accepts and releases a handoff under tag `bacp-handoff`? What does the registry
+record hold (the agent operator the person works for, one key per person), who vets the person, and how fast does a
+revocation reach gateways?<br>
+**Owner.** BACP WG.
+
+**Working position.** `2026-10-17` defines the role value (`Signature.role: support_operator`) and the tag rule, but
+no registry record schema, enrolment, vetting or revocation rule for such keys. A gateway sets `handoff.accepted_by`
+only from a key its registry resolves with that role, and only that key may release the handoff. Until this question
+is settled, `accepted_by` proves which registry key accepted, not that a vetted human holds it. See
+[Human participants](human-participants.md#handoff).
 
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 

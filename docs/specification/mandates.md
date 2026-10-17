@@ -166,7 +166,8 @@ Manager** (MM) issues it.
 
 1. The agent calls `POST /mandates` (tag `bacp-browse`) with a `MandateRequest`:
    `purpose_code`, `rail`, `presence_allowed`, `proposed_constraints`, `data_scopes`,
-   `action_scope`, `validity` (an ISO 8601 duration), `language` and `webhook_url`. The gateway
+   `action_scope`, `validity` (an ISO 8601 duration), `language`, `channel` (the channel on which the
+   principal will approve) and `webhook_url`. The gateway
    **MUST** accept `webhook_url`, so that `mandate.status_changed` can reach the agent before any
    session exists. Proposed: when `action_scope` is omitted, all eight actions (`DISCOVER`,
    `QUOTE`, `ORDER`, `PAY`, `CANCEL`, `RETURN`, `RAISE_ISSUE`, `SHARE_DATA`) are requested, and the
@@ -207,7 +208,9 @@ Manager** (MM) issues it.
    (`role: mandate_manager`). The MM allocates a status-list entry per mandate and issues the
    ConsentReceipt.
 7. The MM sends a signed `mandate.activated` event to the gateway's `/trusted-surface/events`
-   (tag `bacp-ts`, registry key of role MM or PSP). The gateway records an InstructionLog entry at
+   (tag `bacp-ts`, registry key of role MM or PSP). The event **MUST** carry the
+   [`Presentation`](human-participants.md#presentation) of the approval: surface, channel, language,
+   modality, the hash of the notice shown and the principal's action. The gateway records an InstructionLog entry at
    stage `mandate` and sends the webhook `mandate.status_changed` (`ACTIVE`) to the agent.
 
 A verifier **MUST** accept an open mandate only if a principal signature and an MM signature both
@@ -341,6 +344,20 @@ and every post-order write, and travels on the network in `context.bacp.presence
   `403 credit_acceptance_requires_hp`.
 - Returns, and accepting or rejecting an IGM resolution, are HP
   ([Post-order gate](checkout/post-order.md#post-order-gate)).
+- **HP is proven, not declared.** Every post-order write with `presence: HP` (cancel, return,
+  raise issue, issue action) **MUST** carry `hp_proof{ts_event_hash, step_up_id}`, both REQUIRED:
+  the id of a step-up of kind `post_order` whose gateway-signed `ts_render` names this write
+  (`action`, `order_id` and, for an issue action, `issue_id` and the `subject_hash` of the
+  resolution shown), and the sha-256 over the JCS form of the signed `step_up.approved` event
+  that the gateway received for it at `/trusted-surface/events`.
+  A write without `hp_proof` gets `403 presence_not_proven` (`requires_buyer_review`) carrying
+  `step_up` (kind `post_order`, reason `presence_proof`) for the principal to confirm, the same
+  pending step-up on a repeat; a proof issued for another action, order or issue, or for an issue
+  whose `resolution` has changed since, gets the same code. A proof is single-use: the gateway
+  consumes it inside the atomic section keyed on the order's root Checkout Mandate
+  ([Usage ledger](#usage-ledger)). Nothing is sent to the network until the proof passes
+  ([Presence proof](human-participants.md#hp-proof)). An HP `complete` is proven by the principal's
+  signatures on the closed mandates and needs no `hp_proof`.
 
 ## Closing an open mandate {#closing}
 
@@ -497,14 +514,17 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
 
 A step-up hands the decision back to the human. It is never only an error: the session moves to
 `requires_escalation`, carries a `step_up` object, and its `messages[]` includes
-`step_up_required` with `resolution: requires_buyer_review`.
+`step_up_required` with `resolution: requires_buyer_review`. The exception is a `post_order`
+step-up, which has no session: it comes in `Error.step_up` of the `403 presence_not_proven` that
+asks for it, and its approval yields the `hp_proof` for one write ([Presence](#presence)).
 
-There are two kinds.
+There are three kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
 | `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, or any check the gateway cannot resolve. |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
+| `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 
 Any other rail cap (per-transaction, per-period, remaining block, first 24 hours, channel caps)
 does **not** escalate. It returns `403 rail_limit_exceeded` with
@@ -513,18 +533,44 @@ local and rail reason.
 
 **Flow.**
 
-1. The gateway creates a `step_up` with a `step_up_id`, a `trusted_surface_url` and an
-   `expires_at` at most 15 minutes ahead, and sends `session.updated`.
-2. The principal approves or declines on the Trusted Surface. The MM or PSP posts
+1. The gateway creates a `step_up` with a `step_up_id`, a `trusted_surface_url`, a `delivery`
+   (`deep_link`, `app_push`, `ivr_callback` or `assisted`) and an `expires_at` at most 15 minutes
+   ahead, and at least 5 minutes ahead for `ivr_callback` and `assisted` (a BACP design floor, not
+   an external requirement), and sends `session.updated`. `ivr_callback` is **Proposed**
+   ([Q-63](open-questions.md#q-63)).
+2. **Render binding.** The gateway signs a [`ts_render`](human-participants.md#ts-render) for the
+   step-up, once, carrying its `checkout_hash`, the single-figure total and the breakup hash, and
+   never changes it. The Trusted Surface fetches it by `step_up_id`
+   (`GET /trusted-surface/step-ups/{step_up_id}`, tag `bacp-ts`) with the key of the step-up's
+   Mandate Manager or payer PSP: for a session step-up, the issuer of the session's mandate or the
+   PSP in `rail_binding.psp_id` of the open Payment Mandate whose `checkout_mandate_ref` is the
+   session's mandate; for a `post_order` step-up, the issuer of the order's mandate or the PSP in
+   `auth_binding.psp_id` of the order's closed Payment Mandate(s)
+   ([Step-up signers](human-participants.md#ts-signers)); any other
+   registry key gets `404 not_found`. It renders only from the `ts_render` and its own templates; the
+   `trusted_surface_url` that the agent delivers carries only a reference, never content.
+3. The principal approves or declines on the Trusted Surface. The MM or PSP posts
    `step_up.approved` or `step_up.declined` to `/trusted-surface/events`. The agent cannot post
-   these events (`403 trusted_surface_only`).
-3. On a **confirm-only approval** the session returns to `ready_for_complete` with message
+   these events (`403 trusted_surface_only`), and a Mandate Manager or PSP other than the
+   step-up's gets `404 not_found`. `step_up.approved` **MUST** carry a
+   [`Presentation`](human-participants.md#presentation) whose `content_hash` is the sha-256 of the
+   `ts_render` and whose `checkout_hash` is REQUIRED and is the quote's (for a `post_order`
+   step-up, the order's); its `user_action` is never `decline`; its `device_signature`, where
+   present, is the principal's device signature over the JCS form of
+   `{step_up_id, content_hash, acted_at}`.
+   The gateway refuses an approval without `presentation`, without `presentation.checkout_hash` or
+   with `user_action: decline` with `400 invalid_request`, one whose
+   `content_hash` does not match with `403 ts_render_mismatch`, and one acted on after `expires_at`
+   as expired, each without changing the session. While the session is in `human_handoff`, an
+   approval is held, not applied, until the handoff is released
+   ([Human handoff](human-participants.md#handoff)).
+4. On a **confirm-only approval** the session returns to `ready_for_complete` with message
    `step_up_approved`. The agent calls `complete` again with `step_up_id`, still under the open
    mandate and its budgets.
-4. On an **HP payment approval** the event carries principal-signed closed mandates
+5. On an **HP payment approval** the event carries principal-signed closed mandates
    (`auth_binding.type: upi.pin`) and the PSP-signed receipt. The gateway verifies them and
    confirms the order without drawing on the open mandate's binding.
-5. On decline, or once `expires_at` passes, the session becomes `cancelled` with
+6. On decline, or once `expires_at` passes, the session becomes `cancelled` with
    `step_up_declined` or `step_up_expired`, and no money moves.
 
 **Split-order detection.** To stop an agent splitting one purchase into several orders that each
@@ -578,8 +624,11 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
    (attested `rail_limits`, remaining block, period and first-24-hour caps, binding expiry, and
    the PSP's own pre-check) gives `403 rail_limit_exceeded` with all reasons.
 8. **Step-up thresholds.** `above_amount`, `new_merchant`, `outside_categories` and
-   `first_order` give a `confirm` step-up. This step is skipped once the session's step-up has
-   been approved.
+   `first_order` give a `confirm` step-up. This step is skipped only while the session's current
+   `checkout_hash` equals the `checkout_hash` of the approved step-up's `Presentation`. Once the
+   quote changes, the approval no longer applies: step 8 runs again and a new step-up is needed,
+   and no money moves on the old approval. A `step_up_id` that belongs to another session is
+   `404 not_found`.
 9. **Disclosures and dark patterns.** Mandatory disclosures are present and hashed, pre-ticked
    add-ons are removed and drip pricing is flagged (see
    [Sessions and Checkout](checkout/index.md#update)).
@@ -619,7 +668,10 @@ is a read-only view of it.
   with equivalent guarantees, satisfies this. Sibling open Payment Mandates under one open Checkout
   Mandate therefore share one atomic section, and a split-tender payment plan reserves every
   tender in one section. The rail debit **MUST** run after the atomic section, never inside it
-  ([Atomic reservation](security-and-privacy.md#atomic-reservation)).
+  ([Atomic reservation](security-and-privacy.md#atomic-reservation)). A post-order write consumes
+  its `hp_proof` in the section keyed on the order's root open Checkout Mandate, or on its closed
+  Checkout Mandate when the order was placed with no open mandate
+  ([Presence proof](human-participants.md#hp-proof)).
 - **Resolution.** A reservation becomes settled spend only when a PSP-signed success receipt is
   applied. It is released on a PSP-signed failure receipt or a refused debit. While a payment is
   `in_doubt` its reservation is kept until reconciliation resolves it. When every payment on a
@@ -703,7 +755,7 @@ stateDiagram-v2
   or less, and the gateway **MUST** notify the agent (webhook `mandate.status_changed`, with
   `affected_sessions`) within that time.
 - The gateway **MUST** then cancel every open session under the mandate (`incomplete`,
-  `ready_for_complete`, `requires_escalation`) with message `mandate_revoked`, and refuse every new
+  `ready_for_complete`, `requires_escalation`, `human_handoff`) with message `mandate_revoked`, and refuse every new
   commitment: `complete` returns `403 mandate_revoked`. A pause by the principal and expiry behave
   the same way with `mandate_paused` and `mandate_expired`. A principal pause adds the reason
   `principal_paused`, and a principal resume removes only that reason
@@ -838,8 +890,10 @@ Manager is open ([Q-16](open-questions.md#q-16)). Until it is settled, these fai
 - `principal.ref` is a pairwise pseudonymous id at the MM. It is never an Aadhaar number, and no
   BACP artefact carries one.
 - `data_scopes` lists the only personal data fields the agent may release: `NAME`, `PHONE`,
-  `DELIVERY_ADDRESS`, `EMAIL`, `AGE_OVER_18`, `GSTIN`. The purpose limits which scopes may be
-  requested.
+  `DELIVERY_ADDRESS`, `EMAIL`, `AGE_OVER_18`, `GSTIN`, `ACTING_FOR`. `ACTING_FOR` allows the gateway
+  to tell the seller the GSTIN and display name of whom the agent acts for
+  (`context.bacp.acting_for.gstin` and `display_name`, and their mirror tags); without it they are
+  omitted. The purpose limits which scopes may be requested.
 - When a session update shares data (`data_share`), the gateway **MUST** check that `SHARE_DATA`
   is in `action_scope`, that every field is in `data_scopes`, and that `consent_receipt_ref` names
   an active, not withdrawn, ConsentReceipt of this mandate (the class receipt, or a per-seller
@@ -879,6 +933,8 @@ machine-readable form. A REST export interface is not part of this version
 | `mandate_scope_mismatch` | 403 | requires_buyer_review |
 | `amount_not_positive` | 403 | unrecoverable |
 | `presence_not_allowed` | 403 | requires_buyer_review |
+| `presence_not_proven` | 403 | requires_buyer_review |
+| `ts_render_mismatch` | 403 | unrecoverable |
 | `rail_limit_exceeded` | 403, with `reasons[]` and `step_up_kind` | requires_buyer_review |
 | `log_chain_invalid` | 403 | unrecoverable |
 | `collector_not_authorised` | 403 | unrecoverable |

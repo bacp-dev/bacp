@@ -78,11 +78,21 @@
   "acknowledgements": [
     {
       "by": "seller",
+      "actor": {
+        "kind": "human",
+        "role": "seller_operator",
+        "participant_ref": "par_TILH_munim_01"
+      },
       "method": "signature",
       "at": "2026-10-20T17:10:00+05:30"
     },
     {
       "by": "buyer",
+      "actor": {
+        "kind": "human",
+        "role": "principal",
+        "participant_ref": "par_ANNA_buyer_01"
+      },
       "method": "signature",
       "at": "2026-10-20T17:40:00+05:30"
     }

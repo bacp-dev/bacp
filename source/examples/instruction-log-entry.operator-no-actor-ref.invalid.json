@@ -1,0 +1,25 @@
+{
+  "seq": 7,
+  "session_id": "ses_01HZXB",
+  "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
+  "stage": "step_up",
+  "actor": "assisted_operator",
+  "at": "2026-10-20T19:06:00+05:30",
+  "channel": "assisted",
+  "language": "hi-IN",
+  "content_hash": "sha-256:Bm827PMImR-m3T6Og1qtyYWbfP6FnGgvFauB-iWKvhI",
+  "content_ref": "https://logs.vaani.example.in/blobs/ses_01HZXB/7",
+  "summary": {
+    "hi-IN": "संचालक ने पुष्टि की सामग्री ग्राहक को पढ़कर सुनाई।",
+    "en-IN": "The operator read the confirmation content aloud to the customer."
+  },
+  "refs": {},
+  "prev_hash": "sha-256:QP09K6-qS2n7bF4INQ0RefqmkL9onuRPPhV0nYVtfWo",
+  "entry_hash": "sha-256:fIhWyL-awPYfWeZ4sEEclRYJ4MkPizvOBYUHsU-E4Uw",
+  "signature": {
+    "role": "operator",
+    "kid": "bap.vaani.example.in|ukid-7|ed25519",
+    "alg": "EdDSA",
+    "value": "eyJhbGciOiJFZERTQSJ9.eyJsIjowfQ.c2ln"
+  }
+}

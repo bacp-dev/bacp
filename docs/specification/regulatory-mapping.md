@@ -36,8 +36,8 @@ labels for traceability between this page, the open questions and conformance re
 
 | Status | Requirements |
 |---|---|
-| Covered | 160 |
-| Partial | 50 |
+| Covered | 161 |
+| Partial | 49 |
 | Gap | 11 |
 | N/A | 5 |
 | **Total** | **226** |
@@ -79,7 +79,7 @@ RBI directions, master directions and circulars on authentication, e-mandates, p
 | **REQ-306** Refund to the original method unless the user instructs otherwise | RBI PA Directions 2025 para 10(f); Consumer Protection (E-Commerce) Rules r.4(10) (refunds as prescribed by RBI, within a reasonable time) | Refunds to the original method, identified by the original rail reference ([Rail Bindings](payments/rails.md)) | Covered |
 | **REQ-307** "Debited but not confirmed" state; T+5 / T+1 tracking; tell the user about ₹100/day | RBI TAT circular (RBI/2019-20/67, 20-09-2019) | Payment saga state `reversal_pending` with `reversal_deadline`; `debited_not_confirmed` message states TAT and compensation ([Checkout](checkout/index.md)) | **Partial**: Refund-settlement trigger undefined; saga UPI-only → [Q-49](open-questions.md#q-49) |
 | **REQ-308** Machine-readable dispute and ODR channel linked to UTR/RRN | RBI ODR circular (RBI/2020-21/21, 06-08-2020) Annex paras 5.1–5.4 (UTR/RRN linkage is BACP's choice) | IGM issue carries the RRN or UTR; payment disputes raised through the PSP channel by RRN ([Beckn binding](transports/beckn.md#igm)) | Covered |
-| **REQ-309** AI disclosure; switch to a human at any time | RBI FREE-AI report (13-08-2025) para 4.4.54 (non-binding; not verified as of 17-10-2026) | AI disclosure and human handoff URL in the AgentCredential and the first session message ([Identity](identity-and-signing.md)) | **Partial**: No handoff operation |
+| **REQ-309** AI disclosure; switch to a human at any time | RBI FREE-AI report (13-08-2025) para 4.4.54 (non-binding; not verified as of 17-10-2026) | AI disclosure with typed routes to a human (a `tel:` route, optionally with DTMF digits, on voice, IVR and UPI 123PAY) in the AgentCredential and the first session message, logged at stage `ai_disclosure`; `POST /sessions/{id}/handoff` in any state and after revocation, with status `human_handoff`, acceptance only by a registered human support operator, and release back to the agent ([Human participants](human-participants.md#handoff)) | Covered |
 | **REQ-310** AI inventory, red-teaming, incident reporting, kill switch | RBI FREE-AI report (13-08-2025) Recs 20–23, para 4.4.58 (non-binding; not verified as of 17-10-2026) | AI inventory reference and incident contact in the AgentCredential; credential revocation as kill switch ([Identity](identity-and-signing.md)) | **Partial**: No red-team or incident artefact in conformance |
 | **REQ-401** Instrument model covers UPI variants, Lite, 123PAY, Reserve Pay/Circle, cards, e-RUPI, e₹ and BBPS, each with limits, auth mode and refund route | RBI and NPCI rail rules | Payment-handler registry: 57 descriptors with limits, authentication, refund route ([Handler Registry](payments/handler-registry.md)) | Covered |
 | **REQ-402** Enforce configurable rail caps (Lite ₹1,000 / ₹5,000; 123PAY ₹10,000) | RBI offline payments framework (RBI/2021-22/146, updated 04-12-2024); RBI Statement on Developmental and Regulatory Policies, Oct 2024 | Configurable rail caps in handler descriptors; device-bound handlers not open-eligible ([Handler Registry](payments/handler-registry.md)) | Covered (see [Q-05](open-questions.md#q-05)) |

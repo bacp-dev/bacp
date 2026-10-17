@@ -46,7 +46,7 @@ Every term sheet names its parties. One transaction can name a different orderin
 | `logistics` | 3PL, courier (COD collector), transporter holding the e-way bill | Fulfilment party; COD remitter |
 | `assurer` | Assayer, inspector, hallmarking centre, RERA or BIS registry | Issues assay certificates, inspection reports and HUIDs as document references or verifiable credentials |
 | `arbiter` | Grievance officer, ODR provider, MSEFC, APMC committee, GeM incident management, consumer commission | The escalation chain on the IGM issue; MSEFC for MSMED disputes |
-| `assisted_operator` | CSC VLE, bank BC, kirana operator | AI agent → human operator → principal chain. Principal consent, operator id and fee are logged, and the receipt goes to the principal. |
+| `assisted_operator` | CSC VLE, bank BC, kirana operator | AI agent → human operator → principal chain. Principal consent, operator id and fee are logged, and the receipt goes to the principal. The operator is an `assisted_operator` entry in `Session.participants[]`, REQUIRED on `channel: assisted`, and the principal approves with the principal's own factor ([Assisted channel](human-participants.md#assisted)). |
 | `reseller` | Social-commerce reseller | Two prices and two parties; the reseller margin settles after the return window |
 | `auctioneer` | Neutral auction platform | Runs the clock; never affiliated with a seller ([Auctions](negotiation/rfq-and-auctions.md#who-may-run-and-award)) |
 
@@ -243,3 +243,30 @@ flowchart LR
 ```
 
 A GRN, CRAC or weighment slip records delivery and acceptance, which start the MSMED clock, or starts the GeM 10-day clock (CRAC). How a buyer-issued GRN or CRAC travels on Beckn is open ([Q-33](open-questions.md#q-33)). Domain credentials (e-NWR, HUID, RERA registration, assay certificate, inspection report, ABDM consent artefact, e-ticket) are document references whose `uri` points to a verifiable credential.
+
+### Who acted on a trade document {#document-actors}
+
+A GRN, a CRAC and an MSMED written objection start or move a money clock, and so does a credit-ledger
+acknowledgement. Each such act carries a typed **`actor`** (`Actor` in
+[`common.json`](https://bacp.dev/latest/schemas/common.json)), the same object as a ledger acknowledgement's `actor`
+in [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json):
+
+| Field | Required | Meaning |
+|---|---|---|
+| `kind` | yes | `human` or `agent` |
+| `role` | yes | `principal` (the party itself or its authorised human), `seller_operator` (seller staff such as a munim or a sales officer), `assisted_operator`, `agent` (the party's own AI agent) or `sub_agent`. A `human` acts only as `principal`, `seller_operator` or `assisted_operator`; an `agent` only as `agent` or `sub_agent` |
+| `participant_ref` | yes | The acting participant's `participant_id`, or the agent id for an agent |
+| `mandate_ref` | no | The mandate under which an agent acted. It records the mandate; it does not authorise the act |
+
+- A GRN, CRAC, objection or acknowledgement by an agent (`actor.kind: agent`) **MUST** carry `hp_proof` of the
+  principal's confirmation on the Trusted Surface: a `post_order` step-up whose `ts_render` names the act
+  ([Presence proof](human-participants.md#hp-proof)). No mandate scope authorises an agent's trade act. The seller
+  app or the gateway rejects any agent act without `hp_proof`, and the ledger schema rejects an agent
+  acknowledgement without it.
+- A ledger acknowledgement other than one taken automatically from a rail receipt (`auto_from_rail_receipt`) carries
+  `actor`; the schema rejects one without it.
+- Until [Q-44](open-questions.md#q-44) is settled these documents have no wire binding, so the rule is tested at
+  library level. No operation yet lets an agent request a `post_order` step-up for a trade act, and a ledger entry
+  with no `order_id` (an opening balance, a payment or an adjustment) cannot be named by `ts_render.order_id`. Until
+  a request operation exists, an agent trade act is therefore refused. Whether an objection sent by an agent is an objection "in writing" under the MSMED Act is open
+  ([Q-21](open-questions.md#q-21)).

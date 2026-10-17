@@ -73,6 +73,15 @@ def main() -> int:
             sub = {"rfq": "Rfq", "auction": "AuctionSpec"}[stem]
             v = Draft202012Validator({"$ref": f"https://bacp.dev/schemas/negotiation-session.json#/$defs/{sub}"}, registry=registry,
                                      format_checker=FormatChecker())
+        if name == "common":
+            # common.<definition>-<case>.json is checked against common.json#/$defs/<Definition>
+            want = p.name.split(".")[1].split("-")[0]
+            sub = next((k for k in schemas["common"]["$defs"] if k.lower() == want), None)
+            if sub is None:
+                fail(f"{p.name}: no common.json definition named {want}")
+                continue
+            v = Draft202012Validator({"$ref": f"https://bacp.dev/schemas/common.json#/$defs/{sub}"}, registry=registry,
+                                     format_checker=FormatChecker())
         errs = list(v.iter_errors(inst))
         if invalid and not errs:
             fail(f"{p.name}: expected INVALID but validates")

@@ -96,7 +96,8 @@
             "bap",
             "bpp",
             "registry",
-            "operator"
+            "operator",
+            "support_operator"
           ]
         },
         "kid": {
@@ -134,6 +135,11 @@
       },
       "minProperties": 1
     },
+    "LanguageTag": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z]{4})?(-[A-Z]{2})?$",
+      "description": "BCP 47 language tag of the same form as a LangText key, for example hi-IN (Hindi in Devanagari), ta-IN, en-IN or hi-Latn-IN (Hindi in Roman script). Never a language name such as \"Hindi\"."
+    },
     "RailType": {
       "type": "string",
       "pattern": "^(upi\\.circle\\.delegate|upi\\.reservepay\\.block|upi\\.autopay|upi\\.uap\\.[a-z0-9_.]+)$"
@@ -147,7 +153,8 @@
         "whatsapp",
         "web",
         "assisted"
-      ]
+      ],
+      "description": "Channel through which the principal interacts: app, voice, ivr, upi123pay (UPI 123PAY on a feature phone), whatsapp, web or assisted (a human assisted operator at a physical touchpoint). The OpenAPI binding refers to this definition."
     },
     "Handler": {
       "enum": [
@@ -477,6 +484,319 @@
       "type": "string",
       "pattern": "^(\\d{4}-\\d{2}-\\d{2}|draft)$",
       "description": "BACP protocol version: a dated release identifier (YYYY-MM-DD), or \"draft\" for the unreleased working version."
+    },
+    "ParticipantRole": {
+      "enum": [
+        "principal",
+        "assisted_operator",
+        "seller_operator",
+        "sub_agent"
+      ],
+      "description": "Role of a participant in a session other than the session's own agent: principal (the human or business the agent acts for), assisted_operator (a human who completes the session for the principal at a physical touchpoint, channel assisted), seller_operator (a human acting for the seller, such as a kirana owner or a munim) or sub_agent (an agent acting under a mandate delegated by the session's agent). Seller staff and support staff who act through the seller app and IGM are not session participants."
+    },
+    "Participant": {
+      "type": "object",
+      "description": "One participant in a checkout session. The principal is referred to by a pairwise pseudonymous reference, never by an Aadhaar number. Accessibility needs travel only as Presentation.modality, never as disability data.",
+      "required": [
+        "participant_id",
+        "role"
+      ],
+      "properties": {
+        "participant_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier of this participant within the session; referred to by Presentation.assisted_by, InstructionLogEntry.actor_ref and acknowledgement actors."
+        },
+        "role": {
+          "$ref": "#/$defs/ParticipantRole"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Who the participant is: the pairwise pseudonymous principal reference for a principal; the identifier issued to an assisted operator by the body that certifies it (who certifies assisted operators is an open question); the seller-side reference for a seller operator; the agent id for a sub-agent."
+        }
+      }
+    },
+    "HandoffRoute": {
+      "type": "object",
+      "description": "One route to a human. A route on a voice, IVR or UPI 123PAY channel is a tel: URI, optionally with the DTMF digits to press (for example 0). A route on another channel is a tel: or https: URI. A route that carries dtmf MUST be a tel: URI.",
+      "required": [
+        "channel",
+        "uri",
+        "languages",
+        "hours"
+      ],
+      "properties": {
+        "channel": {
+          "$ref": "#/$defs/Channel"
+        },
+        "uri": {
+          "type": "string",
+          "pattern": "^(tel:|https:)",
+          "description": "tel: URI (RFC 3966, https://www.rfc-editor.org/rfc/rfc3966) or https: URI of the route."
+        },
+        "dtmf": {
+          "type": "string",
+          "pattern": "^[0-9*#]{1,8}$",
+          "description": "Digits the caller presses on a voice or IVR flow to reach a human, for example 0. Only on a tel: route."
+        },
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/LanguageTag"
+          },
+          "description": "Languages in which a human answers on this route."
+        },
+        "hours": {
+          "type": "string",
+          "minLength": 1,
+          "description": "When a human answers on this route, in IST, for example 'Mo-Su 08:00-20:00' or '24x7'."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "dtmf"
+            ]
+          },
+          "then": {
+            "properties": {
+              "uri": {
+                "pattern": "^tel:"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Presentation": {
+      "type": "object",
+      "description": "What a Trusted Surface presented to the principal, how, and what the principal did. Recorded by the Trusted Surface (Mandate Manager or payer PSP) and carried inside its signed Trusted Surface event. For a step-up, content_hash is the hash of the gateway-signed ts_render the Trusted Surface fetched by step_up_id.",
+      "required": [
+        "surface",
+        "channel",
+        "language",
+        "modality",
+        "content_hash",
+        "content_ref",
+        "user_action",
+        "shown_at",
+        "acted_at"
+      ],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Trusted Surface id: the registry subscriber id of the payer PSP or Mandate Manager whose app, IVR or assisted counter presented the content. Never the agent."
+        },
+        "channel": {
+          "$ref": "#/$defs/Channel"
+        },
+        "language": {
+          "$ref": "#/$defs/LanguageTag",
+          "description": "Language in which the content was presented: English or a language of the Eighth Schedule, as a BCP 47 tag."
+        },
+        "modality": {
+          "enum": [
+            "visual",
+            "audio",
+            "both"
+          ],
+          "description": "visual (on screen), audio (read aloud in full before the factor was entered) or both."
+        },
+        "content_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "sha-256 over the exact bytes of the content presented. For a step-up, the sha-256 of the compact JWS ts_render."
+        },
+        "content_ref": {
+          "type": "string",
+          "format": "uri",
+          "description": "Where a party entitled to the evidence can fetch the presented content (for a step-up, the ts_render) to recompute content_hash."
+        },
+        "template_id": {
+          "type": "string",
+          "description": "Identifier and version of the Trusted Surface template used to render the content."
+        },
+        "checkout_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "checkout_hash of the quote the content showed: the session's quote, or for a post_order step-up the order's. REQUIRED on a step_up.approved event (the gateway refuses one without it with 400 invalid_request); the gateway applies an approval only while the session's checkout_hash equals it."
+        },
+        "user_action": {
+          "enum": [
+            "tap_confirm",
+            "upi_pin",
+            "biometric",
+            "passkey",
+            "voice_confirm_plus_device",
+            "decline"
+          ],
+          "description": "The principal's action: the ConsentReceipt captured_via values, or decline. biometric is the principal's own enrolled biometric, never an operator's."
+        },
+        "shown_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "acted_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "device_signature": {
+          "$ref": "#/$defs/Jws",
+          "description": "Signature by the principal's device key over the JCS form of {step_up_id, content_hash, acted_at} (for a step-up), or over {content_hash, acted_at} otherwise."
+        },
+        "voice_evidence": {
+          "type": "object",
+          "properties": {
+            "audio_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "transcript_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "translation_model": {
+              "type": "string"
+            }
+          }
+        },
+        "assisted_by": {
+          "type": "string",
+          "description": "participant_id of the assisted_operator entry in the session's participants[]. REQUIRED when channel is assisted. The Trusted Surface takes it from the assisted operators listed in the gateway-signed ts_render, never from the agent, and the gateway checks that it names an assisted_operator participant of the session."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "channel": {
+                "const": "assisted"
+              }
+            },
+            "required": [
+              "channel"
+            ]
+          },
+          "then": {
+            "required": [
+              "assisted_by"
+            ],
+            "properties": {
+              "user_action": {
+                "enum": [
+                  "upi_pin",
+                  "biometric",
+                  "decline"
+                ],
+                "description": "On channel assisted the principal approves with the principal's own factor (UPI PIN, or biometric meaning the principal's own biometric enrolled for the principal on the Trusted Surface device), never a tap (BACP policy)."
+              }
+            }
+          }
+        }
+      ]
+    },
+    "HpProof": {
+      "type": "object",
+      "description": "Proof that the principal confirmed one write on the Trusted Surface: a post-order write with presence HP (cancel, return, raise issue, issue action) or an agent's trade act (GRN, CRAC, MSMED written objection, ledger acknowledgement). It names a step-up of kind post_order, whose gateway-signed ts_render names the action, the order and, for an issue action, the issue and the subject_hash of the resolution shown, and the signed step_up.approved event for it. It is valid only for the write its ts_render names, for an issue action only while the issue's resolution still hashes to that subject_hash, and is used once; otherwise the write is refused with 403 presence_not_proven.",
+      "required": [
+        "ts_event_hash",
+        "step_up_id"
+      ],
+      "properties": {
+        "ts_event_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "sha-256 over the JCS form of the signed step_up.approved event that the gateway received at /trusted-surface/events for step_up_id."
+        },
+        "step_up_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The post_order step-up under which the Trusted Surface showed this write."
+        }
+      }
+    },
+    "Actor": {
+      "type": "object",
+      "description": "Who performed a ledger acknowledgement or a trade act (GRN, CRAC, MSMED written objection): a human or an agent, the role in which it acted, and a reference to the acting participant. A human acts as principal, assisted_operator or seller_operator; an agent acts as agent or sub_agent.",
+      "required": [
+        "kind",
+        "role",
+        "participant_ref"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "human",
+            "agent"
+          ]
+        },
+        "role": {
+          "enum": [
+            "principal",
+            "assisted_operator",
+            "seller_operator",
+            "agent",
+            "sub_agent"
+          ],
+          "description": "principal for the buyer or seller party itself (or its authorised human), seller_operator for seller staff such as a munim, assisted_operator for a human at a physical touchpoint, agent for the party's own AI agent and sub_agent for a delegated agent."
+        },
+        "participant_ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "participant_id in the session's participants[], or the agent id for an agent."
+        },
+        "mandate_ref": {
+          "type": "string",
+          "description": "Mandate under which an agent acted. It does not authorise a trade act: an agent's act needs hp_proof."
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "human"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "principal",
+                  "assisted_operator",
+                  "seller_operator"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "agent"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "agent",
+                  "sub_agent"
+                ]
+              }
+            }
+          }
+        }
+      ]
     }
   }
 }

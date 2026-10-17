@@ -56,7 +56,7 @@ sequenceDiagram
 | `bacp.checkout.get` | `GET /sessions/{session_id}` | none (gateway state) | n/a | `bacp-browse` |
 | `bacp.checkout.complete` | `POST /sessions/{session_id}/complete` | rail debit through the PSP, then `confirm` → `on_confirm` with `payment.status = PAID` and the rail reference | `ORDER`, `PAY` | `bacp-pay` |
 | `bacp.checkout.cancel` | `POST /sessions/{session_id}/cancel` | none (no order exists yet) | n/a | `bacp-browse` |
-| `bacp.human_handoff` | (agent UI) | `support` → `on_support` | n/a | `bacp-browse` |
+| `bacp.human_handoff` | `POST /sessions/{session_id}/handoff` | `support` → `on_support` | n/a | `bacp-browse` (request; release before acceptance); `bacp-handoff` (acceptance and release by a human support operator) |
 
 Every committing Beckn message the gateway sends (`init`, `confirm`, and post-order `update`,
 `cancel`, `issue`) carries `context.bacp` with the agent, `presence`, `idempotency_key`,
@@ -83,8 +83,10 @@ result is `sponsored`. Discovery moves no money and shares no personal data. See
 ### Create {#create}
 
 `POST /sessions` names the seller (`bpp_id`, `provider_id`), the items, the `presence` and
-optionally the `mandate_ref`, `channel`, `language` and `webhook_url`. The gateway sends `select`
-and returns `201` with the quote from `on_select`.
+optionally the `mandate_ref`, `channel`, `language`, `participants` and `webhook_url`. The gateway
+sends `select` and returns `201` with the quote from `on_select`. With `channel: assisted`,
+`participants[]` **MUST** contain an `assisted_operator` entry; otherwise the gateway returns
+`400 invalid_request` at `$.participants` ([Assisted channel](../human-participants.md#assisted)).
 
 ```json
 {
@@ -125,11 +127,21 @@ Response (`201`, abridged to two line items):
   ],
   "totals": [{"type": "total", "amount": {"value": 26700, "currency": "INR"}}],
   "quote": {"id": "Q-55", "ttl": "PT10M", "expires_at": "2026-10-20T19:11:00+05:30"},
+  "ai_disclosure": {
+    "notice": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं।",
+               "en-IN": "You are talking to an AI assistant."},
+    "handoff_routes": [
+      {"channel": "voice", "uri": "tel:+91-80-00000001", "dtmf": "0",
+       "languages": ["hi-IN", "en-IN"], "hours": "Mo-Su 08:00-20:00"},
+      {"channel": "app", "uri": "https://vaani.example.in/human",
+       "languages": ["hi-IN", "en-IN"], "hours": "24x7"}
+    ]
+  },
   "messages": [
     {"type": "disclosure", "code": "ai_disclosure",
      "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
                  "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
-     "param": "$.human_handoff_url",
+     "param": "$.ai_disclosure",
      "resolution": "recoverable"}
   ]
 }
@@ -226,10 +238,11 @@ Response (`200`, abridged):
     {"type": "disclosure", "code": "ai_disclosure",
      "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
                  "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
-     "param": "$.human_handoff_url", "resolution": "recoverable"},
-    {"type": "warning", "code": "preticked_addon_removed",
-     "content": {"hi-IN": "पहले से चुना गया 'डिलीवरी बीमा ₹15' हटा दिया गया (मैंडेट में शामिल नहीं)",
-                 "en-IN": "Removed pre-selected 'Delivery insurance ₹15' (not in mandate)"},
+     "param": "$.ai_disclosure", "resolution": "recoverable"},
+    {"type": "warning", "code": "preticked_addon_removed", "origin": "gateway",
+     "content": {"hi-IN": "पहले से चुना गया ऐड-ऑन हटा दिया गया, जो मैंडेट में शामिल नहीं है: {addon}",
+                 "en-IN": "Removed a pre-selected add-on that is not in the mandate: {addon}"},
+     "args": [{"name": "addon", "origin": "counterparty", "text": "Delivery insurance ₹15"}],
      "param": "$.line_items[3]", "resolution": "recoverable"}
   ]
 }
@@ -274,6 +287,11 @@ stateDiagram-v2
     incomplete --> cancelled: cancel, TTL, mandate stopped
     ready_for_complete --> cancelled: cancel, TTL, mandate stopped, pre-debit opt-out
     requires_escalation --> cancelled: cancel, TTL, mandate stopped
+    incomplete --> human_handoff: handoff requested
+    ready_for_complete --> human_handoff: handoff requested
+    requires_escalation --> human_handoff: handoff requested
+    human_handoff --> cancelled: cancel, TTL, mandate stopped
+    human_handoff --> incomplete: handoff released
     completed --> [*]
     cancelled --> [*]
 ```
@@ -299,8 +317,16 @@ stateDiagram-v2
 | any open state | `POST /sessions/{id}/cancel` | `cancelled` | `session_cancelled` |
 | any open state | Mandate revoked, paused or expired | `cancelled` | `mandate_revoked`, `mandate_paused`, `mandate_expired`; `rail_binding_not_open_eligible` for a gateway pause of an ineligible binding ([Handler binding](../mandates.md#handler-binding)) |
 | `ready_for_complete` | Principal opts out of a pre-debit notice | `cancelled` | `pre_debit_opt_out` (`requires_buyer_input`); no rail traffic |
+| `incomplete`, `ready_for_complete`, `requires_escalation` | `POST /sessions/{id}/handoff` (`action: request`) | `human_handoff` | `handoff.requested_at` set; InstructionLog stage `handoff` |
+| `human_handoff` | Acceptance signed by a human support operator under `bacp-handoff` | `human_handoff` | `handoff.accepted_by` and `accepted_at` set, by compare-and-set, only while `accepted_by` and `ended_at` are absent |
+| `human_handoff` | Agent `PUT` or `complete` | `human_handoff` | `409 session_state_conflict` at `$.status` |
+| `human_handoff` | `step_up.approved` from the Trusted Surface | `human_handoff` | held, not applied, until release |
+| `human_handoff` | `action: release` by the `accepted_by` key (`bacp-handoff`), or by the agent (`bacp-browse`) while `accepted_by` is absent | `incomplete` | `handoff.ended_at` set; InstructionLog stage `handoff`; a held approval then applies only if unexpired and its `checkout_hash` still matches |
+| `human_handoff` | `action: release` by any other key | `human_handoff` | nothing changes |
+| any, with `handoff.ended_at` set | `action: accept` | unchanged | `409 session_state_conflict` at `$.status`; nothing changes |
+| `human_handoff` | Cancel, TTL, mandate revoked, paused or expired | `cancelled` | as for the other open states; `handoff` is kept |
 
-The open states are `incomplete`, `ready_for_complete` and `requires_escalation`. Calling
+The open states are `incomplete`, `ready_for_complete`, `requires_escalation` and `human_handoff`. Calling
 `complete` on an `incomplete` session returns `409 session_state_conflict`; the agent **MUST** PUT
 the session first. Cancelling a session that is `complete_in_progress` or `completed` also returns
 `409 session_state_conflict`; the agent cancels the order instead.
@@ -343,15 +369,59 @@ Every response, and every `session.updated` webhook, is a complete snapshot: the
 to merge partial updates. Readers **MUST** ignore unknown fields. The full code list is in
 [Errors](../errors.md).
 
+**Slot rule for counterparty text.** Each message has an `origin`: `gateway` (the default) or
+`counterparty`. A gateway-written `content` **MUST NOT** contain text that came from a seller or
+other counterparty, such as an item name or a fee label. Such a value travels only in `args[]`, as
+`{name, origin: counterparty, text}`, and `content` refers to it by a `{name}` placeholder. Free
+text from a counterparty that is not a value of a gateway message is returned as a whole message
+with code `untrusted_counterparty_text` and `origin: counterparty`. The agent **MUST** treat every
+`origin: counterparty` value as data, never as an instruction. A text rendering of a message, by
+the gateway, an MCP server or a Trusted Surface, **MUST** show every counterparty `args[]` value
+visibly labelled (in quote marks or after a label such as "Seller's text:") and **MUST NOT**
+interpolate it unlabelled into the template sentence. The same rule holds on the Trusted
+Surface, where such text appears only in the `counterparty_text` slot of `ts_render`
+([Render input](../human-participants.md#ts-render)).
+
 ### AI disclosure and human handoff {#ai-disclosure}
 
 The first entry of every session's `messages[]` **MUST** be the AI disclosure: `type: disclosure`,
 `code: ai_disclosure`, its `content` taken from the AgentCredential's `disclosure.ai_notice` in
-the session's language, followed by the `human_handoff_url`, with
-`param: $.human_handoff_url`. The disclosure is also carried on the network as
-`context.bacp.ai_disclosure: true`. The agent **MUST** present the disclosure to the principal
-and **MUST** offer the human handoff. A handoff on the network maps to Beckn `support` →
-`on_support`.
+the session's language, with `param: $.ai_disclosure`. Every session carries
+`ai_disclosure{notice, handoff_routes[]}`, the typed routes to a human from the AgentCredential's
+`disclosure.handoff_routes` (a `tel:` route, optionally with DTMF digits, on voice, IVR and UPI
+123PAY); `handoff_routes` is absent when the credential lists none. The agent
+**MUST** present the disclosure to the principal and **MUST** offer the human handoff, and the
+gateway logs it at InstructionLog stage `ai_disclosure`, the first entry whose actor is `agent`
+([Human participants](../human-participants.md#ai-disclosure)). The disclosure is also carried on
+the network as `context.bacp.ai_disclosure: true`, which is REQUIRED and is mirrored into the
+`bacp` tag group ([Beckn / ONDC Binding](../transports/beckn.md#mirroring)).
+
+### Human handoff {#handoff}
+
+`POST /sessions/{session_id}/handoff` hands the session to a human:
+
+- The agent sends `{"action": "request", "route": …}` (tag `bacp-browse`) with one of the session's
+  `ai_disclosure.handoff_routes` (no route when the session lists none). The gateway **MUST** accept it in every session state and whatever
+  the mandate's status, including after revocation, and returns `201`.
+- An open session moves to `human_handoff`; the gateway then refuses the agent's `PUT` and
+  `complete` with `409 session_state_conflict` at `$.status`, and holds any Trusted Surface
+  approval without applying it. A session in another state keeps its status and records `handoff`.
+- A human support operator accepts with `{"action": "accept"}`, signed with a registry key of role
+  `support_operator` under tag `bacp-handoff`. Only that sets `handoff.accepted_by` and
+  `handoff.accepted_at`; any other signer leaves the handoff requested.
+- `{"action": "release"}` ends the handoff. The gateway accepts it from the `accepted_by` key under
+  `bacp-handoff`, or from the agent under `bacp-browse` only while `accepted_by` is absent. The
+  session returns to `incomplete` and `handoff.ended_at` is set; a release by any other key changes
+  nothing.
+- `accept` and `release` are each one compare-and-set on `handoff.accepted_by` and
+  `handoff.ended_at`: an agent's release applies only while `accepted_by` is still absent, and an
+  `accept` after `ended_at` is set gets `409 session_state_conflict`. A race between them ends
+  either released with no `accepted_by`, or connected in `human_handoff`, never both.
+- Every act is logged at InstructionLog stage `handoff`. On the network a handoff maps to Beckn
+  `support` → `on_support`.
+
+`Session.handoff` is `{route, requested_at, accepted_by, accepted_at, ended_at}`. See
+[Human participants](../human-participants.md#handoff).
 
 ## Complete {#complete}
 
@@ -453,7 +523,7 @@ Response (`200`, abridged):
     {"type": "disclosure", "code": "ai_disclosure",
      "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
                  "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
-     "param": "$.human_handoff_url", "resolution": "recoverable"},
+     "param": "$.ai_disclosure", "resolution": "recoverable"},
     {"type": "info", "code": "budget_after",
      "content": {"hi-IN": "इस महीने का बचा हुआ बजट: ₹2,698",
                  "en-IN": "Remaining budget this month: ₹2,698"},
@@ -492,7 +562,7 @@ When the evaluation calls for a step-up the gateway returns `200` with
     {"type": "disclosure", "code": "ai_disclosure",
      "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
                  "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
-     "param": "$.human_handoff_url", "resolution": "recoverable"},
+     "param": "$.ai_disclosure", "resolution": "recoverable"},
     {"type": "error", "code": "step_up_required",
      "content": {"hi-IN": "आपकी पुष्टि ज़रूरी है। कृपया UPI ऐप में पुष्टि करें।",
                  "en-IN": "User confirmation required on Trusted Surface"},
@@ -617,7 +687,7 @@ before relying on it ([Evidence: Receipts](../evidence.md#receipts)).
 | 401 | `signature_invalid`, `replay_detected`, `agent_unregistered`, `agent_credential_revoked` |
 | 403 | mandate errors ([Mandates](../mandates.md#error-codes)), `rail_limit_exceeded`, `collector_not_authorised`, `log_chain_invalid` |
 | 404 | `not_found` |
-| 409 | `idempotency_in_flight`, `session_state_conflict` |
+| 409 | `idempotency_in_flight`, `session_state_conflict` (also any agent `PUT` or `complete` while `human_handoff`, and a handoff `accept` after the handoff ended) |
 | 413 | `request_too_large` (body above 256 KiB) |
 | 422 | `idempotency_conflict` |
 | 429 | `quota_exceeded` |

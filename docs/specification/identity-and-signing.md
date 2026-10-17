@@ -36,7 +36,7 @@ with `vct: in.bacp.agent.1`. Its claims are defined by
 | `agent` | The agent `class` (`shopping`, `voice_shopping`, `assisted`, `sub_agent`), `model_family`, `build`, and optionally `channels`, `languages` and `uap_agent_id`. |
 | `cnf.jwk` | The agent's public key (RFC 7800). The matching private key signs the agent's requests and closes its open mandates. |
 | `purposes` | The [signature tags](#signature-tags) this key may use: any of `bacp-browse`, `bacp-pay`, `bacp-post-order`, `bacp-negotiate`. |
-| `disclosure` | `ai_notice` (a multilingual AI-disclosure text) and `human_handoff_url`. The agent's first message in every session MUST present the notice and offer the handoff. |
+| `disclosure` | `ai_notice` (a multilingual AI-disclosure text), `human_handoff_url` and `handoff_routes[]` (typed routes to a human: `channel`, a `tel:` or `https:` `uri`, optional `dtmf`, only on a `tel:` route, `languages`, `hours`). When `agent.channels` includes `voice`, `ivr` or `upi123pay`, `handoff_routes` MUST contain a `tel:` route. The agent's first message in every session MUST present the notice and offer the handoff ([Human participants](human-participants.md#ai-disclosure)). |
 | `conformance` | The conformance levels the agent's stack has passed, with a signed attestation (see below). |
 | `status.status_list` | The status-list `uri` and index `idx` used to check revocation. |
 
@@ -128,7 +128,7 @@ The signature MUST cover:
 | `@path` | Always |
 | `@query` | Whenever the target URI has a query component, for example `GET /orders/ORD-KIR-88231?bpp_id=bpp.kirana.example.in` |
 | `content-digest` | Always (see [Content-Digest](#content-digest)) |
-| `bacp-agent` | Always: the AgentCredential header |
+| `bacp-agent` | Always: the AgentCredential header. Exception: a request under tag `bacp-ts` or `bacp-handoff` is signed with a registry key, carries no `BACP-Agent` header and does not cover `bacp-agent` |
 | `idempotency-key` | On every request other than `GET` and `HEAD` |
 | `content-type` | SHOULD be covered whenever the request has a body |
 
@@ -200,16 +200,40 @@ of two for negotiation messages; any other tag MUST be rejected with
 
 | Tag | Meaning | Endpoints |
 |---|---|---|
-| `bacp-browse` | Reads, discovery, cart building and other non-committing calls | `POST /discover`; `POST /sessions`, `GET` and `PUT /sessions/{id}`, `POST /sessions/{id}/cancel`; `POST /mandates`, `GET /mandates/{id}`, `POST /mandates/{id}/relinquish`; `GET /orders/{id}`, `GET /orders/{id}/returns/{rid}`; `GET /issues/{id}`; `GET /evidence/{transaction_id}`; `POST /negotiations`, `GET /negotiations/{id}`, `GET /negotiations/{id}/offers`, and non-firm messages on `POST /negotiations/{id}/offers`; `POST /rfqs`, `GET /rfqs/{id}`; `GET /auctions/{id}`; `POST /payment-handlers/intersect` |
+| `bacp-browse` | Reads, discovery, cart building and other non-committing calls | `POST /discover`; `POST /sessions`, `GET` and `PUT /sessions/{id}`, `POST /sessions/{id}/cancel`, `POST /sessions/{id}/handoff` (`action: request`, and `action: release` before acceptance); `POST /mandates`, `GET /mandates/{id}`, `POST /mandates/{id}/relinquish`; `GET /orders/{id}`, `GET /orders/{id}/returns/{rid}`; `GET /issues/{id}`; `GET /evidence/{transaction_id}`; `POST /negotiations`, `GET /negotiations/{id}`, `GET /negotiations/{id}/offers`, and non-firm messages on `POST /negotiations/{id}/offers`; `POST /rfqs`, `GET /rfqs/{id}`; `GET /auctions/{id}`; `POST /payment-handlers/intersect` |
 | `bacp-pay` | Commits money | `POST /sessions/{id}/complete` |
 | `bacp-post-order` | Mandate-scoped writes on an existing order | `POST /orders/{id}/cancel`; `POST /orders/{id}/returns`; `POST /issues`; `POST /issues/{id}/actions` |
 | `bacp-negotiate` | Binds the principal in a negotiation | Firm offers and counter-offers on `POST /negotiations/{id}/offers`; `POST /negotiations/{id}/accept`; `POST /rfqs/{id}/award`; `POST /auctions`; bids on `POST /auctions/{id}/bids`; `POST /auctions/{id}/award` |
-| `bacp-ts` | Trusted Surface events. **Never** an agent tag. | `POST /trusted-surface/events`, signed with a Mandate Manager or PSP registry key |
+| `bacp-ts` | Trusted Surface events and render fetches. **Never** an agent tag. | `POST /trusted-surface/events` and `GET /trusted-surface/step-ups/{step_up_id}`, signed with the registry key of the step-up's Mandate Manager or payer PSP |
+| `bacp-handoff` | A human support operator accepts or releases a handoff. **Never** an agent tag. | `POST /sessions/{id}/handoff` (`action: accept` or `release`), signed with a registry key whose role is support operator |
 
-`POST /trusted-surface/events` MUST accept only signatures by a registry key
-whose role is Mandate Manager or PSP, under tag `bacp-ts`. A request that
-carries an AgentCredential, or is signed by an agent key, MUST be refused with
-`403 trusted_surface_only`, whatever its tag.
+`POST /trusted-surface/events` and `GET /trusted-surface/step-ups/{step_up_id}`
+MUST accept only signatures under tag `bacp-ts` by the registry key of the
+step-up's Mandate Manager or payer PSP. For a session step-up these are the
+issuer of the session's mandate and the PSP named in `rail_binding.psp_id` of
+the open Payment Mandate whose `checkout_mandate_ref` is the session's mandate;
+for a `post_order` step-up, the issuer of the mandate the order was placed
+under and the PSP named in `auth_binding.psp_id` of the order's closed Payment
+Mandate (any of them under split tender)
+([Step-up signers](human-participants.md#ts-signers)). A request under
+`bacp-ts` carries no `BACP-Agent` header, and its signature does not cover
+`bacp-agent`. A request that carries an AgentCredential, or is
+signed by an agent key, MUST be refused with `403 trusted_surface_only`,
+whatever its tag. A request signed by any other Mandate Manager or PSP key MUST
+be answered `404 not_found`, never `403`, so that the endpoints do not reveal
+which sessions and step-ups exist.
+
+A handoff acceptance (`action: accept` on `POST /sessions/{id}/handoff`) MUST
+be signed under tag `bacp-handoff` by a registry key whose role is
+**support operator**: a key the registry issues to a human support operator of
+the agent operator, never to an agent. `bacp-handoff` is not a value of an
+AgentCredential's `purposes`. An acceptance under any other tag is refused
+with `401 signature_invalid`, and one signed by a key of any other role leaves
+the handoff requested. The gateway records the key id as
+`handoff.accepted_by` ([Human handoff](checkout/index.md#handoff)). Only that
+key, under `bacp-handoff`, may later release the handoff (`action: release`).
+A request under `bacp-handoff` carries no `BACP-Agent` header, and its
+signature does not cover `bacp-agent`.
 
 The gateway signs its webhooks to the agent with a key published in its
 profile's `keys`, so that the agent can verify them.

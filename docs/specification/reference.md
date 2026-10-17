@@ -16,11 +16,14 @@ generated from the `source/` directory of the specification repository.
 
 All schemas are JSON Schema draft 2020-12.
 
+The human-participant types in `common.json` (`LanguageTag`, `Participant`, `ParticipantRole`, `HandoffRoute`,
+`Presentation`, `HpProof`, `Actor`) are described in [Human Participants and the Trusted Surface](human-participants.md).
+
 | Schema | Title | Description |
 |---|---|---|
 | [`agent-credential.json`](https://bacp.dev/latest/schemas/agent-credential.json) | AgentCredential | Claims of an SD-JWT VC (vct in.bacp.agent.1) issued by a registry-accredited issuer to an agent operated by a registered legal entity and bound to a BAP subscriber. |
 | [`beckn-context-bacp.json`](https://bacp.dev/latest/schemas/beckn-context-bacp.json) | Beckn context extension: context.bacp | Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp] where a network validator rejects unknown context keys. |
-| [`common.json`](https://bacp.dev/latest/schemas/common.json) | BACP common types | Shared definitions: `Amount`, `PositiveAmount`, `Hash`, `Jws`, `Jwk`, `Signature`, `Presence`, `LangText`, `RailType`, `Channel`, `Handler`, `Duration`, `IssueStatus`, `IssueMeta`, `HandlerId`, `HandlerRef`, `RailTypeV1`, `UdyamCategory`, `Party`, `DocumentRef`, `Citation` |
+| [`common.json`](https://bacp.dev/latest/schemas/common.json) | BACP common types | Shared definitions: `Amount`, `PositiveAmount`, `Hash`, `Jws`, `Jwk`, `Signature`, `Presence`, `LangText`, `LanguageTag`, `RailType`, `Channel`, `Handler`, `Duration`, `IssueStatus`, `IssueMeta`, `HandlerId`, `HandlerRef`, `RailTypeV1`, `UdyamCategory`, `Party`, `DocumentRef`, `Citation`, `ParticipantRole`, `Participant`, `HandoffRoute`, `Presentation`, `HpProof`, `Actor` |
 | [`consent-receipt.json`](https://bacp.dev/latest/schemas/consent-receipt.json) | ConsentReceipt (DPDP) | One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or for) a DPDP Consent Manager. |
 | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | CreditLedgerEntry | One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger. Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler. |
 | [`fx.json`](https://bacp.dev/latest/schemas/fx.json) | FX disclosure | Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)). |
@@ -39,7 +42,7 @@ All schemas are JSON Schema draft 2020-12.
 
 | Document | Format | Contents |
 |---|---|---|
-| [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) | OpenAPI 3.1.0 | The REST binding: 34 operations, 7 webhooks, 48 component schemas. See [REST](transports/rest.md). |
+| [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) | OpenAPI 3.1.0 | The REST binding: 36 operations, 7 webhooks, 58 component schemas. See [REST](transports/rest.md). |
 
 ## Payment-handler registry {#handler-registry}
 
@@ -111,21 +114,40 @@ device-bound, **D** deferred (COD), **N** non-paying.
 ## Examples {#examples}
 
 Each example is named `<schema>.<case>.json` and is checked against `<schema>.json` (`rfq.*` and `auction.*` against the `Rfq` and
-`AuctionSpec` definitions of `negotiation-session.json`). Files ending in `.invalid.json`
+`AuctionSpec` definitions of `negotiation-session.json`, and `common.<definition>-<case>.json` against that definition of
+`common.json`, for example `common.presentation-*` against `#/$defs/Presentation`). Files ending in `.invalid.json`
 are negative vectors: a conforming validator MUST reject them. The repository checks every vector, the registry and the
 OpenAPI document with `uv run python scripts/validate.py`.
 
 | Example | Schema | Expected |
 |---|---|---|
+| [`agent-credential.ivr-handoff-routes.json`](https://bacp.dev/latest/examples/agent-credential.ivr-handoff-routes.json) | [`agent-credential.json`](https://bacp.dev/latest/schemas/agent-credential.json) | valid |
+| [`agent-credential.ivr-https-only.invalid.json`](https://bacp.dev/latest/examples/agent-credential.ivr-https-only.invalid.json) | [`agent-credential.json`](https://bacp.dev/latest/schemas/agent-credential.json) | invalid (MUST fail) |
 | [`auction.reverse-l1.json`](https://bacp.dev/latest/examples/auction.reverse-l1.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | valid |
 | [`auction.sealed-no-deposit.invalid.json`](https://bacp.dev/latest/examples/auction.sealed-no-deposit.invalid.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | invalid (MUST fail) |
 | [`auction.seller-run.invalid.json`](https://bacp.dev/latest/examples/auction.seller-run.invalid.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | invalid (MUST fail) |
+| [`beckn-context-bacp.acting-for-business.json`](https://bacp.dev/latest/examples/beckn-context-bacp.acting-for-business.json) | [`beckn-context-bacp.json`](https://bacp.dev/latest/schemas/beckn-context-bacp.json) | valid |
+| [`beckn-context-bacp.no-ai-disclosure.invalid.json`](https://bacp.dev/latest/examples/beckn-context-bacp.no-ai-disclosure.invalid.json) | [`beckn-context-bacp.json`](https://bacp.dev/latest/schemas/beckn-context-bacp.json) | invalid (MUST fail) |
+| [`common.handoffroute-dtmf-https.invalid.json`](https://bacp.dev/latest/examples/common.handoffroute-dtmf-https.invalid.json) | [`common.json`](https://bacp.dev/latest/schemas/common.json) `#/$defs/HandoffRoute` | invalid (MUST fail) |
+| [`common.handoffroute-ivr-dtmf.json`](https://bacp.dev/latest/examples/common.handoffroute-ivr-dtmf.json) | [`common.json`](https://bacp.dev/latest/schemas/common.json) `#/$defs/HandoffRoute` | valid |
+| [`common.presentation-assisted-tap.invalid.json`](https://bacp.dev/latest/examples/common.presentation-assisted-tap.invalid.json) | [`common.json`](https://bacp.dev/latest/schemas/common.json) `#/$defs/Presentation` | invalid (MUST fail) |
+| [`common.presentation-channel-sms.invalid.json`](https://bacp.dev/latest/examples/common.presentation-channel-sms.invalid.json) | [`common.json`](https://bacp.dev/latest/schemas/common.json) `#/$defs/Presentation` | invalid (MUST fail) |
+| [`common.presentation-language-hindi.invalid.json`](https://bacp.dev/latest/examples/common.presentation-language-hindi.invalid.json) | [`common.json`](https://bacp.dev/latest/schemas/common.json) `#/$defs/Presentation` | invalid (MUST fail) |
+| [`common.presentation-upi123pay-hi.json`](https://bacp.dev/latest/examples/common.presentation-upi123pay-hi.json) | [`common.json`](https://bacp.dev/latest/schemas/common.json) `#/$defs/Presentation` | valid |
+| [`consent-receipt.assisted-presentation.json`](https://bacp.dev/latest/examples/consent-receipt.assisted-presentation.json) | [`consent-receipt.json`](https://bacp.dev/latest/schemas/consent-receipt.json) | valid |
+| [`credit-ledger-entry.agent-ack-no-actor.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.agent-ack-no-actor.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
+| [`credit-ledger-entry.agent-ack-no-hp-proof.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.agent-ack-no-hp-proof.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
+| [`credit-ledger-entry.agent-ack-with-hp-proof.json`](https://bacp.dev/latest/examples/credit-ledger-entry.agent-ack-with-hp-proof.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
+| [`credit-ledger-entry.human-actor-agent-role.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.human-actor-agent-role.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
 | [`credit-ledger-entry.net60-micro.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.net60-micro.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
 | [`credit-ledger-entry.payment-no-evidence.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment-no-evidence.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
 | [`credit-ledger-entry.payment.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
 | [`credit-ledger-entry.sale.json`](https://bacp.dev/latest/examples/credit-ledger-entry.sale.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
 | [`handler-descriptor.open-no-primitives.invalid.json`](https://bacp.dev/latest/examples/handler-descriptor.open-no-primitives.invalid.json) | [`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json) | invalid (MUST fail) |
 | [`handler-descriptor.upi-autopay.json`](https://bacp.dev/latest/examples/handler-descriptor.upi-autopay.json) | [`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json) | valid |
+| [`instruction-log-entry.ai-disclosure.json`](https://bacp.dev/latest/examples/instruction-log-entry.ai-disclosure.json) | [`instruction-log-entry.json`](https://bacp.dev/latest/schemas/instruction-log-entry.json) | valid |
+| [`instruction-log-entry.operator-no-actor-ref.invalid.json`](https://bacp.dev/latest/examples/instruction-log-entry.operator-no-actor-ref.invalid.json) | [`instruction-log-entry.json`](https://bacp.dev/latest/schemas/instruction-log-entry.json) | invalid (MUST fail) |
+| [`instruction-log-entry.support-staff-actor.invalid.json`](https://bacp.dev/latest/examples/instruction-log-entry.support-staff-actor.invalid.json) | [`instruction-log-entry.json`](https://bacp.dev/latest/schemas/instruction-log-entry.json) | invalid (MUST fail) |
 | [`mandate-negotiation.buyer.json`](https://bacp.dev/latest/examples/mandate-negotiation.buyer.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | valid |
 | [`mandate-negotiation.disclosed.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.disclosed.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |
 | [`mandate-negotiation.no-reservation.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.no-reservation.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |

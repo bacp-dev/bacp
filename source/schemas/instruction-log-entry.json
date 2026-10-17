@@ -29,6 +29,7 @@
     },
     "stage": {
       "enum": [
+        "ai_disclosure",
         "prompt",
         "intent",
         "discover",
@@ -42,8 +43,10 @@
         "grievance",
         "negotiation",
         "guard",
-        "ledger"
-      ]
+        "ledger",
+        "handoff"
+      ],
+      "description": "ai_disclosure is the agent presenting the AI disclosure and the human-handoff routes; it is the first entry whose actor is agent, before intent. handoff is a handoff to a human being requested, accepted or ended. disclosure is the seller's signed quote and disclosures arriving, not the AI disclosure."
     },
     "actor": {
       "enum": [
@@ -52,8 +55,16 @@
         "gateway",
         "trusted_surface",
         "bpp",
-        "psp"
-      ]
+        "psp",
+        "assisted_operator",
+        "seller_operator",
+        "sub_agent"
+      ],
+      "description": "Who performed the step. assisted_operator, seller_operator and sub_agent name a session participant through actor_ref. Support staff are not log actors: a handoff is logged by the gateway with the accepting operator's key id in actor_ref."
+    },
+    "actor_ref": {
+      "type": "string",
+      "description": "participant_id of the acting participant in the session's participants[] (REQUIRED when actor is assisted_operator, seller_operator or sub_agent), or, on a handoff entry, the registry key id of the support operator who accepted it."
     },
     "at": {
       "type": "string",
@@ -126,5 +137,28 @@
     "signature": {
       "$ref": "common.json#/$defs/Signature"
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "actor": {
+            "enum": [
+              "assisted_operator",
+              "seller_operator",
+              "sub_agent"
+            ]
+          }
+        },
+        "required": [
+          "actor"
+        ]
+      },
+      "then": {
+        "required": [
+          "actor_ref"
+        ]
+      }
+    }
+  ]
 }

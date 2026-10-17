@@ -1,0 +1,9 @@
+{
+  "channel": "ivr",
+  "uri": "tel:+91-80-00000001",
+  "dtmf": "0",
+  "languages": [
+    "hi-IN"
+  ],
+  "hours": "24x7"
+}

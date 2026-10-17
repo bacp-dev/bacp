@@ -183,6 +183,10 @@
               "type": "string"
             }
           }
+        },
+        "presentation": {
+          "$ref": "common.json#/$defs/Presentation",
+          "description": "What the Trusted Surface presented and how. OPTIONAL. When present, its user_action equals captured_via.user_action and its language equals notice.language."
         }
       }
     },

@@ -46,14 +46,17 @@ Every agent request MUST be signed with RFC 9421 HTTP Message Signatures. The fu
 AgentCredential are in [Identity and Request Signing](../identity-and-signing.md). In summary:
 
 - The signature MUST cover `@method`, `@authority`, `@path`, `content-digest` and `bacp-agent`, plus
-  `idempotency-key` on every non-GET request. It MUST also cover `@query` whenever the target URI has a query, and
+  `idempotency-key` on every non-GET request. A request under tag `bacp-ts` or `bacp-handoff` carries no
+  `BACP-Agent` header and does not cover `bacp-agent`. It MUST also cover `@query` whenever the target URI has a query, and
   SHOULD cover `content-type`. A signature that lacks a required component is rejected with 401 `signature_invalid`.
 - Signature parameters MUST include `created`, `expires`, `nonce`, `keyid` and `tag`. `expires − created` MUST NOT
   exceed 300 s; up to 5 s of clock skew is allowed.
 - The gateway verifies the signature on the raw bytes **before** parsing JSON, after the
   [body-size check](#limits). It keeps a `(keyid, nonce)` replay cache until `expires`.
-- The signing key is the AgentCredential's `cnf` key for agents, and the registry key for a Mandate Manager or PSP
-  calling `/trusted-surface/events`.
+- The signing key is the AgentCredential's `cnf` key for agents, the registry key for a Mandate Manager or PSP
+  calling `/trusted-surface/events` or `/trusted-surface/step-ups/{step_up_id}` (only the step-up's Mandate Manager or
+  payer PSP, as defined in [Step-up signers](../human-participants.md#ts-signers); any other gets 404), and the registry key of a human support operator accepting or releasing
+  a handoff (no `BACP-Agent` header, and `bacp-agent` is not covered).
 
 ### Signature tags {#signature-tags}
 
@@ -66,7 +69,8 @@ MUST be listed in the AgentCredential's `purposes`; otherwise the gateway return
 | `bacp-pay` | Moving money | `POST /sessions/{session_id}/complete` |
 | `bacp-post-order` | Protective writes on an existing order | `POST /orders/{order_id}/cancel`, `POST /orders/{order_id}/returns`, `POST /issues`, `POST /issues/{issue_id}/actions` |
 | `bacp-negotiate` | Binding negotiation acts: firm offers and counters, ACCEPT, bids, awards | `POST /negotiations/{negotiation_id}/offers` when the message is firm, `POST /negotiations/{negotiation_id}/accept`, `POST /rfqs/{rfq_id}/award`, `POST /auctions`, `POST /auctions/{auction_id}/bids`, `POST /auctions/{auction_id}/award` |
-| `bacp-ts` | Trusted Surface events, signed by a registered Mandate Manager or payer PSP, never by an agent | `POST /trusted-surface/events` |
+| `bacp-ts` | Trusted Surface events and render fetches, signed by the step-up's Mandate Manager or payer PSP, never by an agent | `POST /trusted-surface/events`, `GET /trusted-surface/step-ups/{step_up_id}` |
+| `bacp-handoff` | A human support operator accepting or releasing a handoff, signed by a registry key of role support operator, never by an agent | `POST /sessions/{session_id}/handoff` with `action: accept` or `release` |
 
 `GET /.well-known/bacp`, `GET /payment-handlers` and `GET /payment-handlers/{handler_id}` are public and need no
 signature.
@@ -159,10 +163,12 @@ endpoint requires. This table is generated from `source/services/bacp.openapi.ya
 | PUT | `/sessions/{session_id}` | session | `bacp-browse` | required | Update session, full replace (UCP update_checkout). Items trigger select, fulfilment/billing triggers init. |
 | POST | `/sessions/{session_id}/complete` | session | `bacp-pay` | required | Complete (UCP complete_checkout). Verifies closed mandates, debits the rail, sends Beckn confirm. |
 | POST | `/sessions/{session_id}/cancel` | session | `bacp-browse` | required | Cancel a session before an order exists (UCP cancel_checkout). No Beckn call is needed. |
+| POST | `/sessions/{session_id}/handoff` | session | `bacp-browse` (request; release before acceptance); `bacp-handoff` (accept, release) | required | Hand the session to a human (bacp.human_handoff). Requested by the agent; accepted only by a registered human support operator. |
 | POST | `/mandates` | mandate | `bacp-browse` | required | Request a mandate. Returns PENDING plus a Trusted Surface link. The agent never signs or activates it. |
 | GET | `/mandates/{mandate_id}` | mandate | `bacp-browse` | — | Get mandate with live status and usage (AA ConsentUse analogue) |
 | POST | `/mandates/{mandate_id}/relinquish` | mandate | `bacp-browse` | required | Agent gives up its authority (agent-side revoke). Users revoke or pause on the Trusted Surface only. |
 | POST | `/trusted-surface/events` | trusted-surface | `bacp-ts (registry key)` | required | Signed event from a Mandate Manager or payer PSP (mandate activated, paused, resumed, revoked, step-up result, rail event) |
+| GET | `/trusted-surface/step-ups/{step_up_id}` | trusted-surface | `bacp-ts (registry key)` | — | Fetch the gateway-signed ts_render of a step-up. Only the step-up's Mandate Manager or payer PSP may call it. |
 | GET | `/orders/{order_id}` | order | `bacp-browse` | — | Get order (Beckn status, UCP get_order). Adjustments are the append-only read model. |
 | POST | `/orders/{order_id}/cancel` | order | `bacp-post-order` | required | Mandate-scoped cancel (Beckn cancel). Requires CANCEL in action_scope. |
 | POST | `/orders/{order_id}/returns` | order | `bacp-post-order` | required | Mandate-scoped return (Beckn update with update_target=item). Requires RETURN in action_scope. |

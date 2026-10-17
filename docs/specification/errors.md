@@ -55,6 +55,7 @@ reports the same condition that `complete` would return as an error.
 | `resolution` | enum | no | How the agent should proceed; one of the [resolution values](#resolution). Gateways SHOULD send it. |
 | `reasons` | array of string | conditional | Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors. |
 | `step_up_kind` | enum | conditional | `confirm` or `rail_auth`. REQUIRED on step-up errors. |
+| `step_up` | object | conditional | On `403 presence_not_proven` for a post-order write without `hp_proof`: a `StepUp` of kind `post_order` (reason `presence_proof`) that the principal confirms on the Trusted Surface to obtain the proof ([Presence proof](human-participants.md#hp-proof)). |
 
 Rail-cap and step-up errors MUST also carry `reasons[]` (every local and rail reason that applied) and
 `step_up_kind`. `idempotency_in_flight` and `quota_exceeded` MUST be sent with a `Retry-After` header.
@@ -74,7 +75,9 @@ Rail-cap and step-up errors MUST also carry `reasons[]` (every local and rail re
 |---|---|---|---|
 | `type` | enum | yes | `error`, `warning`, `info` or `disclosure` |
 | `code` | string | yes | A code from the [registry](#registry) |
-| `content` | LangText | yes | Multilingual text keyed by BCP 47 tag, for example `{"hi-IN": "…", "en-IN": "…"}` |
+| `origin` | enum | no | Who wrote `content`: `gateway` (the default) or `counterparty` |
+| `content` | LangText | yes | Multilingual text keyed by BCP 47 tag, for example `{"hi-IN": "…", "en-IN": "…"}`. A gateway-written `content` never contains counterparty text. |
+| `args` | array | no | Values inserted at `{name}` placeholders in `content`, each `{name, origin, text}`. A counterparty value (an item name, a fee label) travels only here, with `origin: counterparty`. |
 | `param` | string | no | RFC 9535 JSONPath into the returned resource |
 | `resolution` | enum | yes | What the agent may do next (see [Resolution](#resolution)) |
 
@@ -91,7 +94,8 @@ Rail-cap and step-up errors MUST also carry `reasons[]` (every local and rail re
 ```
 
 The first message of every checkout session is the `ai_disclosure` message (`type: disclosure`), which carries the
-agent's AI notice and the human handoff URL in the principal's language.
+agent's AI notice in the principal's language and points (`param: $.ai_disclosure`) at the session's typed routes to a
+human.
 
 ## Resolution {#resolution}
 
@@ -135,14 +139,15 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `idempotency_in_flight` | 409 + `Retry-After` | invalid_request | A request with the same key is still being processed. | — | recoverable (retry with the same key) |
 | `idempotency_store_unavailable` | 503 | service_unavailable | The idempotency store is unreachable; writes fail closed. | — | recoverable |
 | `request_too_large` | 413 | invalid_request | The request body exceeds the gateway's limit (at most 256 KiB). Checked on raw bytes before signature verification. | — | unrecoverable |
-| `quota_exceeded` | 429 + `Retry-After` | invalid_request | The agent has too many live idempotency keys or too many requests in flight. | — | recoverable |
+| `quota_exceeded` | 429 + `Retry-After` | invalid_request | The agent has too many live idempotency keys or too many requests in flight, or the caller exceeded a rate limit: render fetches per Mandate Manager or PSP key, counted before the lookup, or `post_order` step-ups created per agent. | — | recoverable |
 | `signature_invalid` | 401 | authentication_error | The RFC 9421 signature does not verify, lacks a required covered component, is outside its time window, or uses a tag that the endpoint or the credential's `purposes` does not allow. | `$.headers.Signature-Input` | unrecoverable |
 | `replay_detected` | 401 | authentication_error | The `(keyid, nonce)` pair was already seen within the signature window. | `$.headers.Signature-Input` | unrecoverable |
 | `agent_unregistered` | 401 | authentication_error | The signing key or the AgentCredential does not resolve in the registry. | — | unrecoverable |
 | `agent_credential_revoked` | 401 | authentication_error | The AgentCredential is revoked on its status list. | — | unrecoverable |
-| `trusted_surface_only` | 403 | authorization_error | The caller is not a registered Mandate Manager or payer PSP, so it may not post Trusted Surface events. | — | unrecoverable |
-| `not_found` | 404 | invalid_request | The resource does not exist or is not visible to the caller. | the path parameter | unrecoverable |
-| `session_state_conflict` | 409 | invalid_request | The operation is not allowed in the resource's current state. | `$.status` | recoverable (GET, then act on the current state) |
+| `trusted_surface_only` | 403 | authorization_error | The caller is an agent, not a registered Mandate Manager or payer PSP, so it may not post Trusted Surface events or fetch a step-up's `ts_render`. A Mandate Manager or PSP that is not the step-up's ([Step-up signers](human-participants.md#ts-signers)) gets `404 not_found` instead. | — | unrecoverable |
+| `ts_render_mismatch` | 403 | authorization_error | A Trusted Surface approval's `presentation.content_hash` is not the sha-256 of the step-up's gateway-signed `ts_render`. The event is refused and the session does not change. Returned to the Mandate Manager or PSP that posted it. | `$.presentation.content_hash` | unrecoverable |
+| `not_found` | 404 | invalid_request | The resource does not exist or is not visible to the caller, including a step-up or session that belongs to another Mandate Manager's or PSP's mandate. | the path parameter | unrecoverable |
+| `session_state_conflict` | 409 | invalid_request | The operation is not allowed in the resource's current state, including an agent `PUT` or `complete` on a session in `human_handoff`, and a handoff `accept` after the handoff ended (`handoff.ended_at` set). | `$.status` | recoverable (GET, then act on the current state) |
 | `bpp_timeout` | 504 | upstream_error | No `on_*` callback arrived within the gateway's wait window. The resource remains retrievable. | — | recoverable (GET, then retry with the same key) |
 | `bpp_nack` | 502 | upstream_error | The seller app NACKed the Beckn request. | — | recoverable |
 
@@ -163,13 +168,14 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `mandate_scope_mismatch` | 403 | mandate_error | The request falls outside the mandate: amount, category, merchant, PIN code, line items, `checkout_hash`, data shared outside `data_scopes`, reuse of a closed payment mandate, purpose bounds at mandate request, or a handler that does not resolve. | `$.checkout_hash`, `$.mandate_ref` | requires_buyer_review |
 | `amount_not_positive` | 403 | mandate_error | A payable amount, a tender or a ledger posting is zero, negative or not an integer number of paise. | `$.amount` | unrecoverable |
 | `presence_not_allowed` | 403 | mandate_error | The request's presence (HP or HNP) is not in the mandate's `presence_allowed`. | `$.presence` | requires_buyer_review |
+| `presence_not_proven` | 403 | mandate_error | A post-order write with `presence: HP` has no valid `hp_proof`: none (the error then carries `step_up`, a `post_order` step-up whose `ts_render` names the write, the same pending one on a repeat), one for another action, order or issue, one for an issue whose `resolution` has changed since it was shown (`subject_hash`), or one already used. Or, on an assisted session, a Trusted Surface approval was not made with the principal's own factor or names no assisted operator of the session. Nothing is sent to the network. | `$.hp_proof`, `$.presentation.user_action` | requires_buyer_review |
 | `rail_limit_exceeded` | 403 + `reasons[]`, `step_up_kind: rail_auth` | mandate_error | A rail cap other than an AFA threshold would be exceeded: per-transaction, period, first-24-hour, remaining block or channel cap. | `$.amount` | requires_buyer_review |
 | `log_chain_invalid` | 403 | mandate_error | The InstructionLog chain is broken or its head does not match the `log_head` sent on the network. | `$.log_head` | unrecoverable |
 | `constraint_unresolved` | 200 + `step_up` | — | A constraint cannot be evaluated deterministically for this request, so the gateway falls back to a human confirmation. | `$.step_up` | requires_buyer_review |
 | `collector_not_authorised` | 403 | payment_error | The party in `collected_by` is not an RBI-authorised payment aggregator or a bank according to the registry. No money moves. | `$.payment.collected_by` | unrecoverable |
 | `receipt_invalid` | 400 | invalid_request | A receipt is malformed or is not signed by a registered PSP key. | `$.receipt` | unrecoverable |
 | `evidence_forbidden` | 403 | authorization_error | The caller is not a party of record for the evidence bundle. | — | unrecoverable |
-| `evidence_unverifiable` | 422 | invalid_request | The evidence bundle fails verification (signatures or chain). | — | unrecoverable |
+| `evidence_unverifiable` | 422 | invalid_request | The evidence bundle fails verification: signatures, the chain, or step 6 (a step-up entry without its signed Trusted Surface event, an approval without a `Presentation` or with a `content_hash` that does not match its `ts_render`, a step-up event whose `ts_render` is missing from `ts_renders[]` or whose `total`, payee or `checkout_hash` differs from the BPP-signed quote or whose `price_breakup_hash` differs from the disclosures hash, or a first agent entry that is not `ai_disclosure`). A verifier reports the same code. | — | unrecoverable |
 | `cancel_not_allowed` | 403 | authorization_error | The seller refuses the cancellation under its cancellation terms (`@ondc/org/cancellable`, `cancellation_terms`). A mandate or scope failure is `mandate_scope_mismatch`, and a presence failure is `presence_not_allowed`. | `$.order_id` | requires_buyer_review |
 | `return_not_allowed` | 403 | authorization_error | The return is outside the return window, the item is not returnable, or the quantity exceeds what was ordered and not yet returned. | `$.items[n]` | requires_buyer_review |
 
@@ -186,11 +192,11 @@ These are always 200 or 201 messages.
 
 | Code | Message `type` | Meaning | Typical `param` | Resolution |
 |---|---|---|---|---|
-| `ai_disclosure` | disclosure | First message of every session: the AI notice and the human handoff URL. | `$.human_handoff_url` | recoverable |
+| `ai_disclosure` | disclosure | First message of every session: the AI notice, pointing at the session's `ai_disclosure` with its typed routes to a human. | `$.ai_disclosure` | recoverable |
 | `step_up_required` | error | A human approval is needed; see the `step_up` object. | `$.step_up` | requires_buyer_review |
 | `step_up_approved` | info | The principal approved the step-up on the Trusted Surface. | `$.step_up` | recoverable |
 | `step_up_declined` | warning | The principal declined the step-up on the Trusted Surface; the session is cancelled and no money moves. | — | requires_buyer_input |
-| `step_up_expired` | warning | The step-up link expired without approval. | `$.step_up` | requires_buyer_input |
+| `step_up_expired` | warning | The step-up link expired without approval, or the approval was acted on (`presentation.acted_at`) after `expires_at`. No money moves. | `$.step_up` | requires_buyer_input |
 | `quote_expired` | warning | The seller's quote expired before `complete`; the session returns to `incomplete`. | `$.quote.expires_at` | recoverable (re-select) |
 | `quote_mismatch` | warning | The seller's quote differs from what the agent requested (items or quantities). | `$.line_items` | recoverable or requires_buyer_review |
 | `preticked_addon_removed` | warning | The gateway removed an add-on the seller had pre-selected. | `$.line_items[n]` | recoverable |
@@ -249,7 +255,7 @@ See [Negotiation](negotiation/index.md) and [RFQ and Auctions](negotiation/rfq-a
 | `rfq_not_awarded` | `terminate` reason | The RFQ was awarded to another seller. | — | unrecoverable |
 | `capabilities_incompatible` | 200 msg / 403 | The buyer's and seller's negotiation capabilities do not intersect (for example no common mode). The agent falls back to `fixed`. | `$.mode` | requires_buyer_input |
 | `handlers_incompatible` | 200 msg (intersect) / 403 (ACCEPT) | No payment handler is eligible for the agreed payment option at this presence. | — | requires_buyer_input |
-| `untrusted_counterparty_text` | 200 msg (`info`) | Counterparty free text, returned only as data. The agent framework MUST NOT execute it. | `$.untrusted_counterparty_text` | recoverable |
+| `untrusted_counterparty_text` | 200 msg (`info`) | Counterparty free text, returned only as data, with `origin: counterparty`. The agent framework MUST NOT execute it. A counterparty value inside a gateway message travels in its `args[]` instead ([slot rule](checkout/index.md#messages)). | `$.untrusted_counterparty_text` | recoverable |
 | `withdraw_lost_crossing` | 200 msg | Our WITHDRAW crossed the counterparty's ACCEPT and lost; the offer stands accepted. | `$.offers` | recoverable |
 | `accept_void_withdrawn` | 200 msg | Our ACCEPT crossed the counterparty's WITHDRAW and lost; there is no agreement. | `$.offers` | recoverable |
 | `seller_accept_void` | 200 msg | The seller's ACCEPT lost a crossing with our withdrawal. | `$.offers` | recoverable |

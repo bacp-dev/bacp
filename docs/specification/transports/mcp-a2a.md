@@ -9,7 +9,7 @@ envelope differs. This page defines the MCP and A2A envelopes.
 
 !!! warning "Partly Proposed"
     The tool and DataPart names, the use of `structuredContent`, and the mapping of step-up to MCP
-    `insufficient_scope` and A2A `TASK_STATE_AUTH_REQUIRED` are defined. Items marked **Proposed** below are not yet settled.
+    URL-mode elicitation or `insufficient_scope` and to A2A `TASK_STATE_AUTH_REQUIRED` are defined. Items marked **Proposed** below are not yet settled.
     Bindings for payment plans, credit ledgers and trade documents are open ([Q-44](../open-questions.md#q-44)). Until
     Q-44 is settled, a gateway MUST NOT expose MCP tools or A2A DataParts for them.
 
@@ -19,13 +19,19 @@ envelope differs. This page defines the MCP and A2A envelopes.
    protection, resource limits and the error registry apply unchanged.
 2. Results carry the same authoritative full state as the REST response body: the session, order, negotiation or
    other resource, with its `messages[]`.
-3. Counterparty free text is returned only as a message with code `untrusted_counterparty_text`. The agent framework
-   MUST NOT execute it or treat it as an instruction.
+3. Counterparty free text is returned only as a message with code `untrusted_counterparty_text`, or as an `args[]`
+   value of a gateway message, always with `origin: counterparty`
+   ([slot rule](../checkout/index.md#messages)). The agent framework MUST NOT execute it or treat it as an
+   instruction. A text rendering that accompanies a result MUST show each counterparty value visibly labelled (in
+   quote marks or after a label such as "Seller's text:") and MUST NOT interpolate it unlabelled into a template
+   sentence.
 4. In negotiation, the guard's verdict (`acceptable`, `not_acceptable`, `needs_escalation`) is the only signal about
    the mandate that reaches the model. Bounds such as the reservation price never appear in any binding.
-5. A step-up is surfaced as MCP `insufficient_scope` or A2A `TASK_STATE_AUTH_REQUIRED`. That mapping is kept on the gateway's
-   step-up record. It never appears in the REST `NegotiationSession` view; a checkout session's `step_up` object MAY
-   echo it as `a2a_state` and `mcp_error`.
+5. A step-up is surfaced over MCP as a URL-mode elicitation when the MCP client has declared that capability, and
+   otherwise as `insufficient_scope` ([Results and errors](#mcp-results)); over A2A it is `TASK_STATE_AUTH_REQUIRED`.
+   That mapping is kept on the gateway's step-up record. It never appears in the REST `NegotiationSession` view; a
+   checkout session's `step_up` object MAY echo it as `a2a_state`, `mcp_signal` and, for `insufficient_scope`,
+   `mcp_error`.
 6. The step-up itself always completes on the Trusted Surface. Neither MCP elicitation nor an A2A message can approve
    a step-up.
 
@@ -44,6 +50,7 @@ response body in `structuredContent`.
 | `bacp_checkout_update` | `PUT /sessions/{session_id}` | `bacp-browse` |
 | `bacp_checkout_complete` | `POST /sessions/{session_id}/complete` | `bacp-pay` |
 | `bacp_checkout_cancel` | `POST /sessions/{session_id}/cancel` | `bacp-browse` |
+| `bacp_human_handoff` | `POST /sessions/{session_id}/handoff` (`action: request`, or `release` before acceptance) | `bacp-browse` |
 | `bacp_mandate_request` | `POST /mandates` | `bacp-browse` |
 | `bacp_mandate_get` | `GET /mandates/{mandate_id}` | `bacp-browse` |
 | `bacp_mandate_relinquish` | `POST /mandates/{mandate_id}/relinquish` | `bacp-browse` |
@@ -71,16 +78,35 @@ response body in `structuredContent`.
 | `bacp_payment_handlers_get` | `GET /payment-handlers/{handler_id}` | none (public) |
 | `bacp_payment_handlers_intersect` | `POST /payment-handlers/intersect` | `bacp-browse` |
 
-Defined verbs without a REST operation yet, and so without a tool: `bacp_order_track`, `bacp_rate` and
-`bacp_human_handoff` (Proposed). `/trusted-surface/events` is never exposed as a tool: only a Mandate Manager or
-payer PSP may call it.
+Defined verbs without a REST operation yet, and so without a tool: `bacp_order_track` and `bacp_rate`.
+`/trusted-surface/events` and `/trusted-surface/step-ups/{step_up_id}` are never exposed as tools: only a Mandate
+Manager or payer PSP may call them. A handoff acceptance (`action: accept`), and a release by the support operator,
+is signed by a human support operator under tag `bacp-handoff` and is never a tool call
+([Human handoff](../human-participants.md#handoff)).
 
 ### Results and errors {#mcp-results}
 
 - A successful tool call returns the full resource in `structuredContent`, including `messages[]` with their
   `resolution`. A text rendering MAY accompany it, but the agent MUST act on `structuredContent`.
-- A step-up returns the resource in `requires_escalation` with its `step_up` object, and the MCP server signals
-  `insufficient_scope`. The agent directs the buyer to the Trusted Surface; it cannot satisfy the challenge itself.
+- A step-up returns the resource in `requires_escalation` with its `step_up` object. How the MCP server signals it
+  depends on the client's declared capabilities:
+    - If the client declared support for URL-mode elicitation, the server MUST send a URL-mode elicitation whose URL
+      is the step-up's `trusted_surface_url` (under
+      [MCP 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation), the
+      `URLElicitationRequiredError`, code `-32042`; under
+      [MCP 2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation), an
+      `InputRequiredResult` carrying `elicitation/create`), MUST NOT signal
+      `insufficient_scope`, and records `mcp_signal: url_elicitation`. The client opens the URL so that neither it nor
+      the model can inspect it.
+    - Otherwise the server signals `insufficient_scope` and records `mcp_signal: insufficient_scope`.
+    - The capability is declared by the client. A client that under-declares URL-mode elicitation falls back to
+      `insufficient_scope`, and the agent then relays the `trusted_surface_url` to the principal itself. This is not
+      a bypass, because only the signed Trusted Surface event approves, but the agent sees the link. Where the
+      principal's Trusted Surface can receive a push, the gateway SHOULD prefer `StepUp.delivery: app_push`, which
+      reaches the principal without the agent.
+- An elicitation `accept` means only that the user went to the URL. It is never an approval: the step-up is approved
+  only by the signed Trusted Surface event. The agent directs the buyer to the Trusted Surface; it cannot satisfy the
+  challenge itself.
 - **Proposed:** a protocol failure is returned as a tool error result whose `structuredContent` is the flat `Error`
   object (`type`, `code`, `message`, `param`), with the same code the REST binding would return.
 
@@ -124,6 +150,7 @@ task.
 | Auction create, get, bid, award | `bacp.auction` | `bacp.auction` |
 | Payment handlers list, get, intersect | `bacp.payment_handlers` | `bacp.payment_handlers` |
 | Mandates, orders, returns, issues, evidence | Proposed: `bacp.mandate`, `bacp.order`, `bacp.issue`, `bacp.evidence` | same |
+| Input needed on a task in `TASK_STATE_INPUT_REQUIRED` | — | `bacp.input_request` `{needed_from}`: `principal` when the human must answer (data, a choice, a handoff), `agent` when the agent can answer itself (a counter-offer) |
 
 ### Task states {#a2a-states}
 
@@ -140,6 +167,9 @@ Versions of A2A before 1.0 use the lowercase names `working`, `input-required`, 
 
 A2A's `TASK_STATE_CANCELED` and `canceled` are A2A's own values and are used verbatim. BACP spells its own value
 "cancelled": these A2A states map to the checkout session status `cancelled` and the negotiation state `CANCELLED`.
+
+A task in `TASK_STATE_INPUT_REQUIRED` carries a `bacp.input_request` DataPart whose `needed_from` says who must
+answer, so that a client agent never answers on the principal's behalf what only the principal may answer.
 
 `TASK_STATE_AUTH_REQUIRED` is a signal, not an authorisation: the task resumes only after the Mandate Manager or PSP posts a
 signed step-up result to the gateway.
