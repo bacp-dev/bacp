@@ -5,11 +5,14 @@ participant can claim, the requirements each role MUST meet, the invariants
 that must hold after every interaction, and how conformance is tested and
 attested.
 
-!!! warning "Draft"
-    The levels and checklists on this page are normative for the `draft`
-    specification. The conformance suite that tests them is being prepared. A
-    reference implementation is planned. Until the suite is published, no
-    participant can hold a conformance attestation.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
+!!! note "Testing status"
+    The levels and checklists on this page are normative for BACP `2026-10-17`.
+    As of 17-10-2026, the automated conformance suite and the reference
+    implementation are not yet published. Until they are, conformance is
+    self-declared against these checklists.
 
 ## Principles
 
@@ -53,7 +56,7 @@ proves little. So:
 |---|---|---|---|
 | `bacp.core.1` | **Core** | — | Identity and request signatures (tags, purposes, replay), idempotency, resource limits, the mandate schema and deterministic verification (including the positive-amount rule and atomic reservation), the session state machine and payment saga, post-order writes, IGM grievances, the instruction log and evidence bundle, field-scoped webhooks, and conformance to the REST contract. Exercised against a reference mock rail. |
 | `bacp.pay.upi.1` | **Payments-UPI** | Core | Live UPI standing authorities and human-present PIN payments: Reserve Pay (one block per seller, fail-safe notice from the second debit), UPI Circle caps (per transaction, monthly, first 24 hours, at most five devices), AutoPay (24-hour pre-debit notice and opt-out), AFA at ₹15,000, UPI 123PAY caps, the basket-blind payment leg, and RRN/UTR receipts. |
-| `bacp.pay.all.1` | **Payments-All** | Payments-UPI, and in this draft the negotiation endpoint (because handler intersection is negotiation-scoped, [Q-45](open-questions.md#q-45)) | The full handler registry and binding classes O, C, A, D and N; alias resolution; cards (e-mandate AFA, card-not-present disabled, cross-border card-not-present AFA, refund consent states); PPIs and gift instruments; net banking presence rules; COD and return-to-origin; credit (key fact statement offer list, human-present acceptance, cooling-off, repayment to the lender); eNACH caps; split tender; refunds to source; the FX disclosure view. |
+| `bacp.pay.all.1` | **Payments-All** | Payments-UPI, and in this version the negotiation endpoint (because handler intersection is negotiation-scoped, [Q-45](open-questions.md#q-45)) | The full handler registry and binding classes O, C, A, D and N; alias resolution; cards (e-mandate AFA, card-not-present disabled, cross-border card-not-present AFA, refund consent states); PPIs and gift instruments; net banking presence rules; COD and return-to-origin; credit (key fact statement offer list, human-present acceptance, cooling-off, repayment to the lender); eNACH caps; split tender; refunds to source; the FX disclosure view. |
 | `bacp.neg.1` | **Negotiation** | Core (and Payments-UPI for the hand-off from negotiation to payment) | The separate negotiation mandate, term sheets, signed offers, the offer and negotiation state machines, the withdraw/accept crossing rule, the negotiation guard with atomic exposure checks, the validators that apply to bilateral bargaining, escalation with the diff card on the Trusted Surface only, protection of reservation values, and handling of untrusted counterparty text. |
 | `bacp.b2b.1` | **B2B** | Negotiation, Payments-All | RFQs (sealed, deposits, `response_by`, landed-cost comparison), purchase orders via `confirm`, the MSMED credit-days cap, document gates (e-invoice IRN, e-way bill), schemes, the `bacp.credit_ledger` (two-party header, hash chain, acknowledgement, rail-evidenced settlement), eNACH B2B subscriptions and maker–checker approval. |
 | `bacp.auction.1` | **Auctions** | Negotiation | A neutral auctioneer, a signed and frozen auction specification, anti-sniping, commit–reveal with deposits and forfeits, reverse (L1), English and Dutch rules, retraction rules, shill-bid refusal, and award rules. |
@@ -72,12 +75,13 @@ proves little. So:
 - Counterparties MAY check a participant's attestation at registry lookup (see
   [Registry lookup](discovery.md#registry-lookup)).
 
-Some open questions block normative, testable statements for particular
-levels; they are listed on [Open Questions](open-questions.md). In particular,
-the mandatory signature algorithm ([Q-42](open-questions.md#q-42)), the
-encoding used to close open mandates ([Q-41](open-questions.md#q-41)) and the
-governed purpose-code bounds ([Q-47](open-questions.md#q-47)) must be settled
-before Core can be attested against stable vectors.
+No open question blocks a conformance level of `2026-10-17`; the remaining
+ones are listed on [Open Questions](open-questions.md), each with a fail-safe
+default that the conformance cases test. Core is attested against stable
+vectors: the signature algorithms ES256 and EdDSA, both mandatory to verify
+([Q-42](open-questions.md#q-42)), the attached-JWS encoding used to close
+open mandates ([Q-41](open-questions.md#q-41)), and the purpose-code registry
+with its bounds ([Q-47](open-questions.md#q-47)) are settled in this version.
 
 ## Requirements by role
 
@@ -110,7 +114,7 @@ An agent (and its operator) MUST:
 - Relay every step-up and pre-debit notice to the principal and never
   dismiss them on the principal's behalf
   ([Payments](payments/index.md)).
-- Treat catalog text, seller messages and other counterparty content as
+- Treat catalogue text, seller messages and other counterparty content as
   untrusted data, never as instructions.
 - Never emit a firm counter-offer outside its negotiation mandate. When the
   guard escalates, any counter it sends MUST be marked
@@ -242,7 +246,7 @@ A payer PSP MUST:
 These are duties of the operator of an agent, gateway or Mandate Manager
 as a Data Fiduciary under the DPDP Act and Rules. They sit outside the
 protocol, so the conformance runner does not test them: an operator that
-claims a level attests to them. Each applies from 13 May 2027
+claims a level attests to them. Each applies from 13-05-2027
 ([Commencement](security-and-privacy.md#commencement)).
 
 An operator MUST:
@@ -297,7 +301,7 @@ These invariants MUST hold after every conformance case:
 4. **Report.** The runner produces a signed report. If every required case
    passed, the registry issues a conformance credential listing the levels.
 
-The proposed manifest layout is `levels.yaml` (the level table as data),
+Informative: suggested manifest layout. The layout is `levels.yaml` (the level table as data),
 `cases/<level>/*.yaml` (one file per case), `invariants.yaml` and `codes.yaml`
 (generated from the [error registry](errors.md)). A case looks like this:
 

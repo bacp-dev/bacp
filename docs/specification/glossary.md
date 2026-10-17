@@ -1,5 +1,8 @@
 # Glossary
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 This glossary defines the terms used across the BACP specification. Where a
 term is defined normatively on another page, the entry links to it. Terms are
 grouped by topic and sorted alphabetically within each group.
@@ -77,7 +80,7 @@ BACP gateway { #bacp-gateway }
     [reservation ledger](#reservation-ledger).
 
 BAP { #bap }
-:   Buyer App, or Buyer Application Platform. The Beckn/ONDC network
+:   Beckn Application Platform (the buyer app). The Beckn/ONDC network
     participant that acts for buyers. It is identified on the network by its
     subscriber id (`bap_id`). In BACP the BAP hosts the BACP gateway, so the
     BAP subscriber is the network-visible party for every agent order.
@@ -88,14 +91,14 @@ BG { #bg }
 
 BPP { #bpp }
 :   Beckn Provider Platform, or Seller App. The Beckn/ONDC network participant
-    that acts for sellers: catalog, quotes, fulfilment, cancellations,
+    that acts for sellers: catalogue, quotes, fulfilment, cancellations,
     returns and grievance responses.
 
 Consent Manager { #consent-manager }
 :   Under the DPDP Act, a registered entity through which a Data Principal
     gives, manages and withdraws consent. The [Mandate Manager](#mandate-manager)
-    acts as, or for, a Consent Manager
-    ([Q-16](open-questions.md#q-16)).
+    acts as a Consent Manager only if it is registered with the Data
+    Protection Board ([Q-16](open-questions.md#q-16)).
 
 Data Fiduciary { #data-fiduciary }
 :   Under the DPDP Act, the entity that decides the purpose and means of
@@ -216,7 +219,7 @@ Action scope { #action-scope }
     `SHARE_DATA`.
 
 Auth binding { #auth-binding }
-:   The `auth_binding` of a [closed](#closed-mandate) payment mandate. It
+:   The `auth_binding` of a [closed](#closed-mandate) Payment Mandate. It
     states how this one payment is authorised: under the parent open
     mandate's [rail binding](#rail-binding) (`parent_rail_binding`, for
     human-not-present payments), or by a fresh factor such as `upi.pin` (for
@@ -227,10 +230,10 @@ Budget { #budget }
     period of `P1D`, `P7D`, `P1M`, `FIRST_24H` or `LIFETIME`. Budgets are
     decremented only from PSP-signed receipts, never from agent claims.
 
-Checkout mandate { #checkout-mandate }
+Checkout Mandate { #checkout-mandate }
 :   A mandate that authorises what may be bought: categories, merchants,
-    amounts, budgets, line items. The closed checkout mandate goes to the
-    seller side. Compare [payment mandate](#payment-mandate).
+    amounts, budgets, line items. The closed Checkout Mandate goes to the
+    seller side. Compare [Payment Mandate](#payment-mandate).
 
 Closed mandate { #closed-mandate }
 :   A mandate for one specific checkout: exact amount, exact
@@ -279,13 +282,13 @@ Open mandate { #open-mandate }
 :   A standing mandate with constraints rather than a fixed amount, signed by
     the principal on the Trusted Surface and countersigned by the Mandate
     Manager. It carries the agent's `cnf` key so that the agent can later
-    close it. An open payment mandate MUST carry a
+    close it. An open Payment Mandate MUST carry a
     [rail binding](#rail-binding).
 
-Payment mandate { #payment-mandate }
-:   A mandate that authorises how money may move. The closed payment mandate
+Payment Mandate { #payment-mandate }
+:   A mandate that authorises how money may move. The closed Payment Mandate
     goes to the PSP, and carries no basket. Compare
-    [checkout mandate](#checkout-mandate).
+    [Checkout Mandate](#checkout-mandate).
 
 Presence { #presence }
 :   Whether the principal is present for an action: `HP` (human present) or
@@ -296,11 +299,11 @@ Presence { #presence }
 Purpose code { #purpose-code }
 :   A code such as `P-GRO-01` (household grocery replenishment) that states
     what a mandate is for. Each purpose has bounds on amounts, budgets,
-    categories, validity and data scopes
-    ([Q-47](open-questions.md#q-47)).
+    categories, validity and data scopes, set in the purpose-code registry
+    that the BACP working group governs ([Q-47](open-questions.md#q-47)).
 
 Rail binding { #rail-binding }
-:   The `rail_binding` of an [open](#open-mandate) payment mandate. It names
+:   The `rail_binding` of an [open](#open-mandate) Payment Mandate. It names
     the live standing authority the mandate draws on (for example a UPI
     Reserve Pay block or a UPI Circle delegation), its reference, the PSP,
     and a PSP-signed attestation of its limits, expiry and payee.
@@ -403,11 +406,12 @@ UDIR { #udir }
 
 UPI Circle { #upi-circle }
 :   UPI's delegated-payments feature. A primary user links a secondary (a
-    person, or a device or software such as an AI agent) and sets limits. For
+    person, or a device or software such as an AI agent) and sets limits. A
+    primary user can add up to five secondary users. As of 17-10-2026, for
     devices and software NPCI publishes caps of ₹5,000 per transaction,
-    ₹15,000 per month and ₹2,000 in the first 24 hours, per device, with at
-    most five devices. NPCI describes AI and software payments on Circle as
-    a pilot, so the handler `in.upi.circle` has status `pilot`.
+    ₹15,000 per month and ₹2,000 in the first 24 hours, per secondary user,
+    and describes AI and software payments on Circle as a pilot, so the
+    handler `in.upi.circle` has status `pilot`.
 
 UTR { #utr }
 :   Unique Transaction Reference. The bank-side reference of a fund transfer,
@@ -427,7 +431,7 @@ Checkout hash { #checkout-hash }
 Checkout session { #checkout-session }
 :   The synchronous session that the gateway runs over asynchronous Beckn
     messages. Its statuses are `incomplete`, `requires_escalation`,
-    `ready_for_complete`, `complete_in_progress`, `completed` and `canceled`.
+    `ready_for_complete`, `complete_in_progress`, `completed` and `cancelled`.
     See [Sessions and Checkout](checkout/index.md).
 
 `context.bacp` { #context-bacp }
@@ -558,5 +562,6 @@ Trade profile { #trade-profile }
     [Trade Profiles](trade-profiles.md).
 
 Version { #version }
-:   A BACP release, named by its date in `YYYY-MM-DD` form. The unreleased
-    working version is `draft`. See [Versioning](https://bacp.dev/versioning/).
+:   A BACP release, named by its date in `YYYY-MM-DD` form. The first dated
+    release is `2026-10-17`. The unreleased working version on `main` is
+    `draft`. See [Versioning](https://bacp.dev/versioning/).

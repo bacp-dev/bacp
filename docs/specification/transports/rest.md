@@ -1,5 +1,8 @@
 # REST
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 The REST binding is the reference binding of BACP. A BACP gateway, run by or for a registered buyer app (BAP),
 exposes it to AI agents. Each call is translated into signed Beckn/ONDC actions (see
 [Beckn / ONDC Binding](beckn.md)) or into calls to the payer PSP and Mandate Manager, and the gateway returns the
@@ -34,8 +37,8 @@ this page and the OpenAPI document differ, this page is authoritative.
 | `Idempotent-Replayed` | response | on a replay | `true` when the response is the stored response of an earlier request with the same key |
 | `Retry-After` | response | with 409 `idempotency_in_flight` and 429 `quota_exceeded` | Seconds to wait before retrying with the **same** key |
 
-`BACP-Agent-Credential` MAY be accepted as a fallback name for `BACP-Agent` until the first dated release of BACP and
-MUST NOT be accepted after it.
+`BACP-Agent-Credential`, a fallback name for `BACP-Agent`, was accepted only before the first dated release. From BACP
+`2026-10-17` it MUST NOT be accepted; agents send `BACP-Agent`.
 
 ## Signatures {#signatures}
 
@@ -105,7 +108,7 @@ requests, or as the `?bpp_id=` query parameter on `GET /orders/{order_id}` and
 
 ## Pagination {#pagination}
 
-This draft defines no pagination. List responses (`GET /payment-handlers`, `GET /negotiations/{negotiation_id}/offers`)
+This version defines no pagination. List responses (`GET /payment-handlers`, `GET /negotiations/{negotiation_id}/offers`)
 return the complete list. `GET /payment-handlers` accepts the filters `presence`, `class`, `kind`, `segment` and
 `status`.
 
@@ -131,7 +134,8 @@ Each delivery is a `WebhookEvent`: `event_id`, `type`, `created_at` and `data`.
 - Every delivery MUST be signed by the gateway with an RFC 9421 signature under the gateway's registry key, covering
   at least `@method`, `@authority`, `@path`, `content-digest` and the Standard Webhooks headers `webhook-id` (equal to
   `event_id`) and `webhook-timestamp`. Proposed: the signature `tag` is `bacp-webhook`, and the gateway lists its tags
-  in its profile.
+  in its profile ([Q-58](../open-questions.md#q-58)). Until that is settled, a receiver MUST NOT reject a webhook
+  only because its signature has no `tag` or an unknown one.
 - The receiver MUST verify the signature against the gateway's published key and SHOULD de-duplicate on
   `webhook-id`. A 2xx response acknowledges the event; otherwise the gateway retries with backoff.
 - Webhooks are full-state snapshots, but **field-scoped**: a body MUST NOT embed a signed receipt. Receipts travel as

@@ -34,7 +34,7 @@
         "string",
         "null"
       ],
-      "description": "DPDP Board registration of the Consent Manager (DPDP Rules 2025, Rule 4, from ~13 Nov 2026)"
+      "description": "DPDP Board registration number of the Consent Manager (DPDP Rules 2025, Rule 4). On receipts issued on or after 13-11-2026 it MUST be the Board registration number when the Mandate Manager acts as a registered Consent Manager, and MUST be null otherwise (fail-safe default until Q-16 is settled)."
     },
     "issued_at": {
       "type": "string",
@@ -57,7 +57,8 @@
           "type": "string"
         },
         "bpp_id": {
-          "type": "string"
+          "type": "string",
+          "description": "The recipient seller's bpp_id. \"*\" marks a class receipt, scoped to the mandate's categories, which only pre-authorises: the MM MUST mint a per-seller ConsentReceipt, whose recipient.bpp_id is that seller, at init and before any personal data reaches the seller; no data is ever released on the strength of a class receipt alone (settled in Q-12)."
         },
         "provider_id": {
           "type": "string"

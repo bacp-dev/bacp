@@ -1,5 +1,8 @@
 # MCP and A2A
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 Each BACP operation is defined once and bound three ways: [REST](rest.md), MCP tools and an A2A extension. The
 operation's semantics, mandate checks, error codes and state machines are identical in every binding; only the
 envelope differs. This page defines the MCP and A2A envelopes.
@@ -7,7 +10,8 @@ envelope differs. This page defines the MCP and A2A envelopes.
 !!! warning "Partly Proposed"
     The tool and DataPart names, the use of `structuredContent`, and the mapping of step-up to MCP
     `insufficient_scope` and A2A `TASK_STATE_AUTH_REQUIRED` are defined. Items marked **Proposed** below are not yet settled.
-    Bindings for payment plans, credit ledgers and trade documents are open: [Q-44](../open-questions.md#q-44).
+    Bindings for payment plans, credit ledgers and trade documents are open ([Q-44](../open-questions.md#q-44)). Until
+    Q-44 is settled, a gateway MUST NOT expose MCP tools or A2A DataParts for them.
 
 ## Common rules {#common}
 
@@ -129,10 +133,13 @@ task.
 | `TASK_STATE_INPUT_REQUIRED` | A counter to answer | Proposed: `incomplete` when the buyer must supply data |
 | `TASK_STATE_AUTH_REQUIRED` | ESCALATED | `requires_escalation` (step-up) |
 | `TASK_STATE_COMPLETED` | CONTRACTED | `completed` (Proposed) |
-| `TASK_STATE_CANCELED` or `TASK_STATE_FAILED` | REJECTED, TERMINATED or CANCELLED | `canceled` (Proposed) |
+| `TASK_STATE_CANCELED` or `TASK_STATE_FAILED` | REJECTED, TERMINATED or CANCELLED | `cancelled` (Proposed) |
 
 Versions of A2A before 1.0 use the lowercase names `working`, `input-required`, `auth-required`, `completed`,
 `canceled` and `failed`.
+
+A2A's `TASK_STATE_CANCELED` and `canceled` are A2A's own values and are used verbatim. BACP spells its own value
+"cancelled": these A2A states map to the checkout session status `cancelled` and the negotiation state `CANCELLED`.
 
 `TASK_STATE_AUTH_REQUIRED` is a signal, not an authorisation: the task resumes only after the Mandate Manager or PSP posts a
 signed step-up result to the gateway.

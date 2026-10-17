@@ -221,7 +221,7 @@
           },
           "retail_package_mrp_required": {
             "type": "boolean",
-            "description": "True only for a retail package that must bear MRP. LM(PC) Rules r.18(2) ceiling applies. Rule 3 exemptions (industrial/institutional consumer packs, over 25 kg) are false (to be verified)."
+            "description": "True for a retail package that must bear MRP: the Legal Metrology (Packaged Commodities) Rules r.18(2) ceiling (validator V-01) applies. False signals a Rule 3 exemption (industrial or institutional consumer packs, packages over 25 kg or 25 L). Fail-safe default until Q-20 is settled: in B2C, V-01 is checked on every line that carries an mrp, whatever this flag; false is honoured only in B2B; and mandatory packing and convenience charges count toward the MRP."
           },
           "price_breaks": {
             "type": "array",
@@ -807,6 +807,7 @@
                 },
                 "apr_pct": {
                   "type": "number",
+                  "description": "Annual percentage rate including fees and charges, as required by the RBI Key Facts Statement rules; not the interest rate alone.",
                   "minimum": 0,
                   "maximum": 100
                 },
@@ -1981,7 +1982,7 @@
   },
   "allOf": [
     {
-      "description": "MSMED Act s.15 cap: a manufacturing or services micro/small seller may not be given more than 45 days from acceptance or deemed acceptance. Traders are excluded pending verification.",
+      "description": "MSMED Act s.15 cap: a manufacturing or services micro/small seller may not be given more than 45 days from acceptance or deemed acceptance. Whether traders are covered is open question Q-21.",
       "if": {
         "properties": {
           "parties": {

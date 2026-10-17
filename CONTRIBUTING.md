@@ -1,6 +1,6 @@
 # Contributing to BACP
 
-Thank you for helping to improve the Bharat Agentic Commerce Protocol. BACP is a draft, and review is the most useful contribution right now: questions, corrections, missing Indian context and implementation experience are all welcome.
+Thank you for helping to improve the Bharat Agentic Commerce Protocol. BACP is released as dated versions (the first is `2026-10-17`), and work towards the next release happens on `main`. Review is the most useful contribution: questions, corrections, missing Indian context and implementation experience are all welcome. Changes follow the review periods and release process in [GOVERNANCE.md](GOVERNANCE.md) and the [versioning policy](https://bacp.dev/versioning/).
 
 By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Do not report security vulnerabilities in public issues; follow [SECURITY.md](SECURITY.md) instead.
 
@@ -15,7 +15,7 @@ By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). 
 BACP uses the [Developer Certificate of Origin 1.1](https://developercertificate.org/) instead of a contributor licence agreement. Every commit MUST carry a `Signed-off-by` line with your real name and an email address you can be reached at:
 
 ```text
-Signed-off-by: Jane Doe <jane@example.com>
+Signed-off-by: Priya Sharma <priya@example.com>
 ```
 
 Add it automatically with `git commit -s`. By signing off you certify that you wrote the change, or otherwise have the right to submit it under the project's licence (Apache License 2.0). Pull requests with unsigned commits cannot be merged. To fix the last commit, run `git commit --amend -s`. For several commits, run `git rebase --signoff main`.
@@ -72,6 +72,11 @@ CI runs the same checks on every pull request.
 - Write in the present tense, and write "BACP", not "we".
 - Use real Indian context (UPI, ONDC/Beckn, RBI, NPCI, DPDP). Do not invent limits, dates or circular numbers. If a fact is uncertain, say so and link an open question.
 - Give amounts in integer paise in schemas and examples, and times in IST where they matter.
+- **Dates.** Human-facing dates use `DD-MM-YYYY` with zero padding (`07-12-2022`, `13-11-2026`) in prose, tables, diagrams, schema `description` strings and registry notes. Month-only dates stay as words ("April 2026"). Machine values keep ISO forms: RFC 3339 timestamps, JSON Schema `format: date` values and `YYYY-MM-DD` version identifiers (`2026-10-17`), as well as URLs, field names and branch names.
+- **Money.** Write `₹` with Indian digit grouping (₹1,00,000; ₹2,698), never "Rs", "Rs." or "INR 500" in prose or display strings (the `"currency": "INR"` code value is unchanged). Write out "lakh" and "crore" (₹1 lakh, ₹10 crore), not ₹1 L, ₹15k or ₹10 cr, and use lakh and crore for scale ("20 lakh", not "2 million").
+- **Spelling.** Use Indian/British spelling in prose: catalogue, cancelled, centre, programme (but "computer program"), licence (noun) / license (verb), fulfil and fulfilment, behaviour, colour, authorise, organisation, linearisable, judgement. Keep external wire and field names as they are (Beckn `catalog`, `FULFILLMENT`, the HTTP `Authorization` header).
+- **Hindi.** Display text under `hi-IN` is written in Devanagari (`"hi-IN": "घर का किराना सामान"`); Roman-script Hindi, such as voice transcripts, is tagged `hi-Latn-IN`. Never put English text under `hi-IN`. Where prose quotes Hindi, add a short English gloss.
+- **Time-sensitive claims.** Anything that may change (a pilot, an announcement, a press report, a pending notification) carries "as of DD-MM-YYYY". If a claim cannot be checked against a primary source, label it "(reported, not verified as of DD-MM-YYYY)".
 
 ## Licence
 

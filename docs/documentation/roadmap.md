@@ -1,21 +1,22 @@
 # Status and Roadmap
 
-## Status: Draft
+## Status: version 2026-10-17
 
-BACP is a **draft** specification. It is published for open review and is **not ready for production use**.
+BACP `2026-10-17` is the first dated release of the specification. Implementers can target it.
 
-- The current specification is the `draft` version, built from the `main` branch. No dated release exists yet.
+- The release is published at `/2026-10-17/` and aliased as `/latest/`. Work towards later releases continues on the `main` branch, published as `draft`. See [Versioning](../versioning.md).
 - The schemas, the OpenAPI binding and the payment-handler registry validate, and the examples are checked against them on every change.
-- Some rules depend on owner decisions that are still pending. These rules are marked **Proposed** in the specification and link to the [open questions](../specification/open-questions.md).
-- BACP is an independent open proposal. It has no production adopters, and no public body has endorsed it.
+- Some rules depend on owner decisions that are still pending. These rules are marked **Proposed** in the specification, link to the [open questions](../specification/open-questions.md), and may change in a later dated release.
+- The conformance test suite is not yet published, so no participant can hold a conformance attestation yet.
+- BACP is an independent open proposal. As of 17-10-2026, no production deployments have been announced, and no public body has endorsed it.
 
 This roadmap describes intent. It is not a commitment to deliver specific features by specific dates, and it will change with review feedback. Dates are given only once they can be justified.
 
 ## Next steps
 
-### 1. Owner decisions and blocking open questions
+### 1. Owner decisions and open questions
 
-Several questions must be settled before a first release. Some are design choices the maintainers can make. Others depend on regulators, networks or rail operators. Examples include:
+Several questions are still open after the first dated release, and rules that depend on them are marked **Proposed**. Some are design choices the maintainers can make. Others depend on regulators, networks or rail operators. Examples include:
 
 - how liability for an agent's error within a valid mandate should be allocated, and what evidence each party needs;
 - which body should anchor agent identity on Indian rails;
@@ -24,13 +25,13 @@ Several questions must be settled before a first release. Some are design choice
 
 The full list, with the current proposal for each, is on the [open questions](../specification/open-questions.md) page. Rules that depend on them stay marked **Proposed** until they are decided.
 
-### 2. The first dated release
+### 2. Later dated releases
 
-BACP versions its specification by date (`YYYY-MM-DD`). The first dated release will be cut from the draft once the blocking open questions are resolved or explicitly deferred, the specification pages are complete, and the schemas and examples are stable. It will be published at `/YYYY-MM-DD/` and aliased as `/latest/`. See [Versioning](../versioning.md).
+BACP versions its specification by date (`YYYY-MM-DD`). The first dated release, `2026-10-17`, is published at `/2026-10-17/` and aliased as `/latest/`. Later dated releases will be cut from `main` as open questions are decided, and will follow the deprecation and breaking-change notice rules in [Versioning](../versioning.md).
 
 ### 3. Reference implementation and SDKs
 
-An open-source reference implementation of the BACP Gateway is planned, covering:
+An open-source reference implementation of the BACP gateway is planned, covering:
 
 - the session facade over Beckn, with idempotency and replay protection;
 - the deterministic mandate verifier and the negotiation guard;

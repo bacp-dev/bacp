@@ -21,7 +21,7 @@
   "settlement_evidence": {
     "handler": "in.a2a.neft",
     "receipt_id": "rcpt_NEFT00000001",
-    "utr": "AXISN26321000045"
+    "utr": "UTIBN26321000045"
   },
   "ledger_after": {
     "balance": {

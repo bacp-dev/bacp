@@ -1,8 +1,7 @@
 # Orders and Post-order
 
-!!! warning "Draft"
-    This page is part of the `draft` specification. Rules marked **Proposed** depend on an
-    open question and may change before the first dated release.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 Once `complete` succeeds, the seller (BPP) owns an **order**. The order's state stays Beckn's
 authoritative state machine; the gateway mirrors it and adds an append-only `adjustments[]` read
@@ -66,6 +65,8 @@ It then sends the agent a webhook:
 Tracking uses the same model: fulfilment progress arrives as `order.updated` with the new
 `fulfilment_state`. Beckn `track` → `on_track` maps to the `bacp.order.track` verb.
 
+Order snapshot (abridged to one line item):
+
 ```json
 {
   "id": "ORD-KIR-88231",
@@ -117,7 +118,7 @@ because they protect the principal and the seller's take-back and refund duties 
   "reason_code": "001",
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
   "presence": "HP",
-  "note": {"hi-IN": "Galti se order ho gaya"},
+  "note": {"hi-IN": "गलती से ऑर्डर हो गया", "en-IN": "Ordered by mistake"},
   "bpp_id": "bpp.kirana.example.in"
 }
 ```
@@ -148,7 +149,7 @@ because they protect the principal and the seller's take-back and refund duties 
   "presence": "HP",
   "evidence": [
     {"type": "image",
-     "hash": "sha-256:aW1hZ2UtZGFtYWdlZC1taWxrLXBhY2tldC0wMDAwMDE",
+     "hash": "sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A",
      "uri": "https://agents.vaani.example.in/e/1.jpg"}
   ],
   "refund_to": "original_method"
@@ -231,7 +232,7 @@ bundle attached.
   "category": "PAYMENT",
   "sub_category": "PMT02",
   "description": {
-    "hi-IN": "Doodh wapas kiya par refund nahi aaya",
+    "hi-IN": "दूध वापस किया, पर रिफ़ंड नहीं आया",
     "en-IN": "Returned milk, refund not received"
   },
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
@@ -303,7 +304,7 @@ principal an escalation to `GRIEVANCE`.
 
 !!! warning "Proposed"
     Whether the gateway escalates automatically when a clock is missed, and what the ONDC Network
-    Policy IGM chapter (not retrieved) adds, are open ([Q-57](../open-questions.md#q-57)).
+    Policy IGM chapter adds, are open ([Q-57](../open-questions.md#q-57)).
 
 ```mermaid
 sequenceDiagram
@@ -324,7 +325,7 @@ sequenceDiagram
     S-->>G: on_issue PROCESSING then INFO_REQUESTED
     G-->>A: Webhook issue.updated
     A->>G: POST action INFO_PROVIDED
-    S-->>G: on_issue RESOLUTION_PROPOSED refund 68 rupees
+    S-->>G: on_issue RESOLUTION_PROPOSED refund ₹68
     A->>U: The seller will refund again. Accept?
     U->>A: Yes
     A->>G: POST action RESOLUTION_ACCEPTED with presence HP

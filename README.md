@@ -4,11 +4,11 @@ BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, 
 
 It is a thin agent layer. It does not fork any rail. It adds a signed agent credential, signed mandates with budgets and step-up rules, an explicit human-presence flag, DPDP consent receipts, and verifiable evidence that joins each order to its UPI reference number.
 
-> **Status: Draft.** BACP is open for review and is **not ready for production use**. It is an independent open proposal and is not issued or endorsed by NPCI, ONDC, RBI or any other public body.
+> **Status: Released, version `2026-10-17`** (the first dated release, published 17-10-2026). As of 17-10-2026 the automated conformance suite and reference implementation are not yet published, so conformance is self-declared. BACP is an independent open protocol and is not issued or endorsed by NPCI, ONDC, RBI or any other public body.
 
 - Website: <https://bacp.dev>
-- Specification (latest): <https://bacp.dev/latest/specification/overview/>
-- Draft specification (`main`): <https://bacp.dev/draft/specification/overview/>
+- Latest release: 2026-10-17: <https://bacp.dev/latest/specification/overview/> (pinned: <https://bacp.dev/2026-10-17/specification/overview/>)
+- Working draft (`main`, unstable): <https://bacp.dev/draft/specification/overview/>
 - Open questions: <https://bacp.dev/latest/specification/open-questions/>
 
 ## Repository layout
@@ -67,16 +67,20 @@ The site is built in two modes, selected by `DOCS_MODE`:
 
 ## How deployment works
 
-Deployment mirrors how ucp.dev publishes UCP. GitHub Actions (`.github/workflows/docs.yml`) builds with MkDocs Material and deploys to GitHub Pages with [mike](https://github.com/jimporter/mike):
+Built with MkDocs Material and mike. GitHub Actions (`.github/workflows/docs.yml`) builds with MkDocs Material and deploys to GitHub Pages with [mike](https://github.com/jimporter/mike):
 
 | Branch | Published at |
 |---|---|
 | `main` | `/draft/` (the working draft), plus the root landing site at `/` |
 | `release/YYYY-MM-DD` | `/YYYY-MM-DD/`. The newest release is also aliased as `/latest/`. |
 
-Until the first dated release exists, `/latest/` points at `/draft/`. Pull requests run validation, YAML lint and strict builds of both modes, but do not deploy.
+`/latest/` points at the newest dated release, currently `/2026-10-17/`. Pull requests run validation, YAML lint and strict builds of both modes, but do not deploy.
 
 BACP versions its specification by date (`YYYY-MM-DD`). See the [versioning page](https://bacp.dev/versioning/).
+
+### Releasing
+
+A dated release is cut from `main` as a `release/YYYY-MM-DD` branch once the release approver signs off (see [GOVERNANCE.md](GOVERNANCE.md)). CI builds each `release/YYYY-MM-DD` branch with `BACP_BUILD_VERSION` set to that date, deploys it to `/YYYY-MM-DD/` with mike and moves the `/latest/` alias to the newest release. `main` is always built with `BACP_BUILD_VERSION=draft`.
 
 ## Contributing
 

@@ -133,7 +133,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -405,7 +405,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -581,7 +581,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -738,7 +738,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -879,7 +879,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -1018,7 +1018,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -1154,7 +1154,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -1285,7 +1285,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -1426,7 +1426,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",
@@ -1567,7 +1567,7 @@
         },
         "counter_signature": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "Receiver's signed receipt over (request-digest, message-id), Beckn 2.0 CounterSignature. Proves communication (ICA s.4)."
+          "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43."
         },
         "advisory": {
           "type": "object",

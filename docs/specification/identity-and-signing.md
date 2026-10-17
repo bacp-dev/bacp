@@ -1,5 +1,8 @@
 # Identity and Request Signing
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 This page defines who an agent is on the wire and how every request proves
 it: the [AgentCredential](#agentcredential), the
 [operator](#agent-operators-and-the-registry) behind it, RFC 9421
@@ -20,7 +23,7 @@ parsed.
 An **AgentCredential** identifies one agent, the legal entity that operates
 it, and the BAP whose gateway it uses. It is an SD-JWT verifiable credential
 with `vct: in.bacp.agent.1`. Its claims are defined by
-[`agent-credential.json`](https://bacp.dev/schemas/agent-credential.json).
+[`agent-credential.json`](https://bacp.dev/latest/schemas/agent-credential.json).
 
 | Claim | Meaning |
 |---|---|
@@ -45,11 +48,18 @@ registry. It MUST be `null` or absent until such a registry is published.
 `bacp.pay.upi.1`, `bacp.pay.all.1`, `bacp.neg.1`, `bacp.b2b.1`,
 `bacp.auction.1`), plus the signed `attestation`.
 
-!!! warning "Proposed"
-    The credential and the registry record SHOULD also carry a
-    `data_residency` statement (`payment_data`, `llm_region`, `log_region`,
-    `transfer_basis`) so that the gateway can refuse payment-data egress
-    outside India ([Q-15](open-questions.md#q-15)).
+RBI's directive on Storage of Payment System Data (RBI/2017-18/153,
+06-04-2018) already requires RBI-authorised payment system providers to store
+payment data only in India. Where an agent operator's own model may process
+payment data is open ([Q-15](open-questions.md#q-15)). Until it is settled:
+
+- The credential and the registry record MAY carry a `data_residency`
+  statement (`payment_data`, `llm_region`, `log_region`, `transfer_basis`).
+  It is OPTIONAL in this version.
+- A gateway MUST NOT treat a missing or incomplete `data_residency`
+  statement as permission to send payment data outside India. The gateway's
+  own storage and processing of payment data stays in India
+  ([Data localisation](security-and-privacy.md#data-localisation)).
 
 ### Presenting the credential
 
@@ -57,8 +67,9 @@ registry. It MUST be `null` or absent until such a registry is published.
   disclosures the gateway needs, in the `BACP-Agent` request header on every
   request except the unsigned `GET /.well-known/bacp` and
   `GET /payment-handlers` calls.
-- A gateway MAY also accept the header name `BACP-Agent-Credential` until the
-  first dated release, and MUST NOT accept it afterwards.
+- The legacy header name `BACP-Agent-Credential` is removed in `2026-10-17`.
+  An agent MUST NOT send it, and a gateway MUST NOT accept it in place of
+  `BACP-Agent`.
 - The credential header is a [covered component](#covered-components) of the
   request signature, so it cannot be swapped.
 
@@ -143,11 +154,20 @@ Signature-Input: sig1=("@method" "@authority" "@path" "content-digest" "content-
 Signature: sig1=:MEUCIQDexampleSignatureBase64Value=:
 ```
 
-!!! warning "Proposed"
-    Which signature algorithm is mandatory to implement is not settled.
-    Proposed: ES256 (ECDSA P-256) mandatory, Ed25519 (EdDSA) allowed. A
-    mandatory algorithm needs published test vectors before it can be
-    conformance-tested ([Q-42](open-questions.md#q-42)).
+### Signature algorithms {#signature-algorithms}
+
+BACP signatures use exactly two algorithms: ES256 (ECDSA with P-256 and
+SHA-256) and EdDSA with Ed25519.
+
+- Every verifier of a BACP signature (RFC 9421 requests and webhooks, JWS
+  mandates, receipts, ConsentReceipts, attestations and InstructionLog
+  entries) MUST support both.
+- Every signer MUST use one of the two. A signature with any other algorithm
+  MUST be rejected (`401 signature_invalid` on a request).
+- The conformance suite of `2026-10-17` carries test vectors for both.
+
+This settles [Q-42](open-questions.md#q-42). The Beckn network leg keeps the
+network's own Ed25519 signing (see [Network leg signing](#network-leg-signing)).
 
 ### Verification order
 
@@ -195,7 +215,11 @@ The gateway signs its webhooks to the agent with a key published in its
 profile's `keys`, so that the agent can verify them.
 
 !!! warning "Proposed"
-    A dedicated tag for gateway-signed webhooks, `bacp-webhook`, is proposed.
+    A dedicated tag for gateway-signed webhooks, `bacp-webhook`, is proposed
+    ([Q-58](open-questions.md#q-58)). Until it is settled, an agent MUST
+    verify every webhook against a key in the gateway profile's `keys`, MUST
+    NOT act on a webhook that fails verification, and MUST NOT reject a
+    webhook only because its signature has no `tag` or an unknown one.
 
 ## Replay protection
 
@@ -283,12 +307,13 @@ signature over a BLAKE2b-512 digest of the request body, sent in the
 BACP does not replace this signing; the agent's RFC 9421 signature ends at the
 gateway.
 
-!!! warning "Proposed"
-    Proposed: the network's own signing is normative on the Beckn leg, and
-    Beckn 2.0 signed acknowledgements and `request-signature` callback binding
-    are used where the counterparty supports them. Whether BACP requires the
-    Beckn 2.0 countersignature that negotiation timing relies on needs ONDC
-    confirmation ([Q-43](open-questions.md#q-43)).
+The network's own signing is normative on the Beckn leg. BACP does not
+require Beckn 2.0 signed acknowledgements; the gateway SHOULD use them, and
+the `request-signature` binding of callbacks, where the counterparty supports
+them. The CounterSignature that negotiation timing relies on is a BACP
+artefact carried in the negotiation message, not a Beckn acknowledgement
+(settled in [Q-43](open-questions.md#q-43); see
+[Negotiation](negotiation/index.md)).
 
 Rules for the network leg:
 

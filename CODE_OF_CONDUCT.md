@@ -1,5 +1,7 @@
 # Contributor Covenant Code of Conduct
 
+_Adopted verbatim from the Contributor Covenant 2.1, so it keeps the original US spelling._
+
 ## Our Pledge
 
 We as members, contributors, and leaders pledge to make participation in our
@@ -60,9 +62,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-**[conduct contact: TBD, to be published when the maintainer group is
-established; see GOVERNANCE.md]**. Until then, reports may be made privately to
-the maintainers of the `bacp-dev` GitHub organization.
+conduct@bacp.dev.
 All complaints will be reviewed and investigated promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the

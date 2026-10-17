@@ -1,5 +1,8 @@
 # Discovery and Profiles
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 This page defines how an agent learns what a BACP gateway supports, how the
 two sides agree on a protocol version, capabilities, negotiation features and
 payment handlers, how the gateway uses the network registry, and how network
@@ -40,13 +43,13 @@ A BACP gateway MUST publish a profile document at the path
 | `transports` | REQUIRED | Bindings offered: `rest`, `mcp`, `a2a`. See [Transports](transports/rest.md). |
 | `capabilities` | REQUIRED | Capability ids the gateway supports (see [Capabilities](#capabilities)). |
 | `payment_handlers` | REQUIRED | Payment handlers the gateway can process, as handler references. See [Payment handlers in the profile](#payment-handlers-in-the-profile). |
-| `reserved_handlers` | OPTIONAL | Handler ids or globs the gateway knows are reserved and will refuse, for example `upi.uap.*`. |
+| `reserved_handlers` | OPTIONAL | Handler ids or globs the gateway knows are reserved and will refuse, for example `in.upi.uap`. |
 | `keys` | REQUIRED | A JWK Set (`{"keys": [...]}`) with the gateway's public keys. The gateway signs webhooks with these keys. |
 | `message_id_namespace` | REQUIRED | The UUID namespace the gateway uses to derive Beckn `message_id`s (see [Beckn / ONDC Binding](transports/beckn.md)). Agents need it to compute the `nonce` of a key-binding JWT for a seller. |
 | `negotiation` | OPTIONAL | The gateway's negotiation capability advert (see [Negotiation capability](#negotiation-capability)). REQUIRED when the gateway supports negotiation. |
 | `payment_handlers_registry` | OPTIONAL | URI of the gateway's `GET /payment-handlers` endpoint. |
 | `profiles` | OPTIONAL | [Trade profiles](trade-profiles.md) the gateway supports. |
-| `limits.max_body_bytes` | RECOMMENDED | The largest request body the gateway accepts. It MUST NOT exceed 262,144 bytes (256 KiB). |
+| `limits.max_body_bytes` | RECOMMENDED | The largest request body the gateway accepts. It MUST NOT exceed 256 KiB. |
 | `conformance` | RECOMMENDED | The [conformance levels](conformance.md#conformance-levels) the gateway claims and its signed conformance attestation. |
 
 Receivers MUST ignore profile fields they do not understand.
@@ -61,8 +64,8 @@ Receivers MUST ignore profile fields they do not understand.
 ```json
 {
   "bacp": {
-    "version": "draft",
-    "supported_versions": ["draft"]
+    "version": "2026-10-17",
+    "supported_versions": ["2026-10-17"]
   },
   "bap_id": "bap.vaani.example.in",
   "transports": ["rest", "mcp", "a2a"],
@@ -80,7 +83,7 @@ Receivers MUST ignore profile fields they do not understand.
     "in.upi.intent",
     "in.cod"
   ],
-  "reserved_handlers": ["upi.uap.*"],
+  "reserved_handlers": ["in.upi.uap"],
   "message_id_namespace": "55884fda-3b41-58be-87a9-2be7b3b43b7f",
   "payment_handlers_registry": "https://gw.bap.example.in/bacp/payment-handlers",
   "keys": {
@@ -98,8 +101,9 @@ Receivers MUST ignore profile fields they do not understand.
 
 ## Version negotiation
 
-BACP versions are dates in `YYYY-MM-DD` form; the unreleased working version
-is `draft` (see [Versioning](https://bacp.dev/versioning/)).
+BACP versions are dates in `YYYY-MM-DD` form. The first dated release is
+`2026-10-17`; the unreleased working version on `main` is `draft` (see
+[Versioning](https://bacp.dev/versioning/)).
 
 1. The agent fetches `/.well-known/bacp`.
 2. The agent selects a version that appears in `bacp.version` or
@@ -110,11 +114,12 @@ is `draft` (see [Versioning](https://bacp.dev/versioning/)).
 4. On the network leg, the gateway states the BACP version it is speaking in
    `context.bacp.version`.
 
-A participant that implements `draft` MUST expect breaking changes until the
-first dated release.
+A participant that implements `draft` MUST expect breaking changes at any
+time. A dated release such as `2026-10-17` changes only as the
+[Versioning](https://bacp.dev/versioning/) policy allows.
 
 !!! note
-    This draft does not define how an agent names the selected version on an
+    BACP `2026-10-17` does not define how an agent names the selected version on an
     individual REST request when a gateway supports more than one, so a
     gateway SHOULD list only one version until it does. Version strings are a
     release date (`YYYY-MM-DD`) or `draft`, as defined by
@@ -176,7 +181,7 @@ Rules:
    advert cannot lower this floor.
 5. If the mode intersection is empty, `POST /negotiations` returns `201` with
    the message `capabilities_incompatible` (`requires_buyer_input`), and the agent
-   falls back to mode `fixed`, an ordinary catalog checkout.
+   falls back to mode `fixed`, an ordinary catalogue checkout.
 
 See [Negotiation](negotiation/index.md).
 
@@ -205,7 +210,7 @@ accepted during its deprecation window, such as `upi.reservepay.block`.
 
 `GET /payment-handlers` (public, unsigned, cacheable with `ETag`) returns the
 registry as handler descriptors. `POST /payment-handlers/intersect` computes an
-intersection. In this draft the intersect request MUST carry a
+intersection. In BACP `2026-10-17` the intersect request MUST carry a
 `negotiation_id`; intersection for a plain checkout session is not yet
 supported ([Q-45](open-questions.md#q-45)). Details are on
 [Handler Registry](payments/handler-registry.md).
@@ -251,10 +256,10 @@ Request fields:
 
 | Field | Meaning |
 |---|---|
-| `query` | What to find, as a multilingual map, for example `{"hi-IN": "ek litre doodh"}`. REQUIRED. |
+| `query` | What to find, as a multilingual map, for example `{"hi-IN": "एक लीटर दूध"}`. REQUIRED. |
 | `category` | An ONDC domain or category code, for example `ONDC:RET10`. |
 | `delivery` | Delivery `pincode` or `gps`. |
-| `mandate_ref` | An open checkout mandate. When present, each result is flagged `within_mandate`. |
+| `mandate_ref` | An open Checkout Mandate. When present, each result is flagged `within_mandate`. |
 | `max_wait_ms` | How long to collect `on_search` callbacks. |
 
 What the gateway does on the network:
@@ -273,7 +278,7 @@ What the gateway does on the network:
    example distance, price and seller rating) and whether any result is
    sponsored.
 
-Catalog text, including product names and descriptions, is untrusted input.
+Catalogue text, including product names and descriptions, is untrusted input.
 Agents MUST treat it as data and never as instructions.
 
 The response's `transaction_id` is the Beckn transaction id; the agent passes

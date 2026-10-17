@@ -119,6 +119,9 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/bacp-dev
+    - icon: fontawesome/solid/envelope
+      link: mailto:security@bacp.dev
+      name: Report a security issue (security@bacp.dev)
 
 markdown_extensions:
   - abbr

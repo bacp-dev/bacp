@@ -1,10 +1,7 @@
 # Bharat Agentic Commerce Protocol (BACP) Specification
 
-!!! warning "Status: Draft"
-    This is the `draft` version of the BACP specification. It is not yet a
-    dated release. Rules that depend on a pending owner decision are marked
-    **Proposed** and link to the relevant entry in
-    [Open Questions](../open-questions.md).
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Each one links to the relevant entry in [Open Questions](../open-questions.md).
 
 BACP is an open protocol that lets an AI agent run the full Indian commerce
 lifecycle on behalf of a person or a business: discover, negotiate, check out,
@@ -40,7 +37,7 @@ when, and only when, they appear in all capitals, as shown here.
 | Signature timestamps | RFC 9421 `created` and `expires` parameters are integer seconds since the Unix epoch. |
 | Canonical JSON | Signed and hashed JSON is canonicalised with JCS ([RFC 8785](https://www.rfc-editor.org/rfc/rfc8785.html){ target="_blank" }). |
 | Hashes | Written as `alg:base64url`. `sha-256` is mandatory. `blake2b-512` is allowed only for Beckn digests. |
-| Text shown to people | Multilingual maps keyed by BCP 47 tag, for example `{"hi-IN": "...", "en-IN": "..."}`. |
+| Text shown to people | Multilingual maps keyed by BCP 47 tag, for example `{"hi-IN": "...", "en-IN": "..."}`. Hindi display text under `hi-IN` is written in Devanagari. Romanised Hindi (for example a voice transcript) is tagged `hi-Latn-IN`. |
 | Schemas | JSON Schema draft 2020-12. Schemas are identified by their `$id` under `https://bacp.dev/schemas/`, and tools MUST resolve `$ref`s by `$id`, not by file path. |
 
 ## The problem BACP solves
@@ -136,14 +133,14 @@ flowchart TB
 ```
 
 Solid arrows are call paths. Dotted arrows are trust dependencies. Consent and
-identity are cross-cutting: every call depends on them. The façade talks to the
+identity are cross-cutting: every call depends on them. The facade talks to the
 payment rails through the payer PSP rather than through Beckn, because Beckn
 carries only payment *terms*: money moves off-network.
 
 | Layer | What BACP reuses | What BACP adds |
 |---|---|---|
 | **Transport bindings** | REST (OpenAPI 3.1), MCP tools with `structuredContent`, A2A `DataPart` and the `TASK_STATE_AUTH_REQUIRED` task state. One operation set, bound three ways, as UCP does. | RFC 9421 agent signatures with separate tags for browsing, paying, post-order writes and negotiation. Step-up mapped to A2A `TASK_STATE_AUTH_REQUIRED` and MCP `insufficient_scope`. See [REST](../transports/rest.md) and [MCP and A2A](../transports/mcp-a2a.md). |
-| **Session façade** | UCP checkout verbs and statuses; ACP full-state responses, flat errors, `messages[].resolution` and idempotency; AP2's Trusted Surface and fail-closed constraint evaluation. | A synchronous session over asynchronous Beckn; the deterministic verifier; the instruction log; an in-doubt payment saga. See [Sessions and Checkout](../checkout/index.md). |
+| **Session facade** | UCP checkout verbs and statuses; ACP full-state responses, flat errors, `messages[].resolution` and idempotency; AP2's Trusted Surface and fail-closed constraint evaluation. | A synchronous session over asynchronous Beckn; the deterministic verifier; the instruction log; an in-doubt payment saga. See [Sessions and Checkout](../checkout/index.md). |
 | **Beckn/ONDC backbone** | Beckn `{context, message}`, ACK plus `on_*` callbacks, Ed25519/BLAKE2b network signing, registry lookup, ONDC payment and settlement fields, IGM. | The [`context.bacp`](https://bacp.dev/schemas/beckn-context-bacp.json) extension, mandatory idempotency and a replay cache, and an IGM `actors[]` entry of type `AI_AGENT` (Proposed: [Q-11](../open-questions.md#q-11)). Agent semantics stay in a namespace that network participants can ignore. See [Beckn / ONDC Binding](../transports/beckn.md). |
 | **Payment rails** | Live Indian rails: UPI Reserve Pay, UPI Circle, UPI AutoPay, card e-mandates, eNACH, PPIs, COD and others, with their own regulatory limits. | Payment authority bound to a **live** rail primitive with a PSP-signed attestation; a basket-blind payment leg; rail-anchored receipts. See [Payments](../payments/index.md). |
 | **Consent** | AA/DEPA consent-artefact semantics: immutable, purpose-coded, use-counted, revocable. AP2-style open and closed mandates. | Periodic budgets, allow-lists, step-up thresholds, post-order action scopes, a separate negotiation mandate, revocation within 60 seconds, DPDP consent receipts. See [Mandates and Consent](../mandates.md). |
@@ -163,15 +160,15 @@ BACP makes four choices about how it sits on existing infrastructure:
    domain specification only (that would lose global-agent interoperability
    and the AP2 mandate format).
 2. **Mandates in AP2 style with AA/DEPA consent semantics.** A mandate has the
-   structure of an AP2 open or closed Checkout or Payment Mandate, and the life
+   structure of an AP2 open or closed Checkout Mandate or Payment Mandate, and the life
    of an Account Aggregator consent artefact: immutable once signed, tied to a
    purpose code, use-counted, and revocable at any time.
 3. **Payment bound to live Indian rails.** An open (human-not-present) payment
    mandate MUST bind to a standing authority that a live rail already enforces,
    such as a UPI Reserve Pay block or a UPI Circle delegation. A closed
    (human-present) payment is authorised by a fresh per-transaction factor on
-   the Trusted Surface. BACP does not wait for a future rail: NPCI has not
-   published an agent-payment specification for UPI, so the handler
+   the Trusted Surface. BACP does not wait for a future rail: as of 17-10-2026,
+   NPCI has not published an agent-payment specification for UPI, so the handler
    `in.upi.uap` is reserved.
 4. **RFC 9421 agent signatures.** Every agent request is signed with
    [RFC 9421](https://www.rfc-editor.org/rfc/rfc9421.html){ target="_blank" }
@@ -187,7 +184,7 @@ BACP makes four choices about how it sits on existing infrastructure:
 | **Agent** | The LLM runtime (voice or text) that interprets intent, discovers, builds carts, negotiates and closes open mandates with its `cnf` key. | **Untrusted.** It never verifies anything that matters, never holds a PIN or OTP, never signs consent and is never an authentication factor. |
 | **Agent operator** | The legal entity that runs the agent and holds its AgentCredential. Keeps the operator signing key out of the agent's reach, runs the instruction log, appoints a grievance officer, keeps an AI inventory, and provides AI disclosure and a human handoff. | Accountable and identified through registry onboarding. |
 | **BACP gateway** | The BACP endpoint that agents call. It is co-located with, or runs on behalf of, a registered **Buyer App (BAP)**, so the BAP subscriber is the network-visible party. It verifies agent signatures and credentials, runs the deterministic mandate verifier and negotiation guard, translates calls into signed Beckn actions, holds the replay cache, idempotency store and reservation ledger, and is the interfacing network participant for IGM. | Trusted to enforce policy deterministically, but audited by conformance tests and evidence rather than trusted on its word. |
-| **Seller / BPP** | The seller and its Seller App (BPP). Provides catalog, signed quotes, fulfilment, cancel and return handling, GST invoices, and responds to IGM issues. A BACP-aware BPP verifies `context.bacp` and, in negotiation, the buyer's `within_bounds` attestation. | Honest but curious. Its content is **untrusted input** to the agent (dark patterns, prompt injection). |
+| **Seller / BPP** | The seller and its Seller App (BPP). Provides catalogue, signed quotes, fulfilment, cancel and return handling, GST invoices, and responds to IGM issues. A BACP-aware BPP verifies `context.bacp` and, in negotiation, the buyer's `within_bounds` attestation. | Honest but curious. Its content is **untrusted input** to the agent (dark patterns, prompt injection). |
 | **Mandate Manager** | Turns an approval on the Trusted Surface into signed, immutable mandates and consent receipts. Keeps status, usage and revocation, publishes a status list and notifies counterparties within 60 seconds. Acts as, or for, a DPDP Consent Manager. | **Data-blind**: stores mandates and logs, never order or payment payloads. |
 | **Trusted Surface** | The non-agentic surface, typically the payer's UPI app, where the principal reads notices in their language, approves mandates and step-ups, and enters a PIN or biometric. | Non-agentic by requirement. Trusted for consent capture and authentication. |
 | **PSP / rail** | The payer PSP and the rail behind it (for UPI, NPCI and the issuer bank). Creates the standing authority (block, delegation, mandate), issues the `rail_binding` attestation, executes debits and refunds, and signs receipts with the rail reference (RRN, UTR or equivalent). | Authoritative for money movement and limits. Sees only payee, amount, mandate reference and checkout hash, never the basket. |
@@ -200,12 +197,13 @@ roles such as consignee, paying authority, broker, financier and a neutral
 auctioneer (see [Trade Profiles](../trade-profiles.md)).
 
 !!! note "Co-location"
-    In this draft the Mandate Manager is operated by, or co-located with, the
+    In BACP `2026-10-17` the Mandate Manager is operated by, or co-located with, the
     payer PSP that also provides the Trusted Surface, so that consent capture
     and PIN entry happen on one non-agentic surface. The roles stay logically
-    separate so that an independent DPDP Consent Manager can take over.
-    Proposed: separate the credential-provider role from the data-blind
-    Consent Manager ([Q-16](../open-questions.md#q-16)).
+    separate so that an independent DPDP Consent Manager can take over. An
+    MM that acts as a registered Consent Manager does not also act as
+    credential provider; that role runs as a separate component
+    ([Q-16](../open-questions.md#q-16)).
 
 ## Core artefacts
 
@@ -238,7 +236,7 @@ binding (`EvidenceBundle` in the OpenAPI document listed under
 
 A BACP transaction moves through seven stages. Mandate setup happens once,
 before the first stage, on the Trusted Surface. Negotiation is optional: a
-fixed-price catalog purchase goes straight from discovery to checkout.
+fixed-price catalogue purchase goes straight from discovery to checkout.
 
 ```mermaid
 flowchart LR
@@ -309,8 +307,8 @@ a snapshot of the whole protocol: the specification pages, the JSON Schemas,
 the OpenAPI document, the handler registry and the conformance manifest,
 published together.
 
-- The current specification is `draft`. It has no date and may change without
-  notice.
+- The current dated release is `2026-10-17`. The working version on `main`
+  is `draft`, which has no date and may change without notice.
 - A gateway publishes the versions it supports in its
   [profile](../discovery.md#profile-document) (`bacp.version` and
   `bacp.supported_versions`). An agent MUST use a version that the gateway
@@ -337,7 +335,7 @@ one deliberate exception: authority is never extended silently.
 3. **New constraints go in new mandates.** Because existing AP2-compatible
    verifiers fail closed on unknown constraints, a new family of bounds is
    carried in a separate mandate type, as negotiation bounds are, rather than
-   added to checkout or payment mandates.
+   added to Checkout or Payment Mandates.
 4. **Closed objects stay closed.** Objects whose schema forbids additional
    properties (for example the mandate `constraints` object, `context.bacp` and
    the term-sheet issue groups) MUST NOT carry extra fields. Extra negotiable

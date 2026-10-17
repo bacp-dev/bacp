@@ -1,86 +1,102 @@
 # Open Questions
 
-This page lists every question the BACP draft cannot yet answer on its own. Each question names the body whose
-answer BACP needs and the working position the draft takes until then. Other pages link here with anchors such as
-`open-questions.md#q-16`.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
-!!! warning "Blocking questions"
-    Ten questions are marked **Blocking**. Without their answers, a dated release of BACP cannot make a normative,
-    testable statement, or would publish a design that conflicts with a rule already in force. They are
-    [Q-12](#q-12), [Q-15](#q-15), [Q-16](#q-16), [Q-20](#q-20), [Q-41](#q-41), [Q-42](#q-42), [Q-43](#q-43),
-    [Q-44](#q-44), [Q-47](#q-47) and [Q-52](#q-52). Every other question has a fail-safe working position, or is
-    confined to one optional conformance level.
+This page lists every question that BACP version `2026-10-17` cannot answer on its own, and the questions it has
+settled. Each open question names the body whose answer BACP needs and the working position this version takes until
+then. Other pages link here with anchors such as `open-questions.md#q-16`.
+
+!!! note "No blocking questions in 2026-10-17"
+    No open question blocks version `2026-10-17`: **0** questions are marked Blocking. A question is Blocking when,
+    without its answer, a dated release cannot make a normative, testable statement, or would publish a design that
+    conflicts with a rule already in force. Ten questions were Blocking before this release. Four are now
+    [settled](#settled) with a concrete rule ([Q-41](#q-41), [Q-42](#q-42), [Q-43](#q-43) and [Q-47](#q-47), plus
+    [Q-28](#q-28) and [Q-53](#q-53), which were not Blocking). The other six ([Q-12](#q-12), [Q-15](#q-15),
+    [Q-16](#q-16), [Q-20](#q-20), [Q-44](#q-44) and [Q-52](#q-52)) stay open but are non-blocking: each has a
+    **fail-safe default** that the normative text states and that applies until the question is settled. A fail-safe
+    default refuses, escalates to the principal on the Trusted Surface, or keeps a feature disabled; it never assumes
+    the favourable answer.
+
+**How open questions are handled.** Every open question has a working position. Where a wrong guess could move
+money, release personal data or bind a party, the working position is a fail-safe default and is stated as a rule
+on the page that links here. An answer from the owner is applied in a later dated release under the
+[versioning policy](https://bacp.dev/versioning/): a change that relaxes a fail-safe default is backwards-compatible; one that
+tightens it is a breaking change and gets the notice period. A newly found question that would block a normative,
+testable statement is marked Blocking here and must be resolved, or given a fail-safe default, before the next dated
+release.
 
 **Owners.** NPCI, RBI, ONDC, Legal counsel, MeitY/DPDP, or the BACP Working Group (BACP WG). Where several bodies
 are involved, the owner is the one that must give the answer.
 
 ## Summary {#summary}
 
-| # | Topic | Owner | Blocking |
+| # | Topic | Owner | Status |
 |---|---|---|---|
-| [Q-01](#q-01) | Liability for agent error within a valid mandate | RBI | No |
-| [Q-02](#q-02) | Anchor for agent identity | ONDC | No |
-| [Q-03](#q-03) | Pre-debit notice for Reserve Pay and OTM repeat debits | NPCI | No |
-| [Q-04](#q-04) | Issuers and account types for Reserve Pay | NPCI | No |
-| [Q-05](#q-05) | UPI 123PAY limit | NPCI | No |
-| [Q-06](#q-06) | IGM version and ODR | ONDC | No |
-| [Q-07](#q-07) | Member-only NPCI circulars | NPCI | No |
-| [Q-08](#q-08) | UPI Circle cooling period and caps | NPCI | No |
-| [Q-09](#q-09) | Acceptance of `context.bacp` on ONDC | ONDC | No |
-| [Q-10](#q-10) | PSP verification of closed payment mandates | NPCI | No |
-| [Q-11](#q-11) | `AI_AGENT` actor type in IGM | ONDC | No |
-| [Q-12](#q-12) | Class consent receipts for unknown sellers | MeitY/DPDP | **Blocking** |
-| [Q-13](#q-13) | Validity of voice consent | Legal counsel | No |
-| [Q-14](#q-14) | Agent platform as e-commerce operator for GST TCS | Legal counsel | No |
-| [Q-15](#q-15) | Payment-data localisation and model region | RBI | **Blocking** |
-| [Q-16](#q-16) | Mandate Manager as DPDP Consent Manager | MeitY/DPDP | **Blocking** |
-| [Q-17](#q-17) | DPDP forward compliance (May 2027 duties) | MeitY/DPDP | No |
-| [Q-18](#q-18) | Machine-readable list of authorised payment aggregators | RBI | No |
-| [Q-19](#q-19) | Waiver of the right to revoke an acceptance | Legal counsel | No |
-| [Q-20](#q-20) | Fees and the MRP ceiling; Rule 3 exemption | Legal counsel | **Blocking** |
-| [Q-21](#q-21) | MSMED coverage of traders; deemed acceptance | Legal counsel | No |
-| [Q-22](#q-22) | Penalty for breach of a firm offer | ONDC | No |
-| [Q-23](#q-23) | Escrow key for negotiation transcripts | ONDC | No |
-| [Q-24](#q-24) | `within_bounds`: attestation or range proof | BACP WG | No |
-| [Q-25](#q-25) | Neutral auctioneer on ONDC | ONDC | No |
-| [Q-26](#q-26) | Unsolicited `on_select` for seller-paced rounds | ONDC | No |
-| [Q-27](#q-27) | Interest-free seller credit and digital lending | RBI | No |
-| [Q-28](#q-28) | Handler naming and alias deprecation window | BACP WG | No |
-| [Q-29](#q-29) | eNACH cap and NACH pre-debit rule | NPCI | No |
-| [Q-30](#q-30) | Gift PPI redemption by a PSP adapter | RBI | No |
-| [Q-31](#q-31) | OTM validity and agent-triggered capture | NPCI | No |
-| [Q-32](#q-32) | Checkout BNPL and the end-use exception | RBI | No |
-| [Q-33](#q-33) | GRN and CRAC on Beckn | ONDC | No |
-| [Q-34](#q-34) | REQUEST_EXTENSION within ONDC's ttl | ONDC | No |
-| [Q-35](#q-35) | Bid retraction in e-auctions | Legal counsel | No |
-| [Q-36](#q-36) | Atomic budgets across gateways and replicas | BACP WG | No |
-| [Q-37](#q-37) | RTO fee on refused COD orders | Legal counsel | No |
-| [Q-38](#q-38) | e-RUPI agent redemption and refunds | NPCI | No |
-| [Q-39](#q-39) | Agentic card tokens in India | RBI | No |
-| [Q-40](#q-40) | LIFO refund allocation for split tender | RBI | No |
-| [Q-41](#q-41) | Interoperable encoding for closing open mandates | BACP WG | **Blocking** |
-| [Q-42](#q-42) | Mandatory signature algorithm | BACP WG | **Blocking** |
-| [Q-43](#q-43) | Signing profile on the Beckn leg | ONDC | **Blocking** |
-| [Q-44](#q-44) | REST, MCP and A2A binding for plans, ledgers and documents | BACP WG | **Blocking** |
-| [Q-45](#q-45) | Handler intersection for plain checkout sessions | BACP WG | No |
-| [Q-46](#q-46) | Exposure accounting for credit-ledger deals | BACP WG | No |
-| [Q-47](#q-47) | Governance of purpose codes and bounds | BACP WG | **Blocking** |
-| [Q-48](#q-48) | Agent signature on negotiation message bodies | BACP WG | No |
-| [Q-49](#q-49) | Signal for refund settlement | NPCI | No |
-| [Q-50](#q-50) | Cross-seller split-order detection | BACP WG | No |
-| [Q-51](#q-51) | Payment aggregator marketplace limits and settlement ETA | RBI | No |
-| [Q-52](#q-52) | Indian Contract Act timing rules | Legal counsel | **Blocking** |
-| [Q-53](#q-53) | Final DPDP commencement dates (resolved) | MeitY/DPDP | No |
-| [Q-54](#q-54) | BACP operator as card token requestor | RBI | No |
-| [Q-55](#q-55) | Aadhaar offline VC verification and OVSE registration | MeitY/DPDP | No |
-| [Q-56](#q-56) | Retention of negotiation transcripts | Legal counsel | No |
-| [Q-57](#q-57) | IGM SLA timelines and auto-escalation | ONDC | No |
+| [Q-01](#q-01) | Liability for agent error within a valid mandate | RBI | Open |
+| [Q-02](#q-02) | Anchor for agent identity | ONDC | Open |
+| [Q-03](#q-03) | Pre-debit notice for Reserve Pay and OTM repeat debits | NPCI | Open |
+| [Q-04](#q-04) | Issuers and account types for Reserve Pay | NPCI | Open |
+| [Q-05](#q-05) | UPI 123PAY limit | NPCI | Open |
+| [Q-06](#q-06) | IGM version and ODR | ONDC | Open |
+| [Q-07](#q-07) | Member-only NPCI circulars | NPCI | Open |
+| [Q-08](#q-08) | UPI Circle cooling period and caps | NPCI | Open |
+| [Q-09](#q-09) | Acceptance of `context.bacp` on ONDC | ONDC | Open |
+| [Q-10](#q-10) | PSP verification of closed payment mandates | NPCI | Open |
+| [Q-11](#q-11) | `AI_AGENT` actor type in IGM | ONDC | Open |
+| [Q-12](#q-12) | Class consent receipts for unknown sellers | MeitY/DPDP | Open, fail-safe default |
+| [Q-13](#q-13) | Validity of voice consent | Legal counsel | Open |
+| [Q-14](#q-14) | Agent platform as e-commerce operator for GST TCS | Legal counsel | Open |
+| [Q-15](#q-15) | Payment-data localisation and model region | RBI | Open, fail-safe default |
+| [Q-16](#q-16) | Mandate Manager as DPDP Consent Manager | MeitY/DPDP | Open, fail-safe default |
+| [Q-17](#q-17) | DPDP forward compliance (May 2027 duties) | MeitY/DPDP | Open |
+| [Q-18](#q-18) | Machine-readable list of authorised payment aggregators | RBI | Open |
+| [Q-19](#q-19) | Waiver of the right to revoke an acceptance | Legal counsel | Open |
+| [Q-20](#q-20) | Fees and the MRP ceiling; Rule 3 exemption | Legal counsel | Open, fail-safe default |
+| [Q-21](#q-21) | MSMED coverage of traders; deemed acceptance | Legal counsel | Open |
+| [Q-22](#q-22) | Penalty for breach of a firm offer | ONDC | Open |
+| [Q-23](#q-23) | Escrow key for negotiation transcripts | ONDC | Open |
+| [Q-24](#q-24) | `within_bounds`: attestation or range proof | BACP WG | Open |
+| [Q-25](#q-25) | Neutral auctioneer on ONDC | ONDC | Open |
+| [Q-26](#q-26) | Unsolicited `on_select` for seller-paced rounds | ONDC | Open |
+| [Q-27](#q-27) | Interest-free seller credit and digital lending | RBI | Open |
+| [Q-28](#q-28) | Handler naming and alias deprecation window | BACP WG | Settled |
+| [Q-29](#q-29) | eNACH cap and NACH pre-debit rule | NPCI | Open |
+| [Q-30](#q-30) | Gift PPI redemption by a PSP adapter | RBI | Open |
+| [Q-31](#q-31) | OTM validity and agent-triggered capture | NPCI | Open |
+| [Q-32](#q-32) | Checkout BNPL and the end-use exception | RBI | Open |
+| [Q-33](#q-33) | GRN and CRAC on Beckn | ONDC | Open |
+| [Q-34](#q-34) | REQUEST_EXTENSION within ONDC's ttl | ONDC | Open |
+| [Q-35](#q-35) | Bid retraction in e-auctions | Legal counsel | Open |
+| [Q-36](#q-36) | Atomic budgets across gateways and replicas | BACP WG | Open |
+| [Q-37](#q-37) | RTO fee on refused COD orders | Legal counsel | Open |
+| [Q-38](#q-38) | e-RUPI agent redemption and refunds | NPCI | Open |
+| [Q-39](#q-39) | Agentic card tokens in India | RBI | Open |
+| [Q-40](#q-40) | LIFO refund allocation for split tender | RBI | Open |
+| [Q-41](#q-41) | Interoperable encoding for closing open mandates | BACP WG | Settled |
+| [Q-42](#q-42) | Mandatory signature algorithm | BACP WG | Settled |
+| [Q-43](#q-43) | Signing profile on the Beckn leg | ONDC | Settled |
+| [Q-44](#q-44) | REST, MCP and A2A binding for plans, ledgers and documents | BACP WG | Open, fail-safe default |
+| [Q-45](#q-45) | Handler intersection for plain checkout sessions | BACP WG | Open |
+| [Q-46](#q-46) | Exposure accounting for credit-ledger deals | BACP WG | Open |
+| [Q-47](#q-47) | Governance of purpose codes and bounds | BACP WG | Settled |
+| [Q-48](#q-48) | Agent signature on negotiation message bodies | BACP WG | Open |
+| [Q-49](#q-49) | Signal for refund settlement | NPCI | Open |
+| [Q-50](#q-50) | Cross-seller split-order detection | BACP WG | Open |
+| [Q-51](#q-51) | Payment aggregator marketplace limits and settlement ETA | RBI | Open |
+| [Q-52](#q-52) | Indian Contract Act timing rules | Legal counsel | Open, fail-safe default |
+| [Q-53](#q-53) | Final DPDP commencement dates | MeitY/DPDP | Settled |
+| [Q-54](#q-54) | BACP operator as card token requestor | RBI | Open |
+| [Q-55](#q-55) | Aadhaar offline VC verification and OVSE registration | MeitY/DPDP | Open |
+| [Q-56](#q-56) | Retention of negotiation transcripts | Legal counsel | Open |
+| [Q-57](#q-57) | IGM SLA timelines and auto-escalation | ONDC | Open |
+| [Q-58](#q-58) | Signature tag for gateway-signed webhooks | BACP WG | Open, fail-safe default |
 
 ## Questions {#questions}
 
 ### Q-01 Liability for agent error {#q-01}
 
-**Question.** Who bears the loss when an agent mis-buys within a valid mandate: the agent provider, the buyer app,
+**Question.** Who bears the loss when an agent mis-buys within a valid mandate: the agent operator, the buyer app,
 the PSP or the user?<br>
 **Owner.** RBI, with NPCI and ONDC.
 
@@ -110,15 +126,15 @@ unattended debit on the block. See [Rail Bindings](payments/rails.md).
 ### Q-04 Reserve Pay issuers and account types {#q-04}
 
 **Question.** Which issuers and which account types (credit or savings) support Reserve Pay? NPCI's product page sets
-₹10,000 per block and 90 days but does not restrict account types; the GFF 2025 release launched it on credit cards and
-pre-sanctioned credit lines.<br>
+₹10,000 per block and 90 days but does not restrict account types; the Global Fintech Fest (GFF) 2025 release
+launched it on credit cards and pre-sanctioned credit lines.<br>
 **Owner.** NPCI.
 
 **Working position.** Support both and read the PSP's attestation.
 
 ### Q-05 UPI 123PAY limit {#q-05}
 
-**Question.** RBI raised the UPI 123PAY per-transaction limit from ₹5,000 to ₹10,000 on 9 October 2024 and said NPCI
+**Question.** RBI raised the UPI 123PAY per-transaction limit from ₹5,000 to ₹10,000 on 09-10-2024 and said NPCI
 would issue instructions. Has NPCI implemented ₹10,000 for every 123PAY channel?<br>
 **Owner.** NPCI.
 
@@ -175,16 +191,27 @@ the IGM 2.0 enum has only `AGENT`, which means a fulfilment agent?<br>
 
 ### Q-12 Class consent receipts for unknown sellers {#q-12}
 
-!!! danger "Blocking"
-    Must be resolved before a dated release.
+!!! note "Non-blocking: fail-safe default"
+    Was Blocking. The protocol rule is settled in `2026-10-17`; the legal question stays open with the fail-safe
+    default below.
 
 **Question.** Does a class ConsentReceipt (recipient `*`) meet DPDP Rule 3 for human-not-present orders to sellers
 who are unknown when the mandate is set up? Must the per-seller receipt at `init` be normative before any data is
 released?<br>
 **Owner.** MeitY/DPDP, with legal counsel.
 
-**Working position.** Proposed: a per-seller receipt minted at `init` is REQUIRED before data is released; the class
-receipt only pre-authorises. See [Mandates and Consent](mandates.md) and
+**Settled in `2026-10-17`.** A per-seller ConsentReceipt, naming that seller's `bpp_id`, MUST be minted by the
+Mandate Manager at `init` before any personal data reaches the seller. A class receipt (`recipient.bpp_id: "*"`) only
+pre-authorises: if the gateway does not hold an active per-seller receipt for the seller, it sends nothing and
+returns `403 mandate_scope_mismatch`.
+
+**Still open.** Whether the class pre-authorisation, given when the seller is unknown, is valid consent under DPDP
+Act ss.5–6 and Rule 3, which apply from 13-05-2027.
+
+**Fail-safe default.** Until Q-12 is settled, and from 13-05-2027, the first release of personal data to a seller
+not named in any receipt the principal approved MUST be confirmed by the principal on the Trusted Surface, which
+shows that seller's Rule 3 notice; the gateway escalates with `requires_buyer_review` and releases nothing
+before the confirmation. See [Mandates and Consent](mandates.md#consent) and
 [Security and Privacy](security-and-privacy.md#notice-and-consent).
 
 ### Q-13 Voice consent {#q-13}
@@ -204,33 +231,64 @@ PIN on the Trusted Surface.
 
 ### Q-15 Payment-data localisation {#q-15}
 
-!!! danger "Blocking"
-    Must be resolved before a dated release.
+!!! note "Non-blocking: fail-safe default"
+    Was Blocking. Made non-blocking by the fail-safe default below.
 
 **Question.** RBI payment-data localisation is in force. Where must mandates, receipts, the InstructionLog and
 evidence bundles be stored, and in which region may the language model process payment data?<br>
 **Owner.** RBI.
 
-**Working position.** Proposed: India-only storage for anything that contains payment data; a
-`data_residency{payment_data: "IN", llm_region, log_region, transfer_basis}` declaration in the AgentCredential and
-the registry; the gateway refuses payment-data egress. See
+**Findings.** RBI's directive on Storage of Payment System Data (RBI/2017-18/153, 06-04-2018) requires
+RBI-authorised payment system providers to store payment system data only in India. RBI's FAQ on the directive
+(26-06-2019) allows processing abroad if the data is deleted abroad and brought back to India within one business day
+or 24 hours of processing, whichever is earlier. Whether an agent operator's language model is such processing, and
+whether an agent operator that is not a payment system provider is covered at all, needs RBI's answer.
+
+**Fail-safe default.** Until Q-15 is settled, BACP is stricter than the FAQ:
+
+- A gateway, Mandate Manager or PSP adapter MUST store mandates, receipts, the InstructionLog and evidence bundles
+  that contain payment data only in India.
+- These components MUST NOT send payment data to a language model, log store or other processor outside India,
+  even transiently; the FAQ's one-business-day processing allowance is not used.
+- The `data_residency` statement (`payment_data`, `llm_region`, `log_region`, `transfer_basis`) is OPTIONAL in this
+  version. A gateway MUST NOT treat a missing or incomplete statement as permission to send payment data outside
+  India.
+
+Still open: where an agent operator's own model may process the payment data it receives. See
 [Security and Privacy](security-and-privacy.md#data-localisation).
 
 ### Q-16 Mandate Manager as Consent Manager {#q-16}
 
-!!! danger "Blocking"
-    Must be resolved before a dated release.
+!!! note "Non-blocking: fail-safe default"
+    Was Blocking. Made non-blocking by the fail-safe default below.
 
-**Question.** DPDP Rule 4 applies from 13 November 2026. Should the Mandate Manager register as a Consent
+**Question.** DPDP Rule 4 applies from 13-11-2026. Should the Mandate Manager register as a Consent
 Manager, or integrate with one? Is co-locating the Mandate Manager with the payer PSP, and giving it the role of
 credential provider that re-verifies closed mandates, compatible with a data-blind Consent Manager? From what date is
 `cm_registration_no` mandatory, and how is the 7-year machine-readable export offered? Do RBI-registered Account
 Aggregators count as Consent Managers?<br>
 **Owner.** MeitY/DPDP.
 
-**Working position.** Proposed: split the credential provider from the data-blind Consent Manager;
-`cm_registration_no` is required on receipts issued on or after 2026-11-13; a `GET /mm/records?principal=` export.
-See [Security and Privacy](security-and-privacy.md#consent-manager).
+**Findings.** Rule 4 and the First Schedule (registration and obligations of Consent Managers), and Act s.6(9),
+apply from 13-11-2026 (G.S.R. 846(E) rule 1 and G.S.R. 843(E); see [Q-53](#q-53)). Under the Act a Data Principal
+may give consent through a Consent Manager; nothing found requires every consent record to pass through one.
+
+**Fail-safe default.** Until Q-16 is settled:
+
+- A Mandate Manager MUST NOT act, or describe itself, as a Consent Manager unless it is registered with the Data
+  Protection Board. On ConsentReceipts issued on or after 13-11-2026, `cm_registration_no` MUST be the Board
+  registration number when the MM acts as a Consent Manager, and MUST be `null` otherwise. A `null` value means the
+  receipt records consent given to the recipient Data Fiduciary, not through a Consent Manager.
+- An MM that acts as a registered Consent Manager MUST NOT also perform the credential-provider role (re-verifying
+  closed mandates, issuing `within_bounds` attestations). That role MUST run as a logically separate component with
+  its own registry key.
+- The MM keeps mandate, notice, consent and sharing records for at least 7 years and MUST give them to the
+  principal, on request on the Trusted Surface, in machine-readable form. A REST export endpoint
+  (`GET /mm/records?principal=`) is not part of this version.
+
+Still open: whether an MM co-located with the payer PSP may register as a Consent Manager, and whether
+RBI-registered Account Aggregators count as Consent Managers. See
+[Security and Privacy](security-and-privacy.md#consent-manager).
 
 ### Q-17 DPDP forward compliance {#q-17}
 
@@ -240,7 +298,7 @@ erasure with an SLA, and a retention table for the InstructionLog, receipts and 
 **Owner.** MeitY/DPDP.
 
 **Working position.** Proposed messages `bacp.erasure_request`, `bacp.correction`, `bacp.breach_signal` and
-`principal.minor_status`. Needed before 13 May 2027. See
+`principal.minor_status`. Needed before 13-05-2027. See
 [Security and Privacy](security-and-privacy.md#forward-compliance).
 
 ### Q-18 List of authorised payment aggregators {#q-18}
@@ -267,27 +325,36 @@ listed as [proposed design choice (c)](#proposed-c).
 
 ### Q-20 Fees and the MRP ceiling {#q-20}
 
-!!! danger "Blocking"
-    Must be resolved before a dated release.
+!!! note "Non-blocking: fail-safe default"
+    Was Blocking. Made non-blocking by the fail-safe default below.
 
 **Question.** Do delivery, packing or convenience fees count toward the MRP? What exactly is the Legal Metrology
 Rule 3 exemption (industrial or institutional packs, packs above 25 kg)?<br>
 **Owner.** Legal counsel.
 
 **Findings.** Rule 18(2) of the Legal Metrology (Packaged Commodities) Rules, 2011 bars selling a packaged commodity
-above its MRP (Lok Sabha Unstarred Question 4362, answered 26 March 2025). The Rule 3 exemptions (packages above
-25 kg or 25 litres; cement, fertiliser and agricultural farm produce in bags above 50 kg; packages for industrial or
-institutional consumers) come only from a 2022 secondary consolidation; the Rules text was not seen. No official
-source was found on whether delivery, packing or convenience fees count toward the MRP, so the question stays
-blocking.
+above its MRP (Lok Sabha Unstarred Question 4362, answered 26-03-2025). The Rule 3 exemptions (packages above
+25 kg or 25 L; cement, fertiliser and agricultural farm produce in bags above 50 kg; packages for industrial or
+institutional consumers) come only from a 2022 secondary consolidation; the Rules text was not verified against the
+Gazette as of 17-10-2026. No official source was found on whether delivery, packing or convenience fees count toward
+the MRP.
 
-**Working position.** Fees are separate disclosed lines and `retail_package_mrp_required` is set per line. The answer
-will be encoded as `mrp_inclusive_charges`. The MRP validator is normative, so its scope must be settled first. See
-[Negotiation](negotiation/index.md).
+**Fail-safe default.** Until Q-20 is settled, the MRP ceiling (validator V-01) is applied in its stricter reading:
+
+- In a B2C negotiation, every line that carries an `mrp` is checked against it, whatever its
+  `retail_package_mrp_required` value. The Rule 3 exemptions, signalled by `retail_package_mrp_required: false`,
+  are honoured only in B2B.
+- Mandatory `packing` and `convenience` charges count toward the MRP: for the lines checked against MRP, the sum of
+  unit price including tax times quantity, plus every mandatory `packing` and `convenience` charge of the term
+  sheet, MUST NOT exceed the sum of `mrp` times quantity.
+- `delivery` and the other charge codes stay separate disclosed charges outside the MRP comparison.
+
+An answer that fees sit outside the MRP relaxes this default (backwards-compatible). See
+[Negotiation](negotiation/index.md#validators).
 
 ### Q-21 MSMED traders and deemed acceptance {#q-21}
 
-**Question.** Are Udyam-registered traders excluded from MSMED Act s.15 (Office Memorandum of 2 July 2021)? Is deemed
+**Question.** Are Udyam-registered traders excluded from MSMED Act s.15 (Office Memorandum of 02-07-2021)? Is deemed
 acceptance machine-checkable?<br>
 **Owner.** Legal counsel.
 
@@ -295,7 +362,7 @@ acceptance machine-checkable?<br>
 objects in writing within fifteen days of delivery, the day the supplier removes the objection; with no objection in
 that time, the day of deemed acceptance is the day of actual delivery. The fifteen days enter s.15 only through the
 "appointed day" (the day after fifteen days from acceptance or deemed acceptance), which applies when there is no
-written agreement (Gazette of India, 16 June 2006). The MSME Office Memorandum 5/2(2)/2021-E/P&G/Policy of 2 July 2021
+written agreement (Gazette of India, 16-06-2006). The MSME Office Memorandum 5/2(2)/2021-E/P&G/Policy of 02-07-2021
 restricts benefits to retail and wholesale trade MSMEs to priority-sector lending; its legal effect on s.15 is open.
 Also open: how a buyer's written objection travels on the network.
 
@@ -345,15 +412,6 @@ the delivery date and any written objection.
 **Owner.** RBI.
 
 **Working position.** Treated as trade credit; a financier makes it an `in.fin.*` or `in.credit.*` handler.
-
-### Q-28 Handler naming {#q-28}
-
-**Question.** Who governs handler names (`in.*` or `bacp.pay.*`), and how long is the alias deprecation window?<br>
-**Owner.** BACP WG.
-
-**Working position.** `in.*` ids are canonical and alias resolution rules are fixed in
-[Handler Registry](payments/handler-registry.md); the window length is to be decided. This is also listed as
-[proposed design choice (b)](#proposed-b).
 
 ### Q-29 eNACH cap {#q-29}
 
@@ -417,7 +475,7 @@ beneficiary?<br>
 and across replicas of one gateway? Should the Mandate Manager hold the authoritative reservation ledger?<br>
 **Owner.** BACP WG.
 
-**Working position.** A single gateway is atomic per mandate; replicas MUST share a linearizable ledger. Proposed:
+**Working position.** A single gateway is atomic per mandate; replicas MUST share a linearisable ledger. Proposed:
 the Mandate Manager publishes outstanding exposure. See
 [Security and Privacy](security-and-privacy.md#atomic-reservation).
 
@@ -452,56 +510,25 @@ para 10(f)?<br>
 
 **Working position.** LIFO by default; `tender_specific` where lines were bound to a tender.
 
-### Q-41 Closing open mandates {#q-41}
-
-!!! danger "Blocking"
-    Must be resolved before a dated release.
-
-**Question.** What is the interoperable SD-JWT / KB-JWT encoding for closing open mandates, in place of the
-detached-JWS `cnf` closing?<br>
-**Owner.** BACP WG.
-
-**Working position.** This draft fixes the detached-JWS form: a closed mandate on the wire is an attached compact JWS
-whose payload is the Mandate JSON. A dated release must pick one encoding and publish test vectors. See
-[Mandates and Consent](mandates.md).
-
-### Q-42 Mandatory signature algorithm {#q-42}
-
-!!! danger "Blocking"
-    Must be resolved before a dated release.
-
-**Question.** ES256 is mandatory and EdDSA allowed, but no ES256 test vectors exist and the implementation exercised
-so far signs only with EdDSA. Should ES256 stay mandatory, should EdDSA become mandatory, or should both be
-required?<br>
-**Owner.** BACP WG.
-
-**Working position.** A mandatory algorithm without test vectors cannot be conformance-tested; the choice must come
-with vectors. See [Identity and Request Signing](identity-and-signing.md).
-
-### Q-43 Network-leg signing {#q-43}
-
-!!! danger "Blocking"
-    Must be resolved before a dated release.
-
-**Question.** Should Beckn messages be signed with a detached JWS over JCS, or with Beckn's Ed25519 + BLAKE2b
-`Authorization` header? Does BACP require Beckn 2.0 signed ACKs and the CounterSignature on which negotiation timing
-depends?<br>
-**Owner.** ONDC.
-
-**Working position.** Use the network's own signing on the Beckn leg. The CounterSignature dependency needs ONDC
-confirmation. See [Beckn / ONDC Binding](transports/beckn.md#signing).
-
 ### Q-44 Binding for plans, ledgers and documents {#q-44}
 
-!!! danger "Blocking"
-    Must be resolved before a dated release.
+!!! note "Non-blocking: fail-safe default"
+    Was Blocking. Made non-blocking by keeping these features off the wire in `2026-10-17`.
 
 **Question.** What are the REST, MCP and A2A bindings for split-tender payment plans, credit ledgers and trade
 documents (GRN, CRAC, invoices)?<br>
 **Owner.** BACP WG.
 
-**Working position.** These are service-level interfaces without a normative wire binding in this draft;
-`CompleteRequest.payment_plan` is reserved. See [Credit and Split Tender](payments/credit-and-split-tender.md).
+**Fail-safe default.** Until Q-44 is settled, payment plans, credit ledgers and trade documents are service-level
+interfaces with no wire binding in BACP `2026-10-17`, and conformance for them is tested at library level only:
+
+- `CompleteRequest.payment_plan` is reserved. A gateway MUST reject a `complete` that carries it with
+  `400 invalid_request` at `$.payment_plan`, and MUST NOT ignore it and charge a single tender instead.
+- A gateway MUST NOT expose MCP tools or A2A DataParts for payment plans, credit ledgers or trade documents.
+- A checkout over REST, MCP or A2A is paid with one tender. Buyer-issued GRN and CRAC on Beckn follow
+  [Q-33](#q-33).
+
+See [Credit and Split Tender](payments/credit-and-split-tender.md).
 
 ### Q-45 Intersection for plain sessions {#q-45}
 
@@ -517,18 +544,6 @@ budgets or against `credit_ledger.max_outstanding`?<br>
 **Owner.** BACP WG.
 
 **Working position.** Count against both `total_max` and the checkout mandate's budgets.
-
-### Q-47 Purpose-code governance {#q-47}
-
-!!! danger "Blocking"
-    Must be resolved before a dated release.
-
-**Question.** Who governs the purpose-code registry and its bounds? The Sahamati Fair Use page that inspired it is
-marked "no longer relevant".<br>
-**Owner.** BACP WG.
-
-**Working position.** The purpose-bounds table in [Mandates and Consent](mandates.md) is provisional; conformance
-vectors need stable, governed values.
 
 ### Q-48 Agent signature on negotiation messages {#q-48}
 
@@ -566,43 +581,30 @@ the seller?<br>
 
 ### Q-52 Contract Act timing {#q-52}
 
-!!! danger "Blocking"
-    Must be resolved before a dated release.
+!!! note "Non-blocking: fail-safe default"
+    Was Blocking. Made non-blocking by the fail-safe default below.
 
 **Question.** The dispatch and receipt timing of negotiation messages, the WITHDRAW/ACCEPT crossing rule and the
 dispatch-time assumption rest on Indian Contract Act ss.4–7. Do they hold for electronic negotiation messages?<br>
 **Owner.** Legal counsel.
 
 **Findings.** The text of Contract Act ss.2 and 4–7 has been checked against India Code. Still open: whether mapping
-dispatch and receipt to CounterSignature timestamps, and the crossing tie-break, hold for electronic messages. IT Act
-s.13 sets despatch and receipt rules for electronic records "save as otherwise agreed to between the originator and
-the addressee", so the parties may agree their own.
+dispatch and receipt to CounterSignature timestamps, and the crossing tie-break, hold for electronic messages. The
+Information Technology Act, 2000, s.13 sets "despatch" and receipt rules for electronic records "save as otherwise
+agreed to between the originator and the addressee", so the parties may agree their own.
 
-**Working position.** The timing semantics are normative in [Negotiation](negotiation/index.md); their legal basis
-must be confirmed before publication.
+**Fail-safe default.** The timing rules in [Negotiation](negotiation/index.md#indian-contract-act-timing) are
+normative as protocol terms that participants agree to, in the sense of the Information Technology Act, 2000, s.13.
+Until Q-52 is settled:
 
-### Q-53 DPDP commencement dates {#q-53}
+- When a `withdraw` and an `accept` cross and the outcome is decided by the BACP crossing rule, the buyer gateway
+  MUST NOT proceed to `init`, `complete` or `confirm` on that deal automatically. It MUST escalate to the buyer
+  principal on the Trusted Surface (`requires_buyer_review`), and proceeds only on the principal's confirmation.
+- The crossing outcome (`withdraw_lost_crossing`, `accept_void_withdrawn`, `seller_accept_void`) is still recorded
+  in the transcript as evidence.
 
-!!! success "Resolved"
-    The dates are fixed in the Gazette. Re-check only if an amending notification is published.
-
-**Question.** What are the final DPDP commencement dates, given a reported MeitY consultation to shorten 18 months to
-12 and a reported corrigendum G.S.R. 113(E)?<br>
-**Owner.** MeitY/DPDP.
-
-**Answer.** The DPDP Rules 2025 are G.S.R. 846(E) and the Act's commencement notification is G.S.R. 843(E), both
-dated 13 November 2025. Together they set three dates:
-
-| From | Rules (G.S.R. 846(E), rule 1) | Act (G.S.R. 843(E)) |
-|---|---|---|
-| 13 November 2025 (in force now) | Rules 1, 2 and 17–21 | ss.1(2), 2, 18–26, 35, 38–43, 44(1) and 44(3) |
-| 13 November 2026 | Rule 4 (Consent Managers) | s.6(9) and s.27(1)(d) |
-| 13 May 2027 | Rules 3, 5–16, 22 and 23 | ss.3–5, 6(1)–(8) and 6(10), 7–17, 27 (except 27(1)(d)), the penalty provisions ss.28–34, 36, 37 and 44(2) |
-
-The corrigendum G.S.R. 892(E) (10 December 2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E),
-5 October 2026) change wording only and move no date. The reported consultation to shorten the eighteen-month period
-and the reported corrigendum G.S.R. 113(E) appear only in secondary sources; no amending notification had been found
-as of October 2026. See [Security and Privacy](security-and-privacy.md#commencement).
+Still open: whether the courts would treat CounterSignature timestamps and the crossing tie-break as the time of
+dispatch and receipt.
 
 ### Q-54 Token requestor duties {#q-54}
 
@@ -631,21 +633,33 @@ is proposed but unverified.<br>
 ### Q-57 IGM SLA timelines {#q-57}
 
 **Question.** What are the IGM SLA timelines (48-hour acknowledgement, one-month resolution, Level I/II)? The ONDC
-policy portal was unreachable. Should BACP auto-escalate on missed clocks?<br>
+policy text could not be verified as of 17-10-2026. Should BACP auto-escalate on missed clocks?<br>
 **Owner.** ONDC.
 
 **Partly answered.** The 48-hour acknowledgement and one-month resolution are maximums under Consumer Protection
 (E-Commerce) Rules r.4(5), restated by ONDC on its [complaint page](https://ondc.org/pages/complaint.html). IGM 2.0
 carries them as per-issue durations (`expected_response_time`, `expected_resolution_time`) with no network default.
-Still open: auto-escalation on a missed clock, and the ONDC Network Policy IGM chapter, which was not retrieved.
+Still open: auto-escalation on a missed clock, and the ONDC Network Policy IGM chapter, which was not verified as of
+17-10-2026.
 
 **Working position.** Proposed: normative `ack_by` and `resolve_by` timers. See
 [Beckn / ONDC Binding](transports/beckn.md#igm) and [Orders and Post-order](checkout/post-order.md#igm).
 
+### Q-58 Webhook signature tag {#q-58}
+
+**Question.** Should gateway-signed webhooks carry a dedicated RFC 9421 signature tag, `bacp-webhook`, listed in the
+gateway's profile, so that a webhook signature can never be confused with any other signed message?<br>
+**Owner.** BACP WG.
+
+**Working position.** Proposed: the tag is `bacp-webhook`. Fail-safe default until it is settled: an agent MUST
+verify every webhook against a key in the gateway profile's `keys` and MUST NOT act on a webhook that fails
+verification; it MUST NOT reject a webhook only because its signature has no `tag` or an unknown one. See
+[Identity and Request Signing](identity-and-signing.md#signature-tags) and [REST](transports/rest.md).
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
-These four choices are already written into the draft. They are flagged here because an owner may still overturn
-them.
+These three choices are written into BACP `2026-10-17`. They are flagged here because an owner may still overturn
+them in a later dated release.
 
 ### (a) Open mandates on any class-O handler {#proposed-a}
 
@@ -654,11 +668,6 @@ limits the rail, the issuer or both parties enforce (UPI Reserve Pay, Circle, Au
 agentic card tokens in pilot, eNACH debit, PPI e-mandates and gift PPIs, and others), not only to the three UPI
 primitives. Pilot handlers are eligible only when the gateway's conformance attestation lists them; reserved handlers
 never are. Related: [Q-39](#q-39). See [Handler Registry](payments/handler-registry.md).
-
-### (b) Canonical `in.*` handler ids {#proposed-b}
-
-Handler ids under `in.*` (rails and instruments) and `bacp.*` (BACP constructs) are canonical. Earlier names such as
-`upi.circle.delegate` are aliases for one deprecation window. Decision owner: [Q-28](#q-28).
 
 ### (c) Acceptance revocation waived by default {#proposed-c}
 
@@ -671,7 +680,126 @@ A Reserve Pay block serves exactly one seller. Human-not-present shopping across
 Circle, an agentic card token, several per-seller blocks under one open checkout mandate whose budgets cap the total,
 or falls back to a human-present payment. See [Rail Bindings](payments/rails.md).
 
-## Settled in this draft {#settled}
+## Settled {#settled}
+
+These questions are settled in BACP `2026-10-17`. Each answer is normative in this version; the linked pages state
+the rule. A settled answer changes only in a later dated release, under the [versioning policy](https://bacp.dev/versioning/).
+
+### Q-28 Handler naming {#q-28}
+
+!!! success "Settled"
+    Settled in `2026-10-17`.
+
+**Question.** Who governs handler names (`in.*` or `bacp.*`), and how long is the alias deprecation window?<br>
+**Owner.** BACP WG.
+
+<a id="proposed-b"></a>**Answer.** Handler ids under `in.*` (rails and instruments) and `bacp.*` (BACP constructs) are canonical; earlier
+names such as `upi.circle.delegate` are aliases. Registry changes, including new ids, aliases and status changes,
+are normative changes under [`GOVERNANCE.md`](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md): a 14-day
+review and two maintainers' approval, one of them the payments editor, after the
+[proposal process](payments/handler-registry.md#proposing-a-new-handler). The deprecation window is set by the
+[versioning policy](https://bacp.dev/versioning/#deprecation): a deprecated alias stays supported for at least two dated releases
+after the release that deprecates it and at least 180 days after that release, whichever is later. Removing an
+alias is a breaking change and gets at least 90 days' notice. This also settles what was proposed design choice
+(b), canonical `in.*` handler ids.
+
+### Q-41 Closing open mandates {#q-41}
+
+!!! success "Settled"
+    Was Blocking. Settled in `2026-10-17`.
+
+**Question.** What is the interoperable SD-JWT / KB-JWT encoding for closing open mandates, in place of the
+detached-JWS `cnf` closing?<br>
+**Owner.** BACP WG.
+
+**Answer.** BACP `2026-10-17` has one interoperable encoding for a closed mandate: an attached compact JWS whose
+payload is the Mandate JSON, including an inner signature with `role: agent` made by the open mandate's `cnf` key,
+and whose header `kid` is the `cnf` key id. The optional `kb_jwt` on `complete` keeps its current rules. An SD-JWT /
+KB-JWT selective-disclosure encoding is not part of this version; a later release may add it as a new mandate
+`vct` without changing this one. The release's conformance suite carries test vectors for the attached-JWS form. See
+[Mandates and Consent](mandates.md#closing).
+
+### Q-42 Mandatory signature algorithm {#q-42}
+
+!!! success "Settled"
+    Was Blocking. Settled in `2026-10-17`.
+
+**Question.** ES256 is mandatory and EdDSA allowed, but no ES256 test vectors exist and the implementation exercised
+so far signs only with EdDSA. Should ES256 stay mandatory, should EdDSA become mandatory, or should both be
+required?<br>
+**Owner.** BACP WG.
+
+**Answer.** Both are mandatory to verify. Every verifier of a BACP signature (RFC 9421 requests and webhooks, JWS
+mandates, receipts, ConsentReceipts, attestations and InstructionLog entries) MUST support ES256 (ECDSA P-256) and
+EdDSA with Ed25519. Every signer MUST use one of the two; no other algorithm is allowed. The release's conformance
+suite carries test vectors for both. See [Identity and Request Signing](identity-and-signing.md#signature-algorithms).
+
+### Q-43 Network-leg signing {#q-43}
+
+!!! success "Settled"
+    Was Blocking. Settled in `2026-10-17`.
+
+**Question.** Should Beckn messages be signed with a detached JWS over JCS, or with Beckn's Ed25519 + BLAKE2b
+`Authorization` header? Does BACP require Beckn 2.0 signed ACKs and the CounterSignature on which negotiation timing
+depends?<br>
+**Owner.** ONDC.
+
+**Answer.**
+
+- On the Beckn leg the network's own signing profile is normative: on Beckn 1.x and ONDC, the Ed25519 + BLAKE2b-512
+  `Authorization` header. BACP adds no transport signature of its own.
+- BACP does not require Beckn 2.0 signed ACKs. A gateway SHOULD use them, and the `request-signature` binding of
+  callbacks, where the counterparty supports them.
+- The CounterSignature that negotiation timing relies on is a BACP artefact, not a Beckn ACK: a JWS by the
+  receiving participant's registry key over the request digest and message id, returned in the negotiation
+  message's `counter_signature` (on Beckn, inside the `bacp` TagGroups), so it does not depend on the Beckn
+  version.
+- A counterparty that does not return valid CounterSignatures is treated as not supporting firm negotiation: the
+  gateway MUST send it only non-firm offers (`firm: false`), so that formation follows the purchase-offer flow.
+
+Whether ONDC validators accept the `bacp` TagGroups at all is [Q-09](#q-09). See
+[Beckn / ONDC Binding](transports/beckn.md#signing) and [Negotiation](negotiation/index.md).
+
+### Q-47 Purpose-code governance {#q-47}
+
+!!! success "Settled"
+    Was Blocking. Settled in `2026-10-17`.
+
+**Question.** Who governs the purpose-code registry and its bounds? The Sahamati Fair Use page that inspired it is
+marked "no longer relevant".<br>
+**Owner.** BACP WG.
+
+**Answer.** The BACP WG governs the purpose-code registry. The purpose-bounds table in
+[Mandates and Consent](mandates.md#purpose-bounds) is the normative registry for `2026-10-17`. A change to a code or
+a bound is a normative change under
+[`GOVERNANCE.md`](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md) and ships only in a dated release;
+lowering a bound or removing a code is a breaking change. A `purpose_code` that is not in the table is refused with
+`403 mandate_scope_mismatch`.
+
+### Q-53 DPDP commencement dates {#q-53}
+
+!!! success "Settled"
+    The dates are fixed in the Gazette. Re-check only if an amending notification is published.
+
+**Question.** What are the final DPDP commencement dates, given a reported MeitY consultation to shorten 18 months to
+12 and a reported corrigendum G.S.R. 113(E)?<br>
+**Owner.** MeitY/DPDP.
+
+**Answer.** The DPDP Rules 2025 are G.S.R. 846(E) and the Act's commencement notification is G.S.R. 843(E), both
+dated 13-11-2025. Together they set three dates:
+
+| From | Rules (G.S.R. 846(E), rule 1) | Act (G.S.R. 843(E)) |
+|---|---|---|
+| 13-11-2025 (in force) | Rules 1, 2 and 17–21 | ss.1(2), 2, 18–26, 35, 38–43, 44(1) and 44(3) |
+| 13-11-2026 | Rule 4 (Consent Managers) | s.6(9) and s.27(1)(d) |
+| 13-05-2027 | Rules 3, 5–16, 22 and 23 | ss.3–5, 6(1)–(8) and 6(10), 7–17, 27 (except 27(1)(d)), the penalty provisions ss.28–34, 36, 37 and 44(2) |
+
+The corrigendum G.S.R. 892(E) (10-12-2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E),
+05-10-2026) change wording only and move no date. The reported consultation to shorten the eighteen-month period
+and the reported corrigendum G.S.R. 113(E) appear only in secondary sources; no amending notification had been found
+as of 17-10-2026. See [Security and Privacy](security-and-privacy.md#commencement).
+
+### Other settled points {#settled-other}
 
 | Question | Answer |
 |---|---|
@@ -680,6 +808,6 @@ or falls back to a human-present payment. See [Rail Bindings](payments/rails.md)
 | How does a 24-hour AutoPay notice fit a 10-minute quote? | The notice-gated checkout pattern in [Rail Bindings](payments/rails.md). |
 | Which header carries the credential, and what does the signature cover? | `BACP-Agent`; see [Identity and Request Signing](identity-and-signing.md). |
 | Is a rail-cap breach an escalation or an error? | Only AFA thresholds escalate; other caps return 403 `rail_limit_exceeded` ([Errors](errors.md#registry-mandate)). |
-| How are colliding handler aliases resolved? | Exact beats glob; see [Handler Registry](payments/handler-registry.md). Naming governance stays open ([Q-28](#q-28)). |
+| How are colliding handler aliases resolved? | Exact beats glob; see [Handler Registry](payments/handler-registry.md). Naming governance is settled in [Q-28](#q-28). |
 | What evidence do non-UPI receipts carry? | `rail.evidence` keyed by the descriptor's evidence references; see [Rail Bindings](payments/rails.md). |
 | Is per-mandate evaluation atomic? | Yes, within one gateway ([Security and Privacy](security-and-privacy.md#atomic-reservation)); across gateways see [Q-36](#q-36). |

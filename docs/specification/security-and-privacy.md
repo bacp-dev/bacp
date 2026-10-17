@@ -1,5 +1,8 @@
 # Security and Privacy
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 This page states the BACP threat model and the controls that answer it, then how BACP handles personal data under
 India's Digital Personal Data Protection Act, 2023 and the DPDP Rules, 2025. The controls are defined normatively
 on the pages linked from each row; this page collects them so that an implementer or auditor can check coverage in
@@ -79,9 +82,9 @@ deterministic, non-LLM verifier inside the gateway, which fails closed.
 
 - Mandates are immutable, signed artefacts with an explicit purpose code, `action_scope`, `data_scopes`, budgets,
   allow-lists and step-up rules. Unknown constraint keys fail closed.
-- At mandate request, the gateway or Mandate Manager MUST reject a request that exceeds the purpose's provisional
-  bounds before anything reaches the Trusted Surface (`mandate_scope_mismatch`). The bounds are provisional
-  ([Q-47](open-questions.md#q-47)).
+- At mandate request, the gateway or Mandate Manager MUST reject a request that exceeds the purpose's bounds, or
+  names a purpose code not in the registry, before anything reaches the Trusted Surface (`mandate_scope_mismatch`).
+  The purpose-code registry is governed by the BACP working group (settled in [Q-47](open-questions.md#q-47)).
 - BACP constraints MUST be at or below the bound rail's limits.
 - An AFA threshold produces a `rail_auth` step-up. Every other rail cap produces 403 `rail_limit_exceeded` with
   every local and rail reason in `reasons[]`.
@@ -103,7 +106,9 @@ deterministic, non-LLM verifier inside the gateway, which fails closed.
 ### Replay protection {#replay}
 
 - The RFC 9421 signature carries `created`, `expires`, `nonce`, `keyid` and `tag`. `expires − created` MUST NOT
-  exceed 300 s, and clock skew of up to 5 s is allowed.
+  exceed 300 s, and clock skew of up to 5 s is allowed. Participants subject to the CERT-In Directions already
+  synchronise their system clocks to the NTP servers of NIC or NPL (or servers traceable to them), which keeps them
+  well inside this window.
 - The gateway MUST keep a `(keyid, nonce)` cache until `expires`. A hit returns 401 `replay_detected`. The nonce is
   stored only after the signature verifies.
 - On the network leg, the Beckn `message_id` is derived deterministically from the agent, the idempotency key and the
@@ -120,7 +125,7 @@ ledger.
 1. **Reservation ledger.** For every open payment mandate the gateway MUST keep (a) settled spends, derived only
    from PSP-signed receipts, and (b) in-flight reservations keyed by closed payment mandate id, each with an amount
    and a time. Exposure for a budget window is settled spends plus reservations in that window.
-2. **Atomic section.** For `complete`, the following MUST run as one atomic, linearizable operation per open mandate
+2. **Atomic section.** For `complete`, the following MUST run as one atomic, linearisable operation per open mandate
    id: the split-order check; the authoritative mandate evaluation (including the positive-amount rule) against
    exposure; consumption of the closed payment mandate; creation of the reservation; and the session's move to
    `complete_in_progress`. A lock keyed on the mandate id, or compare-and-reserve on a store with equivalent
@@ -133,7 +138,7 @@ ledger.
 5. **The rail is not the backstop.** A gateway MUST NOT rely on rail-enforced limits to bound BACP budgets: the
    rail authority may legitimately exceed the BACP caps, and the multi-seller rails (UPI Circle, agentic card
    tokens) are exactly the loose ones.
-6. **Replicas.** A gateway running as several instances MUST share a ledger that is linearizable per mandate. A
+6. **Replicas.** A gateway running as several instances MUST share a ledger that is linearisable per mandate. A
    per-process lock is not enough. Cross-gateway atomicity is open ([Q-36](open-questions.md#q-36)).
 7. **Negotiation exposure.** The guard's cross-session exposure check, and the emission of the firm COUNTER, ACCEPT
    or bid it guards, MUST run in the same kind of atomic section, keyed on the principal. Each outstanding firm
@@ -231,18 +236,18 @@ needs to show compliance; it does not replace their own notices and policies.
 
 | Provisions | Applies from | Notes |
 |---|---|---|
-| DPDP Rules 1, 2 and 17–21 (the Data Protection Board); Act s.1(2), s.2, ss.18–26, 35, 38–43, 44(1) and 44(3) | 13 November 2025, on publication (Rules: G.S.R. 846(E); Act commencement: G.S.R. 843(E), both of 13 November 2025) | In force. |
-| Rule 4 and the First Schedule (Consent Managers); Act s.6(9) (Consent Manager registration) and s.27(1)(d) | 13 November 2026 (one year after publication) | See [Consent Manager role](#consent-manager). |
-| Rules 3, 5–16, 22 and 23 (notice, security, breach, retention, children, Significant Data Fiduciaries, rights, cross-border transfer); Act ss.3–5, 6(1)–(8) and 6(10), 7–17, 27 (except 27(1)(d)), 28–34, 36, 37 and 44(2) | 13 May 2027 (eighteen months after publication) | The Act's duties and its penalties (s.33 and the Schedule) commence on the same date as these Rules (G.S.R. 843(E)). |
-| RBI direction on Storage of Payment System Data (6 April 2018) | In force | See [Data localisation](#data-localisation). |
+| DPDP Rules 1, 2 and 17–21 (the Data Protection Board); Act s.1(2), s.2, ss.18–26, 35, 38–43, 44(1) and 44(3) | 13-11-2025, on publication (Rules: G.S.R. 846(E); Act commencement: G.S.R. 843(E), both of 13-11-2025) | In force. |
+| Rule 4 and the First Schedule (Consent Managers); Act s.6(9) (Consent Manager registration) and s.27(1)(d) | 13-11-2026 (one year after publication) | See [Consent Manager role](#consent-manager). |
+| Rules 3, 5–16, 22 and 23 (notice, security, breach, retention, children, Significant Data Fiduciaries, rights, cross-border transfer); Act ss.3–5, 6(1)–(8) and 6(10), 7–17, 27 (except 27(1)(d)), 28–34, 36, 37 and 44(2) | 13-05-2027 (eighteen months after publication) | The Act's duties and its penalties (s.33 and the Schedule) commence on the same date as these Rules (G.S.R. 843(E)). |
+| RBI direction on Storage of Payment System Data (06-04-2018) | In force | See [Data localisation](#data-localisation). |
+| CERT-In Directions under s.70B(6) of the Information Technology Act, 2000 (No. 20(3)/2022-CERT-In, 28-04-2022): 6-hour incident reporting, 180-day log retention in India, NTP clock synchronisation | In force | Not a DPDP instrument; see [Breach notice](#breach-notice) and [Retention](#retention). |
 
 !!! warning "Dates may move"
     A MeitY consultation in January 2026 reportedly proposed shortening some of the eighteen-month periods to
     twelve months; reports differ on whether it covers all the duties or only Rule 13. It is reported in secondary
-    sources only, and no amending notification had been found as of October 2026. A corrigendum to the Rules
-    (G.S.R. 892(E), 10 December 2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E), 5 October
-    2026) change wording only and move no date. A further corrigendum, G.S.R. 113(E), is listed by a secondary
-    source, but its text has not been seen. See [Q-53](open-questions.md#q-53).
+    sources only, and no amending notification had been found as of 17-10-2026. A corrigendum to the Rules
+    (G.S.R. 892(E), 10-12-2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E), 05-10-2026) change wording only and move no date. A further corrigendum, G.S.R. 113(E), is listed by a secondary
+    source (reported, not verified as of 17-10-2026). See [Q-53](open-questions.md#q-53).
 
 ### Notice and consent {#notice-and-consent}
 
@@ -256,58 +261,75 @@ needs to show compliance; it does not replace their own notices and policies.
   delivery data the buyer provided for that order).
 - Withdrawal MUST be as easy as giving consent. The receipt carries a withdrawal URI and an erasure signal.
 - When the seller is unknown at mandate setup, a class receipt (recipient `*`) scoped to the mandate's categories is
-  issued, plus a per-seller receipt at `init`. Proposed: the per-seller receipt is REQUIRED before any data is
-  released ([Q-12](open-questions.md#q-12)).
+  issued. It only pre-authorises: a per-seller receipt MUST be minted at `init` before any data is released to that
+  seller, and no data is released on the strength of a class receipt alone (settled in
+  [Q-12](open-questions.md#q-12)).
+- Fail-safe default until [Q-12](open-questions.md#q-12) is settled: from 13-05-2027, the first release of personal
+  data to a seller not named in any receipt the principal approved MUST be confirmed by the principal on the Trusted
+  Surface (see [Mandates and Consent](mandates.md#consent)).
 - Purchase consent is never recorded automatically: no confirmation without a covering mandate or an explicit buyer
   confirmation, and pre-ticked add-ons are declined.
 
 ### Purpose limitation {#purpose-limitation}
 
 - Every mandate carries a purpose code. The purpose fixes the categories, maximum validity, monetary bounds and
-  data scopes the mandate may request (provisional table in [Mandates and Consent](mandates.md);
-  [Q-47](open-questions.md#q-47)).
+  data scopes the mandate may request (registry table in [Mandates and Consent](mandates.md#purpose-bounds);
+  settled in [Q-47](open-questions.md#q-47)).
 - Data shared under a mandate MUST stay within its `data_scopes` and the order's needs.
 - Separate consent for model training and for health data is not yet modelled
   ([forward compliance](#forward-compliance)).
 
 ### Consent Manager role {#consent-manager}
 
-!!! warning "Proposed"
-    The Mandate Manager turns Trusted Surface approvals into signed mandates and ConsentReceipts, keeps their status
-    and publishes a status list. It is designed to be **data-blind**: it stores mandates and logs, never order or
-    payment payloads. Whether it registers as a DPDP Consent Manager or integrates with one, and how that fits a
-    Mandate Manager co-located with the payer PSP, is open: [Q-16](open-questions.md#q-16).
+The Mandate Manager turns Trusted Surface approvals into signed mandates and ConsentReceipts, keeps their status
+and publishes a status list. It is designed to be **data-blind**: it stores mandates and logs, never order or
+payment payloads. Whether it registers as a DPDP Consent Manager or integrates with one, and how that fits a
+Mandate Manager co-located with the payer PSP, is open: [Q-16](open-questions.md#q-16).
 
-Proposed rules, pending that answer:
+Act s.6(9) (registration of Consent Managers with the Board) and Rule 4 apply from 13-11-2026. Under the First
+Schedule, a Consent Manager is a company incorporated in India with a net worth of at least ₹2 crore. Until Q-16 is
+settled, these fail-safe rules apply (stated normatively in
+[Mandates and Consent](mandates.md#consent-manager-registration)):
 
-- `cm_registration_no` is REQUIRED on ConsentReceipts issued on or after 2026-11-13, the date from which Act
-  s.6(9) (registration of Consent Managers with the Board) and Rule 4 apply. Under the First Schedule, a Consent
-  Manager is a company incorporated in India with a net worth of at least ₹2 crore.
-- The credential-provider role (re-verifying closed mandates, issuing `within_bounds` attestations) is split from
-  the data-blind Consent Manager.
-- The Consent Manager keeps records of consents, notices and sharing for at least 7 years and gives them to the
-  Data Principal on request in machine-readable form (First Schedule Part B item 4; proposed
-  `GET /mm/records?principal=`).
+- A Mandate Manager MUST NOT act, or describe itself, as a Consent Manager unless it is registered with the Board.
+  On ConsentReceipts issued on or after 13-11-2026, `cm_registration_no` MUST be the Board registration number when
+  the MM acts as a Consent Manager, and MUST be `null` otherwise.
+- An MM that acts as a registered Consent Manager MUST NOT also perform the credential-provider role (re-verifying
+  closed mandates, issuing `within_bounds` attestations); that role runs as a logically separate component with its
+  own registry key.
+- The MM keeps records of consents, notices and sharing for at least 7 years and MUST give them to the Data
+  Principal on request, on the Trusted Surface, in machine-readable form (First Schedule Part B item 4). A REST
+  export endpoint is not part of this version.
 
 ### Data localisation {#data-localisation}
 
-!!! warning "Proposed"
-    RBI requires payment system data to be stored only in India; data for the foreign leg of a transaction may also
-    be stored abroad. BACP has not yet fixed where mandates, receipts, the InstructionLog and evidence bundles are
-    stored, or where a language model may process payment data: [Q-15](open-questions.md#q-15).
+RBI requires payment system data to be stored only in India; data for the foreign leg of a transaction may also be
+stored abroad. RBI's FAQ on the directive allows processing abroad if the data returns to India within one business
+day or 24 hours. Where an agent operator's own language model may process payment data is open:
+[Q-15](open-questions.md#q-15). Until it is settled, BACP applies a fail-safe default that is stricter than the FAQ:
 
-Proposed: anything that contains payment data is stored only in India; the AgentCredential and registry declare
-`data_residency{payment_data: "IN", llm_region, log_region, transfer_basis}`; the gateway refuses payment-data
-egress outside India. Cross-border transfer of other personal data follows DPDP s.16 and Rule 15 from 13 May 2027: transfer is
+- A gateway, Mandate Manager or PSP adapter MUST store mandates, receipts, the InstructionLog and evidence bundles
+  that contain payment data only in India.
+- These components MUST NOT send payment data to a language model, log store or other processor outside India, even
+  transiently.
+- The AgentCredential and registry MAY declare `data_residency{payment_data: "IN", llm_region, log_region,
+  transfer_basis}`. A gateway MUST NOT treat a missing or incomplete declaration as permission for payment-data
+  egress outside India.
+
+Cross-border transfer of other personal data follows DPDP s.16 and Rule 15 from 13-05-2027: transfer is
 restricted only to countries the Central Government notifies. A Significant Data Fiduciary may also be required to
 keep specified data in India (Rule 13(4)).
 
 ### Retention {#retention}
 
-- From 13 May 2027, DPDP Rule 8(3) requires personal data, traffic data and processing logs to be kept for at
+- From 13-05-2027, DPDP Rule 8(3) requires personal data, traffic data and processing logs to be kept for at
   least one year; the
   ConsentReceipt records `retention.legal_minimum` (default one year) and the recipient's maximum.
 - Erasure on withdrawal or once the purpose is served (s.8(7)) is reconciled with that minimum.
+- Already in force: participants subject to the CERT-In Directions (28-04-2022) MUST keep the logs of their ICT
+  systems, which include gateway, InstructionLog and signing-service logs, for a rolling 180 days within India, and
+  produce them to CERT-In on request. This is a floor; the DPDP one-year minimum above applies on top of it from
+  13-05-2027.
 - Mandate records at the Mandate Manager are kept for 7 years.
 - Negotiation transcripts are kept for at least the proposed limitation period of two years for B2C, longer for B2B
   and public procurement ([Q-56](open-questions.md#q-56)).
@@ -316,16 +338,27 @@ keep specified data in India (Rule 13(4)).
 
 ### Breach notice {#breach-notice}
 
-From 13 May 2027, Act s.8(6) and DPDP Rule 7 require a Fiduciary that becomes aware of a personal data
+**Applies now: CERT-In reporting.** Under the CERT-In Directions issued under s.70B(6) of the Information
+Technology Act, 2000 (No. 20(3)/2022-CERT-In, 28-04-2022), service providers, intermediaries, data centres and body
+corporates must report the cyber incidents the Directions list (including data breaches, data leaks and
+unauthorised access to IT systems or data) to CERT-In within 6 hours of noticing them or being told of them.
+Participants subject to the Directions MUST make that report themselves; a BACP message never satisfies it on their
+behalf, and no other participant or the BACP maintainers can make it for them. The 180-day log duty that supports
+the report is described under [Retention](#retention).
+
+**From 13-05-2027: DPDP breach notice.** In addition, Act s.8(6) and DPDP Rule 7 require a Fiduciary that becomes aware of a personal data
 breach to inform each affected Data Principal without delay, and the Board without delay, followed by a detailed
 report within 72 hours of becoming aware of it (or a longer period the Board allows on a written request). Failure
 to notify can attract a penalty of up to ₹200 crore. In a BACP flow a breach at one participant can
 affect data held by others. Proposed: a cross-participant `bacp.breach_signal` message carrying detection and
-notification times ([Q-17](open-questions.md#q-17)).
+notification times ([Q-17](open-questions.md#q-17)). Because the CERT-In clock is 6 hours, the signal is
+meant to be sent as soon as a participant detects an incident affecting others; receiving a signal can be the moment
+another participant "notices" an incident and starts its own 6-hour clock. The signal carries times and
+references only, and the logs it points to are the ones kept for the 180-day CERT-In period.
 
 ### Forward compliance {#forward-compliance}
 
-These DPDP duties start in May 2027 and are not yet designed in. Proposed message designs are tracked in
+These DPDP duties start on 13-05-2027 and are not yet designed in. Proposed message designs are tracked in
 [Q-17](open-questions.md#q-17):
 
 | Duty | Proposed |
@@ -342,8 +375,8 @@ within 90 days (Rule 14(3)); e-commerce grievances follow the shorter timelines 
 
 ### Penalties {#penalties}
 
-The Schedule to the DPDP Act (s.33(1)) sets the maximum penalties the Board may impose. They apply from about
-13 May 2027.
+The Schedule to the DPDP Act (s.33(1)) sets the maximum penalties the Board may impose. They apply from
+13-05-2027.
 
 | Breach | Maximum penalty |
 |---|---|

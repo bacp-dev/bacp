@@ -9,8 +9,8 @@ hide:
 
 **BACP lets an AI agent discover, negotiate, buy, pay for, return and raise grievances about goods and services in India, on behalf of a person or a business, within limits that person or business has signed.**
 
-!!! warning "Status: Draft, open for review"
-    BACP is a **draft** specification. It is open for public review and is **not ready for production use**. Some rules depend on decisions that are still open. Read the [specification](specification/overview/index.md) and the [open questions](specification/open-questions.md), and send feedback on [GitHub](https://github.com/bacp-dev/bacp).
+!!! info "Version 2026-10-17"
+    BACP `2026-10-17` is the first dated release of the specification, and implementers can target it. Rules marked **Proposed** depend on an [open question](specification/open-questions.md) and may change in a later dated release. The conformance test suite is not yet published, so no participant can hold a conformance attestation yet. BACP is an independent proposal: it is not issued or endorsed by NPCI, ONDC, RBI or any other public body. Send feedback on [GitHub](https://github.com/bacp-dev/bacp).
 
 [Read the specification](specification/overview/index.md){ .md-button .md-button--primary }
 [Core concepts](documentation/core-concepts/){ .md-button }
@@ -20,9 +20,9 @@ hide:
 
 India already has the rails that agentic commerce needs. ONDC and Beckn provide an open commerce network with order, cancel, return and grievance flows. UPI moves money at population scale and already has standing-authority primitives such as UPI Circle, Reserve Pay and AutoPay. Account Aggregator consent shows how to make permission explicit, purpose-bound and revocable. The DPDP Act sets the rules for personal data.
 
-None of these rails knows about agents. A network message identifies the buyer app, not the agent that acted. A payment carries no record of what the user allowed the agent to do. Nothing standard says whether a human was present, how a user revokes an agent, or how a dispute can reconstruct what the agent was told.
+As of 17-10-2026, none of these rails has a published, standard way to identify agents. A network message identifies the buyer app, not the agent that acted. A payment carries no record of what the user allowed the agent to do. Nothing standard says whether a human was present, how a user revokes an agent, or how a dispute can reconstruct what the agent was told.
 
-Global agentic-commerce protocols solve parts of this problem, but they are built mainly around cards and around single merchants. None of them defines how to use UPI, cash on delivery, GST, Indian-language voice or the ONDC network.
+Global agentic-commerce protocols solve parts of this problem, but, as of 17-10-2026, they are built mainly around cards and around single merchants. None of them defines how to use UPI, cash on delivery, GST, Indian-language voice or the ONDC network.
 
 BACP is a thin agent layer over the Indian rails. It replaces none of them. It adds four things to every transaction:
 
@@ -59,7 +59,7 @@ Every step leaves verifiable evidence, so that a dispute can be traced from the 
 
     ---
 
-    Open mandates bind to UPI Circle, Reserve Pay, AutoPay and One-Time Mandate. (NPCI lists AI-driven payments through UPI Circle as a closed-user-group pilot.) A registry of payment handlers covers cards, net banking, wallets, BBPS, e-RUPI, NACH, cash on delivery and B2B credit.
+    Open mandates bind to UPI Circle, Reserve Pay, AutoPay and One-Time Mandate. (As of 17-10-2026, NPCI lists AI-driven payments through UPI Circle as a closed-user-group pilot.) A registry of payment handlers covers cards, net banking, wallets, BBPS, e-RUPI, NACH, cash on delivery and B2B credit.
 
     [Payments →](specification/payments/index.md)
 
@@ -101,8 +101,8 @@ Every step leaves verifiable evidence, so that a dispute can be traced from the 
 
 ```mermaid
 flowchart LR
-    U["User"] -->|"approves mandate on a trusted surface"| MM["Mandate Manager"]
-    A["Agent"] -->|"signed request with mandate"| G["BACP Gateway<br/>in a buyer app"]
+    U["User"] -->|"approves mandate on the Trusted Surface"| MM["Mandate Manager"]
+    A["Agent"] -->|"signed request with mandate"| G["BACP gateway<br/>in a buyer app"]
     MM -.->|"mandate status"| G
     G -->|"Beckn with context.bacp"| S["Seller apps on ONDC"]
     G -->|"basket-blind payment leg"| P["Payer PSP and UPI"]
@@ -114,6 +114,6 @@ flowchart LR
 
 ## An independent, open proposal
 
-BACP is an independent open proposal. It is not issued, endorsed or operated by NPCI, ONDC, RBI or any other public body, and it has no production adopters yet. Where it relies on a rail or a regulation, it describes that rail as publicly documented and leaves the rail's own rules in charge.
+BACP is an independent open proposal. It is not issued, endorsed or operated by NPCI, ONDC, RBI or any other public body. As of 17-10-2026, no production deployments have been announced. Where it relies on a rail or a regulation, it describes that rail as publicly documented and leaves the rail's own rules in charge.
 
 The specification, schemas and tools are developed in the open at [github.com/bacp-dev/bacp](https://github.com/bacp-dev/bacp) under the Apache License 2.0. See [Status and Roadmap](documentation/roadmap/) for what comes next.

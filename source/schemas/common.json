@@ -107,7 +107,8 @@
           "enum": [
             "ES256",
             "EdDSA"
-          ]
+          ],
+          "description": "Signature algorithm. Every verifier of a BACP signature MUST support both ES256 (ECDSA P-256 with SHA-256) and EdDSA (Ed25519); every signer MUST use one of the two, and a signature with any other algorithm MUST be rejected (settled in Q-42)."
         },
         "value": {
           "$ref": "#/$defs/Jws"
@@ -283,7 +284,7 @@
                 "services",
                 "trading"
               ],
-              "description": "MSMED s.15 applies to manufacturing and services micro/small units. Traders are likely excluded (2 Jul 2021 OM, to be verified)."
+              "description": "MSMED s.15 applies to manufacturing and services micro/small units. Whether traders are covered (Office Memorandum of 02-07-2021) is open question Q-21."
             },
             "declared_at": {
               "type": "string",
@@ -448,7 +449,7 @@
     "ProtocolVersion": {
       "type": "string",
       "pattern": "^(\\d{4}-\\d{2}-\\d{2}|draft)$",
-      "description": "BACP protocol version: a release date (YYYY-MM-DD) or \"draft\"."
+      "description": "BACP protocol version: a dated release identifier (YYYY-MM-DD), or \"draft\" for the unreleased working version."
     }
   }
 }

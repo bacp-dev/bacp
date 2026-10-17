@@ -1,7 +1,7 @@
 # Credit and Split Tender
 
-!!! warning "Draft"
-    This page is part of the `draft` BACP specification. Rules marked **Proposed** depend on an open question and can change.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page covers the ways an order is paid other than one tender in full at checkout:
 
@@ -14,7 +14,7 @@ This page covers the ways an order is paid other than one tender in full at chec
 The general payment model, handler classes and refund rules are in the [Payments Overview](index.md).
 
 !!! warning "Proposed"
-    Payment plans, credit ledgers and trade documents are defined in this draft as **service-level interfaces without a normative REST binding**. Their conformance is tested at library level. `CompleteRequest.payment_plan` is reserved. The REST, MCP and A2A bindings are open: [Q-44](../open-questions.md#q-44).
+    Payment plans, credit ledgers and trade documents are defined in this version as **service-level interfaces without a normative wire binding**. Their conformance is tested at library level. The REST, MCP and A2A bindings are open: [Q-44](../open-questions.md#q-44). Until Q-44 is settled, `CompleteRequest.payment_plan` is reserved: a gateway MUST reject a `complete` that carries it with `400 invalid_request` at `$.payment_plan`, and MUST NOT ignore it and charge a single tender instead. A checkout over REST, MCP or A2A is paid with one tender, and a gateway MUST NOT expose MCP tools or A2A DataParts for these interfaces.
 
 ## Split tender: payment plans
 
@@ -55,7 +55,7 @@ Whether LIFO allocation satisfies the refund-to-source rule of PA Master Directi
 
 A tranche plan for a high-value purchase (a vehicle, a property booking) combines a token, a loan and a balance:
 
-- The token tranche is limited by RERA (a booking token of at most 10% without a registered agreement) and by the cash limit of Income-tax Act 1961 s.269ST (Income-tax Act 2025 equivalent not verified; cash of ₹2,00,000 or more is refused, `NEG_CASH_LIMIT`).
+- The token tranche is limited by RERA (a booking token of at most 10% without a registered agreement) and by the cash limit of Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 equivalent: s.186 per secondary sources, not verified as of 17-10-2026; cash of ₹2,00,000 or more is refused, `NEG_CASH_LIMIT`).
 - The loan tranche is an `in.credit.*` or `in.fin.ocen` tender with all the [credit-at-checkout](#credit-at-checkout-bnpl-and-loan-offers) duties: the KFS shown, HP acceptance, disbursal to the end beneficiary's account, and a cooling-off period of at least one day.
 
 ### Example
@@ -109,16 +109,16 @@ sequenceDiagram
     participant GI as Gift PPI issuer
     participant N as Payer PSP and NPCI
     participant S as Seller BPP
-    A->>G: Complete session with plan gift 1000 plus Circle UPI 1160
-    G->>G: Check sum equals 2160, step-up and AFA on the 2160 total
-    G->>V: Redeem gift tender 1000 for checkout_hash
-    V->>GI: Debit gift PPI 1000, AFA exempt
+    A->>G: Complete session with plan gift ₹1,000 plus Circle UPI ₹1,160
+    G->>G: Check sum equals ₹2,160, step-up and AFA on the ₹2,160 total
+    G->>V: Redeem gift tender ₹1,000 for checkout_hash
+    V->>GI: Debit gift PPI ₹1,000, AFA exempt
     GI-->>G: Receipt for tender 1
-    G->>N: Debit 1160 under the Circle delegation
+    G->>N: Debit ₹1,160 under the Circle delegation
     alt UPI debit fails
         N-->>G: Failure
-        G->>GI: Refund 1000 to the same gift PPI at once
-        G-->>A: Session canceled, no net money moved
+        G->>GI: Refund ₹1,000 to the same gift PPI at once
+        G-->>A: Session cancelled, no net money moved
     end
     N-->>G: Receipt for tender 2 with RRN
     G->>S: confirm with payment PAID and both receipts
@@ -130,10 +130,10 @@ sequenceDiagram
 
 Handlers: `in.credit.bnpl` (alias `in.bnpl`), `in.credit.cardless_emi`, `in.fin.ocen` (registry status `pilot`), `in.fin.dealer_line`, and `in.card.emi`. All are class C, with `funding: loan` or `credit`, so `credit_disclosure_required` is `true`.
 
-They are governed by the RBI **Digital Lending Directions 2025** (RBI/2025-26/36, DOR.STR.REC.19/21.07.001/2025-26, 8 May 2025). These apply to commercial banks, co-operative banks, NBFCs and AIFIs (para 3) and repeal the 2022 and 2023 digital-lending guidelines (para 30). The Key Fact Statement (KFS) and the annual percentage rate (APR) follow DOR.STR.REC.13/13.03.00/2024-25 (15 April 2024). Credit-card EMI is governed instead by the Credit Card MD para 6(b)(iii) and is outside the Digital Lending Directions; loans on debit cards, including EMI, are inside them (para 29(i)). That PPIs may not be loaded from credit lines, which rules out PPI-based BNPL by non-banks, rests on an RBI letter of June 2022 that is not public and is reported only by secondary sources.
+They are governed by the RBI **Digital Lending Directions 2025** (RBI/2025-26/36, DOR.STR.REC.19/21.07.001/2025-26, 08-05-2025). These apply to commercial banks, co-operative banks, NBFCs and AIFIs (para 3) and repeal the 2022 and 2023 digital-lending guidelines (para 30). The Key Fact Statement (KFS) and the annual percentage rate (APR) follow DOR.STR.REC.13/13.03.00/2024-25 (15-04-2024). Credit-card EMI is governed instead by the RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 ("Credit Card MD") para 6(b)(iii) and is outside the Digital Lending Directions; loans on debit cards, including EMI, are inside them (para 29(i)). That PPIs may not be loaded from credit lines, which rules out PPI-based BNPL by non-banks, rests on an RBI letter of June 2022 that is not public and is reported only by secondary sources.
 
 !!! warning "Directions since withdrawn"
-    RBI's list of circulars withdrawn by its Department of Regulation now includes both the Digital Lending Directions 2025 and the KFS circular. They were withdrawn in the November 2025 consolidation into entity-wise directions, such as the Commercial Banks – Responsible Business Conduct Directions, 2025. The paragraph numbers on this page are those of the 8 May 2025 text, where every rule cited was checked. The draft consolidated directions carry the same disbursal wording, but the final paragraph numbers have not been checked. Implementers MUST map each rule to the consolidated directions that apply to their lender.
+    RBI's list of circulars withdrawn by its Department of Regulation now includes both the Digital Lending Directions 2025 and the KFS circular. They were withdrawn in the November 2025 consolidation into entity-wise directions, such as the Commercial Banks – Responsible Business Conduct Directions, 2025. The paragraph numbers on this page are those of the 08-05-2025 text, where every rule cited was checked. The draft consolidated directions carry the same disbursal wording, but the final paragraph numbers have not been checked. Implementers MUST map each rule to the consolidated directions that apply to their lender.
 
 ### Loan offers
 
@@ -142,7 +142,7 @@ Credit offers are carried as an **offer list** ([schema](https://bacp.dev/schema
 | Field | Rule | Source |
 |---|---|---|
 | `requested_amount` | The amount the buyer needs financed | — |
-| `offers[]` | **Every** matching offer | DL Directions para 6(i), from 1 November 2025 |
+| `offers[]` | **Every** matching offer | DL Directions para 6(i), from 01-11-2025 |
 | `unmatched_lenders[]` | Each lender that did not match, by name, with a reason. The Directions require the names; the reason is a BACP addition. | para 6(i) |
 | `ranking_metric` | A URI to a publicly pre-disclosed ranking rule (for example APR ascending). Ranking by such a metric "shall not be construed as promoting a particular product". Sponsored ranking is not allowed, because the content must be "unbiased, objective". | para 6(iv) |
 
@@ -170,9 +170,9 @@ An example offer:
   "lender_regulated_entity": "N-14.03512",
   "loan_amount": {"value": 3000000, "currency": "INR"},
   "tenor_months": 6,
-  "apr_pct": 18.5,
-  "emi_amount": {"value": 526400, "currency": "INR"},
-  "interest_amount": {"value": 158400, "currency": "INR"},
+  "apr_pct": 24.4,
+  "emi_amount": {"value": 527300, "currency": "INR"},
+  "interest_amount": {"value": 163800, "currency": "INR"},
   "processing_fee": {"value": 49900, "currency": "INR"},
   "penal_charges": "2% per month on the overdue EMI, as stated in the KFS",
   "kfs_ref": "https://lender.example.in/kfs/lof_7Q2K91",
@@ -183,6 +183,8 @@ An example offer:
   "rank": 1
 }
 ```
+
+In this offer `apr_pct` is the annual percentage rate including the ₹499 processing fee, as the KFS rules require: about 24.4% on the ₹30,000 loan repaid in 6 EMIs of ₹5,273. The annual interest rate alone is 18.5%, and the KFS states it separately. An agent MUST show the APR, not the interest rate, as the cost of credit.
 
 ### Rules for credit at checkout
 
@@ -198,7 +200,7 @@ An example offer:
 10. **Card EMI.** Before converting a card purchase to EMI the agent shows principal, interest and any upfront discount, and never calls an interest-bearing EMI "no cost". A TermSheet that claims `no_cost` with non-zero interest is refused (`NEG_EMI_NO_COST_FALSE`).
 11. **OCEN and dealer lines.** `in.fin.ocen` offers carry the lender, APR or all-in cost, tenure, repayment mandate type and KFS link, and acceptance is human-present. `in.fin.dealer_line` drawdowns run under a maker-checker approval and are repaid by NACH. No RBI direction specific to dealer finance was found.
 
-Disputes go to the lender's grievance officer and, after 30 days, to the RBI Ombudsman (DL Directions para 11(iv)).
+Disputes go to the lender's grievance officer and, after 30 days, to the RBI Integrated Ombudsman (DL Directions para 11(iv)).
 
 ## The khata credit ledger
 
@@ -266,7 +268,7 @@ For a sale by a "supplier" under the Micro, Small and Medium Enterprises Develop
 | Acceptance | The day of acceptance is the day of actual delivery of the goods or rendering of the services. If the buyer objects in writing within 15 days of delivery, it is the day the supplier removes the objection. If no written objection is made within 15 days, the day of deemed acceptance is the day of actual delivery. | MSMED Act s.2(b), Explanation |
 | Due date | The buyer pays by the date agreed in writing, which "in no case" may exceed 45 days from the day of acceptance or deemed acceptance. Without a written agreement, payment is due before the "appointed day", the day after 15 days from acceptance or deemed acceptance. | MSMED Act ss.2(b), 15 |
 | Interest | On late payment, "compound interest with monthly rests" at "three times of the bank rate notified by the Reserve Bank", notwithstanding any agreement | MSMED Act s.16 |
-| Tax | From AY 2024-25, a sum payable to a micro or small enterprise beyond the s.15 time limit is deductible only in the year it is actually paid. Under the Income-tax Act 2025, in force from 1 April 2026, the same rule is s.37(2)(g). | Income-tax Act 1961 s.43B(h) (inserted by the Finance Act 2023, w.e.f. 1 April 2024); Income-tax Act 2025 s.37(2)(g) |
+| Tax | From AY 2024-25, a sum payable to a micro or small enterprise beyond the s.15 time limit is deductible only in the year it is actually paid. Under the Income-tax Act, 2025, in force from 01-04-2026, the same rule is s.37(2)(g). | Income-tax Act, 1961 s.43B(h) (inserted by the Finance Act 2023, w.e.f. 01-04-2024); Income-tax Act, 2025 s.37(2)(g) |
 
 The ledger implements this as follows:
 
@@ -278,13 +280,13 @@ The ledger implements this as follows:
     - Each `interest_msmed` entry carries the cumulative `interest_accrued` for its sale and posts only the **increment** over interest already accrued for that sale. Re-running the accrual never charges the same interest twice.
     - The ledger header selects one `interest_rule`. A ledger MUST NOT accrue both statutory and contractual interest on the same overdue amount for the same period. This is BACP policy. Section 16 makes the statutory interest payable "notwithstanding anything contained in any agreement", so a contractual rule never displaces it for a micro or small supplier.
     - Interest stops accruing on the amount settled by a rail-evidenced payment.
-- **Traders.** The Ministry of MSME Office Memorandum of 2 July 2021 restricts the benefits of Udyam-registered retail and wholesale traders "to Priority Sector Lending only". Whether that excludes them from s.15 as a matter of law is open ([Q-21](../open-questions.md#q-21)). For a trader, BACP raises a warning only and does not accrue statutory interest.
+- **Traders.** The Ministry of MSME Office Memorandum of 02-07-2021 restricts the benefits of Udyam-registered retail and wholesale traders "to Priority Sector Lending only". Whether that excludes them from s.15 as a matter of law is open ([Q-21](../open-questions.md#q-21)). For a trader, BACP raises a warning only and does not accrue statutory interest.
 
 ## Trade credit, TReDS and GeM
 
 ### TReDS
 
-Handler: `in.fin.treds` (class N, non-paying). The Trade Receivables Discounting System is regulated by the Reserve Bank of India (Trade Receivables Discounting System) Directions, 2026 (RBI/DPSS/2026-27/406, 23 June 2026), which repeal the 2014 TReDS guidelines. RBI lists five authorised TReDS operators: RXIL, M1xchange, Invoicemart (A.TReDS), C2treds and DTX (KredX).
+Handler: `in.fin.treds` (class N, non-paying). The Trade Receivables Discounting System is regulated by the Reserve Bank of India (Trade Receivables Discounting System) Directions, 2026 (issued 23-06-2026; circular number RBI/DPSS/2026-27/406 not verified as of 17-10-2026), which repeal the 2014 TReDS guidelines. RBI lists five authorised TReDS operators: RXIL, M1xchange, Invoicemart (A.TReDS), C2treds and DTX (KredX).
 
 1. The MSME seller uploads an invoice the buyer has accepted, creating a **factoring unit**. Once it is accepted, the buyer's obligation to pay on the due date is unconditional, with no option of set-off (Directions para 15(i)).
 2. Financiers bid, and the seller accepts a bid.
@@ -295,7 +297,7 @@ Binding rules:
 
 - Each factoring unit MUST be bound to the GST e-invoice IRN and the buyer's acceptance. An invoice whose IRN has already been financed MUST be refused.
 - After discounting, the ledger's `settlement_evidence.new_payee` is the financier, and the buyer's due-date NACH debit pays the financier.
-- Companies with turnover above ₹250 crore, and all CPSEs, must onboard on TReDS. The Ministry of MSME notification of 7 November 2024 cut the threshold from ₹500 crore to ₹250 crore (confirmed by PIB). Its number, S.O. 4845(E), and the 31 March 2025 deadline are taken from secondary reports; the Gazette text was not available. Since 30 June 2026, operating CPSEs must also route the settlement of invoices from MSMEs through an RBI-authorised TReDS platform (Ministry of MSME, reported by PIB on 10 July 2026). BACP records the buyer's TReDS onboarding status and SHOULD offer TReDS as a settlement option on MSME invoices for such buyers.
+- Companies with turnover above ₹250 crore, and all CPSEs, must onboard on TReDS. The Ministry of MSME notification S.O. 4845(E) of 07-11-2024 cut the threshold from ₹500 crore to ₹250 crore, with an onboarding deadline of 31-03-2025 (confirmed by PIB; Gazette text not verified as of 17-10-2026). Under a Ministry of MSME notification of 30-06-2026, operating CPSEs must also route the settlement of invoices from MSMEs through an RBI-authorised TReDS platform (reported by PIB; Gazette text not verified as of 17-10-2026). BACP records the buyer's TReDS onboarding status and SHOULD offer TReDS as a settlement option on MSME invoices for such buyers.
 - Funding is same day (T0) for bids accepted before a cut-off, otherwise T+1, with the buyer's NACH debit on the due date *(vendor; the cut-off time is given inconsistently)*.
 - Buyer-side and seller-side agents act only within the corporate's platform entitlements and with human signatory approval.
 
@@ -308,7 +310,7 @@ A `gem_receivable` ledger tracks a Government e-Marketplace order:
 - Late payment carries penal interest of **1% a month**, prorated on a 30-day month. This interest is deposited "in an account maintained by GeM" and is **not paid to the vendor**. It does not cover interest payable under the MSMED Act or the contract. BACP MUST disclose that, and records it as a `gem_penal_interest` entry with `effect: none`.
 - For non-PFMS buyers the GeM Pool Account block reference is recorded at order time; an order without one is shown as unfunded.
 
-Sources: Department of Expenditure OM F.6/18/2019-PPD of 3 July 2020, for procurements under GFR Rule 149 from 1 October 2020; GeM FAQ for the CRAC timeline. The GeM GTC clause that carries these terms was not checked. Reports that individual buyers override them with 45, 60 or 90-day terms are not verified.
+Sources: Department of Expenditure OM F.6/18/2019-PPD of 03-07-2020, for procurements under GFR Rule 149 from 01-10-2020; GeM FAQ for the CRAC timeline. The GeM GTC clause that carries these terms was not checked. Reports that individual buyers override them with 45, 60 or 90-day terms are not verified.
 
 ## FX disclosure for cross-border payments
 
@@ -339,8 +341,8 @@ The gateway MUST reject an `fx` view that is inconsistent with its `inr_total`. 
 
 Related cross-border rules:
 
-- **Card AFA.** A non-recurring, cross-border, card-not-present payment needs AFA when the overseas acquirer asks for it (RBI Authentication Directions 2025 para 10, from 1 October 2026). See [Cards](rails.md#rbi-authentication-directions-2025-for-cards).
+- **Card AFA.** A non-recurring, cross-border, card-not-present payment needs AFA when the overseas acquirer asks for it (RBI Authentication Directions 2025 para 10, from 01-10-2026). See [Cards](rails.md#rbi-authentication-directions-2025-for-cards).
 - **Determining cross-border.** A payment that the merchant declares cross-border is treated as cross-border. A declaration that it is *not* cross-border cannot override merchant, acquirer or FX data that says it is.
 - **PA cross-border** collections and payments are capped at ₹25,00,000 per transaction (RBI PA Master Direction 2025 para 11(d)).
-- **Export realisation.** Under the Foreign Exchange Management (Export and Import of Goods and Services) Regulations, 2026 (FEMA 23(R)/2026-RB, in force from 1 October 2026), as amended by FEMA 23(R)/(1)/2026-RB of 22 September 2026, export proceeds are realised within 9 months: for goods from the date of shipment, for services from the date of invoice, and for goods exported to a warehouse outside India from the date of sale from the warehouse. Exports invoiced or settled in INR have 12 months (Reg 5(1)), and the AD bank may extend the period. If proceeds stay unrealised for more than one year past the due date, the exporter may export further only against full advance or an irrevocable LC (Reg 13). These Regulations replace the FEM (Export of Goods and Services) Regulations 2015, under which the period was also 9 months (FEMA 23(R)/(8)/2026-RB, 5 June 2026). `bacp.trade.export_realisation` tracks the due date, with an alert 30 days before it.
+- **Export realisation.** Under the Foreign Exchange Management (Export and Import of Goods and Services) Regulations, 2026 (FEMA 23(R)/2026-RB, in force from 01-10-2026), as amended by FEMA 23(R)/(1)/2026-RB of 22-09-2026, export proceeds are realised within 9 months: for goods from the date of shipment, for services from the date of invoice, and for goods exported to a warehouse outside India from the date of sale from the warehouse. Exports invoiced or settled in INR have 12 months (Reg 5(1)), and the AD bank may extend the period. If proceeds stay unrealised for more than one year past the due date, the exporter may export further only against full advance or an irrevocable LC (Reg 13). These Regulations replace the FEM (Export of Goods and Services) Regulations 2015, under which the period was also 9 months (FEMA 23(R)/(8)/2026-RB, 05-06-2026; not verified as of 17-10-2026). `bacp.trade.export_realisation` tracks the due date, with an alert 30 days before it.
 - Whether a cross-border transfer of personal data meets the DPDP Act's restrictions is not checked by the FX view.

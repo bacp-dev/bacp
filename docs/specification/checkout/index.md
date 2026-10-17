@@ -1,8 +1,7 @@
 # Sessions and Checkout
 
-!!! warning "Draft"
-    This page is part of the `draft` specification. Rules marked **Proposed** depend on an
-    open question and may change before the first dated release.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 A **checkout session** is the gateway's synchronous, authoritative view of one purchase in
 progress. The agent talks to the gateway with UCP-style session verbs. The gateway translates each
@@ -128,7 +127,8 @@ Response (`201`, abridged to two line items):
   "quote": {"id": "Q-55", "ttl": "PT10M", "expires_at": "2026-10-20T19:11:00+05:30"},
   "messages": [
     {"type": "disclosure", "code": "ai_disclosure",
-     "content": {"hi-IN": "Aap ek AI sahayak se baat kar rahe hain. Kisi insaan se baat karne ke liye: https://vaani.example.in/human"},
+     "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
+                 "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
      "param": "$.human_handoff_url",
      "resolution": "recoverable"}
   ]
@@ -207,7 +207,7 @@ Response (`200`, abridged):
   "quote": {
     "id": "Q-55",
     "ttl": "PT10M",
-    "checkout_hash": "sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl",
+    "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
     "bpp_signature": "eyJhbGciOiJFUzI1NiJ9.eyJxIjoiUS01NSJ9.c2ln"
   },
   "disclosures": {
@@ -218,16 +218,18 @@ Response (`200`, abridged):
     "expected_delivery": "PT2H",
     "country_of_origin": {"default": "IN"},
     "price_breakup": [{"type": "total", "amount": {"value": 30200, "currency": "INR"}}],
-    "hash": "sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg"
+    "hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4"
   },
   "payment": {"handler": "in.upi.reservepay", "collected_by": "BAP", "type": "ON-ORDER",
               "status": "not_started"},
   "messages": [
     {"type": "disclosure", "code": "ai_disclosure",
-     "content": {"en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
+     "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
+                 "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
      "param": "$.human_handoff_url", "resolution": "recoverable"},
     {"type": "warning", "code": "preticked_addon_removed",
-     "content": {"en-IN": "Removed pre-selected 'Delivery insurance Rs 15' (not in mandate)"},
+     "content": {"hi-IN": "पहले से चुना गया 'डिलीवरी बीमा ₹15' हटा दिया गया (मैंडेट में शामिल नहीं)",
+                 "en-IN": "Removed pre-selected 'Delivery insurance ₹15' (not in mandate)"},
      "param": "$.line_items[3]", "resolution": "recoverable"}
   ]
 }
@@ -262,18 +264,18 @@ stateDiagram-v2
     ready_for_complete --> requires_escalation: complete over step-up or AFA threshold
     requires_escalation --> ready_for_complete: step_up.approved (confirm)
     requires_escalation --> complete_in_progress: step_up.approved with HP payment
-    requires_escalation --> canceled: step_up declined or expired
+    requires_escalation --> cancelled: step_up declined or expired
     ready_for_complete --> complete_in_progress: complete accepted
     ready_for_complete --> incomplete: quote expired
     complete_in_progress --> completed: debit OK and on_confirm OK
-    complete_in_progress --> canceled: debit failed, no money moved
+    complete_in_progress --> cancelled: debit failed, no money moved
     complete_in_progress --> complete_in_progress: payment in_doubt or reversal_pending
-    complete_in_progress --> canceled: refund credit settled (payment reversed)
-    incomplete --> canceled: cancel, TTL, mandate stopped
-    ready_for_complete --> canceled: cancel, TTL, mandate stopped, pre-debit opt-out
-    requires_escalation --> canceled: cancel, TTL, mandate stopped
+    complete_in_progress --> cancelled: refund credit settled (payment reversed)
+    incomplete --> cancelled: cancel, TTL, mandate stopped
+    ready_for_complete --> cancelled: cancel, TTL, mandate stopped, pre-debit opt-out
+    requires_escalation --> cancelled: cancel, TTL, mandate stopped
     completed --> [*]
-    canceled --> [*]
+    cancelled --> [*]
 ```
 
 | From | Event | To | Messages and notes |
@@ -287,16 +289,16 @@ stateDiagram-v2
 | `ready_for_complete` | `complete` before a pre-debit notice matures | `ready_for_complete` | `pre_debit_notice`; no money moves |
 | `requires_escalation` | `step_up.approved` without payment (confirm) | `ready_for_complete` | `step_up_approved`; agent completes with `step_up_id` |
 | `requires_escalation` | `step_up.approved` with HP closed mandates and PSP receipt | `complete_in_progress` | continues to `confirm` |
-| `requires_escalation` | `step_up.declined`, or `complete` after `expires_at` | `canceled` | `step_up_declined` or `step_up_expired`; no money moves |
+| `requires_escalation` | `step_up.declined`, or `complete` after `expires_at` | `cancelled` | `step_up_declined` or `step_up_expired`; no money moves |
 | `ready_for_complete` | `complete` accepted by the atomic evaluation | `complete_in_progress` | `payment.status: initiated` |
 | `complete_in_progress` | Debit succeeds and `on_confirm` arrives | `completed` | `budget_after` |
-| `complete_in_progress` | PSP refuses or fails the debit | `canceled` | `payment_failed`; reservation released |
+| `complete_in_progress` | PSP refuses or fails the debit | `cancelled` | `payment_failed`; reservation released |
 | `complete_in_progress` | PSP times out | `complete_in_progress` | `payment_in_doubt`; reservation kept |
 | `complete_in_progress` | Debited, `on_confirm` still missing after re-send | `complete_in_progress` | `debited_not_confirmed`; `payment.status: reversal_pending` |
-| `complete_in_progress` | PSP reports the refund credit as settled | `canceled` | `payment.status: reversed` |
-| any open state | `POST /sessions/{id}/cancel` | `canceled` | `session_canceled` |
-| any open state | Mandate revoked, paused or expired | `canceled` | `mandate_revoked`, `mandate_paused`, `mandate_expired` |
-| `ready_for_complete` | Principal opts out of a pre-debit notice | `canceled` | `pre_debit_opt_out` (`requires_buyer_input`); no rail traffic |
+| `complete_in_progress` | PSP reports the refund credit as settled | `cancelled` | `payment.status: reversed` |
+| any open state | `POST /sessions/{id}/cancel` | `cancelled` | `session_cancelled` |
+| any open state | Mandate revoked, paused or expired | `cancelled` | `mandate_revoked`, `mandate_paused`, `mandate_expired` |
+| `ready_for_complete` | Principal opts out of a pre-debit notice | `cancelled` | `pre_debit_opt_out` (`requires_buyer_input`); no rail traffic |
 
 The open states are `incomplete`, `ready_for_complete` and `requires_escalation`. Calling
 `complete` on an `incomplete` session returns `409 session_state_conflict`; the agent **MUST** PUT
@@ -316,7 +318,7 @@ Inside `complete_in_progress`, `payment.status` follows the payment saga:
 | `in_doubt` | The PSP timed out; the outcome is unknown. |
 | `failed` | The debit failed; no money moved. |
 | `reversal_pending` | Debited, but the seller never confirmed; a refund to source is in progress. |
-| `reversed` | The refund credit has settled; the session is `canceled`. |
+| `reversed` | The refund credit has settled; the session is `cancelled`. |
 
 ## Messages and full-state responses {#messages}
 
@@ -360,8 +362,8 @@ and **MUST** offer the human handoff. A handoff on the network maps to Beckn `su
   "presence": "HNP",
   "checkout_mandate": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUuY2hlY2tvdXQuMSJ9.c2ln",
   "payment_mandate": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln",
-  "checkout_hash": "sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl",
-  "accepted_disclosures_hash": "sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg"
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "accepted_disclosures_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4"
 }
 ```
 
@@ -374,8 +376,8 @@ The gateway, in order:
 1. **Decodes the closed mandates** and checks they are signed by the session agent's `cnf` key
    (HNP) or by the principal key that signed the parent (HP), and narrow the session's open mandates (`403 mandate_invalid_signature` or
    `mandate_scope_mismatch`).
-2. **Checks the session state.** A canceled session returns its state (or the mandate error that
-   canceled it). A session that is already `complete_in_progress` or `completed` re-runs the
+2. **Checks the session state.** A cancelled session returns its state (or the mandate error that
+   cancelled it). A session that is already `complete_in_progress` or `completed` re-runs the
    closed-mandate checks and then returns `403 mandate_scope_mismatch` (one debit per checkout).
    An open step-up that is not approved returns the unchanged `requires_escalation` state; an
    expired one cancels the session with `step_up_expired`.
@@ -421,12 +423,12 @@ Response (`200`, abridged):
       "iss": "psp.example.in",
       "issued_at": "2026-10-20T19:02:11+05:30",
       "result": "success",
-      "reference": "sha-256:cGF5bWVudC1tYW5kYXRlLWNsb3NlZC0wMDAwMDAwMDAx",
+      "reference": "sha-256:56zHckmGabR5RoD_aAjAlsFMjuSAjmXgymcJL4c7arY",
       "mandate_ref": "mdt_PAYC0000000001",
       "open_mandate_ref": "mdt_PAY7Q2W9X4K1M3",
       "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
       "order_id": "ORD-KIR-88231",
-      "checkout_hash": "sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl",
+      "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
       "amount": {"value": 30200, "currency": "INR"},
       "payee": {"vpa": "ganeshkirana@examplebank", "name": "Shree Ganesh Kirana"},
       "rail": {
@@ -449,10 +451,12 @@ Response (`200`, abridged):
   },
   "messages": [
     {"type": "disclosure", "code": "ai_disclosure",
-     "content": {"en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
+     "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
+                 "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
      "param": "$.human_handoff_url", "resolution": "recoverable"},
     {"type": "info", "code": "budget_after",
-     "content": {"en-IN": "Remaining mandate budget: P1M Rs 2698"},
+     "content": {"hi-IN": "इस महीने का बचा हुआ बजट: ₹2,698",
+                 "en-IN": "Remaining budget this month: ₹2,698"},
      "param": "$.payment.budget_after", "resolution": "recoverable"}
   ]
 }
@@ -479,16 +483,19 @@ When the evaluation calls for a step-up the gateway returns `200` with
     "step_up_id": "stp_01HZXA",
     "kind": "confirm",
     "reason": "above_step_up_threshold",
-    "summary": {"hi-IN": "Rs 1,350 ka order aapki Rs 1,200 ki seema se zyada hai. Kripya UPI app mein pushti karein."},
+    "summary": {"hi-IN": "₹1,350 का ऑर्डर आपकी ₹1,200 की सीमा से ज़्यादा है। कृपया UPI ऐप में पुष्टि करें।",
+                "en-IN": "The ₹1,350 order is above your ₹1,200 limit. Please confirm in your UPI app."},
     "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXA",
     "expires_at": "2026-10-22T18:40:00+05:30"
   },
   "messages": [
     {"type": "disclosure", "code": "ai_disclosure",
-     "content": {"en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
+     "content": {"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
+                 "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"},
      "param": "$.human_handoff_url", "resolution": "recoverable"},
     {"type": "error", "code": "step_up_required",
-     "content": {"en-IN": "User confirmation required on Trusted Surface"},
+     "content": {"hi-IN": "आपकी पुष्टि ज़रूरी है। कृपया UPI ऐप में पुष्टि करें।",
+                 "en-IN": "User confirmation required on Trusted Surface"},
      "param": "$.step_up", "resolution": "requires_buyer_review"}
   ]
 }
@@ -521,7 +528,7 @@ If the debit succeeds but `on_confirm` does not arrive, the gateway re-sends the
 - the gateway **MUST** start a refund to source immediately, citing the original rail reference
   (`original_rrn` for UPI). Issuing the refund Receipt does not by itself end the session;
 - when the PSP reports the refund credit as settled, `payment.status` **MUST** become `reversed`
-  and the session **MUST** become `canceled`;
+  and the session **MUST** become `cancelled`;
 - the `debited_not_confirmed` message **SHOULD** state the rail's turnaround time and the
   principal's entitlement to compensation of ₹100 per day of delay for a failed UPI merchant
   payment not reversed in time.

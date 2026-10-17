@@ -1,7 +1,7 @@
 # Trade Profiles
 
-!!! info "Status: Draft"
-    Thresholds on this page come from the research notes behind the specification. Several rest on secondary sources, and every regulatory number MUST be configurable. Rules marked **Proposed** depend on an open question.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Several thresholds rest on secondary sources; every regulatory number MUST be configurable.
 
 India trades in many ways at once: a quick-commerce order paid by UPI, a kirana's monthly khata, a distributor's "buy 10 get 1" scheme, an RFQ that ends in a net-30 purchase order, a GeM reverse auction, an eNAM lot sold to the highest bidder. A **trade profile** is a named, conformance-testable bundle of defaults over the [negotiation module](negotiation/index.md) and the [payment handler registry](payments/handler-registry.md). It fixes, for one trade model:
 
@@ -66,7 +66,7 @@ Every term sheet names its parties. One transaction can name a different orderin
 | [`assisted.rural`](#assisted-rural) | CSC / VLE, BC / AePS, feature phones | `fixed` (only the operator fee is negotiated) | A: AePS, POS dynamic QR / C: UPI 123PAY | None | Operator id, fee and consent logged; channel limits |
 | [`crossborder`](#exports-and-cross-border) | Exports and imports | `rfq_sealed`, `alternating` (Incoterm, currency, instrument) | C: PA-CB, account-to-account / N: LC, e-BG, export realisation tracker | Advance TT, LC, D/P, D/A, open account | Incoterm, currency and instrument required; PA-CB cap; FEMA realisation |
 | [`c2c.rental`](#c2c-and-rentals) | Classifieds, recommerce, rentals, tenancy | `alternating` | O: UPI one-time mandate (token with release), UPI AutoPay, NACH debit (rent) / C: UPI intent | Deposits and tokens with release conditions | Itemised deductions, title checks, tenancy deposit caps |
-| [`high_value`](#high-value-purchases) | Cars, property, gold | `alternating` multi-issue bundles, `scheme` | **HP only** for commitment. C: UPI intent, card token, RTGS, credit / tranches token + loan + balance | Token, loan, balance tranches | RERA 10% token cap, Income-tax Act 1961 s.269ST cash limit, PAN, HUID |
+| [`high_value`](#high-value-purchases) | Cars, property, gold | `alternating` multi-issue bundles, `scheme` | **HP only** for commitment. C: UPI intent, card token, RTGS, credit / tranches token + loan + balance | Token, loan, balance tranches | RERA 10% token cap, Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 s.186) cash limit, PAN, HUID |
 | [`ticketing`](#ticketing) | Rail, air, bus, events | `posted_dynamic`, `fixed` | C: UPI intent, card token / O: Circle for low-value bus or metro | None | Honour the shown price within validity, anti-bot windows, ID binding |
 
 Credit-backed overlays such as TReDS invoice discounting and OCEN purchase finance are not separate profiles. They attach to the profiles above and are described under [Financing overlays](#financing-overlays-treds-and-ocen).
@@ -79,7 +79,7 @@ Profile `b2c.ecom`: organised B2C e-commerce and quick commerce.
 - **Payment handlers.** HNP orders MAY use Reserve Pay (one block per seller, payable to that seller's collection VPA), UPI Circle, agentic card tokens or a gift PPI. Everything else is HP. COD and UPI on delivery are allowed only if the mandate sets `cod_allowed`.
 - **Credit.** Card EMI and BNPL are credit-funded. They require `credit_funding_allowed` on the governing mandate, full disclosure (lender, APR, KFS, `no_cost: false` when interest is charged), and a human-present loan acceptance. Whether checkout BNPL fits the digital-lending end-use rules is open ([Q-32](open-questions.md#q-32)).
 - **COD.** A seller MAY accept or refuse COD per order. The mandate's `cod_max_open_orders` caps open COD orders, and a COD order placed without the principal counts against the placing agent's id. The final payment mode at the door (cash or UPI on delivery) is recorded. Whether an RTO fee may be charged to a consumer is open ([Q-37](open-questions.md#q-37)); it is never charged unless disclosed in round 1 and allowed by the mandate.
-- **Compliance.** The drip-pricing, basket-sneaking, false-urgency and personalised-pricing validators run on every offer (CCPA Dark Patterns Guidelines, 2023). An e-way bill is needed above ₹50,000 per consignment; returns produce a credit note and a refund to source.
+- **Compliance.** The drip-pricing, basket-sneaking, false-urgency and personalised-pricing validators run on every offer (Central Consumer Protection Authority (CCPA) Dark Patterns Guidelines, 2023). An e-way bill is needed above ₹50,000 per consignment; returns produce a credit note and a refund to source.
 
 ## Kirana, khata and mol-bhav { #kirana }
 
@@ -107,7 +107,7 @@ Profile `b2b.procurement`: SME and enterprise purchasing.
 - **Flow.** RFQ → quotation or proforma → negotiation → PO (`confirm`) → order acknowledgement (`on_confirm`) → dispatch with tax invoice, e-way bill and challan → GRN and inspection → three-way match (PO, GRN, invoice) → payment on net-N → TDS certificate. The [purchase order](negotiation/rfq-and-auctions.md#purchase-order) MUST NOT alter accepted terms.
 - **Payment handlers.** HNP: credit ledger and NACH debit. HP with **maker–checker**: the agent prepares a NEFT, RTGS or IMPS instruction (or a BBPS B2B invoice payment) and a human checker approves it in corporate banking. N: TReDS and e-BG.
 - **Credit terms.** Tranches such as "30% advance, 70% net-45 from GRN". The MSMED cap (at most 45 days from acceptance, 15 days with no written agreement) applies to micro and small manufacturing and services suppliers; traders are warned only ([Q-21](open-questions.md#q-21)). The clock runs from acceptance, which under the Act is the day of delivery unless the buyer objects in writing within 15 days; a buyer-signed GRN records both. The ledger computes the statutory due date, MSMED interest on late payment, and the income-tax deduction exposure on unpaid MSE dues. Exposure from firm commitments counts against the checkout mandate's budgets as well as `total_max` ([Q-46](open-questions.md#q-46)).
-- **Compliance.** IRN and signed QR for sellers whose aggregate turnover exceeded ₹5 crore in any financial year since 2017-18, with a 30-day reporting flag where AATO is ₹10 crore or more (GSTN advisory, from 1 April 2025; primary text not retrieved); e-way bill above ₹50,000; TDS obligations displayed. Companies with turnover above ₹250 crore must be onboarded on TReDS (see [Financing overlays](#financing-overlays-treds-and-ocen)). Trade documents and ledgers are service-level interfaces whose REST binding is still open ([Q-44](open-questions.md#q-44)).
+- **Compliance.** IRN and signed QR for sellers whose aggregate turnover exceeded ₹5 crore in any financial year since 2017-18, with a 30-day reporting flag where AATO is ₹10 crore or more (GSTN advisory, from 01-04-2025; primary text not verified as of 17-10-2026); e-way bill above ₹50,000; TDS obligations displayed. Companies with turnover above ₹250 crore must be onboarded on TReDS (see [Financing overlays](#financing-overlays-treds-and-ocen)). Trade documents and ledgers are service-level interfaces whose REST binding is still open ([Q-44](open-questions.md#q-44)).
 
 ## GeM { #gem }
 
@@ -116,7 +116,7 @@ Profile `gem`: government procurement on the Government e-Marketplace.
 - **Roles.** Ordering entity, consignee and paying authority are separate parties; GeM is the auctioneer and its incident management is an arbiter.
 - **Negotiation.** `fixed` for direct purchase, `rfq_sealed` for L1 purchase and e-bids, `reverse_l1` for reverse auctions after technical evaluation, and `english` for forward (disposal) auctions. Price is negotiated only through the reverse auction. Quantity MAY vary under the ± option clause (`option_clause_pct`). Ties MAY use `msme_preference` or `make_in_india_preference`. On GeM itself these preferences are wider than a tie-break: under the Public Procurement Policy for MSEs, an MSE quoting within L1 + 15% may match the L1 price and supply at least 25% of the tendered value when L1 is not an MSE, and the Make in India order gives a 20% purchase-preference margin to Class-I local suppliers. A BACP tie-break does not model these bands; the buying platform applies them.
 - **Mode thresholds.** The buying organisation chooses the mode by value and records `procurement_mode_reason`. The default thresholds under GFR Rule 149 as amended in July 2024 are listed in [Reverse L1](negotiation/rfq-and-auctions.md#reverse-l1-gem-style): direct purchase up to ₹50,000; L1 purchase above ₹50,000 up to ₹10 lakh among sellers of at least three different manufacturers; above ₹10 lakh, bids are mandatory, through online bidding or reverse auction. They MUST be configurable.
-- **Payment handlers.** Payment runs through the GeM handler (PFMS and the GeM pool account), which the agent does not trigger directly. EMD MAY be paid by UPI collect or furnished as an e-BG; performance security as an ePBG. The UPI limit for GeM payments, including EMD, was raised to ₹5 lakh per transaction from 15 September 2025, as reported by the public broadcaster (the NPCI circular and a GeM page listing UPI for EMD were not available).
+- **Payment handlers.** Payment runs through the GeM handler (PFMS and the GeM pool account), which the agent does not trigger directly. EMD MAY be paid by UPI collect or furnished as an e-BG; performance security as an ePBG. The UPI limit for GeM payments, including EMD, was raised to ₹5 lakh per transaction from 15-09-2025, as reported by the public broadcaster (reported, not verified against the NPCI circular or a GeM page as of 17-10-2026).
 - **Credit terms.** Payment terms are fixed by the GeM general terms and conditions and are **not negotiable**. The buyer MUST pay within **10 days of the CRAC** (including auto-generated CRACs). Late payment attracts penal interest of 1% per month, pro-rated, which is deposited in an account maintained by GeM rather than paid to the seller; MSMED interest is additional. The ledger tracks this clock.
 - **Compliance.** Every agent action produces an audit trail fit for CAG and CVC review: who acted, under which mandate, and the comparison set. Suspended sellers are excluded from new bids.
 
@@ -168,8 +168,8 @@ Profile `crossborder`: MSME exports and imports.
 
 - **Negotiation.** `rfq_sealed` and `alternating` over Incoterm, currency and payment instrument. Every cross-border offer MUST carry an Incoterm, a currency, a payment instrument (advance TT, LC at sight or usance, D/P, D/A, open account with ECGC cover) and the required document set. A foreign-currency price is shown through the `fx` disclosure view; every settlement amount stays in INR.
 - **Payment handlers.** C: PA-CB (capped at ₹25 lakh per transaction) and account-to-account transfers. N: LC, e-BG and `bacp.trade.export_realisation`, which tracks the realisation deadline. Outbound cross-border card-not-present payments need AFA when the acquirer asks.
-- **FEMA realisation.** The export-realisation tracker records the due date for each export and alerts before it: **9 months** from shipment (goods) or invoice (services), and 12 months for exports invoiced or settled in INR, under the FEM (Export and Import of Goods and Services) Regulations 2026, Reg 5(1), as amended with effect from 1 October 2026. The periods have changed several times since 2025 and the AD bank can extend them, so they MUST be configurable. Proceeds unrealised for more than one year past the due date restrict future exports to full advance or an irrevocable LC (Reg 13). See [Credit and Split Tender](payments/credit-and-split-tender.md#fx-disclosure-for-cross-border-payments).
-- **Compliance.** Courier exports have had no value cap since 31 March 2026: CBIC Circular 17/2026-Customs removed the earlier ₹10 lakh limit for commercial export consignments through courier mode. BACP does not redirect a consignment to cargo on value alone.
+- **FEMA realisation.** The export-realisation tracker records the due date for each export and alerts before it: **9 months** from shipment (goods) or invoice (services), and 12 months for exports invoiced or settled in INR, under the FEM (Export and Import of Goods and Services) Regulations 2026, Reg 5(1), as amended with effect from 01-10-2026. The periods have changed several times since 2025 and the AD bank can extend them, so they MUST be configurable. Proceeds unrealised for more than one year past the due date restrict future exports to full advance or an irrevocable LC (Reg 13). See [Credit and Split Tender](payments/credit-and-split-tender.md#fx-disclosure-for-cross-border-payments).
+- **Compliance.** Courier exports have had no value cap since 31-03-2026: CBIC Circular 17/2026-Customs removed the earlier ₹10 lakh limit for commercial export consignments through courier mode. BACP does not redirect a consignment to cargo on value alone.
 
 ## C2C and rentals { #c2c-and-rentals }
 
@@ -185,7 +185,7 @@ Profile `high_value`: cars, property and gold.
 
 - **Negotiation.** `alternating` over multi-issue bundles (price, accessories, finance, delivery; price per sq ft, floor rise, payment plan, possession date; making charges, wastage, old-gold exchange), plus `scheme`.
 - **Payment handlers.** **Every commitment is human-present.** UPI intent, card token, RTGS and credit handlers; tranches for token, loan and balance.
-- **Rules.** For property sold by a RERA-registered promoter (an apartment, plot or building), a token or booking amount above 10% of cost needs a linked registered agreement for sale (RERA s.13; `NEG_RERA_TOKEN_CAP`). A cash receipt of ₹2 lakh or more is refused (Income-tax Act 1961 s.269ST; reported as s.186 of the Income-tax Act 2025, not verified; `NEG_CASH_LIMIT`), and PAN is required above the statutory threshold, which secondary sources give as a purchase of any goods above ₹2 lakh per transaction. A "hallmarked" claim requires an HUID.
+- **Rules.** For property sold by a RERA-registered promoter (an apartment, plot or building), a token or booking amount above 10% of cost needs a linked registered agreement for sale (RERA s.13; `NEG_RERA_TOKEN_CAP`). A cash receipt of ₹2 lakh or more is refused (Income-tax Act, 1961 s.269ST; Income-tax Act, 2025 s.186 equivalent; `NEG_CASH_LIMIT`), and PAN is required above the statutory threshold, which secondary sources give as a purchase of any goods above ₹2 lakh per transaction. A "hallmarked" claim requires an HUID.
 
 ## Ticketing { #ticketing }
 
@@ -206,7 +206,7 @@ TReDS platforms discount an MSME seller's invoices that the buyer has accepted. 
 - The seller uploads the accepted invoice as a factoring unit, bound to its GST IRN and the buyer's acceptance; financiers bid; the seller accepts a bid and is funded without recourse.
 - After discounting, the ledger records the **financier as the new payee**, and the buyer pays the financier on the due date, typically by NACH debit.
 - A buyer-side agent can accept invoices within an approval policy and keep them inside the MSMED 45-day window. A seller-side agent can upload invoices and accept bids within a rate floor. Both act within the corporate's platform entitlements with human signatory approval.
-- Companies with turnover above ₹250 crore, and all CPSEs, are required to onboard on TReDS (Ministry of MSME notification of 7 November 2024, as reported by PIB). Since 30 June 2026, operating CPSEs must also settle MSME invoices through a TReDS platform. See [Credit and Split Tender](payments/credit-and-split-tender.md#treds) for sources.
+- Companies with turnover above ₹250 crore, and all CPSEs, are required to onboard on TReDS (Ministry of MSME notification of 07-11-2024, as reported by PIB). Since 30-06-2026, operating CPSEs must also settle MSME invoices through a TReDS platform. See [Credit and Split Tender](payments/credit-and-split-tender.md#treds) for sources.
 - Applies to: `b2b.procurement`, `fmcg.distribution`, `gem` sellers.
 
 ### OCEN
@@ -230,7 +230,7 @@ flowchart LR
     Q --> PO[PO is Beckn confirm]
     PO --> ACK[Order ack is on_confirm]
     PO --> INV[Tax invoice with IRN]
-    INV --> EWB[e-way bill above Rs 50000]
+    INV --> EWB[e-way bill above ₹50,000]
     INV --> DC[Delivery challan]
     DC --> GRN[GRN or CRAC or weighment slip]
     PO --> GRN

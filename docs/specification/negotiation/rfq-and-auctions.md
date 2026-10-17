@@ -1,7 +1,7 @@
 # RFQ and Auctions
 
-!!! info "Status: Draft"
-    This page extends the [negotiation module](index.md). Everything there (term sheets, signed messages, the guard, exposure, drift detection, contract timing) applies to RFQs and auctions too. Rules marked **Proposed** depend on an open question.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. This page extends the [negotiation module](index.md). Everything there (term sheets, signed messages, the guard, exposure, drift detection, contract timing) applies to RFQs and auctions too.
 
 Two families of multi-party negotiation are covered here:
 
@@ -151,7 +151,7 @@ The reverse auction follows GeM practice: after technical evaluation, qualified 
 - A seller-side guard checks each bid against the seller mandate's floor (`total_min`, or `auction_max_bid` read as a floor for sellers).
 - GeM separates the ordering entity, the consignee and the paying authority, and the term sheet names all three. Payment terms on GeM are fixed and not negotiable (see [GeM profile](../trade-profiles.md#gem)).
 
-**Procurement-mode thresholds.** A buying organisation configures its own value thresholds for direct purchase, L1 purchase and bid or reverse auction, and every RFQ or auction records `procurement_mode_reason`. Under GFR Rule 149 as amended by DoE OM F.1/3/2024-PPD (10 July 2024), the default thresholds are:
+**Procurement-mode thresholds.** A buying organisation configures its own value thresholds for direct purchase, L1 purchase and bid or reverse auction, and every RFQ or auction records `procurement_mode_reason`. Under GFR Rule 149 as amended by DoE OM F.1/3/2024-PPD (10-07-2024), the default thresholds are:
 
 | Value | Mode |
 |---|---|
@@ -159,7 +159,7 @@ The reverse auction follows GeM practice: after technical evaluation, qualified 
 | Above ₹50,000, up to ₹10 lakh | L1 purchase from the GeM seller with the lowest price among the sellers of at least three different manufacturers. The online bidding and reverse auction tools may also be used. |
 | Above ₹10 lakh | Bids are mandatory, obtained through online bidding (e-bid) or the reverse auction tool. GeM gives a normal bid duration of 10 to 45 days. |
 
-The values are from GFR 2017 Rule 149 as consolidated by the Department of Expenditure. Direct purchase has no ceiling for automobiles. Scientific ministries and research institutes have a ₹1 lakh direct-purchase limit (DoE OM F.20/42/2021-PPD, 18 July 2024). Rule 149 forbids splitting a demand to avoid L1 buying, bidding or reverse auction. The values MUST be configurable, not hard-coded.
+The values are from GFR 2017 Rule 149 as consolidated by the Department of Expenditure. Direct purchase has no ceiling for automobiles. Scientific ministries and research institutes have a ₹1 lakh direct-purchase limit (DoE OM F.20/42/2021-PPD, 18-07-2024). Rule 149 forbids splitting a demand to avoid L1 buying, bidding or reverse auction. The values MUST be configurable, not hard-coded.
 
 ### English (forward) auctions
 
@@ -232,7 +232,7 @@ Under every rule, a retraction inside the anti-sniping window, or after close, i
 **Retraction isolation.** A retraction voids **only the retracting bidder's own bid**. Other bidders' bids stand. The previous best bid is not re-published as the standing price: the standing price stays hidden until the next bid. Repeated retractions by one bidder are flagged to the shill and collusion screens.
 
 !!! warning "Proposed"
-    Proposed: the Sale of Goods Act, 1930, s.64(2) says that an auction sale "is complete when the auctioneer announces its completion by the fall of the hammer or in other customary manner; and, until such announcement is made, any bidder may retract his bid". BACP does not treat this right as overriding `no_retraction` in e-auctions. Whether it applies is open ([Q-35](../open-questions.md#q-35)). The quoted text is from a bare-act reproduction; the official India Code text could not be retrieved.
+    Proposed: the Sale of Goods Act, 1930, s.64(2) says that an auction sale "is complete when the auctioneer announces its completion by the fall of the hammer or in other customary manner; and, until such announcement is made, any bidder may retract his bid". BACP does not treat this right as overriding `no_retraction` in e-auctions. Whether it applies is open ([Q-35](../open-questions.md#q-35)). The quoted text is from a bare-act reproduction and was not checked against the official India Code text as of 17-10-2026.
 
     Section 64 also bears on shill bidding: unless the sale is notified as subject to the seller's right to bid, the seller may not bid or employ anyone to bid (s.64(4)), and a sale in which the seller uses "pretended bidding to raise the price" is voidable by the buyer (s.64(6)).
 

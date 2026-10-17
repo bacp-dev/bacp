@@ -1,7 +1,7 @@
 # Handler Registry
 
-!!! warning "Draft"
-    This page is part of the `draft` BACP specification. Rules marked **Proposed** depend on an open question and can change.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 The handler registry lists every Indian payment mode BACP can bind to: 57 handlers across UPI, cards, net banking, account-to-account transfers, NACH, PPIs, credit, COD, BBPS, e-RUPI, e₹, AePS, transit, trade finance, cross-border, GeM, PA settlement, cheques and the BACP credit ledger. Each entry is a **handler descriptor**: a JSON document that validates against [`handler-descriptor.json`](https://bacp.dev/schemas/handler-descriptor.json).
 
@@ -29,7 +29,7 @@ A descriptor has the fields below. Required fields are marked **R**.
 | `limits[]` | R | Each limit has a `name` (`per_txn`, `per_txn_min`, `per_day`, `per_month`, `per_year`, `first_24h`, `balance`, `block_amount`, `mandate_max`, `voucher_max`, `no_afa_debit`, `no_afa_debit_special_categories`, `validity`, `devices`, `pps_threshold`, `cash_threshold`), one of `amount` (integer paise), `duration` (ISO 8601) or `count`, an `applies_to` note, a `source` citation, a `verification` grade (`verified`, `secondary`, `vendor`, `unverified`, `conflict`), a `conflict_note` where sources disagree, and `configurable`. |
 | `afa` | R | `model` (`per_txn_2fa`, `at_registration_and_first_debit`, `at_registration_only`, `at_block_creation`, `at_provisioning`, `exempt`, `exempt_below_threshold`, `biometric_assisted`, `maker_checker`, `loan_acceptance`, `voucher_code`, `none_cash`, `n_a`), `threshold` and `threshold_special` (amounts above which AFA is needed), and `pre_debit_notice` (`required_24h`, `bacp_policy_24h`, `exempt`, `unknown`, `not_applicable`). |
 | `refund` | R | `route` (`source`, `source_with_card_credit_consent`, `same_ppi`, `release_block_or_source`, `lender`, `user_elected_account`, `same_balance`, `issuer_or_sponsor`, `new_credit_push`, `ledger_credit_note`, `n_a`, `unverified`), `failed_txn_tat` (ISO 8601 duration), `compensation_per_day`, `notes`. See [refunds](index.md#refunds). |
-| `dispute` | R | `channels[]` (e.g. UDIR, issuer billing dispute, RBI Ombudsman, Bharat Connect complaints, GeM incident management) and `window`. |
+| `dispute` | R | `channels[]` (e.g. UDIR, issuer billing dispute, RBI Integrated Ombudsman, Bharat Connect complaints, GeM incident management) and `window`. |
 | `settlement` | R | `mechanism` (free text), `evidence_refs[]` (the keys a receipt may carry: `rrn`, `utr`, `umn`, `umrn`, `arn`, `auth_code`, `bconnect_txn_id`, `voucher_id`, `cbdc_txn_id`, `factoring_unit_id`, `loan_id`, `lc_no`, `ebg_no`, `gem_order_no`, `crac_no`, `pfms_payment_id`, `pa_order_id`, `cheque_no`, `uetr`, `ledger_entry_id`, `awb`, `none`), `escrow` (`pa_escrow`, `none`, `gem_pool_account`, `platform`, `n_a`) and `timeline_source`. The PA-to-merchant timeline follows the PA–merchant agreement; there is no RBI T+N. |
 | `data_minimisation` | R | `payment_leg_fields` (by default `payee`, `amount`, `mandate_ref`, `checkout_hash`), `never_collect` (always includes `pin`, `otp`, `card_pan`, `cvv`, `card_expiry`, `netbanking_credentials`, `aadhaar_number`, `biometric` and `basket`; vouchers add `voucher_code_plaintext`), `retain_only` (cards: last four digits and issuer) and `basket_blind`. |
 | `funding` | R | `debit`, `credit`, `prepaid`, `cash`, `voucher`, `loan`, `cbdc`, `trade_credit` or `n_a`. |
@@ -100,8 +100,8 @@ Rules for registry content:
 
 ## Alias resolution
 
-!!! warning "Proposed"
-    The `in.*` canonical ids and the alias list below are the working position. Governance of handler names and the length of the deprecation window are open: [Q-28](../open-questions.md#q-28).
+!!! note "Settled"
+    The `in.*` canonical ids, the alias rules below, the governance of handler names and the length of the deprecation window are settled in [Q-28](../open-questions.md#q-28).
 
 A **handler reference** (`HandlerRef`) is a canonical id, an exact alias, or a string matched by a glob alias. It resolves as follows:
 
@@ -112,7 +112,7 @@ A **handler reference** (`HandlerRef`) is a canonical id, an exact alias, or a s
 5. **Emit canonical.** Producers MUST emit canonical ids in new artefacts: receipts, payment state, profiles, intersection results. Consumers MUST accept any handler reference and MUST compare handlers only after resolution, for example a session's handler against its mandate's `rail_binding.type`.
 6. **Unknown fails closed.** A reference that does not resolve is not eligible: the intersection excludes it with `not_in_registry`, and at PUT or `complete` it gets 403 `mandate_scope_mismatch`.
 7. **Resolution is not eligibility.** After resolution, the binding rules still apply: a `reserved` or `deprecated` descriptor MUST NOT back a payment, and a `pilot` descriptor only when attested.
-8. **Deprecation window.** Legacy aliases are accepted for one deprecation window. The registry SHOULD publish each alias's end date (a proposed descriptor field `aliases_deprecated_after`, not yet in the schema).
+8. **Deprecation window.** Legacy aliases are accepted for one deprecation window: at least two dated releases after the release that deprecates them, and at least 180 days after that release, whichever is later ([versioning policy](https://bacp.dev/versioning/#deprecation)). Removing an alias is a breaking change and gets at least 90 days' notice. The registry SHOULD publish each alias's end date (a proposed descriptor field `aliases_deprecated_after`, not yet in the schema).
 
 The registry declares two exact aliases of `in.upi.intent` for the deprecation window: `upi.pin` and `upi.uap.pin` (listed after the [registry table](#registry-table)). They identify a human-present one-off UPI payment authorised by UPI PIN. `auth_binding.type` stays `upi.pin`.
 
@@ -128,7 +128,7 @@ A new handler, or a change to an existing one (a new limit, a status change, a n
 6. **Add conformance cases.** A handler that a gateway claims under a conformance level needs cases for its binding, limits, AFA and refund route. See [Conformance](../conformance.md).
 7. **Validate.** The pull request MUST pass schema validation of the whole registry and the alias rules above.
 
-The BACP working group reviews the proposal. Who finally approves registry changes is part of [Q-28](../open-questions.md#q-28).
+The BACP working group reviews the proposal. A registry change is a normative change under [`GOVERNANCE.md`](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md): it needs a 14-day review and the approval of two maintainers, one of them the payments editor, and ships in a dated release or an approved backport (settled in [Q-28](../open-questions.md#q-28)).
 
 ## Registry table
 
@@ -154,7 +154,7 @@ The table below is generated from `source/handlers/registry.json`. "Presence all
 | 16 | `in.card.agentic` | Network agentic token (Mastercard Agent Pay, Visa Intelligent Commerce) | O | HP, HNP (rail-enforced) | `agentic_token_intent` | `source_with_card_credit_consent` | pilot |
 | 17 | `in.card.emi` | Card EMI (credit or debit) | C | HP | `loan_sanction` | `lender` | live |
 | 18 | `in.card.present` | Card present (EMV, contactless) | A | HP (assisted) | — | `source` | live |
-| 19 | `in.pos.tap` | UPI Tap and Pay / contactless at POS | A | HP (assisted) | — | `source` | live |
+| 19 | `in.pos.tap` | UPI Tap & Pay / contactless at POS | A | HP (assisted) | — | `source` | live |
 | 20 | `in.pos.dynamic_qr` | POS / soundbox dynamic QR | A | HP (assisted) | — | `source` | live |
 | 21 | `in.netbanking` | Net banking (redirect) | C | HP | — | `source` | live |
 | 22 | `in.nach.debit` | NACH / eNACH debit mandate | O | HP, HNP (rail-enforced) | `nach_umrn` | `new_credit_push` | live |
@@ -180,9 +180,9 @@ The table below is generated from `source/handlers/registry.json`. "Presence all
 | 42 | `in.bbps.b2b_invoice` | Bharat Connect for Business (B2B invoice) | C | HP | `approval_policy` | `source` | live |
 | 43 | `in.bbps.upms` | BBPS UPMS recurring registration | O | HP, HNP (rail-enforced) | `upms_registration` | `source` | live |
 | 44 | `in.erupi` | e-RUPI purpose-bound voucher | O | HP, HNP (rail-enforced) | `voucher` | `issuer_or_sponsor` | live |
-| 45 | `in.cbdc.retail` | e-rupee retail wallet | C | HP | — | `new_credit_push` | pilot |
-| 46 | `in.cbdc.programmed` | Programmable e-rupee (sponsor-locked) | O | HP, HNP (rail-enforced) | `programmability_rules` | `issuer_or_sponsor` | pilot |
-| 47 | `in.cbdc.wholesale` | Wholesale e-rupee settlement (reserved) | N | none (non-paying) | — | `n_a` | reserved |
+| 45 | `in.cbdc.retail` | e₹ retail wallet | C | HP | — | `new_credit_push` | pilot |
+| 46 | `in.cbdc.programmed` | Programmable e₹ (sponsor-locked) | O | HP, HNP (rail-enforced) | `programmability_rules` | `issuer_or_sponsor` | pilot |
+| 47 | `in.cbdc.wholesale` | Wholesale e₹ settlement (reserved) | N | none (non-paying) | — | `n_a` | reserved |
 | 48 | `in.aeps.assisted` | AePS / Aadhaar Pay (assisted) | A | HP (assisted) | `assisted_session` | `source` | live |
 | 49 | `in.fin.treds` | TReDS invoice discounting | N | none (non-paying) | `factoring_unit` | `n_a` | live |
 | 50 | `in.fin.lc` | Letter of credit (verify and track) | N | none (non-paying) | — | `n_a` | live |

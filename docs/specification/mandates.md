@@ -1,8 +1,7 @@
 # Mandates and Consent
 
-!!! warning "Draft"
-    This page is part of the `draft` specification. Rules marked **Proposed** depend on an
-    open question and may change before the first dated release.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 A **mandate** is the signed, immutable statement of what a principal (the person or business on
 whose behalf an agent acts) has authorised the agent to do. Every BACP commitment that moves
@@ -12,8 +11,8 @@ the principal saw and the personal data they agreed to release to a named recipi
 
 | Artefact | Schema | Signed by |
 |---|---|---|
-| Mandate (`bacp.AgentMandate`) | [`mandate.json`](https://bacp.dev/schemas/mandate.json) | Principal and Mandate Manager (open); agent `cnf` key or principal (closed) |
-| ConsentReceipt (DPDP) | [`consent-receipt.json`](https://bacp.dev/schemas/consent-receipt.json) | Mandate Manager |
+| Mandate (`bacp.AgentMandate`) | [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | Principal and Mandate Manager (open); agent `cnf` key or principal (closed) |
+| ConsentReceipt (DPDP) | [`consent-receipt.json`](https://bacp.dev/latest/schemas/consent-receipt.json) | Mandate Manager |
 
 Negotiation bounds (reservation price, walk-away terms) are **not** carried by this mandate. They
 live in a separate negotiation mandate, described in [Negotiation](negotiation/index.md), so that
@@ -94,7 +93,7 @@ than its parent's.
   },
   "purpose": {
     "code": "P-GRO-01",
-    "text": {"hi-IN": "Ghar ka kirana saman", "en-IN": "Household grocery replenishment"}
+    "text": {"hi-IN": "घर का किराना सामान", "en-IN": "Household grocery replenishment"}
   },
   "action_scope": ["DISCOVER", "QUOTE", "ORDER", "PAY", "CANCEL", "RETURN", "RAISE_ISSUE", "SHARE_DATA"],
   "data_scopes": ["NAME", "PHONE", "DELIVERY_ADDRESS"],
@@ -176,8 +175,9 @@ Manager** (MM) issues it.
     - with `403 mandate_scope_mismatch` if it has no `amount_per_txn`; has no periodic budget; has
       no `categories_allow`, or one outside the purpose's categories; asks for a longer validity
       than the purpose allows; exceeds any per-transaction or per-period bound of the purpose
-      ([Purpose bounds](#purpose-bounds)); asks for a data scope the purpose does not allow; or
-      exceeds the static limits of the requested rail.
+      ([Purpose bounds](#purpose-bounds)); asks for a data scope the purpose does not allow; names a
+      `purpose_code` that is not in the [purpose-code registry](#purpose-bounds); or exceeds the
+      static limits of the requested rail.
 3. Otherwise the gateway returns `202` with a `MandateHandle` in `PENDING`, carrying a
    `trusted_surface_url` deep link. The link expires after at most 15 minutes.
 4. The principal opens the link. The Trusted Surface shows the notice in the principal's language
@@ -209,7 +209,7 @@ sequenceDiagram
     participant MM as Mandate Manager
     participant TS as Trusted Surface (payer PSP app)
     participant N as NPCI and issuer
-    U->>A: Order my groceries every month, up to 3000 rupees
+    U->>A: Order my groceries every month, up to ₹3,000
     A->>G: POST /mandates with purpose, rail, constraints, data scopes, webhook_url
     G->>G: Check unknown constraints, schema, purpose bounds, rail static caps
     G->>MM: Mandate request with the agent cnf key
@@ -231,9 +231,11 @@ sequenceDiagram
 ### Purpose bounds {#purpose-bounds}
 
 `purpose.code` comes from a purpose-code registry. Each purpose carries bounds that the gateway or
-MM enforces at `POST /mandates`. The values below are **provisional** but normative for
-conformance. Who governs the registry and its values is open ([Q-47](open-questions.md#q-47)).
-Amounts are in rupees.
+MM enforces at `POST /mandates`. The table below is the normative purpose-code registry of
+BACP `2026-10-17`. The BACP working group governs it: a new code or a changed bound is a normative
+change and ships only in a dated release, and lowering a bound or removing a code is a breaking
+change (settled in [Q-47](open-questions.md#q-47)). A `purpose_code` that is not in the table
+**MUST** be refused with `403 mandate_scope_mismatch`. Amounts are in rupees (₹).
 
 | Purpose | Text | Per txn | P1D | P7D | P1M | FIRST_24H | LIFETIME | Categories | Max validity | Data scopes |
 |---|---|---|---|---|---|---|---|---|---|---|
@@ -358,10 +360,12 @@ signed by the `cnf` key with `aud` set to the seller's `bpp_id` and `nonce` set 
 `context.bacp.mandate_ref.kb_jwt`.
 
 !!! note "Encoding"
-    The attached-JWS closing above is the interoperable form for this draft. Whether BACP moves to
-    an SD-JWT / KB-JWT selective-disclosure encoding for closing is open
-    ([Q-41](open-questions.md#q-41)). The mandatory signature algorithm is also open
-    ([Q-42](open-questions.md#q-42)).
+    The attached-JWS closing above is the only interoperable encoding of a closed mandate in BACP
+    `2026-10-17`, and the conformance suite carries test vectors for it. An SD-JWT / KB-JWT
+    selective-disclosure encoding is not part of this version; a later release may add one as a
+    new mandate `vct` (settled in [Q-41](open-questions.md#q-41)). Verifiers **MUST** support both
+    ES256 and EdDSA (Ed25519) signatures (settled in [Q-42](open-questions.md#q-42); see
+    [Identity and Request Signing](identity-and-signing.md#signature-algorithms)).
 
 A closed Payment Mandate is single use. The gateway and the PSP adapter **MUST** allow at most one
 debit per closed Payment Mandate `mandate_id` and at most one per `checkout_hash`. Presenting a
@@ -424,7 +428,7 @@ local and rail reason.
 4. On an **HP payment approval** the event carries principal-signed closed mandates
    (`auth_binding.type: upi.pin`) and the PSP-signed receipt. The gateway verifies them and
    confirms the order without drawing on the open mandate's binding.
-5. On decline, or once `expires_at` passes, the session becomes `canceled` with
+5. On decline, or once `expires_at` passes, the session becomes `cancelled` with
    `step_up_declined` or `step_up_expired`, and no money moves.
 
 **Split-order detection.** To stop an agent splitting one purchase into several orders that each
@@ -505,7 +509,7 @@ is a read-only view of it.
   plus reservations. Budgets, `max_executions`, every rail-cap pre-check and split-order detection
   **MUST** count reservations as spent.
 - **Atomic section.** For `complete`, steps 5 to 8 and 13 of
-  [Deterministic evaluation](#evaluation) **MUST** run as one atomic, linearizable operation per
+  [Deterministic evaluation](#evaluation) **MUST** run as one atomic, linearisable operation per
   open mandate id: mutual exclusion keyed on `mandate_id`, or compare-and-reserve on a store with
   equivalent guarantees. The rail debit **MUST** run after the atomic section, never inside it.
 - **Resolution.** A reservation becomes settled spend only when a PSP-signed success receipt is
@@ -517,7 +521,7 @@ is a read-only view of it.
 - **The rail is not the backstop.** A gateway **MUST NOT** rely on rail-enforced limits to bound
   BACP budgets. A rail authority can be far larger than the budget.
 - **Replicas.** A gateway that runs as several instances **MUST** share the ledger and keep it
-  linearizable per mandate (a single writer or a transactional store). A per-process lock is not
+  linearisable per mandate (a single writer or a transactional store). A per-process lock is not
   enough. Keeping budgets atomic across gateways, for a principal with two BAPs, is open
   ([Q-36](open-questions.md#q-36)).
 
@@ -605,9 +609,9 @@ stateDiagram-v2
 
 ### ConsentReceipt
 
-Every merchant that receives personal data is a separate Data Fiduciary. The MM, acting as or for a
-DPDP Consent Manager, issues one ConsentReceipt **per recipient per mandate**, signed with its
-registry key. The receipt records:
+Every merchant that receives personal data is a separate Data Fiduciary. The MM issues one
+ConsentReceipt **per recipient per mandate**, signed with its registry key. The MM acts as a DPDP
+Consent Manager only if it is registered as one (see [below](#consent-manager-registration)). The receipt records:
 
 - the itemised `data_items` (`field`, and `form`: `plain`, `masked`, `selective_disclosure_vc`
   or `token`);
@@ -623,18 +627,21 @@ registry key. The receipt records:
   for that order, and `consent_s6` for everything else.
 
 In HNP shopping the seller is often unknown when the mandate is set up. The MM then issues a
-**class receipt** with `recipient.bpp_id: "*"`, scoped to the mandate's categories, and a
-per-seller receipt is minted when data is released at `init`.
+**class receipt** with `recipient.bpp_id: "*"`, scoped to the mandate's categories. A class
+receipt only pre-authorises. The MM **MUST** mint a per-seller ConsentReceipt, whose
+`recipient.bpp_id` is that seller, at `init` and before any personal data reaches the seller; no
+data is ever released on the strength of a class receipt alone (settled in
+[Q-12](open-questions.md#q-12)).
 
-!!! warning "Proposed"
-    A per-seller ConsentReceipt minted at `init`, before any personal data reaches that seller, is
-    Proposed as a **MUST**; the class receipt would then only pre-authorise. Whether a class receipt
-    alone meets DPDP Rule 3 is open ([Q-12](open-questions.md#q-12)).
+!!! warning "Fail-safe default until Q-12 is settled"
+    Whether a class pre-authorisation is valid consent under DPDP Act ss.5–6 and Rule 3 is open
+    ([Q-12](open-questions.md#q-12)). Until it is settled, and from 13-05-2027, when those
+    provisions apply, the first release of personal data to a seller not named in any receipt the
+    principal approved **MUST** be confirmed by the principal on the Trusted Surface, which shows
+    that seller's notice. The gateway escalates with resolution `requires_buyer_review` and
+    releases nothing before the confirmation.
 
-!!! warning "Proposed"
-    `cm_registration_no` is Proposed as required on receipts issued on or after 2026-11-13, when
-    DPDP Rule 4 on Consent Managers is expected to commence. How the MM relates to a registered
-    Consent Manager is open ([Q-16](open-questions.md#q-16)).
+Example: a class receipt issued at mandate setup.
 
 ```json
 {
@@ -656,13 +663,13 @@ per-seller receipt is minted when data is released at `init`.
   ],
   "purpose": {
     "code": "P-GRO-01",
-    "text": {"hi-IN": "Order delivery ke liye", "en-IN": "To deliver grocery orders"},
+    "text": {"hi-IN": "ऑर्डर की डिलीवरी के लिए", "en-IN": "To deliver grocery orders"},
     "goods_or_services": "Grocery delivery"
   },
   "legal_basis": "consent_s6",
   "notice": {
     "language": "hi-IN",
-    "hash": "sha-256:Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5",
+    "hash": "sha-256:DgcWqPzbKveSkigvRZUO1GO9ijHGKa-QOlbH5Km2ePs",
     "uri": "https://mm.psp.example.in/notices/n-551"
   },
   "captured_via": {
@@ -676,7 +683,7 @@ per-seller receipt is minted when data is released at `init`.
   },
   "grievance": {
     "contact": "dpo@psp.example.in",
-    "board_complaint_uri": "https://dpb.example.gov.in/complaints"
+    "board_complaint_uri": "https://dpb.example.in/complaints"
   },
   "retention": {"recipient_max": "P1Y", "legal_minimum": "P1Y"},
   "status": "ACTIVE",
@@ -689,6 +696,21 @@ per-seller receipt is minted when data is released at `init`.
 }
 ```
 
+### Consent Manager registration {#consent-manager-registration}
+
+DPDP Rule 4 and Act s.6(9) apply from 13-11-2026. How the MM relates to a registered Consent
+Manager is open ([Q-16](open-questions.md#q-16)). Until it is settled, these fail-safe rules apply:
+
+- An MM **MUST NOT** act, or describe itself, as a Consent Manager unless it is registered with
+  the Data Protection Board.
+- On receipts issued on or after 13-11-2026, `cm_registration_no` **MUST** be the Board
+  registration number when the MM acts as a Consent Manager, and **MUST** be `null` otherwise. A
+  `null` value means the receipt records consent given to the recipient Data Fiduciary, not
+  through a Consent Manager.
+- An MM that acts as a registered Consent Manager **MUST NOT** also act as credential provider
+  (re-verifying closed mandates, issuing `within_bounds` attestations); that role runs as a
+  logically separate component with its own registry key.
+
 ### Data minimisation
 
 - `principal.ref` is a pairwise pseudonymous id at the MM. It is never an Aadhaar number, and no
@@ -698,7 +720,10 @@ per-seller receipt is minted when data is released at `init`.
   requested.
 - When a session update shares data (`data_share`), the gateway **MUST** check that `SHARE_DATA`
   is in `action_scope`, that every field is in `data_scopes`, and that `consent_receipt_ref` names
-  an active, not withdrawn, ConsentReceipt of this mandate. Otherwise it returns
+  an active, not withdrawn, ConsentReceipt of this mandate (the class receipt, or a per-seller
+  receipt for the session's seller). Before any personal data is sent to the seller at `init`,
+  the gateway **MUST** hold an active per-seller ConsentReceipt from the MM whose
+  `recipient.bpp_id` is that seller. Otherwise it returns
   `403 mandate_scope_mismatch` at `$.data_share.fields` or `$.data_share.consent_receipt_ref`,
   before anything is sent to the seller.
 - No personal data travels through the Beckn gateway in `search`. Delivery data goes only to the
@@ -712,8 +737,10 @@ per-seller receipt is minted when data is released at `init`.
   becomes `WITHDRAWN` and further data release under it is refused.
 
 The MM keeps mandate, notice, consent and sharing records for at least 7 years in machine-readable
-form. The export interface and the full retention schedule are open
-([Q-16](open-questions.md#q-16), [Q-17](open-questions.md#q-17)). See also
+form, and **MUST** give them to the principal on request, on the Trusted Surface, in
+machine-readable form. A REST export interface is not part of this version
+([Q-16](open-questions.md#q-16)), and the full retention schedule is open
+([Q-17](open-questions.md#q-17)). See also
 [Evidence: retention](evidence.md#retention) and [Security and Privacy](security-and-privacy.md).
 
 ## Error codes

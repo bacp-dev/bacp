@@ -5,18 +5,20 @@ maintained: the version identifiers, the URLs under which each version is
 published, how schema identifiers resolve, what counts as a breaking change,
 and when fixes are backported to a published release.
 
-!!! note "Governance is still being set up"
-    BACP is a draft. The bodies that will approve releases, breaking changes
-    and backports are not yet constituted. Until they are, the BACP working
-    group maintains the specification and follows the process on this page.
-    Where this page says "approved", the approving body is still to be
-    defined.
+!!! info "Version 2026-10-17"
+    The current dated release is `2026-10-17`, the first dated release of
+    BACP. Where this page says "approved", the approval is given by the
+    release approvers defined in
+    [`GOVERNANCE.md`](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md),
+    following the process on this page.
 
 ## Version identifiers
 
 BACP versions are calendar dates in the form **`YYYY-MM-DD`**, for example
-`2027-01-15`. The date is the day the release is cut. Dates give a clear
-chronological order and make versions easy to compare.
+`2026-10-17`. The date is the day the release is cut. Dates give a clear
+chronological order and make versions easy to compare. Version identifiers
+use `YYYY-MM-DD` so that they sort correctly in URLs, tags and schema ids;
+dates elsewhere in the documentation are shown as DD-MM-YYYY.
 
 - **`draft`** is the working version on the `main` branch. It has no date and
   may change at any time, including in breaking ways.
@@ -27,8 +29,8 @@ chronological order and make versions easy to compare.
     - the OpenAPI document of the REST binding;
     - the payment handler registry and the conformance manifest.
 
-No dated release has been published yet. The specification is currently
-`draft`.
+The first dated release is `2026-10-17`. `draft` remains the working
+version built from `main`, where changes for later releases are made.
 
 A participant states the version it speaks in its gateway profile
 (`bacp.version` and `bacp.supported_versions` at `/.well-known/bacp`), and the
@@ -44,7 +46,7 @@ The specification is published at `bacp.dev` with one directory per version.
 | `https://bacp.dev/` | This site: the overview pages, which are not versioned |
 | `https://bacp.dev/draft/` | The specification built from `main`. Unstable. |
 | `https://bacp.dev/YYYY-MM-DD/` | The specification of the dated release `YYYY-MM-DD`. Stable, amended only by approved backports. |
-| `https://bacp.dev/latest/` | An alias of the newest dated release. Until the first dated release exists, it points at `draft`. |
+| `https://bacp.dev/latest/` | An alias of the newest dated release. It points at `2026-10-17`. |
 
 Links from the overview pages into the specification go to `/latest/`. To cite
 a rule that must not move, link to a dated release.
@@ -127,21 +129,29 @@ release:
 
 A field, code or handler alias that will be removed is first marked
 deprecated in a release, and removed in a later release. Handler aliases from
-earlier naming schemes are accepted for one deprecation window; the length of
-that window is still to be decided
-([Q-28](specification/open-questions.md#q-28)).
+earlier naming schemes are accepted for one deprecation window.
+
+As policy of this release, a deprecated field, code or handler alias stays
+supported for at least two dated releases after the release that deprecates
+it, and for at least 180 days after that release, whichever is later. It may
+be removed only in a dated release after both periods have passed. (This
+settles the deprecation window asked about in
+[Q-28](specification/open-questions.md#q-28).)
 
 ## Breaking-change policy
 
 - A breaking change MUST be marked as breaking in its change request (for
   example with `!` in the pull-request title) and MUST be listed in the
   release notes of the release that introduces it.
-- A breaking change MUST be announced publicly before it is merged. The
-  notice period is still to be set as part of governance.
+- A breaking change MUST be announced publicly before it is merged. As policy
+  of this release, a breaking change gets at least 90 days' notice in the
+  release notes before the dated release that introduces it is published.
 - Security-sensitive fixes are the exception: their disclosure timeline is set
   case by case, so a fix is not announced before it is safe to disclose.
-- While the specification is `draft`, breaking changes are expected and are
-  made on `main` without a notice period.
+- `draft` on `main` is unstable: work towards a later release lands there
+  first and may change before it is released. The notice period applies to
+  the dated release that ships a breaking change, not to each change on
+  `main`.
 
 ## Backport policy
 

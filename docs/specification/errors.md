@@ -6,15 +6,15 @@ outcome the agent must act on, succeeds (200 or 201, or 202 where the operation 
 page defines both shapes, the resolution vocabulary that tells an agent what it may do next, and the registry of
 every code a conforming participant may emit.
 
-!!! note "Status"
-    Draft. Codes are stable identifiers. A participant MUST NOT emit a code that is not registered on this page.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Codes are stable identifiers. A participant MUST NOT emit a code that is not registered on this page.
 
 ## Two channels {#channels}
 
 | Channel | When | HTTP status | Body |
 |---|---|---|---|
 | **Protocol failure** | The request was malformed, unauthenticated, unauthorised, refused by the deterministic mandate verifier, or could not reach the seller. | 4xx or 5xx | One flat [`Error`](#error-object) object |
-| **Business outcome** | The request was processed and the resource has a new authoritative state, but the agent must take note, ask the buyer, or wait. | 200 or 201; 202 for asynchronous operations (`POST /mandates`, return requests, Trusted Surface events) | The full resource (session, order, negotiation, …) with [`messages[]`](#message-object) |
+| **Business outcome** | The request was processed and the resource has a new authoritative state, but the agent must take note, ask the principal, or wait. | 200 or 201; 202 for asynchronous operations (`POST /mandates`, return requests, Trusted Surface events) | The full resource (session, order, negotiation, …) with [`messages[]`](#message-object) |
 
 Rules:
 
@@ -46,7 +46,7 @@ ACCEPT whose agreed payment option has no eligible handler. Registry rows marked
 |---|---|---|---|
 | `type` | enum | yes | Error class: `invalid_request`, `authentication_error`, `authorization_error`, `mandate_error`, `payment_error`, `upstream_error`, `service_unavailable` |
 | `code` | string | yes | A code from the [registry](#registry) |
-| `message` | string | yes | Human-readable explanation for logs and developers. Agents MUST NOT present it to the buyer as a legal notice. |
+| `message` | string | yes | Human-readable explanation for logs and developers. Agents MUST NOT present it to the principal as a legal notice. |
 | `param` | string | no | RFC 9535 JSONPath to the offending field |
 | `resolution` | enum | no | How the agent should proceed; one of the [resolution values](#resolution). Gateways SHOULD send it. |
 | `reasons` | array of string | conditional | Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors. |
@@ -87,7 +87,7 @@ Rail-cap and step-up errors MUST also carry `reasons[]` (every local and rail re
 ```
 
 The first message of every checkout session is the `ai_disclosure` message (`type: disclosure`), which carries the
-agent's AI notice and the human handoff URL in the buyer's language.
+agent's AI notice and the human handoff URL in the principal's language.
 
 ## Resolution {#resolution}
 
@@ -95,9 +95,9 @@ Every `Error` code and every message has exactly one `resolution`:
 
 | Value | Meaning for the agent |
 |---|---|
-| `recoverable` | The agent may fix the request itself (re-select, wait, GET and retry with the same key) without involving the buyer. |
-| `requires_buyer_input` | The agent must ask the buyer for something new: set up or renew a mandate, choose another payment method, supply missing data. |
-| `requires_buyer_review` | A human must review and approve on the Trusted Surface (step-up, disclosure review, out-of-scope action). The agent MUST NOT approve on the buyer's behalf. |
+| `recoverable` | The agent may fix the request itself (re-select, wait, GET and retry with the same key) without involving the principal. |
+| `requires_buyer_input` | The agent must ask the principal for something new: set up or renew a mandate, choose another payment method, supply missing data. |
+| `requires_buyer_review` | A human must review and approve on the Trusted Surface (step-up, disclosure review, out-of-scope action). The agent MUST NOT approve on the principal's behalf. |
 | `unrecoverable` | The request cannot succeed as sent. The agent must not retry it; an operator may need to act. |
 
 "Informational" is not a resolution value. Purely informational messages use `type: info` with
@@ -128,7 +128,7 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `idempotency_conflict` | 422 | invalid_request | The same key was reused with a different request body. | `$.headers.Idempotency-Key` | unrecoverable (a new key only for a new intent) |
 | `idempotency_in_flight` | 409 + `Retry-After` | invalid_request | A request with the same key is still being processed. | — | recoverable (retry with the same key) |
 | `idempotency_store_unavailable` | 503 | service_unavailable | The idempotency store is unreachable; writes fail closed. | — | recoverable |
-| `request_too_large` | 413 | invalid_request | The request body exceeds the gateway's limit (256 KiB by default). Checked on raw bytes before signature verification. | — | unrecoverable |
+| `request_too_large` | 413 | invalid_request | The request body exceeds the gateway's limit (at most 256 KiB). Checked on raw bytes before signature verification. | — | unrecoverable |
 | `quota_exceeded` | 429 + `Retry-After` | invalid_request | The agent has too many live idempotency keys or too many requests in flight. | — | recoverable |
 | `signature_invalid` | 401 | authentication_error | The RFC 9421 signature does not verify, lacks a required covered component, is outside its time window, or uses a tag that the endpoint or the credential's `purposes` does not allow. | `$.headers.Signature-Input` | unrecoverable |
 | `replay_detected` | 401 | authentication_error | The `(keyid, nonce)` pair was already seen within the signature window. | `$.headers.Signature-Input` | unrecoverable |
@@ -151,10 +151,10 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `rail_binding_not_open_eligible` | 400 | invalid_request | The open payment mandate's `rail_binding` resolves to a handler that cannot back standing authority: a reserved or deprecated descriptor, a pilot the gateway has not attested, or a handler that is not open-eligible. | `$.mandates` | requires_buyer_input (bind another rail) |
 | `constraint_unknown` | 403 | mandate_error | The mandate carries a constraint key the verifier does not know. Unknown constraints fail closed. | `$.proposed_constraints` | unrecoverable |
 | `mandate_expired` | 403 (also a 200 `error` message on a checkout session cancelled by the expiry) | mandate_error | The mandate is past `valid_until` or its rail authority has expired. | `$.mandate_ref` | requires_buyer_input |
-| `mandate_revoked` | 403 (also a 200 message: `error` on a checkout session cancelled by the revocation, `warning` on negotiation sessions) | mandate_error | The mandate was revoked by the buyer, by a rail safety switch or by agent relinquishment. | `$.mandate_ref` | requires_buyer_input |
-| `mandate_paused` | 403 (also a 200 `error` message on a checkout session cancelled by the pause) | mandate_error | The buyer paused the mandate. | `$.mandate_ref` | requires_buyer_input |
+| `mandate_revoked` | 403 (also a 200 message: `error` on a checkout session cancelled by the revocation, `warning` on negotiation sessions) | mandate_error | The mandate was revoked by the principal, by a rail safety switch or by agent relinquishment. | `$.mandate_ref` | requires_buyer_input |
+| `mandate_paused` | 403 (also a 200 `error` message on a checkout session cancelled by the pause) | mandate_error | The principal paused the mandate. | `$.mandate_ref` | requires_buyer_input |
 | `mandate_exhausted` | 403 | mandate_error | A budget, the rail block or `max_executions` is used up, counting in-flight reservations. | `$.mandate_ref` | requires_buyer_input |
-| `mandate_scope_mismatch` | 403 | mandate_error | The request falls outside the mandate: amount, category, merchant, pincode, line items, `checkout_hash`, data shared outside `data_scopes`, reuse of a closed payment mandate, purpose bounds at mandate request, or a handler that does not resolve. | `$.checkout_hash`, `$.mandate_ref` | requires_buyer_review |
+| `mandate_scope_mismatch` | 403 | mandate_error | The request falls outside the mandate: amount, category, merchant, PIN code, line items, `checkout_hash`, data shared outside `data_scopes`, reuse of a closed payment mandate, purpose bounds at mandate request, or a handler that does not resolve. | `$.checkout_hash`, `$.mandate_ref` | requires_buyer_review |
 | `amount_not_positive` | 403 | mandate_error | A payable amount, a tender or a ledger posting is zero, negative or not an integer number of paise. | `$.amount` | unrecoverable |
 | `presence_not_allowed` | 403 | mandate_error | The request's presence (HP or HNP) is not in the mandate's `presence_allowed`. | `$.presence` | requires_buyer_review |
 | `rail_limit_exceeded` | 403 + `reasons[]`, `step_up_kind: rail_auth` | mandate_error | A rail cap other than an AFA threshold would be exceeded: per-transaction, period, first-24-hour, remaining block or channel cap. | `$.amount` | requires_buyer_review |
@@ -164,7 +164,7 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `receipt_invalid` | 400 | invalid_request | A receipt is malformed or is not signed by a registered PSP key. | `$.receipt` | unrecoverable |
 | `evidence_forbidden` | 403 | authorization_error | The caller is not a party of record for the evidence bundle. | — | unrecoverable |
 | `evidence_unverifiable` | 422 | invalid_request | The evidence bundle fails verification (signatures or chain). | — | unrecoverable |
-| `cancel_not_allowed` | 403 | authorization_error | The order cannot be cancelled under the seller's cancellation terms, or CANCEL is outside the mandate's scope at this presence. | `$.order_id` | requires_buyer_review |
+| `cancel_not_allowed` | 403 | authorization_error | The seller refuses the cancellation under its cancellation terms (`@ondc/org/cancellable`, `cancellation_terms`). A mandate or scope failure is `mandate_scope_mismatch`, and a presence failure is `presence_not_allowed`. | `$.order_id` | requires_buyer_review |
 | `return_not_allowed` | 403 | authorization_error | The return is outside the return window, the item is not returnable, or the quantity exceeds what was ordered and not yet returned. | `$.items[n]` | requires_buyer_review |
 
 ### Session and payment messages {#registry-session}
@@ -175,22 +175,22 @@ These are always 200 or 201 messages.
 |---|---|---|---|---|
 | `ai_disclosure` | disclosure | First message of every session: the AI notice and the human handoff URL. | `$.human_handoff_url` | recoverable |
 | `step_up_required` | error | A human approval is needed; see the `step_up` object. | `$.step_up` | requires_buyer_review |
-| `step_up_approved` | info | The buyer approved the step-up on the Trusted Surface. | `$.step_up` | recoverable |
-| `step_up_declined` | warning | The buyer declined the step-up on the Trusted Surface; the session is canceled and no money moves. | — | requires_buyer_input |
+| `step_up_approved` | info | The principal approved the step-up on the Trusted Surface. | `$.step_up` | recoverable |
+| `step_up_declined` | warning | The principal declined the step-up on the Trusted Surface; the session is cancelled and no money moves. | — | requires_buyer_input |
 | `step_up_expired` | warning | The step-up link expired without approval. | `$.step_up` | requires_buyer_input |
 | `quote_expired` | warning | The seller's quote expired before `complete`; the session returns to `incomplete`. | `$.quote.expires_at` | recoverable (re-select) |
 | `quote_mismatch` | warning | The seller's quote differs from what the agent requested (items or quantities). | `$.line_items` | recoverable or requires_buyer_review |
 | `preticked_addon_removed` | warning | The gateway removed an add-on the seller had pre-selected. | `$.line_items[n]` | recoverable |
 | `drip_pricing_detected` | warning | The total rose between quote and checkout, or a mandatory charge appeared late. | `$.totals` | requires_buyer_review |
-| `disclosures_missing` | error | A mandatory pre-contract disclosure (country of origin, expected delivery or price breakup) is missing; the session cannot reach `ready_for_complete`. | `$.disclosures` | requires_buyer_review |
+| `disclosures_missing` | error | A mandatory pre-contract disclosure (seller name, total price, return terms, cancellation terms, country of origin, expected delivery or price breakup) is missing; the session cannot reach `ready_for_complete`. | `$.disclosures` | requires_buyer_review |
 | `split_order_suspected` | warning | Orders to the same seller within a short window look like a split to stay under a step-up threshold. | `$.totals` | requires_buyer_review |
 | `payment_in_doubt` | warning | The PSP did not confirm the debit; the gateway is reconciling. | `$.payment.status` | recoverable (do NOT re-key) |
 | `payment_failed` | error | The debit failed; no money moved and the budget reservation is released. | `$.payment` | requires_buyer_input |
-| `debited_not_confirmed` | warning | The buyer was debited but the seller never confirmed; a refund to source has started. The message states the rail turnaround time and the compensation entitlement. | `$.payment.reversal_deadline` | recoverable |
+| `debited_not_confirmed` | warning | The principal was debited but the seller never confirmed; a refund to source has started. The message states the rail turnaround time and the compensation entitlement. | `$.payment.reversal_deadline` | recoverable |
 | `budget_after` | info | The remaining mandate budget after a PSP-signed receipt was applied (computed by the gateway, unsigned). | `$.payment.budget_after` | recoverable |
 | `pre_debit_notice` | info | A pre-debit notice has been issued; no money moves until it matures. | `$.payment.scheduled_debit_at` | recoverable |
-| `pre_debit_opt_out` | warning | The buyer opted out of the notified debit; the session is canceled with no rail traffic. | `$.payment` | requires_buyer_input |
-| `session_canceled` | info | The session was canceled (by the agent, by TTL or because the mandate ended). | `$.mandate_ref` | recoverable |
+| `pre_debit_opt_out` | warning | The principal opted out of the notified debit; the session is cancelled with no rail traffic. | `$.payment` | requires_buyer_input |
+| `session_cancelled` | info | The session was cancelled (by the agent, by TTL or because the mandate ended). | `$.mandate_ref` | recoverable |
 | `mandate_revoked` | error (checkout session) / warning (negotiation) | The mandate was revoked while the session or negotiation was live. | `$.mandate_ref` | requires_buyer_input |
 
 ### Negotiation, RFQ and auction codes {#registry-negotiation}
@@ -209,7 +209,7 @@ See [Negotiation](negotiation/index.md) and [RFQ and Auctions](negotiation/rfq-a
 | `NEG_MSMED_CREDIT_CAP` | 200 msg (incoming) / 403 (own firm) | Credit days to a micro or small enterprise exceed the statutory cap. | `$.term_sheet.payment.credit_days` | recoverable |
 | `NEG_DRIP_PRICING` | 200 msg | A charge appeared after the first round, or the all-in total rose beyond the mandate's tripwire. | `$.live_offer.all_in_total` | requires_buyer_review |
 | `NEG_FALSE_URGENCY` | 200 msg / 403 | The offer's validity window is shorter than the minimum (PT5M for B2C). | `$.expires_at` | requires_buyer_review (msg) / recoverable (403) |
-| `NEG_BASKET_SNEAK` | 200 msg / 403 | A counter adds lines or add-ons the buyer did not assert. | `$.term_sheet.lines` | requires_buyer_review / recoverable |
+| `NEG_BASKET_SNEAK` | 200 msg / 403 | A counter adds lines or add-ons the principal did not assert. | `$.term_sheet.lines` | requires_buyer_review / recoverable |
 | `NEG_PERSONALISED_PRICING` | 200 msg / 403 | The pricing basis is undeclared or uses prohibited attributes. | `$.term_sheet.pricing_basis` | requires_buyer_review / recoverable |
 | `NEG_EXPOSURE_EXCEEDED` | 200 + `step_up` | Outstanding firm commitments across this principal's negotiations would exceed `total_max` or a remaining budget. | `$.term_sheet` | requires_buyer_review |
 | `NEG_INJECTION_SUSPECTED` | 200 msg | Counterparty free text looks like an instruction to the agent; it is quarantined as data. | `$.untrusted_counterparty_text` | recoverable |
@@ -243,7 +243,7 @@ See [Negotiation](negotiation/index.md) and [RFQ and Auctions](negotiation/rfq-a
 | `agreed_by_counterparty` | 200 msg | The counterparty accepted our live firm offer; the negotiation is AGREED. | `$.state` | requires_buyer_review |
 | `seller_counter_at_init` | 200 msg | The seller's `on_init` differs from our non-firm offer, which makes it a counter-offer. | `$.live_offer` | requires_buyer_input |
 | `negotiation_terminated` | 200 msg | The negotiation ended (rounds, deadline, revocation or TERMINATE). | `$.state` | requires_buyer_input |
-| `cancelled_no_penalty` | 200 msg | After a firm-offer breach the buyer cancelled without penalty. | `$.state` | recoverable |
+| `cancelled_no_penalty` | 200 msg | After a firm-offer breach the principal cancelled without penalty. | `$.state` | recoverable |
 | `bid_not_revealed` | 200 msg | A committed sealed bid was never revealed; it is excluded and its deposit forfeited. | — | unrecoverable |
 | `NEG_CLOSED` | 400 | A sealed-bid commit arrived after the commit phase closed. | — | unrecoverable for that action |
 | `NEG_REVEAL_MISMATCH` | 400 | A revealed bid and salt do not hash to the bidder's commitment, or the bidder made no commitment. | — | unrecoverable for that action |
@@ -290,39 +290,39 @@ here. "200 msg" codes come back on `POST /payment-handlers/intersect` as `exclud
 ### Rail and ledger refusals {#registry-rail-ledger}
 
 These codes are returned by a rail or by the [khata credit ledger](payments/credit-and-split-tender.md#the-khata-credit-ledger)
-to the participant that called it. They follow the "rail refusal" rows of the table above: no money moves, and this
-draft does not yet assign them an HTTP status. A gateway that reports one to an agent MUST use the code unchanged.
+to the participant that called it. They follow the "rail refusal" rows of the table above: no money moves. A gateway
+that reports one to an agent MUST use the code unchanged and, over HTTP, the status given here.
 
-| Code | Raised by | Meaning | Typical `param` | Resolution |
-|---|---|---|---|---|
-| `afa_required` | rail refusal | The debit needs an additional factor of authentication (for example a human-present wallet debit without 2FA). On a standing mandate the same condition is a `rail_auth` step-up instead (see [step-up reasons](#step-up-reasons)). | — | requires_buyer_review |
-| `insufficient_balance` | rail refusal | A wallet, UPI Lite, store-credit or loyalty balance is too low for the debit. | — | requires_buyer_input |
-| `ppi_not_reloadable` | rail refusal | A load into a gift PPI, which cannot be reloaded. | — | unrecoverable |
-| `pre_debit_notice_missing` | rail refusal | No matured 24-hour pre-debit notice covers this card e-mandate or NACH debit. | `$.payment.scheduled_debit_at` | recoverable (send a notice and wait) |
-| `consent_window_closed` | rail refusal | Cardholder consent for a refund was given after the refund left `pending_cardholder_consent` or after its 7-day window. | — | unrecoverable |
-| `voucher_expired` | rail refusal | An e-RUPI voucher is past its validity; unredeemed value returns to the sponsor. | — | unrecoverable |
-| `voucher_purpose_mismatch` | rail refusal | An e-RUPI voucher redeemed at a merchant outside its purpose. | — | unrecoverable |
-| `bill_already_paid` | rail refusal | A BBPS bill that is already paid. | — | unrecoverable |
-| `amount_mismatch` | rail refusal | A BBPS payment that differs from the fetched bill amount when partial payment is not allowed. | `$.amount` | recoverable |
-| `payee_name_mismatch` | rail refusal | The bank's beneficiary name look-up does not match the expected payee name for an account-to-account transfer. | — | requires_buyer_review |
-| `maker_checker_required` | rail refusal | An account-to-account payment was approved by its maker, or without 2FA; a different human checker must approve. | — | requires_buyer_review |
-| `invalid_state` | rail refusal | An account-to-account payment is not in the state the operation needs (approve when not `pending_approval`, credit when not `sent`). | — | unrecoverable |
-| `illegal_cod_transition` | rail refusal | A cash-on-delivery order state change that the COD state machine does not allow. | — | unrecoverable |
-| `loan_offer_not_lender_signed` | rail refusal | The loan offer presented for acceptance does not match the lender-signed KFS offer. | — | unrecoverable |
-| `disbursal_not_to_end_beneficiary` | rail refusal | A loan disbursal to an account other than the end beneficiary's. | — | unrecoverable |
-| `cooling_off_over` | rail refusal | A penalty-free exit from a loan after its cooling-off period ended. | — | unrecoverable |
-| `refund_not_allowed` | rail refusal | A refund that cites no successful debit with that RRN. | — | unrecoverable |
-| `poster_not_party` | ledger refusal | The poster of a ledger entry is not the ledger's creditor or debtor, or its signature does not verify under that party's registry key. | — | unrecoverable |
-| `ack_signature_required` | ledger refusal | An acknowledgement without the counterparty's signature. | — | requires_buyer_input |
-| `ack_not_by_counterparty` | ledger refusal | An acknowledgement by anyone other than the counterparty of the poster. | — | unrecoverable |
-| `ack_signature_invalid` | ledger refusal | The acknowledgement signature does not verify under the counterparty's registry key. | — | unrecoverable |
-| `grn_attestation_required` | ledger refusal | An acceptance-dated credit sale without a buyer-signed GRN attestation. | — | requires_buyer_input |
-| `grn_attestation_invalid` | ledger refusal | The GRN attestation is not signed by the ledger's debtor, or the GRN was already used. | — | unrecoverable |
-| `grn_date_invalid` | ledger refusal | The GRN date precedes the invoice or delivery date, is in the future, or differs from the sale's reference date. | — | recoverable |
-| `receipt_required` | ledger refusal | A `payment` entry without a PSP-signed rail receipt. | — | requires_buyer_input |
-| `receipt_reused` | ledger refusal | The rail receipt has already settled ledger entries. | — | unrecoverable |
-| `nothing_to_settle` | ledger refusal | A `payment` entry when the ledger has no acknowledged open sale entries. | — | unrecoverable |
-| `credit_note_exceeds_open` | ledger refusal | A credit note larger than the sale's open amount. | — | recoverable |
+| Code | Raised by | HTTP when surfaced | Meaning | Typical `param` | Resolution |
+|---|---|---|---|---|---|
+| `afa_required` | rail refusal | 403 | The debit needs an additional factor of authentication (for example a human-present wallet debit without 2FA). On a standing mandate the same condition is a `rail_auth` step-up instead (see [step-up reasons](#step-up-reasons)). | — | requires_buyer_review |
+| `insufficient_balance` | rail refusal | 403 | A wallet, UPI Lite, store-credit or loyalty balance is too low for the debit. | — | requires_buyer_input |
+| `ppi_not_reloadable` | rail refusal | 403 | A load into a gift PPI, which cannot be reloaded. | — | unrecoverable |
+| `pre_debit_notice_missing` | rail refusal | 403 | No matured 24-hour pre-debit notice covers this card e-mandate or NACH debit. | `$.payment.scheduled_debit_at` | recoverable (send a notice and wait) |
+| `consent_window_closed` | rail refusal | 409 | Cardholder consent for a refund was given after the refund left `pending_cardholder_consent` or after its 7-day window. | — | unrecoverable |
+| `voucher_expired` | rail refusal | 403 | An e-RUPI voucher is past its validity; unredeemed value returns to the sponsor. | — | unrecoverable |
+| `voucher_purpose_mismatch` | rail refusal | 403 | An e-RUPI voucher redeemed at a merchant outside its purpose. | — | unrecoverable |
+| `bill_already_paid` | rail refusal | 409 | A BBPS bill that is already paid. | — | unrecoverable |
+| `amount_mismatch` | rail refusal | 422 | A BBPS payment that differs from the fetched bill amount when partial payment is not allowed. | `$.amount` | recoverable |
+| `payee_name_mismatch` | rail refusal | 422 | The bank's beneficiary name look-up does not match the expected payee name for an account-to-account transfer. | — | requires_buyer_review |
+| `maker_checker_required` | rail refusal | 403 | An account-to-account payment was approved by its maker, or without 2FA; a different human checker must approve. | — | requires_buyer_review |
+| `invalid_state` | rail refusal | 409 | An account-to-account payment is not in the state the operation needs (approve when not `pending_approval`, credit when not `sent`). | — | unrecoverable |
+| `illegal_cod_transition` | rail refusal | 409 | A cash-on-delivery order state change that the COD state machine does not allow. | — | unrecoverable |
+| `loan_offer_not_lender_signed` | rail refusal | 422 | The loan offer presented for acceptance does not match the lender-signed KFS offer. | — | unrecoverable |
+| `disbursal_not_to_end_beneficiary` | rail refusal | 403 | A loan disbursal to an account other than the end beneficiary's. | — | unrecoverable |
+| `cooling_off_over` | rail refusal | 409 | A penalty-free exit from a loan after its cooling-off period ended. | — | unrecoverable |
+| `refund_not_allowed` | rail refusal | 400 | A refund that cites no successful debit with that RRN. | — | unrecoverable |
+| `poster_not_party` | ledger refusal | 403 | The poster of a ledger entry is not the ledger's creditor or debtor, or its signature does not verify under that party's registry key. | — | unrecoverable |
+| `ack_signature_required` | ledger refusal | 400 | An acknowledgement without the counterparty's signature. | — | requires_buyer_input |
+| `ack_not_by_counterparty` | ledger refusal | 403 | An acknowledgement by anyone other than the counterparty of the poster. | — | unrecoverable |
+| `ack_signature_invalid` | ledger refusal | 400 | The acknowledgement signature does not verify under the counterparty's registry key. | — | unrecoverable |
+| `grn_attestation_required` | ledger refusal | 400 | An acceptance-dated credit sale without a buyer-signed GRN attestation. | — | requires_buyer_input |
+| `grn_attestation_invalid` | ledger refusal | 400 | The GRN attestation is not signed by the ledger's debtor, or the GRN was already used. | — | unrecoverable |
+| `grn_date_invalid` | ledger refusal | 400 | The GRN date precedes the invoice or delivery date, is in the future, or differs from the sale's reference date. | — | recoverable |
+| `receipt_required` | ledger refusal | 400 | A `payment` entry without a PSP-signed rail receipt. | — | requires_buyer_input |
+| `receipt_reused` | ledger refusal | 409 | The rail receipt has already settled ledger entries. | — | unrecoverable |
+| `nothing_to_settle` | ledger refusal | 409 | A `payment` entry when the ledger has no acknowledged open sale entries. | — | unrecoverable |
+| `credit_note_exceeds_open` | ledger refusal | 400 | A credit note larger than the sale's open amount. | — | recoverable |
 
 ### Internal and nested reasons {#internal-reasons}
 

@@ -1,5 +1,8 @@
 # Beckn / ONDC Binding
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 BACP is an agent layer over Beckn and ONDC, not a fork. The BACP gateway speaks ordinary Beckn on the network leg,
 adds agent semantics in a namespaced extension that network participants who do not speak BACP can ignore, and
 hardens the transport for machine clients (mandatory idempotency, callback binding, replay protection). This page
@@ -7,7 +10,7 @@ defines that binding. The agent-facing side is the [REST binding](rest.md).
 
 ## Roles {#roles}
 
-- **The BACP gateway is the BAP.** It runs inside, or on behalf of, a registered buyer app (BAP). The agent provider
+- **The BACP gateway is the BAP.** It runs inside, or on behalf of, a registered buyer app (BAP). The agent operator
   either is that BAP or contracts with one. The BAP subscriber (`bap_id`, registry key `subscriber_id|ukid`) is the
   network-visible party; the agent never talks to the network directly.
 - **Seller apps (BPPs)** are ordinary Beckn providers. A BACP-aware BPP additionally reads `context.bacp`, verifies
@@ -112,7 +115,7 @@ No other keys are allowed (`additionalProperties: false`).
   "language": "hi-IN",
   "ai_disclosure": true,
   "log_head": "sha-256:LCa0a2j_xo_5m0U8HTBBNBNCLXBkg7-g-YpeiGJm564",
-  "version": "draft"
+  "version": "2026-10-17"
 }
 ```
 
@@ -145,11 +148,7 @@ Every `bacp.neg.*` object is likewise carried as a namespaced TagGroup.
 
 ## Signing {#signing}
 
-!!! danger "Blocking: [Q-43](../open-questions.md#q-43)"
-    Which signing profile is normative on the Beckn leg, and whether BACP requires Beckn 2.0 signed ACKs and the
-    CounterSignature, needs ONDC's answer.
-
-Working rules:
+The signing profile on the Beckn leg is settled in [Q-43](../open-questions.md#q-43):
 
 - The gateway signs every Beckn message with the BAP's registry key, using the network's own signing profile. On
   Beckn 1.x and ONDC this is the `Authorization` header: Ed25519 over `(created)`, `(expires)` and a BLAKE2b-512
@@ -159,8 +158,13 @@ Working rules:
 - The gateway MUST NOT hold or use an agent key. Negotiation messages carry the sending network participant's
   registry signature; the agent's own act is evidenced by its RFC 9421 request signature to the gateway under tag
   `bacp-negotiate`.
-- Where the counterparty supports Beckn 2.0, the gateway SHOULD use signed ACKs and the `request-signature` binding
-  of callbacks. Negotiation timing uses the receiver's CounterSignature timestamp as the time of receipt.
+- BACP does not require Beckn 2.0 signed ACKs. Where the counterparty supports Beckn 2.0, the gateway SHOULD use
+  signed ACKs and the `request-signature` binding of callbacks.
+- Negotiation timing uses the receiver's CounterSignature timestamp as the time of receipt. The CounterSignature is
+  a BACP artefact, a JWS by the receiver's registry key carried in the negotiation message's `counter_signature`
+  inside the `bacp` TagGroups, so it does not depend on the Beckn version.
+- A counterparty that does not return valid CounterSignatures is treated as not supporting firm negotiation: the
+  gateway MUST send it only non-firm offers (`firm: false`).
 
 ## Callback correlation {#callbacks}
 
@@ -202,10 +206,11 @@ status changes, goes through `issue` / `on_issue`. The IGM 1.x actions `issue_st
   evidence bundle. The agent sends `RESOLUTION_ACCEPTED` only after the buyer confirms, with `presence: HP`.
 - A payment-side dispute is raised through the PSP's dispute channel keyed by the RRN, linked to the IGM issue id.
 - Timelines: E-commerce grievance officers acknowledge within 48 hours and resolve within one month (Consumer
-  Protection (E-Commerce) Rules r.4(5); the limits are unchanged by the 2026 amendment in force from 1 January 2027).
+  Protection (E-Commerce) Rules r.4(5)). Reports indicate that the Consumer Protection (E-Commerce) (Amendment) Rules, 2026, in force from
+  01-01-2027, leave these limits unchanged (not verified as of 17-10-2026).
   ONDC restates these as maximums on its complaint page; IGM 2.0 carries per-issue durations
   (`expected_response_time`, `expected_resolution_time`) with no network default, and the Network Policy IGM chapter
-  was not retrieved. Proposed: normative `ack_by` and `resolve_by` timers with auto-escalation
+  was not verified as of 17-10-2026. Proposed: normative `ack_by` and `resolve_by` timers with auto-escalation
   ([Q-57](../open-questions.md#q-57)).
 
 ## Settlement (RSF) {#rsf}

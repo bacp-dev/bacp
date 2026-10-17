@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Bharat Agentic Commerce Protocol (BACP) — Gateway REST binding
-  version: draft
+  version: "2026-10-17"
   summary: REST binding that a BACP gateway exposes to AI agents.
   description: "Synchronous, UCP-compatible session API that a BACP gateway (co-located with a Buyer App / BAP) exposes to AI agents.\nThe gateway\
     \ translates each call into signed Beckn/ONDC actions (search, select, init, confirm, status, cancel, update,\nIGM 2.0 issue/on_issue), waits\
@@ -16,6 +16,9 @@ info:
     \ Keys are kept at least 24 h (48 h recommended). 5xx responses are never stored.\n- Amounts are integer paise (INR minor units).\n- Business\
     \ outcomes return 200/201 with full state plus `messages[]`. Transport and protocol failures return 4xx/5xx\n  with the flat Error object\
     \ (ACP model).\n- Unknown fields MUST be ignored by readers. Unknown mandate constraints MUST fail closed.\n"
+  contact:
+    name: BACP maintainers
+    url: https://github.com/bacp-dev/bacp
   license:
     name: Apache-2.0
     identifier: Apache-2.0
@@ -65,9 +68,9 @@ paths:
                 default:
                   value:
                     bacp:
-                      version: draft
+                      version: '2026-10-17'
                       supported_versions:
-                      - draft
+                      - '2026-10-17'
                     bap_id: bap.vaani.example.in
                     transports:
                     - rest
@@ -116,7 +119,7 @@ paths:
               hindiVoice:
                 value:
                   query:
-                    hi-IN: do kilo aashirvaad atta, ek litre doodh, aadha kilo toor dal
+                    hi-Latn-IN: do kilo chakki atta, ek litre doodh, aadha kilo toor dal
                   category: ONDC:RET10
                   delivery:
                     pincode: '560034'
@@ -143,8 +146,8 @@ paths:
                       items:
                       - id: I-ATTA-2KG
                         name:
-                          en-IN: Aashirvaad Atta 2 kg
-                          hi-IN: आशीर्वाद आटा 2 किलो
+                          en-IN: Chakki Atta 2 kg
+                          hi-IN: चक्की आटा 2 किलो
                         unit_price:
                           value: 11000
                           currency: INR
@@ -369,8 +372,8 @@ paths:
                   presence: HNP
                   checkout_mandate: eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUuY2hlY2tvdXQuMSJ9.c2ln~WyJzYWx0IiwiY2hlY2tvdXRfaGFzaCJd~eyJhbGciOiJFUzI1NiJ9.eyJub25jZSI6Im4ifQ.c2ln
                   payment_mandate: eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln~eyJhbGciOiJFUzI1NiJ9.eyJub25jZSI6Im4ifQ.c2ln
-                  checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
-                  accepted_disclosures_hash: sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg
+                  checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
+                  accepted_disclosures_hash: sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4
       responses:
         '200':
           description: Completed, in progress, or requires escalation
@@ -417,7 +420,7 @@ paths:
       - $ref: '#/components/parameters/Signature'
       responses:
         '200':
-          description: Canceled session
+          description: Cancelled session
           content:
             application/json:
               schema:
@@ -730,7 +733,7 @@ paths:
                   mandate_ref: mdt_CHK7Q2W9X4K1M3
                   presence: HP
                   note:
-                    hi-IN: Galti se order ho gaya
+                    hi-IN: गलती से ऑर्डर हो गया
       responses:
         '200':
           description: Order with cancellation state from on_cancel, refund adjustment pending or done
@@ -789,7 +792,7 @@ paths:
                   presence: HP
                   evidence:
                   - type: image
-                    hash: sha-256:aW1hZ2UtZGFtYWdlZC1taWxrLXBhY2tldC0wMDAwMDE
+                    hash: sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A
                     uri: https://agents.vaani.example.in/e/1.jpg
                   refund_to: original_method
       responses:
@@ -890,7 +893,7 @@ paths:
                   category: PAYMENT
                   sub_category: PMT02
                   description:
-                    hi-IN: Doodh wapas kiya par refund nahi aaya
+                    hi-IN: दूध वापस किया पर रिफ़ंड नहीं आया
                     en-IN: Returned milk, refund not received
                   mandate_ref: mdt_CHK7Q2W9X4K1M3
                   rrn: '629318004417'
@@ -1678,7 +1681,7 @@ paths:
       summary: Eligible payment handlers for a negotiation, ordered by user preference then lowest all-in total
       description: 'Requires negotiation_id: the inputs come from the negotiated TermSheet. A request with only session_id, or with
 
-        neither, gets 400. Session-scoped intersection is not defined in this draft (Q-45).
+        neither, gets 400. Session-scoped intersection is not defined in this version (Q-45).
 
 
         Intersection of registry, BAP profile, BPP accepted handlers, the TermSheet payment option and tranche, mandates,
@@ -1881,7 +1884,7 @@ webhooks:
                     session_id: ses_01HZXD
                     receipt:
                       receipt_id: rcpt_PAY0000000001
-                      receipt_hash: sha-256:cmVjZWlwdC1oYXNoLXJjcHQtUEFZMDAwMDAwMDAwMDE
+                      receipt_hash: sha-256:PWyy8xS6oduROAtRGV3LSx8A3hJx9mdOj0XhZDcrUME
                       receipt_type: payment
                       result: success
                       amount:
@@ -1956,9 +1959,9 @@ components:
 
         nonce, keyid and tag (bacp-browse, bacp-pay, bacp-post-order, bacp-negotiate or bacp-ts). Keys: AgentCredential.cnf.jwk
 
-        (agents) or the registry record (MM, PSP, BAP). Algorithms: ES256 and EdDSA (Ed25519). Which one is mandatory to implement
+        (agents) or the registry record (MM, PSP, BAP). Algorithms: every verifier MUST support both ES256 and EdDSA (Ed25519); every signer
 
-        is open (Q-42); the proposal is ES256 mandatory and Ed25519 allowed.
+        MUST use one of the two, and any other algorithm is rejected with 401 signature_invalid (settled in Q-42).
 
         '
     agentCredential:
@@ -1966,8 +1969,8 @@ components:
       in: header
       name: BACP-Agent
       description: SD-JWT VC (vct in.bacp.agent.1) with only the disclosures the gateway needs. Checked against the registry status list. Covered
-        by the request signature. A gateway MAY also accept the header name BACP-Agent-Credential until the first dated release, and MUST NOT
-        accept it afterwards.
+        by the request signature. The legacy header name BACP-Agent-Credential was accepted only before the first dated release (`2026-10-17`);
+        a gateway MUST NOT accept it.
   parameters:
     IdempotencyKey:
       name: Idempotency-Key
@@ -2332,6 +2335,7 @@ components:
           enum:
           - ES256
           - EdDSA
+          description: "Signature algorithm. Every verifier of a BACP signature MUST support both ES256 (ECDSA P-256 with SHA-256) and EdDSA (Ed25519); every signer MUST use one of the two, and a signature with any other algorithm MUST be rejected (settled in Q-42)."
         value:
           $ref: '#/components/schemas/Jws'
       additionalProperties: false
@@ -2520,6 +2524,22 @@ components:
             human_handoff_url:
               type: string
               format: uri
+        data_residency:
+          type: object
+          description: "Optional data-residency statement (fail-safe default until Q-15 is settled). A gateway MUST NOT treat a missing or incomplete data_residency statement as permission to send payment data outside India; a gateway, Mandate Manager or PSP adapter stores and processes payment data only in India."
+          properties:
+            payment_data:
+              const: IN
+              description: "Where payment data is stored and processed. Always IN (RBI Storage of Payment System Data, RBI/2017-18/153, 06-04-2018)."
+            llm_region:
+              type: string
+              description: "Region in which the agent operator's language model processes data it receives, e.g. IN."
+            log_region:
+              type: string
+              description: "Region in which the agent operator's logs are stored, e.g. IN."
+            transfer_basis:
+              type: string
+              description: "Legal basis for any cross-border transfer of other personal data (DPDP Act s.16 and Rule 15, from 13-05-2027). Never a basis for sending payment data abroad."
         conformance:
           type: object
           description: The conformance levels the agent's stack has passed, with the signed attestation.
@@ -2658,7 +2678,7 @@ components:
             code:
               type: string
               pattern: ^P-[A-Z]{3}-[0-9]{2}$
-              description: BACP purpose-code registry (Sahamati Fair Use analogue), e.g. P-GRO-01 grocery replenishment
+              description: "Code from the BACP purpose-code registry (Sahamati Fair Use analogue), e.g. P-GRO-01 household grocery replenishment. The purpose fixes the categories, maximum validity, monetary bounds and data scopes the mandate may request. The registry is governed by the BACP working group: a new code or a changed bound ships only in a dated release. A purpose_code that is not in the registry MUST be refused with 403 mandate_scope_mismatch (settled in Q-47)."
             text:
               $ref: '#/components/schemas/LangText'
         action_scope:
@@ -2693,7 +2713,7 @@ components:
             $ref: '#/components/schemas/Presence'
         constraints:
           type: object
-          description: 'Evaluated fail-closed by deterministic code: unknown keys fail (AP2 agent_authorization 463-465).'
+          description: 'Evaluated fail-closed by deterministic code: unknown keys fail (AP2 agent_authorization).'
           properties:
             amount_per_txn:
               $ref: '#/components/schemas/Amount'
@@ -3039,7 +3059,7 @@ components:
           type:
           - string
           - 'null'
-          description: DPDP Board registration of the Consent Manager (DPDP Rules 2025, Rule 4, from ~13 Nov 2026)
+          description: "DPDP Board registration number of the Consent Manager (DPDP Rules 2025, Rule 4). On receipts issued on or after 13-11-2026 it MUST be the Board registration number when the Mandate Manager acts as a registered Consent Manager, and MUST be null otherwise (fail-safe default until Q-16 is settled)."
         issued_at:
           type: string
           format: date-time
@@ -3057,6 +3077,7 @@ components:
               type: string
             bpp_id:
               type: string
+              description: "The recipient seller's bpp_id. \"*\" marks a class receipt, scoped to the mandate's categories, which only pre-authorises: the MM MUST mint a per-seller ConsentReceipt, whose recipient.bpp_id is that seller, at init and before any personal data reaches the seller; no data is ever released on the strength of a class receipt alone (settled in Q-12)."
             provider_id:
               type: string
             dpo_contact:
@@ -3623,7 +3644,7 @@ components:
             version:
               type: string
               pattern: ^(\d{4}-\d{2}-\d{2}|draft)$
-              description: Protocol version this profile speaks (a release date or draft).
+              description: 'Protocol version this profile speaks: a dated release identifier (YYYY-MM-DD), or "draft" for the unreleased working version.'
             supported_versions:
               type: array
               items:
@@ -3847,6 +3868,7 @@ components:
           properties:
             consent_receipt_ref:
               type: string
+              description: "receipt_id of a class or per-seller ConsentReceipt. A class receipt (recipient.bpp_id \"*\") only pre-authorises: the gateway MUST hold a per-seller ConsentReceipt, whose recipient.bpp_id is that seller, at init and before any personal data reaches the seller; no data is ever released on the strength of a class receipt alone (settled in Q-12)."
             fields:
               type: array
               items:
@@ -4078,13 +4100,14 @@ components:
         transaction_id:
           type: string
         status:
+          description: Session status. Values follow the UCP checkout statuses, except that UCP `canceled` maps to BACP `cancelled`.
           enum:
           - incomplete
           - requires_escalation
           - ready_for_complete
           - complete_in_progress
           - completed
-          - canceled
+          - cancelled
         presence:
           $ref: '#/components/schemas/Presence'
         bpp_id:
@@ -4172,6 +4195,9 @@ components:
           $ref: '#/components/schemas/Jws'
           description: Key-binding JWT for closing the open mandate, with aud = the bpp_id and nonce = the Beckn confirm message_id (derived with
             the profile's message_id_namespace).
+        payment_plan:
+          not: {}
+          description: "Reserved. Payment plans have no wire binding in this version (Q-44). Until Q-44 is settled, a gateway MUST reject a complete that carries payment_plan with 400 invalid_request at $.payment_plan, and MUST NOT ignore it and charge a single tender instead."
     MandateRequest:
       type: object
       required:
@@ -4183,6 +4209,7 @@ components:
       properties:
         purpose_code:
           type: string
+          description: "Code from the BACP purpose-code registry (Sahamati Fair Use analogue), e.g. P-GRO-01 household grocery replenishment. The purpose fixes the categories, maximum validity, monetary bounds and data scopes the mandate may request. The registry is governed by the BACP working group: a new code or a changed bound ships only in a dated release. A purpose_code that is not in the registry MUST be refused with 403 mandate_scope_mismatch (settled in Q-47)."
         rail:
           anyOf:
           - $ref: '#/components/schemas/RailType'
@@ -4935,7 +4962,7 @@ components:
         purpose:
           code: P-GRO-01
           text:
-            hi-IN: Ghar ka kirana saman
+            hi-IN: घर का किराना सामान
             en-IN: Household grocery replenishment
         action_scope:
         - DISCOVER
@@ -5039,7 +5066,7 @@ components:
         purpose:
           code: P-GRO-01
           text:
-            hi-IN: Ghar ka kirana saman
+            hi-IN: घर का किराना सामान
             en-IN: Household grocery replenishment
         action_scope:
         - PAY
@@ -5057,7 +5084,7 @@ components:
         ap2_vct: mandate.payment.1
         parent_mandate_id: mdt_PAY7Q2W9X4K1M3
         constraints: {}
-        checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+        checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
         amount:
           value: 30200
           currency: INR
@@ -5075,12 +5102,12 @@ components:
         iss: psp.example.in
         issued_at: '2026-10-20T19:02:11+05:30'
         result: success
-        reference: sha-256:cGF5bWVudC1tYW5kYXRlLWNsb3NlZC0wMDAwMDAwMDAx
+        reference: sha-256:56zHckmGabR5RoD_aAjAlsFMjuSAjmXgymcJL4c7arY
         mandate_ref: mdt_PAYC0000000001
         open_mandate_ref: mdt_PAY7Q2W9X4K1M3
         transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
         order_id: ORD-KIR-88231
-        checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+        checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
         amount:
           value: 30200
           currency: INR
@@ -5144,7 +5171,7 @@ components:
         - bacp-post-order
         disclosure:
           ai_notice:
-            hi-IN: Aap ek AI sahayak se baat kar rahe hain.
+            hi-IN: आप एक AI सहायक से बात कर रहे हैं।
             en-IN: You are talking to an AI assistant.
           human_handoff_url: https://vaani.example.in/human
         conformance:
@@ -5178,13 +5205,13 @@ components:
         purpose:
           code: P-GRO-01
           text:
-            hi-IN: Order delivery ke liye
+            hi-IN: ऑर्डर की डिलीवरी के लिए
             en-IN: To deliver grocery orders
           goods_or_services: Grocery delivery
         legal_basis: consent_s6
         notice:
           language: hi-IN
-          hash: sha-256:Zm9vYmFyYmF6cXV4cXV1eGNvcmdlZ3JhdWx0Z2FycGx5
+          hash: sha-256:c29tAz3q3Uw5cyPEZkdHi7vjmlitXMTweOjGCPxYMgU
           uri: https://mm.psp.example.in/notices/n-551
         captured_via:
           surface: psp.example.in/app
@@ -5195,7 +5222,7 @@ components:
           erasure_signal: true
         grievance:
           contact: dpo@psp.example.in
-          board_complaint_uri: https://dpb.example.gov.in/complaints
+          board_complaint_uri: https://dpb.example.in/complaints
         retention:
           recipient_max: P1Y
           legal_minimum: P1Y
@@ -5208,25 +5235,25 @@ components:
     InstructionLogEntry:
       value:
         seq: 0
-        session_id: ses_01HZX8V4K2
+        session_id: ses_01HZXB
         transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
         stage: prompt
         actor: user
         at: '2026-10-20T19:00:02+05:30'
         channel: voice
         language: hi-IN
-        content_hash: sha-256:YXVkaW8tYW5kLXRyYW5zY3JpcHQtaGFzaC0wMDAwMDE
-        content_ref: https://logs.vaani.example.in/blobs/ses_01HZX8V4K2/0
+        content_hash: sha-256:vDBjViDrgrAD9K_V1vOD6oXNAb3Xi5gOcVwzt6zjmx8
+        content_ref: https://logs.vaani.example.in/blobs/ses_01HZXB/0
         summary:
-          hi-IN: Do kilo atta, ek litre doodh aur paanch sau gram dal mangwa do
-          en-IN: Order 2 kg atta, 1 l milk and 500 g dal
+          hi-Latn-IN: Do kilo atta, ek litre doodh aur paanch sau gram dal mangwa do
+          en-IN: Order 2 kg atta, 1 L milk and 500 g dal
         model:
           id: example-llm-2
           version: 2026.10.1
           translation_model: bhashini-asr-hi-v3
         refs: {}
-        prev_hash: sha-256:c2Vzc2lvbi1nZW5lc2lzLXNlc18wMUhaWDhWNEsyLXh4
-        entry_hash: sha-256:ZW50cnktMC1oYXNoLWZvci1zZXNfMDFIWlg4VjRLMgA
+        prev_hash: sha-256:63NywMgu90boOc1H3TrT20Wdm8FuXj7F7Qe5X2ByiSY
+        entry_hash: sha-256:oazDkqizax5_ElrGQLLpHKtJbXBjI550wMt22RZhbc4
         signature:
           role: operator
           kid: bap.vaani.example.in|ukid-7|ed25519
@@ -5243,14 +5270,14 @@ components:
         presence: HNP
         mandate_ref:
           id: mdt_CHKC0000000001
-          hash: sha-256:Y2xvc2VkLWNoZWNrb3V0LW1hbmRhdGUtMDAwMDAwMDAx
+          hash: sha-256:OXpRaDBJTf3viASmwpA7-0nTrUMYW8uWsnZ3f3TRaXg
           kb_jwt: eyJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJicHAifQ.c2ln
         idempotency_key: 01HZX8W3T6Q9M2R7C4B1N8K5D0
         channel: voice
         language: hi-IN
         ai_disclosure: true
-        log_head: sha-256:ZW50cnktNi1oYXNoLWZvci1zZXNfMDFIWlg4VjRLMgA
-        version: draft
+        log_head: sha-256:LbxjqEpNNB0__yQii0EQoD075bGKSD5idqqLneyswXg
+        version: '2026-10-17'
     SessionQuoted:
       value:
         id: ses_01HZXB
@@ -5305,7 +5332,7 @@ components:
         - type: disclosure
           code: ai_disclosure
           content:
-            hi-IN: Yeh order ek AI sahayak dwara banaya ja raha hai.
+            hi-IN: यह ऑर्डर एक AI सहायक द्वारा बनाया जा रहा है।
           param: $.human_handoff_url
           resolution: recoverable
     SessionReady:
@@ -5357,7 +5384,7 @@ components:
         quote:
           id: Q-55
           ttl: PT10M
-          checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+          checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
           bpp_signature: eyJhbGciOiJFUzI1NiJ9.eyJxIjoiUS01NSJ9.c2ln
         disclosures:
           seller_name: Shree Ganesh Kirana
@@ -5367,7 +5394,7 @@ components:
           return_terms: Returnable within 2 days if damaged
           cancellation_terms: Free before dispatch
           expected_delivery: PT2H
-          hash: sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg
+          hash: sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4
           country_of_origin:
             default: IN
           price_breakup:
@@ -5382,7 +5409,7 @@ components:
         - type: warning
           code: preticked_addon_removed
           content:
-            en-IN: Removed pre-selected 'Delivery insurance Rs 15' (not in mandate)
+            en-IN: Removed pre-selected 'Delivery insurance ₹15' (not in mandate)
           param: $.line_items[3]
           resolution: recoverable
     SessionStepUp:
@@ -5410,7 +5437,7 @@ components:
           kind: confirm
           reason: above_step_up_threshold
           summary:
-            hi-IN: Rs 1,350 ka order aapki Rs 1,200 ki seema se zyada hai. Kripya UPI app mein pushti karein.
+            hi-IN: ₹1,350 का ऑर्डर आपकी ₹1,200 की सीमा से ज़्यादा है। कृपया UPI ऐप में पुष्टि करें।
           trusted_surface_url: https://psp.example.in/approve/stp_01HZXA
           expires_at: '2026-10-22T18:40:00+05:30'
           a2a_state: TASK_STATE_AUTH_REQUIRED
@@ -5453,12 +5480,12 @@ components:
             iss: psp.example.in
             issued_at: '2026-10-20T19:02:11+05:30'
             result: success
-            reference: sha-256:cGF5bWVudC1tYW5kYXRlLWNsb3NlZC0wMDAwMDAwMDAx
+            reference: sha-256:56zHckmGabR5RoD_aAjAlsFMjuSAjmXgymcJL4c7arY
             mandate_ref: mdt_PAYC0000000001
             open_mandate_ref: mdt_PAY7Q2W9X4K1M3
             transaction_id: 6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60
             order_id: ORD-KIR-88231
-            checkout_hash: sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl
+            checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
             amount:
               value: 30200
               currency: INR

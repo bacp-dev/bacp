@@ -49,7 +49,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI UPI Procedural Guidelines (member-only, not read)",
+     "file": "NPCI UPI Procedural Guidelines (member-only, not verified as of 17-10-2026)",
      "section": "whole instrument",
      "label": "UNVERIFIED"
     },
@@ -64,7 +64,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "file": "NPCI circular of 28-08-2025 on UPI P2M limits for notified categories",
      "section": "whole instrument",
      "label": "PRESS"
     },
@@ -74,7 +74,7 @@
      "value": 50000000,
      "currency": "INR"
     },
-    "applies_to": "verified merchants in notified categories, from 2025-09-15; the 24-hour aggregate differs by category (reported as Rs 10 L for most, Rs 6 L for credit-card bills). NPCI circular text not read"
+    "applies_to": "verified merchants in notified categories, from 15-09-2025; the 24-hour aggregate differs by category (reported as ₹10 lakh for most, ₹6 lakh for credit-card bills). NPCI circular text not verified as of 17-10-2026"
    }
   ],
   "afa": {
@@ -207,7 +207,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI UPI Procedural Guidelines (member-only, not read)",
+     "file": "NPCI UPI Procedural Guidelines (member-only, not verified as of 17-10-2026)",
      "section": "whole instrument",
      "label": "UNVERIFIED"
     },
@@ -222,7 +222,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "file": "NPCI circular of 28-08-2025 on UPI P2M limits for notified categories",
      "section": "whole instrument",
      "label": "PRESS"
     },
@@ -232,7 +232,7 @@
      "value": 50000000,
      "currency": "INR"
     },
-    "applies_to": "verified merchants in notified categories, from 2025-09-15; the 24-hour aggregate differs by category (reported as Rs 10 L for most, Rs 6 L for credit-card bills). NPCI circular text not read"
+    "applies_to": "verified merchants in notified categories, from 15-09-2025; the 24-hour aggregate differs by category (reported as ₹10 lakh for most, ₹6 lakh for credit-card bills). NPCI circular text not verified as of 17-10-2026"
    }
   ],
   "afa": {
@@ -358,7 +358,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI UPI Procedural Guidelines (member-only, not read)",
+     "file": "NPCI UPI Procedural Guidelines (member-only, not verified as of 17-10-2026)",
      "section": "whole instrument",
      "label": "UNVERIFIED"
     },
@@ -373,7 +373,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "file": "NPCI circular of 28-08-2025 on UPI P2M limits for notified categories",
      "section": "whole instrument",
      "label": "PRESS"
     },
@@ -383,7 +383,7 @@
      "value": 50000000,
      "currency": "INR"
     },
-    "applies_to": "verified merchants in notified categories, from 2025-09-15; the 24-hour aggregate differs by category (reported as Rs 10 L for most, Rs 6 L for credit-card bills). NPCI circular text not read"
+    "applies_to": "verified merchants in notified categories, from 15-09-2025; the 24-hour aggregate differs by category (reported as ₹10 lakh for most, ₹6 lakh for credit-card bills). NPCI circular text not verified as of 17-10-2026"
    }
   ],
   "afa": {
@@ -460,7 +460,7 @@
     "label": "NPCI"
    }
   ],
-  "notes": "P2P collect ended 2025-10-01 (PRESS). Most agent-friendly HP handoff: request is pushed to the phone."
+  "notes": "P2P collect ended 01-10-2025 (reported in the press, not verified as of 17-10-2026). Most agent-friendly HP handoff: request is pushed to the phone."
  },
  {
   "handler_id": "in.upi.otm",
@@ -477,11 +477,11 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "SBMD/blocking decision 2022-12-07"
+    "instrument": "SBMD/blocking decision 07-12-2022"
    },
    {
     "body": "NPCI",
-    "instrument": "OTM circular (not read)"
+    "instrument": "OTM circular (not verified as of 17-10-2026)"
    }
   ],
   "presence": {
@@ -521,7 +521,7 @@
      "value": 10000000,
      "currency": "INR"
     },
-    "applies_to": "general MCCs (vendor default; NPCI OTM circular not read)"
+    "applies_to": "general MCCs (vendor default; NPCI OTM circular not verified as of 17-10-2026)"
    },
    {
     "name": "validity",
@@ -533,7 +533,7 @@
     "verification": "conflict",
     "configurable": true,
     "duration": "P60D",
-    "conflict_note": "Up to 60 days from authorisation (Pine Labs, PayU) vs a 14-day execution window (Juspay); Razorpay documents different authorisation-expiry values by MCC. NPCI OTM circular not read."
+    "conflict_note": "Up to 60 days from authorisation (Pine Labs, PayU) vs a 14-day execution window (Juspay); Razorpay documents different authorisation-expiry values by MCC. NPCI OTM circular not verified as of 17-10-2026."
    }
   ],
   "afa": {
@@ -627,7 +627,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "SBMD/blocking decision 2022-12-07"
+    "instrument": "SBMD/blocking decision 07-12-2022"
    },
    {
     "body": "NPCI",
@@ -708,7 +708,7 @@
     "value": 10000,
     "currency": "INR"
    },
-   "notes": "Whether a refund restores the block is unverified. The mandate budget is not restored."
+   "notes": "Whether a refund restores the block is not verified as of 17-10-2026. The mandate budget is not restored."
   },
   "dispute": {
    "channels": [
@@ -761,7 +761,7 @@
     "label": "NPCI"
    },
    {
-    "file": "NPCI press release 'RBI Governor unveils New Generation of Digital Payment Initiatives at GFF 2025' (2025-10-08), https://www.npci.org.in/uploads/RBI_Governor_unveils_New_Generation_of_Digital_Payment_Initiatives_at_GFF_6494fabdfc.pdf",
+    "file": "NPCI press release 'RBI Governor unveils New Generation of Digital Payment Initiatives at GFF 2025' (08-10-2025), https://www.npci.org.in/uploads/RBI_Governor_unveils_New_Generation_of_Digital_Payment_Initiatives_at_GFF_6494fabdfc.pdf",
     "section": "UPI Reserve Pay - SBMD on Credit Accounts",
     "label": "NPCI"
    },
@@ -948,12 +948,12 @@
     "label": "NPCI"
    },
    {
-    "file": "NBSL press release 'BHIM Goes Live with UPI Circle Full Delegation' (2025-11-25), https://www.npci.org.in/uploads/NBSL_Press_release_BHIM_Goes_Live_with_UPI_Circle_Full_Delegation_Enabling_Authorised_UPI_Payments_within_set_limits_7b308e643d.pdf",
+    "file": "NBSL press release 'BHIM Goes Live with UPI Circle Full Delegation' (25-11-2025), https://www.npci.org.in/uploads/NBSL_Press_release_BHIM_Goes_Live_with_UPI_Circle_Full_Delegation_Enabling_Authorised_UPI_Payments_within_set_limits_7b308e643d.pdf",
     "section": "whole instrument",
     "label": "NPCI"
    }
   ],
-  "notes": "Limits are NPCI's figures for IoT and software secondaries. Agent HNP use is a closed-user-group pilot. Human full delegation (BHIM): monthly limit up to Rs 15,000, expiry 1 month to 5 years, 'a short cooling period' (length not stated); a per-transaction cap for human secondaries is not in any NPCI text read."
+  "notes": "Limits are NPCI's figures for IoT and software secondaries. Agent HNP use is a closed-user-group pilot. Human full delegation (BHIM): monthly limit up to ₹15,000, expiry 1 month to 5 years, 'a short cooling period' (length not stated); a per-transaction cap for human secondaries is not in any NPCI text read."
  },
  {
   "handler_id": "in.upi.autopay",
@@ -1006,7 +1006,7 @@
    {
     "name": "no_afa_debit",
     "source": {
-     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
      "section": "para 8",
      "label": "RBI"
     },
@@ -1020,7 +1020,7 @@
    {
     "name": "no_afa_debit_special_categories",
     "source": {
-     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
      "section": "para 8",
      "label": "RBI"
     },
@@ -1037,7 +1037,7 @@
    "model": "at_registration_and_first_debit",
    "pre_debit_notice": "required_24h",
    "source": {
-    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
     "section": "whole instrument",
     "label": "RBI"
    },
@@ -1110,7 +1110,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
     "section": "whole instrument",
     "label": "RBI"
    },
@@ -1136,7 +1136,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "RBI/2023-24/58 (updated 2025-02-12)"
+    "instrument": "RBI/2023-24/58 (updated 12-02-2025)"
    },
    {
     "body": "NPCI",
@@ -1265,7 +1265,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "Policy statement 2022-06-08 (secondary)"
+    "instrument": "Policy statement 08-06-2022 (secondary)"
    },
    {
     "body": "RBI",
@@ -1327,7 +1327,7 @@
     "value": 10000,
     "currency": "INR"
    },
-   "notes": "CC MD 10(h), only where the bill is already paid: above the lower of 1% of limit or Rs 5,000 needs cardholder consent within 7 days, else reversed to the bank account."
+   "notes": "CC MD 10(h), only where the bill is already paid: above the lower of 1% of limit or ₹5,000 needs cardholder consent within 7 days, else reversed to the bank account."
   },
   "dispute": {
    "channels": [
@@ -1374,7 +1374,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Statement on Developmental and Regulatory Policies (2022-06-08), as reported by Business Today",
+    "file": "RBI Statement on Developmental and Regulatory Policies (08-06-2022), as reported by Business Today",
     "section": "whole instrument",
     "label": "PRESS"
    }
@@ -1386,7 +1386,7 @@
    "bacp.pay.xb.upi_global"
   ],
   "name": {
-   "en-IN": "UPI international (outbound corridors, inbound FIR)"
+   "en-IN": "UPI international (outbound corridors, inbound Foreign Inward Remittance (FIR) to UPI)"
   },
   "family": "upi",
   "kind": "payment",
@@ -1532,7 +1532,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "Offline small-value framework, amended 2024-12-04 (RBI/2024-25/93)"
+    "instrument": "Offline small-value framework, amended 04-12-2024 (RBI/2024-25/93)"
    }
   ],
   "presence": {
@@ -1559,7 +1559,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 2024-12-04), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
+     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 04-12-2024), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
      "section": "para 2",
      "label": "RBI"
     },
@@ -1574,7 +1574,7 @@
    {
     "name": "balance",
     "source": {
-     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 2024-12-04), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
+     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 04-12-2024), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
      "section": "para 2",
      "label": "RBI"
     },
@@ -1603,7 +1603,7 @@
     "section": "UPI Lite",
     "label": "UNVERIFIED"
    },
-   "notes": "Unverified."
+   "notes": "Not verified as of 17-10-2026."
   },
   "dispute": {
    "channels": [
@@ -1650,7 +1650,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 2024-12-04), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
+    "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 04-12-2024), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
     "section": "para 2",
     "label": "RBI"
    }
@@ -1704,7 +1704,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "RBI Statement on Developmental and Regulatory Policies (2024-10-09), https://www.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
+     "file": "RBI Statement on Developmental and Regulatory Policies (09-10-2024), https://www.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
      "section": "Payment systems, item (i) UPI123Pay",
      "label": "RBI"
     },
@@ -1714,7 +1714,7 @@
      "value": 1000000,
      "currency": "INR"
     },
-    "applies_to": "per transaction, raised from Rs 5,000 by RBI decision of 2024-10-09 ('Necessary instructions will be issued to NPCI'). The NPCI implementing circular (reported dated 2024-10-25, compliance 2025-01-01) was not read."
+    "applies_to": "per transaction, raised from ₹5,000 by RBI decision of 09-10-2024 ('Necessary instructions will be issued to NPCI'). The NPCI implementing circular (reported dated 25-10-2024, compliance 01-01-2025) was not verified as of 17-10-2026."
    }
   ],
   "afa": {
@@ -1785,7 +1785,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Statement on Developmental and Regulatory Policies (2024-10-09), https://www.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
+    "file": "RBI Statement on Developmental and Regulatory Policies (09-10-2024), https://www.rbi.org.in/Scripts/BS_ViewBulletin.aspx?Id=22920",
     "section": "whole instrument",
     "label": "RBI"
    },
@@ -1988,7 +1988,7 @@
     "section": "paras 10(g) and 10(h)",
     "label": "RBI"
    },
-   "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or Rs 5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. Failed CNP payment (debited, no merchant confirmation): auto-reversal within T+5, Rs 100/day after (RBI/2019-20/67 Annex row 2c). Never refunded to a PPI (PPI MD para 14.3).",
+   "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or ₹5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. Failed CNP payment (debited, no merchant confirmation): auto-reversal within T+5, ₹100/day after (RBI/2019-20/67 Annex row 2c). Never refunded to a PPI (PPI MD para 14.3).",
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
     "value": 10000,
@@ -1998,8 +1998,8 @@
   "dispute": {
    "channels": [
     "issuer billing dispute (30 days, CC MD 10(b))",
-    "network chargeback (about 120 days, UNVERIFIED)",
-    "RBI Ombudsman"
+    "network chargeback (about 120 days, not verified as of 17-10-2026)",
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -2112,7 +2112,7 @@
    {
     "name": "no_afa_debit",
     "source": {
-     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
      "section": "para 8",
      "label": "RBI"
     },
@@ -2126,7 +2126,7 @@
    {
     "name": "no_afa_debit_special_categories",
     "source": {
-     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+     "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
      "section": "para 8",
      "label": "RBI"
     },
@@ -2143,7 +2143,7 @@
    "model": "at_registration_and_first_debit",
    "pre_debit_notice": "required_24h",
    "source": {
-    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
     "section": "whole instrument",
     "label": "RBI"
    },
@@ -2163,7 +2163,7 @@
     "section": "paras 10(g) and 10(h)",
     "label": "RBI"
    },
-   "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or Rs 5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. Failed CNP payment (debited, no merchant confirmation): auto-reversal within T+5, Rs 100/day after (RBI/2019-20/67 Annex row 2c). Never refunded to a PPI (PPI MD para 14.3).",
+   "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or ₹5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. Failed CNP payment (debited, no merchant confirmation): auto-reversal within T+5, ₹100/day after (RBI/2019-20/67 Annex row 2c). Never refunded to a PPI (PPI MD para 14.3).",
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
     "value": 10000,
@@ -2173,8 +2173,8 @@
   "dispute": {
    "channels": [
     "issuer billing dispute (30 days, CC MD 10(b))",
-    "network chargeback (about 120 days, UNVERIFIED)",
-    "RBI Ombudsman"
+    "network chargeback (about 120 days, not verified as of 17-10-2026)",
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -2223,7 +2223,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
     "section": "whole instrument",
     "label": "RBI"
    }
@@ -2305,7 +2305,7 @@
     "section": "paras 10(g) and 10(h)",
     "label": "RBI"
    },
-   "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or Rs 5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. Failed CNP payment (debited, no merchant confirmation): auto-reversal within T+5, Rs 100/day after (RBI/2019-20/67 Annex row 2c). Never refunded to a PPI (PPI MD para 14.3).",
+   "notes": "CC MD 10(h): only where the bill is already paid, a refund that leaves a credit balance above the lower of 1% of the limit or ₹5,000 needs cardholder consent within 7 days (state pending_cardholder_consent), otherwise the issuer reverses it to the bank account (state reversed_to_bank_account). 10(g): refunds before the due date are adjusted against dues. Failed CNP payment (debited, no merchant confirmation): auto-reversal within T+5, ₹100/day after (RBI/2019-20/67 Annex row 2c). Never refunded to a PPI (PPI MD para 14.3).",
    "failed_txn_tat": "P5D",
    "compensation_per_day": {
     "value": 10000,
@@ -2315,8 +2315,8 @@
   "dispute": {
    "channels": [
     "issuer billing dispute (30 days, CC MD 10(b))",
-    "network chargeback (about 120 days, UNVERIFIED)",
-    "RBI Ombudsman",
+    "network chargeback (about 120 days, not verified as of 17-10-2026)",
+    "RBI Integrated Ombudsman",
     "intent audit trail"
    ]
   },
@@ -2444,8 +2444,8 @@
   "dispute": {
    "channels": [
     "issuer billing dispute (30 days, CC MD 10(b))",
-    "network chargeback (about 120 days, UNVERIFIED)",
-    "RBI Ombudsman"
+    "network chargeback (about 120 days, not verified as of 17-10-2026)",
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -2541,7 +2541,7 @@
    {
     "name": "no_afa_debit",
     "source": {
-     "file": "RBI circular 'Card transactions in Contactless mode - Relaxation in requirement of AFA' (DPSS.CO.PD No.752/02.14.003/2020-21, 2020-12-04, effective 2021-01-01), https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=11999",
+     "file": "RBI circular 'Card transactions in Contactless mode - Relaxation in requirement of AFA' (DPSS.CO.PD No.752/02.14.003/2020-21, 04-12-2020, effective 01-01-2021), https://www.rbi.org.in/Scripts/BS_ViewMasDirections.aspx?id=11999",
      "section": "para 3",
      "label": "RBI"
     },
@@ -2583,8 +2583,8 @@
   "dispute": {
    "channels": [
     "issuer billing dispute (30 days, CC MD 10(b))",
-    "network chargeback (about 120 days, UNVERIFIED)",
-    "RBI Ombudsman"
+    "network chargeback (about 120 days, not verified as of 17-10-2026)",
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -2641,7 +2641,7 @@
   "handler_id": "in.pos.tap",
   "aliases": [],
   "name": {
-   "en-IN": "UPI Tap and Pay / contactless at POS"
+   "en-IN": "UPI Tap & Pay / contactless at POS"
   },
   "family": "pos",
   "kind": "payment",
@@ -2689,7 +2689,7 @@
      "value": 500000,
      "currency": "INR"
     },
-    "applies_to": "UPI Tap & Pay on NFC POS: PIN-less up to Rs 5,000; card contactless follows in.card.present"
+    "applies_to": "UPI Tap & Pay on NFC POS: PIN-less up to ₹5,000; card contactless follows in.card.present"
    }
   ],
   "afa": {
@@ -2971,7 +2971,7 @@
     "section": "para 10(f)",
     "label": "RBI"
    },
-   "notes": "No TAT row in 2019 circular. Vendor 5-7 business days (UNVERIFIED)."
+   "notes": "No TAT row in 2019 circular. Vendor 5-7 business days (not verified as of 17-10-2026)."
   },
   "dispute": {
    "channels": [
@@ -3080,7 +3080,7 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (2020-07-15, effective 2020-08-01), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
+     "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (15-07-2020, effective 01-08-2020), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
      "section": "para 2",
      "label": "NPCI"
     },
@@ -3090,12 +3090,12 @@
      "value": 100000000,
      "currency": "INR"
     },
-    "applies_to": "e-mandate via internet banking or debit card (raised from Rs 1 L; 'will be reviewed after 1 year')"
+    "applies_to": "e-mandate via internet banking or debit card (raised from ₹1 lakh; 'will be reviewed after 1 year')"
    },
    {
     "name": "mandate_max",
     "source": {
-     "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (2020-07-15, effective 2020-08-01), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
+     "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (15-07-2020, effective 01-08-2020), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
      "section": "para 2",
      "label": "NPCI"
     },
@@ -3110,7 +3110,7 @@
    {
     "name": "mandate_max",
     "source": {
-     "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (2020-07-15, effective 2020-08-01), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
+     "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (15-07-2020, effective 01-08-2020), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
      "section": "para 2",
      "label": "NPCI"
     },
@@ -3135,7 +3135,7 @@
      "value": 1000000000,
      "currency": "INR"
     },
-    "conflict_note": "Vendor reports NPCI NACH Circular 003 of FY2023-24 ('E-Mandate simplification and harmonization of the limit of all variants of mandates', effective 2023-08-01) set Rs 1 crore for all variants (Rs 3 crore for TReDS). NPCI text not read. Configurable; default Rs 10 L until it is.",
+    "conflict_note": "Vendor reports NPCI NACH Circular 003 of FY2023-24 ('E-Mandate simplification and harmonization of the limit of all variants of mandates', effective 01-08-2023) set ₹1 crore for all variants (₹3 crore for TReDS). NPCI text not verified as of 17-10-2026. Configurable; default ₹10 lakh until it is.",
     "applies_to": "all mandate variants, as reported by vendors"
    }
   ],
@@ -3143,7 +3143,7 @@
    "model": "at_registration_only",
    "pre_debit_notice": "bacp_policy_24h",
    "source": {
-    "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (2020-07-15, effective 2020-08-01), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
+    "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (15-07-2020, effective 01-08-2020), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
     "section": "whole instrument",
     "label": "NPCI"
    }
@@ -3166,7 +3166,7 @@
    "channels": [
     "destination bank",
     "NPCI NACH dispute",
-    "RBI Ombudsman"
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -3211,7 +3211,7 @@
   ],
   "sources": [
    {
-    "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (2020-07-15, effective 2020-08-01), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
+    "file": "NPCI/2020-21/NACH/Circular No.010 'E-Mandate scope & limit enhancement' (15-07-2020, effective 01-08-2020), https://www.npci.org.in/PDF/nach/circular/2020-21/Circular_no_010-E-Mandate_scope_and_limit_enhancement.pdf (read via web.archive.org)",
     "section": "para 2",
     "label": "NPCI"
    },
@@ -3354,7 +3354,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "PPI Master Direction 2021 (updated 2026-09-30)"
+    "instrument": "PPI Master Direction 2021 (updated 30-09-2026)"
    }
   ],
   "presence": {
@@ -3459,7 +3459,7 @@
   "dispute": {
    "channels": [
     "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
-    "RBI Ombudsman"
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -3593,7 +3593,7 @@
   "dispute": {
    "channels": [
     "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
-    "RBI Ombudsman"
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -3737,7 +3737,7 @@
   "dispute": {
    "channels": [
     "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
-    "RBI Ombudsman"
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -3917,7 +3917,7 @@
   "regulator": [
    {
     "body": "Programme terms",
-    "instrument": "No RBI regime found (UNVERIFIED)"
+    "instrument": "No RBI regime found (not verified as of 17-10-2026)"
    }
   ],
   "presence": {
@@ -4056,7 +4056,7 @@
    {
     "name": "block_amount",
     "source": {
-     "file": "FASTag Annual Pass (MoRTH/NHAI announcement, June 2025), reported by press; NPCI NETC FAQ not re-read",
+     "file": "FASTag Annual Pass (MoRTH/NHAI announcement, June 2025), reported by press; NPCI NETC FAQ not verified as of 17-10-2026",
      "section": "whole instrument",
      "label": "PRESS"
     },
@@ -4066,7 +4066,7 @@
      "value": 300000,
      "currency": "INR"
     },
-    "applies_to": "Annual Pass Rs 3,000 (not a top-up cap)"
+    "applies_to": "Annual Pass ₹3,000 (not a top-up cap)"
    }
   ],
   "afa": {
@@ -4128,7 +4128,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
     "section": "para 6(d)",
     "label": "RBI"
    }
@@ -4187,7 +4187,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "RBI circular 'Enhancing transaction limits for Small Value Digital Payments in Offline Mode' (RBI/2023-24/57, 2023-08-24), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12531",
+     "file": "RBI circular 'Enhancing transaction limits for Small Value Digital Payments in Offline Mode' (RBI/2023-24/57, 24-08-2023), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12531",
      "section": "para 2",
      "label": "RBI"
     },
@@ -4202,7 +4202,7 @@
    {
     "name": "balance",
     "source": {
-     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 2024-12-04), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
+     "file": "RBI Amendment to Framework for Facilitating Small Value Digital Payments in Offline Mode (RBI/2024-25/93, 04-12-2024), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12752",
      "section": "para 1 (restates the Offline Framework total limit)",
      "label": "RBI"
     },
@@ -4212,7 +4212,7 @@
      "value": 200000,
      "currency": "INR"
     },
-    "applies_to": "offline total per payment instrument at any point in time (the UPI Lite uplift to Rs 5,000 does not extend to NCMC)"
+    "applies_to": "offline total per payment instrument at any point in time (the UPI Lite uplift to ₹5,000 does not extend to NCMC)"
    }
   ],
   "afa": {
@@ -4275,7 +4275,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
     "section": "para 6(d)",
     "label": "RBI"
    }
@@ -4358,7 +4358,7 @@
   "dispute": {
    "channels": [
     "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
-    "RBI Ombudsman"
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -4481,12 +4481,12 @@
     "section": "para 9(i)",
     "label": "RBI"
    },
-   "notes": "Merchant refund reduces the loan (UNVERIFIED). Cooling-off >= 1 day is separate. DL para 9(i) has no merchant-disbursal exception: checkout BNPL must fit the specific-end-use exception with disbursal direct to the end-beneficiary bank account. Multi-lender display must be unbiased (para 6)."
+   "notes": "Merchant refund reduces the loan (not verified as of 17-10-2026). Cooling-off >= 1 day is separate. DL para 9(i) has no merchant-disbursal exception: checkout BNPL must fit the specific-end-use exception with disbursal direct to the end-beneficiary bank account. Multi-lender display must be unbiased (para 6)."
   },
   "dispute": {
    "channels": [
     "lender grievance officer",
-    "RBI Ombudsman via CMS after 30 days"
+    "RBI Integrated Ombudsman via CMS after 30 days"
    ]
   },
   "settlement": {
@@ -4607,12 +4607,12 @@
     "section": "para 9(i)",
     "label": "RBI"
    },
-   "notes": "Merchant refund reduces the loan (UNVERIFIED). Cooling-off >= 1 day is separate. DL para 9(i) has no merchant-disbursal exception: checkout BNPL must fit the specific-end-use exception with disbursal direct to the end-beneficiary bank account. Multi-lender display must be unbiased (para 6)."
+   "notes": "Merchant refund reduces the loan (not verified as of 17-10-2026). Cooling-off >= 1 day is separate. DL para 9(i) has no merchant-disbursal exception: checkout BNPL must fit the specific-end-use exception with disbursal direct to the end-beneficiary bank account. Multi-lender display must be unbiased (para 6)."
   },
   "dispute": {
    "channels": [
     "lender grievance officer",
-    "RBI Ombudsman via CMS after 30 days"
+    "RBI Integrated Ombudsman via CMS after 30 days"
    ]
   },
   "settlement": {
@@ -4730,7 +4730,7 @@
   "dispute": {
    "channels": [
     "lender",
-    "RBI Ombudsman"
+    "RBI Integrated Ombudsman"
    ]
   },
   "settlement": {
@@ -4793,7 +4793,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "No dealer-finance direction fetched (UNVERIFIED)"
+    "instrument": "No dealer-finance direction found (not verified as of 17-10-2026)"
    }
   ],
   "presence": {
@@ -4941,7 +4941,7 @@
      "value": 20000000,
      "currency": "INR"
     },
-    "applies_to": "IT Act s.269ST: refuse cash >= Rs 2 L"
+    "applies_to": "Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 equivalent): refuse cash of ₹2 lakh or more"
    }
   ],
   "afa": {
@@ -5233,7 +5233,7 @@
     "value": 10000,
     "currency": "INR"
    },
-   "notes": "Beneficiary not credited: auto-reverse T+1, Rs 100/day."
+   "notes": "Beneficiary not credited: auto-reverse T+1, ₹100/day."
   },
   "dispute": {
    "channels": [
@@ -5348,7 +5348,7 @@
     },
     "verification": "verified",
     "configurable": true,
-    "applies_to": "no RBI limit, walk-in cash Rs 50,000"
+    "applies_to": "no RBI limit, walk-in cash ₹50,000"
    }
   ],
   "afa": {
@@ -5838,7 +5838,7 @@
    {
     "type": "upms_registration",
     "limits_enforced_by": "rail",
-    "ref_name": "UPMS registration id (field name UNVERIFIED)",
+    "ref_name": "UPMS registration id (field name not verified as of 17-10-2026)",
     "payee_scope": "single_biller",
     "multi_capture": true
    }
@@ -5848,7 +5848,7 @@
    "model": "at_registration_and_first_debit",
    "pre_debit_notice": "required_24h",
    "source": {
-    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 2026-04-21), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+    "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
     "section": "whole instrument",
     "label": "RBI"
    }
@@ -5929,7 +5929,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "SDRP 2022-02-10 item 6; SDRP 2023-06-08 item 6 (press release 2023-2024/365)"
+    "instrument": "SDRP 10-02-2022 item 6; SDRP 08-06-2023 item 6 (press release 2023-2024/365)"
    }
   ],
   "presence": {
@@ -5945,7 +5945,7 @@
    "closed_auth": [
     "voucher_code"
    ],
-   "open_requires": "Voucher is the mandate. Agent redemption without the beneficiary is UNVERIFIED."
+   "open_requires": "Voucher is the mandate. Agent redemption without the beneficiary is not verified as of 17-10-2026."
   },
   "mandate_primitives": [
    {
@@ -5960,7 +5960,7 @@
    {
     "name": "voucher_max",
     "source": {
-     "file": "RBI Statement on Developmental and Regulatory Policies (2022-02-10), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
+     "file": "RBI Statement on Developmental and Regulatory Policies (10-02-2022), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
      "section": "item 6",
      "label": "RBI"
     },
@@ -5970,12 +5970,12 @@
      "value": 10000000,
      "currency": "INR"
     },
-    "applies_to": "government vouchers, multi-use: RBI 'proposed' this cap ('Necessary instructions to NPCI will be issued separately'); the NPCI instruction was not read"
+    "applies_to": "government vouchers, multi-use: RBI 'proposed' this cap ('Necessary instructions to NPCI will be issued separately'); the NPCI instruction was not verified as of 17-10-2026"
    },
    {
     "name": "voucher_max",
     "source": {
-     "file": "RBI Statement on Developmental and Regulatory Policies (2022-02-10), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
+     "file": "RBI Statement on Developmental and Regulatory Policies (10-02-2022), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
      "section": "item 6",
      "label": "RBI"
     },
@@ -5985,7 +5985,7 @@
      "value": 1000000,
      "currency": "INR"
     },
-    "applies_to": "launch value: Rs 10,000 per voucher, single redemption (as stated by RBI in February 2022)"
+    "applies_to": "launch value: ₹10,000 per voucher, single redemption (as stated by RBI in February 2022)"
    }
   ],
   "afa": {
@@ -6003,7 +6003,7 @@
     "section": "e-RUPI",
     "label": "UNVERIFIED"
    },
-   "notes": "Unredeemed value returns to sponsor. Post-redemption refunds UNVERIFIED. June 2023 scope changes (non-bank PPI issuers, issuance on behalf of individuals, modified limits) were announced; the implementing instructions were not read."
+   "notes": "Unredeemed value returns to sponsor. Post-redemption refunds not verified as of 17-10-2026. June 2023 scope changes (non-bank PPI issuers, issuance on behalf of individuals, modified limits) were announced; the implementing instructions were not verified as of 17-10-2026."
   },
   "dispute": {
    "channels": [
@@ -6051,7 +6051,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Statement on Developmental and Regulatory Policies (2022-02-10), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
+    "file": "RBI Statement on Developmental and Regulatory Policies (10-02-2022), https://www.rbi.org.in/commonman/Upload/English/PressRelease/PDFs/PR1694_10022022.pdf",
     "section": "whole instrument",
     "label": "RBI"
    }
@@ -6064,7 +6064,7 @@
    "bacp.pay.cbdc.retail"
   ],
   "name": {
-   "en-IN": "e-rupee retail wallet"
+   "en-IN": "e₹ retail wallet"
   },
   "family": "cbdc",
   "kind": "payment",
@@ -6075,7 +6075,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "CBDC pilot"
+    "instrument": "CBDC pilot (as of 17-10-2026)"
    }
   ],
   "presence": {
@@ -6173,7 +6173,7 @@
     "label": "RBI"
    }
   ],
-  "notes": "Offline e-rupee is excluded from autonomous agent initiation."
+  "notes": "Offline e₹ (Digital Rupee) is excluded from autonomous agent initiation."
  },
  {
   "handler_id": "in.cbdc.programmed",
@@ -6181,7 +6181,7 @@
    "bacp.pay.cbdc.programmed"
   ],
   "name": {
-   "en-IN": "Programmable e-rupee (sponsor-locked)"
+   "en-IN": "Programmable e₹ (sponsor-locked)"
   },
   "family": "cbdc",
   "kind": "payment",
@@ -6291,7 +6291,7 @@
    "bacp.settle.cbdc.wholesale"
   ],
   "name": {
-   "en-IN": "Wholesale e-rupee settlement (reserved)"
+   "en-IN": "Wholesale e₹ settlement (reserved)"
   },
   "family": "cbdc",
   "kind": "tracker",
@@ -6302,7 +6302,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "e-rupee-W"
+    "instrument": "e₹-W"
    }
   ],
   "presence": {
@@ -6430,7 +6430,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI/2021-22/AEPS/002 'Splitting of transactions below Rs. 10,000 for Off-us transactions initiated from Micro-ATM' (2021-08-18), https://www.npci.org.in/PDF/AePS/circular/2021-22/OC-AePS-Splitting-of-transactions-below-Rs-10,000-with-Annexures.pdf (read via web.archive.org)",
+     "file": "NPCI/2021-22/AEPS/002 'Splitting of transactions below Rs. 10,000 for Off-us transactions initiated from Micro-ATM' (18-08-2021), https://www.npci.org.in/PDF/AePS/circular/2021-22/OC-AePS-Splitting-of-transactions-below-Rs-10,000-with-Annexures.pdf (read via web.archive.org)",
      "section": "para 1",
      "label": "NPCI"
     },
@@ -6440,7 +6440,7 @@
      "value": 1000000,
      "currency": "INR"
     },
-    "applies_to": "cash withdrawal in a single transaction (the circular refers to AePS Circular 3 of 2016-01-25, not read)"
+    "applies_to": "cash withdrawal in a single transaction (the circular refers to AePS Circular 3 of 25-01-2016, not verified as of 17-10-2026)"
    }
   ],
   "afa": {
@@ -6464,7 +6464,7 @@
     "value": 10000,
     "currency": "INR"
    },
-   "notes": "RBI/2019-20/67 Annex row 5a: Aadhaar Pay / AePS debited without merchant confirmation, credit adjustment within T+5, Rs 100/day after."
+   "notes": "RBI/2019-20/67 Annex row 5a: Aadhaar Pay / AePS debited without merchant confirmation, credit adjustment within T+5, ₹100/day after."
   },
   "dispute": {
    "channels": [
@@ -6510,12 +6510,12 @@
   ],
   "sources": [
    {
-    "file": "RBI (AePS - Due Diligence of AePS Touchpoint Operators) Directions, 2025 (RBI/2025-26/63, 2025-06-27, effective 2026-01-01), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12877",
+    "file": "RBI (AePS - Due Diligence of AePS Touchpoint Operators) Directions, 2025 (RBI/2025-26/63, 27-06-2025, effective 01-01-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12877",
     "section": "paras 2.1, 2.2",
     "label": "RBI"
    },
    {
-    "file": "NPCI/2021-22/AEPS/002 'Splitting of transactions below Rs. 10,000 for Off-us transactions initiated from Micro-ATM' (2021-08-18), https://www.npci.org.in/PDF/AePS/circular/2021-22/OC-AePS-Splitting-of-transactions-below-Rs-10,000-with-Annexures.pdf (read via web.archive.org)",
+    "file": "NPCI/2021-22/AEPS/002 'Splitting of transactions below Rs. 10,000 for Off-us transactions initiated from Micro-ATM' (18-08-2021), https://www.npci.org.in/PDF/AePS/circular/2021-22/OC-AePS-Splitting-of-transactions-below-Rs-10,000-with-Annexures.pdf (read via web.archive.org)",
     "section": "para 1",
     "label": "NPCI"
    }
@@ -6845,7 +6845,7 @@
   ],
   "sources": [
    {
-    "file": "NeSL Circular NeSL/DDE/2026/235 (2026-05-05)",
+    "file": "NeSL Circular NeSL/DDE/2026/235 (05-05-2026)",
     "section": "whole instrument",
     "label": "SECONDARY"
    }
@@ -7020,14 +7020,14 @@
    {
     "name": "validity",
     "source": {
-     "file": "RBI FEMA 23(R)/(1)/2026-RB (2026-09-22) amending FEMA 23(R)/2026-RB",
+     "file": "RBI FEMA 23(R)/(1)/2026-RB (22-09-2026) amending FEMA 23(R)/2026-RB",
      "section": "Reg 5(1)",
      "label": "RBI"
     },
     "verification": "verified",
     "configurable": true,
     "duration": "P9M",
-    "applies_to": "goods and services; 12 months INR-invoiced (FEMA 23(R)(1)/2026-RB of 22 Sep 2026, effective 1 Oct 2026)"
+    "applies_to": "goods and services; 12 months INR-invoiced (FEMA 23(R)(1)/2026-RB of 22-09-2026, effective 01-10-2026)"
    }
   ],
   "afa": {
@@ -7115,7 +7115,7 @@
   "regulator": [
    {
     "body": "DoE",
-    "instrument": "OM 3 Jul 2020; GFR r.149; GeM GTC cl.12"
+    "instrument": "OM of 03-07-2020; GFR r.149; GeM GTC cl.12"
    }
   ],
   "presence": {
@@ -7141,7 +7141,7 @@
    {
     "name": "per_txn",
     "source": {
-     "file": "NPCI circular of 2025-08-28 on UPI P2M limits for notified categories",
+     "file": "NPCI circular of 28-08-2025 on UPI P2M limits for notified categories",
      "section": "whole instrument",
      "label": "SECONDARY"
     },
@@ -7156,7 +7156,7 @@
    {
     "name": "validity",
     "source": {
-     "file": "DoE Office Memorandum of 2020-07-03 on GeM payment timelines",
+     "file": "DoE Office Memorandum of 03-07-2020 on GeM payment timelines",
      "section": "whole instrument",
      "label": "GeM/DoE"
     },
@@ -7389,7 +7389,7 @@
    {
     "name": "pps_threshold",
     "source": {
-     "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 2020-09-25)",
+     "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 25-09-2020)",
      "section": "whole instrument",
      "label": "RBI"
     },
@@ -7404,7 +7404,7 @@
    {
     "name": "pps_threshold",
     "source": {
-     "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 2020-09-25)",
+     "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 25-09-2020)",
      "section": "whole instrument",
      "label": "RBI"
     },
@@ -7477,7 +7477,7 @@
   ],
   "sources": [
    {
-    "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 2020-09-25)",
+    "file": "RBI Positive Pay System for Cheque Truncation System circular (RBI/2020-21/41, 25-09-2020)",
     "section": "whole instrument",
     "label": "RBI"
    }
@@ -7498,7 +7498,7 @@
   "regulator": [
    {
     "body": "STATUTE",
-    "instrument": "MSMED Act 2006 s.15-16; IT Act s.43B(h) / s.37(2)(g)"
+    "instrument": "MSMED Act 2006 s.15-16; Income-tax Act, 1961 s.43B(h); Income-tax Act, 2025 s.37(2)(g)"
    }
   ],
   "presence": {

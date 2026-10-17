@@ -1,7 +1,7 @@
 # Payments Overview
 
-!!! warning "Draft"
-    This page is part of the `draft` BACP specification. Rules marked **Proposed** depend on an open question and can change.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 BACP does not move money itself. Money moves on Indian payment rails (UPI, cards, net banking, NACH, PPIs, BBPS, e-RUPI and others), operated by NPCI, the card networks, NBBL, banks and payment aggregators under RBI regulation. Beckn/ONDC carries only the payment *terms* of an order. The BACP gateway talks to the rail through the payer's PSP and records the result as a signed, rail-anchored receipt.
 
@@ -141,7 +141,7 @@ Every excluded handler is reported with a reason, for example `not_in_registry`,
 - A Reserve Pay block is payable only to one seller. The intersection MUST exclude `in.upi.reservepay` unless a block payable to this seller exists.
 - If a card is excluded because card-not-present use is disabled on it, the agent MUST NOT silently try another card.
 
-The REST binding of the intersection is `POST /payment-handlers/intersect`. In this draft it requires a `negotiation_id`, because the inputs come from a negotiated TermSheet. Whether plain sessions are supported is [Q-45](../open-questions.md#q-45).
+The REST binding of the intersection is `POST /payment-handlers/intersect`. In this version it requires a `negotiation_id`, because the inputs come from a negotiated TermSheet. Whether plain sessions are supported is [Q-45](../open-questions.md#q-45).
 
 ```mermaid
 sequenceDiagram
@@ -178,7 +178,7 @@ A refund receipt MUST identify the original payment (`original_rrn`, `original_u
 |---|---|
 | `refunded_to_source` | Default: the refund reached the original instrument |
 | `released_block` | A UPI OTM block was released before capture |
-| `adjusted_against_dues` | A card refund made before the bill was paid, adjusted against the dues (Credit Card MD para 10(g)) |
+| `adjusted_against_dues` | A card refund made before the bill was paid, adjusted against the dues (RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022, "Credit Card MD", para 10(g)) |
 | `pending_cardholder_consent` | A card refund waiting for the cardholder's consent (see below) |
 | `reversed_to_bank_account` | No consent within 7 days, so the issuer reversed the amount to the cardholder's bank account |
 | `credit_note_issued` | An unpaid credit-ledger sale was reduced by a credit note; no money moved |
@@ -189,7 +189,7 @@ A refund receipt MUST identify the original payment (`original_rrn`, `original_u
 
 **Never into a PPI where the PPI rules forbid it.** Refunds of card, UPI or net-banking payments MUST NOT be credited to an RBI-regulated PPI (wallet, PPI card, gift PPI), even if the user asks (PPI Master Direction 2021 para 14.3 has no consent exception). The gateway refuses with `refund_to_ppi_forbidden`. In the other direction, a refund of a PPI-funded payment MUST go back to the same PPI immediately, even if this takes it above the PPI's limits (para 14.3).
 
-**Card refunds above the consent threshold.** Where the card bill has already been paid and a refund would leave a credit balance above the lower of 1% of the credit limit or ₹5,000, the issuer must seek the cardholder's consent within 7 days; without consent the issuer reverses the amount to the cardholder's bank account (Credit Card and Debit Card Directions 2022 para 10(h)). The refund receipt goes through `pending_cardholder_consent` and then either `refunded_to_source` or `reversed_to_bank_account`, and BACP MUST NOT promise an "instant refund to card" in that case. A refund made before the bill is paid is adjusted against the dues (`adjusted_against_dues`) and does not pass through `pending_cardholder_consent`.
+**Card refunds above the consent threshold.** Where the card bill has already been paid and a refund would leave a credit balance above the lower of 1% of the credit limit or ₹5,000, the issuer must seek the cardholder's consent within 7 days; without consent the issuer reverses the amount to the cardholder's bank account (Credit Card MD para 10(h)). The refund receipt goes through `pending_cardholder_consent` and then either `refunded_to_source` or `reversed_to_bank_account`, and BACP MUST NOT promise an "instant refund to card" in that case. A refund made before the bill is paid is adjusted against the dues (`adjusted_against_dues`) and does not pass through `pending_cardholder_consent`.
 
 The refund route of each handler is the descriptor's `refund.route`:
 
@@ -231,12 +231,12 @@ The circular has no net-banking row. NEFT and RTGS follow their own return rules
 Inside the checkout session, a payment moves through `initiated`, `debited` and `confirmed`. The failure paths are:
 
 - **`in_doubt`.** The PSP timed out. The gateway reconciles by idempotency key and PSP status, and MUST NOT attempt a new debit until the outcome is known. The budget reservation stays in place until reconciliation.
-- **Debited but not confirmed.** If the debit succeeded and the seller's `on_confirm` is still missing after the `confirm` is re-sent, the session MUST stay `complete_in_progress` with `payment.status = reversal_pending`, `reversal_deadline` = debit time + 5 days, and message `debited_not_confirmed` (`recoverable`). The gateway MUST start a refund to source with `original_rrn` at once. Issuing the refund receipt does not by itself end the session. When the PSP reports the refund credit as settled, `payment.status` becomes `reversed` and the session becomes `canceled`. The message SHOULD state the rail TAT and the ₹100/day compensation entitlement. What signal confirms refund settlement is open ([Q-49](../open-questions.md#q-49)).
-- **Failed debit.** No money moved. The session is canceled, the budget reservation is released, and the message is `payment_failed`.
+- **Debited but not confirmed.** If the debit succeeded and the seller's `on_confirm` is still missing after the `confirm` is re-sent, the session MUST stay `complete_in_progress` with `payment.status = reversal_pending`, `reversal_deadline` = debit time + 5 days, and message `debited_not_confirmed` (`recoverable`). The gateway MUST start a refund to source with `original_rrn` at once. Issuing the refund receipt does not by itself end the session. When the PSP reports the refund credit as settled, `payment.status` becomes `reversed` and the session becomes `cancelled`. The message SHOULD state the rail TAT and the ₹100 per day compensation entitlement. What signal confirms refund settlement is open ([Q-49](../open-questions.md#q-49)).
+- **Failed debit.** No money moved. The session is cancelled, the budget reservation is released, and the message is `payment_failed`.
 
 ## NPCI UAP: the reserved slot
 
-NPCI's Unified Agent Protocol (UAP) for agentic UPI payments has been reported in the press (Business Standard, July 2026; Reuters, September 2026), but as of this draft **no public specification, circular or NPCI press release for UAP exists**. NPCI's GFF 2026 press release does not mention it. What is live today is UPI Circle delegation to IoT or software secondaries (with AI chatbots in a closed-user-group pilot), UPI Reserve Pay and UPI AutoPay, and BACP binds to those.
+NPCI's Unified Agent Protocol (UAP) for agentic UPI payments has been reported in the press (Business Standard, July 2026; Reuters, September 2026, the latter not verified as of 17-10-2026), but as of 17-10-2026 **no public specification, circular or NPCI press release for UAP exists**. NPCI's Global Fintech Fest (GFF) 2026 press release does not mention it. What is live as of 17-10-2026 is UPI Circle delegation to IoT or software secondaries (with AI chatbots in a closed-user-group pilot), UPI Reserve Pay and UPI AutoPay, and BACP binds to those.
 
 BACP reserves a slot so that UAP can be added without breaking clients:
 
@@ -249,8 +249,8 @@ When NPCI publishes UAP, the descriptor will be filled in from the published tex
 
 ## Handler ids and legacy aliases
 
-!!! warning "Proposed"
-    The naming scheme below is the working position. Who governs handler names, and how long legacy aliases stay accepted, is open: [Q-28](../open-questions.md#q-28).
+!!! note "Settled"
+    The naming scheme below is settled in [Q-28](../open-questions.md#q-28). Registry changes follow the [proposal process](handler-registry.md#proposing-a-new-handler), and legacy aliases stay accepted for the deprecation window set in the [versioning policy](https://bacp.dev/versioning/#deprecation).
 
 - `in.<family>.<variant>` names an Indian rail or instrument, e.g. `in.upi.reservepay`, `in.card.mandate`, `in.nach.debit`.
 - `bacp.<construct>` names a BACP-native construct, e.g. `bacp.credit_ledger`, `bacp.trade.export_realisation`.

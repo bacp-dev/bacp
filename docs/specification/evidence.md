@@ -1,8 +1,7 @@
 # Evidence and Instruction Log
 
-!!! warning "Draft"
-    This page is part of the `draft` specification. Rules marked **Proposed** depend on an
-    open question and may change before the first dated release.
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 When an agent buys something on a principal's behalf, every party may later need to show what was
 authorised, what was instructed, what was offered and what was paid. BACP produces that evidence
@@ -10,8 +9,8 @@ as a by-product of every transaction, using three artefacts:
 
 | Artefact | Schema | Produced by | Proves |
 |---|---|---|---|
-| **InstructionLog** entries | [`instruction-log-entry.json`](https://bacp.dev/schemas/instruction-log-entry.json) | The agent operator's gateway | The ordered chain prompt → intent → cart → mandate → payment → order, tamper-evident |
-| **Receipt** | [`receipt.json`](https://bacp.dev/schemas/receipt.json) | The verifier that acted: PSP, BPP or Mandate Manager | That a payment, refund, checkout or mandate step happened, anchored to the rail |
+| **InstructionLog** entries | [`instruction-log-entry.json`](https://bacp.dev/latest/schemas/instruction-log-entry.json) | The agent operator's gateway | The ordered chain prompt → intent → cart → mandate → payment → order, tamper-evident |
+| **Receipt** | [`receipt.json`](https://bacp.dev/latest/schemas/receipt.json) | The verifier that acted: PSP, BPP or Mandate Manager | That a payment, refund, checkout or mandate step happened, anchored to the rail |
 | **Evidence bundle** | `EvidenceBundle` in the REST binding | The gateway, on request | Everything above for one transaction, verified and signed, for a dispute |
 
 ## InstructionLog {#instruction-log}
@@ -96,23 +95,23 @@ the heads recorded in the network trace.
 ```json
 {
   "seq": 0,
-  "session_id": "ses_01HZX8V4K2",
+  "session_id": "ses_01HZXB",
   "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
   "stage": "prompt",
   "actor": "user",
   "at": "2026-10-20T19:00:02+05:30",
   "channel": "voice",
   "language": "hi-IN",
-  "content_hash": "sha-256:YXVkaW8tYW5kLXRyYW5zY3JpcHQtaGFzaC0wMDAwMDE",
-  "content_ref": "https://logs.vaani.example.in/blobs/ses_01HZX8V4K2/0",
+  "content_hash": "sha-256:YaIsf4NASd5cjPZvWWkQKmbj9SW9F-zJzj-1G6_KAi4",
+  "content_ref": "https://logs.vaani.example.in/blobs/ses_01HZXB/0",
   "summary": {
-    "hi-IN": "Do kilo atta, ek litre doodh aur paanch sau gram dal mangwa do",
-    "en-IN": "Order 2 kg atta, 1 l milk and 500 g dal"
+    "hi-IN": "दो किलो आटा, एक लीटर दूध और पाँच सौ ग्राम दाल मँगवा दो",
+    "en-IN": "Order 2 kg atta, 1 L milk and 500 g dal"
   },
   "model": {"id": "example-llm-2", "version": "2026.10.1", "translation_model": "bhashini-asr-hi-v3"},
   "refs": {},
-  "prev_hash": "sha-256:c2Vzc2lvbi1nZW5lc2lzLXNlc18wMUhaWDhWNEsyLXh4",
-  "entry_hash": "sha-256:ZW50cnktMC1oYXNoLWZvci1zZXNfMDFIWlg4VjRLMgA",
+  "prev_hash": "sha-256:QP09K6-qS2n7bF4INQ0RefqmkL9onuRPPhV0nYVtfWo",
+  "entry_hash": "sha-256:nbwyd-n-VkI8y5myMA_yKrU7bG6Dh9OkbXcZO3R-lXI",
   "signature": {
     "role": "operator",
     "kid": "bap.vaani.example.in|ukid-7|ed25519",
@@ -217,12 +216,12 @@ come from a receipt.
   "iss": "psp.example.in",
   "issued_at": "2026-10-20T19:02:11+05:30",
   "result": "success",
-  "reference": "sha-256:cGF5bWVudC1tYW5kYXRlLWNsb3NlZC0wMDAwMDAwMDAx",
+  "reference": "sha-256:56zHckmGabR5RoD_aAjAlsFMjuSAjmXgymcJL4c7arY",
   "mandate_ref": "mdt_PAYC0000000001",
   "open_mandate_ref": "mdt_PAY7Q2W9X4K1M3",
   "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
   "order_id": "ORD-KIR-88231",
-  "checkout_hash": "sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
   "amount": {"value": 30200, "currency": "INR"},
   "payee": {"vpa": "ganeshkirana@examplebank", "name": "Shree Ganesh Kirana"},
   "rail": {
@@ -265,7 +264,7 @@ trusting the agent or its operator.
 
 For a negotiated purchase the bundle also carries the negotiation transcript, the accepted offer,
 the `within_bounds` attestation and the bound `on_init`, so that a reviewer can check what was
-offered and agreed without seeing the buyer's reservation price ([Negotiation](negotiation/index.md)).
+offered and agreed without seeing the principal's reservation price ([Negotiation](negotiation/index.md)).
 
 ### AP2 five-step verification {#ap2-verification}
 
@@ -328,12 +327,18 @@ and the instrument away from the seller where the format allows it.
 | InstructionLog, receipts and evidence bundles | Agent operator (gateway) and PSP | Long enough to serve grievances, disputes and regulatory review; see below |
 | Negotiation transcripts | Agent operator | Proposed: 2 years for B2C, longer for B2B and public procurement ([Q-56](open-questions.md#q-56)) |
 
+Where these records contain payment data, RBI's directive on Storage of Payment System Data
+(RBI/2017-18/153, 06-04-2018) already requires RBI-authorised payment system providers to store
+that data only in India (the foreign leg of a cross-border transaction may also be stored abroad).
+
+Until [Q-15](open-questions.md#q-15) is settled, a gateway, Mandate Manager or PSP adapter MUST
+store InstructionLogs, receipts and evidence bundles that contain payment data only in India, and
+MUST NOT send that payment data to any processor outside India (see
+[Data localisation](security-and-privacy.md#data-localisation)).
+
 !!! warning "Proposed"
     A single retention table for InstructionLogs, receipts and evidence bundles, with downstream
-    erasure on a deadline, is still to be set ([Q-17](open-questions.md#q-17)). Where these records
-    contain payment data, they are Proposed to be stored in India only, with the LLM, log and
-    evidence regions declared in the AgentCredential and registry
-    ([Q-15](open-questions.md#q-15)).
+    erasure on a deadline, is open ([Q-17](open-questions.md#q-17)).
 
 See [Security and Privacy](security-and-privacy.md) for encryption and access control of operator
 records.

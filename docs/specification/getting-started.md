@@ -1,15 +1,18 @@
 # Getting Started
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 This page walks through one complete BACP transaction, from mandate setup to a
 refund. It is a guided tour of the normative pages, not a replacement for them:
 each step links to the page that defines the rules.
 
 ## The scenario
 
-- **Who.** Meera lives in Bengaluru (pincode 560034). She uses *Sakhi*, a Hindi
+- **Who.** Meera lives in Bengaluru (PIN code 560034). She uses *Sakhi*, a Hindi
   voice agent run by Vaani Voice Commerce Pvt Ltd. Sakhi's BACP gateway runs at
   Vaani's Buyer App, `bap.vaani.example.in`.
-- **What.** Sakhi orders Aashirvaad atta 2 kg (₹110), milk 1 L (₹68) and toor
+- **What.** Sakhi orders chakki atta 2 kg (₹110), milk 1 L (₹68) and toor
   dal 500 g (₹89) from Meera's regular ONDC kirana, `bpp.kirana.example.in`.
 - **How Meera pays.** Through an open mandate bound to a **UPI Reserve Pay**
   block of ₹3,000 for 30 days, payable to the kirana. The mandate caps each
@@ -67,13 +70,13 @@ sequenceDiagram
     A->>G: PUT /sessions/id (bacp-browse)
     G->>S: Beckn init and on_init
     A->>G: POST /sessions/id/complete (bacp-pay)
-    G->>P: Basket-blind debit of Rs 302
+    G->>P: Basket-blind debit of ₹302
     P-->>G: Signed receipt with RRN
     G->>S: Beckn confirm and on_confirm
     G-->>A: completed with order
     A->>G: POST /orders/id/returns (bacp-post-order)
     G->>S: Beckn update and on_update
-    G->>P: Refund Rs 68 to source
+    G->>P: Refund ₹68 to source
     G-->>A: Webhook return.updated
 ```
 
@@ -92,14 +95,17 @@ the capabilities `in.bacp.mandate`, `in.bacp.discover`, `in.bacp.checkout` and
 ## Step 1: Disclose and capture the instruction
 
 Sakhi's first message in every session discloses that Meera is talking to an
-AI and offers a human: *"Aap ek AI sahayak se baat kar rahe hain…"*. The text
+AI and offers a human: *"Aap ek AI sahayak se baat kar rahe hain…"* ("You are
+talking to an AI assistant…"). The text
 and the handoff link come from Sakhi's AgentCredential (`disclosure.ai_notice`,
 `disclosure.human_handoff_url`).
 
-Meera says: *"Har mahine ka kirana tum mangwa dena, teen hazaar tak."* Sakhi's
-operator records the turn as the first [instruction log](evidence.md) entry
-(stage `prompt`, channel `voice`, language `hi-IN`), with hashes of the audio
-and transcript and the translation model used. Sakhi turns it into structured
+Meera says: *"Har mahine ka kirana tum mangwa dena, teen hazaar tak."* ("Order
+the groceries every month, up to three thousand.") Sakhi's operator records
+the turn as the first [instruction log](evidence.md) entry (stage `prompt`,
+channel `voice`, spoken language `hi-IN`, with the Roman-script transcript
+tagged `hi-Latn-IN`), with hashes of the audio and transcript and the
+translation model used. Sakhi turns it into structured
 constraints and logs that as stage `intent`.
 
 **On Beckn:** nothing.
@@ -111,7 +117,7 @@ constraints and logs that as stage `intent`.
 ```json
 {
   "purpose_code": "P-GRO-01",
-  "rail": "upi.reservepay.block",
+  "rail": "in.upi.reservepay",
   "presence_allowed": ["HNP", "HP"],
   "proposed_constraints": {
     "amount_per_txn": {"value": 150000, "currency": "INR"},
@@ -132,8 +138,9 @@ constraints and logs that as stage `intent`.
 }
 ```
 
-`upi.reservepay.block` is an alias of the canonical handler id
-`in.upi.reservepay`; new artefacts emit the canonical id
+`rail` carries the canonical handler id `in.upi.reservepay`. The legacy alias
+`upi.reservepay.block` still resolves to it during its deprecation window, but
+new artefacts emit the canonical id
 ([Handler Registry](payments/handler-registry.md#alias-resolution)).
 `action_scope` lists the actions used later in this walkthrough, including
 `RETURN` and `RAISE_ISSUE`. `webhook_url` is where the gateway sends
@@ -155,7 +162,8 @@ expires after at most 15 minutes. Sakhi never signs or activates the mandate.
 
 ## Step 3: Meera approves on her UPI app
 
-Sakhi says *"Kripya apne UPI app mein manzoori dein"* and Meera opens the link
+Sakhi says *"Kripya apne UPI app mein manzoori dein"* ("Please give your
+approval in your UPI app") and Meera opens the link
 in her UPI app, which is the [Trusted Surface](glossary.md#trusted-surface).
 
 1. The app shows, in Hindi, the limits, the category, the data items that will
@@ -169,7 +177,7 @@ in her UPI app, which is the [Trusted Surface](glossary.md#trusted-surface).
 4. The Mandate Manager checks that the constraints are within the rail limits,
    then builds an **open Checkout Mandate** and an **open Payment Mandate**.
    Meera's principal signature covers both, and the Mandate Manager
-   countersigns both. The payment mandate carries `rail_binding.type: in.upi.reservepay` and the PSP
+   countersigns both. The Payment Mandate carries `rail_binding.type: in.upi.reservepay` and the PSP
    attestation. Both carry Sakhi's `cnf` key, `audit_uri`, `data_scopes` and a
    data-retention period. It also issues a DPDP
    [consent receipt](mandates.md).
@@ -181,7 +189,8 @@ in her UPI app, which is the [Trusted Surface](glossary.md#trusted-surface).
    `mandate.status_changed` with status `ACTIVE`.
 
 Sakhi confirms: *"Ho gaya. ₹3,000 tak, sirf kirana, ₹1,200 se upar
-poochungi."*
+poochungi."* ("Done. Up to ₹3,000, groceries only, and I will ask you about
+anything above ₹1,200.")
 
 **On Beckn:** nothing.
 
@@ -193,7 +202,7 @@ Ten days later Sakhi runs a scheduled reorder. Meera is not present (HNP).
 
 ```json
 {
-  "query": {"hi-IN": "do kilo aashirvaad atta, ek litre doodh, aadha kilo toor dal"},
+  "query": {"hi-IN": "दो किलो चक्की आटा, एक लीटर दूध, आधा किलो तूर दाल"},
   "category": "ONDC:RET10",
   "delivery": {"pincode": "560034"},
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3"
@@ -265,9 +274,9 @@ receipt reference) and `payment.handler: in.upi.reservepay`.
 **Response.** `200` with status `ready_for_complete` and the `checkout_hash`,
 the hash of the BPP-signed quote.
 
-!!! warning "Proposed"
-    A per-seller consent receipt minted at `init`, before any personal data
-    reaches the seller, is proposed as a requirement
+!!! note "Consent receipt"
+    A per-seller consent receipt is minted at `init`, before any personal
+    data reaches the seller; no data is released on a class receipt alone
     ([Q-12](open-questions.md#q-12)).
 
 ## Step 7: Close the mandates
@@ -279,8 +288,8 @@ checkout. Both are attached compact JWS objects signed with Sakhi's `cnf` key:
   `checkout_hash` and `parent_mandate_id` pointing at the open checkout
   mandate;
 - a closed **Payment Mandate** with the same amount and `checkout_hash`,
-  `parent_mandate_id` pointing at the open payment mandate,
-  `checkout_mandate_ref` naming the closed checkout mandate, `payee` set to the
+  `parent_mandate_id` pointing at the open Payment Mandate,
+  `checkout_mandate_ref` naming the closed Checkout Mandate, `payee` set to the
   kirana's collection VPA, and `auth_binding.type: parent_rail_binding`, which
   means the debit runs under the Reserve Pay block.
 
@@ -302,8 +311,8 @@ This is optional. The message id is a UUIDv5 under the gateway's published
   "presence": "HNP",
   "checkout_mandate": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUuY2hlY2tvdXQuMSJ9.c2ln",
   "payment_mandate": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln",
-  "checkout_hash": "sha-256:Y2hlY2tvdXQtaGFzaC1rYWlyYW5hLTg4MjMxLXF1b3Rl",
-  "accepted_disclosures_hash": "sha-256:ZGlzY2xvc3VyZXMtaGFzaC1rYWlyYW5hLTg4MjMxLXg",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "accepted_disclosures_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4",
   "kb_jwt": "eyJhbGciOiJFUzI1NiJ9.eyJub25jZSI6Im4ifQ.c2ln"
 }
 ```
@@ -324,7 +333,7 @@ closed and stops at the first failure
 3. The closed mandates are signed by the `cnf` key, bind to the open mandates,
    carry the `checkout_hash` of the BPP-signed quote and an amount equal to
    the quote total, name the right payee, and have not been used.
-4. Constraints: category `ONDC:RET10` and pincode 560034 are allowed, ₹302 is
+4. Constraints: category `ONDC:RET10` and PIN code 560034 are allowed, ₹302 is
    below the ₹1,500 per-order cap, and the ₹3,000 monthly budget has ₹0 spent
    or reserved.
 5. Split-order detection: no other order to the kirana under this mandate in
@@ -339,7 +348,7 @@ closed and stops at the first failure
    a bank, according to the registry. Otherwise the gateway returns 403
    `collector_not_authorised` and no money moves.
 
-Finally it consumes the closed payment mandate (a closed payment mandate can
+Finally it consumes the closed Payment Mandate (a closed Payment Mandate can
 pay at most once), **reserves** ₹302 against the monthly budget, and moves the
 session to `complete_in_progress`. The constraint, split-order, rail-cap and
 step-up checks and this commit run under a per-mandate lock, so concurrent
@@ -391,8 +400,10 @@ operation yet ([Beckn / ONDC Binding](transports/beckn.md#mapping-commerce)).
 
 ## Step 10: Return the damaged milk
 
-Meera says *"Doodh ka packet phata hua aaya, wapas karo."* Sakhi reads back the
-return (1 litre milk, ₹68 back to the same UPI account) and Meera says *"Haan"*.
+Meera says *"Doodh ka packet phata hua aaya, wapas karo."* ("The milk packet
+arrived torn, send it back.") Sakhi reads back the return (1 L milk, ₹68 back
+to the same UPI account) and Meera says *"Haan"* ("Yes"). Both transcripts are
+tagged `hi-Latn-IN`.
 The voice confirmation is logged. Returns are always human-present
 (`presence: HP`).
 
@@ -407,7 +418,7 @@ The voice confirmation is logged. Returns are always human-present
   "evidence": [
     {
       "type": "image",
-      "hash": "sha-256:aW1hZ2UtZGFtYWdlZC1taWxrLXBhY2tldC0wMDAwMDE",
+      "hash": "sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A",
       "uri": "https://agents.vaani.example.in/e/1.jpg"
     }
   ],
@@ -437,7 +448,8 @@ on the first of `Liquidated` or `Return_Delivered`:
   post-order stage, and sends the webhook `return.updated`. Sakhi can read the
   full state at `GET /orders/ORD-KIR-88231/returns/{return_id}`.
 
-Sakhi tells Meera: *"₹68 wapas aa gaye, reference number available hai."* See
+Sakhi tells Meera: *"₹68 wapas aa gaye, reference number available hai."*
+("The ₹68 has come back; the reference number is available.") See
 [Orders and Post-order](checkout/post-order.md).
 
 ## Step 11 (optional): Raise a grievance
@@ -465,11 +477,12 @@ are cross-referenced to the RRN for the UPI dispute channel. See
 ## Alternative: UPI Circle
 
 With a UPI Circle binding, Meera links Sakhi as a delegate (secondary) in her
-UPI app instead of creating a block. For software secondaries Circle is in an
-NPCI pilot, so the handler `in.upi.circle` has status `pilot` and a gateway
-may use it only when its conformance attestation lists it. The rail then enforces per-device caps:
-₹5,000 per transaction, ₹15,000 per month and ₹2,000 in the first 24 hours,
-with at most five delegates. The open payment mandate carries
+UPI app instead of creating a block. As of 17-10-2026, Circle is in an NPCI
+pilot for software secondary users, so the handler `in.upi.circle` has status
+`pilot` and a gateway may use it only when its conformance attestation lists
+it. The rail then enforces caps per secondary user: ₹5,000 per transaction,
+₹15,000 per month and ₹2,000 in the first 24 hours. A primary user can add up
+to five secondary users. The open Payment Mandate carries
 `rail_binding.type: in.upi.circle`, and its BACP caps MUST be at or below the
 Circle caps. Unlike a Reserve Pay block, a Circle delegation is not tied to one
 seller, so one mandate can pay several sellers, bounded by the open checkout

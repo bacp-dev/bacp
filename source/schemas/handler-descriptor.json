@@ -35,6 +35,11 @@
       },
       "description": "Legacy and previously proposed ids that resolve to this handler."
     },
+    "aliases_deprecated_after": {
+      "type": "string",
+      "format": "date",
+      "description": "Date after which this handler's deprecated aliases stop resolving. It is at least two dated releases and at least 180 days after the release that deprecates them, whichever is later (settled in Q-28; versioning policy)."
+    },
     "name": {
       "$ref": "common.json#/$defs/LangText"
     },

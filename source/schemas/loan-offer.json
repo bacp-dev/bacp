@@ -87,6 +87,7 @@
         },
         "apr_pct": {
           "type": "number",
+          "description": "Annual percentage rate including fees and charges, as required by the RBI Key Facts Statement rules; not the interest rate alone.",
           "minimum": 0
         },
         "emi_amount": {

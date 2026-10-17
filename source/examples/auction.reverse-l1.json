@@ -3,7 +3,7 @@
   "type": "reverse_l1",
   "auctioneer": {
     "role": "auctioneer",
-    "id": "ra.gem-like.example.gov.in",
+    "id": "ra.gem-like.example.in",
     "kind": "human"
   },
   "auctioneer_neutrality": {
@@ -45,7 +45,7 @@
   "procurement_mode_reason": "Value above direct and L1 purchase ceilings",
   "signature": {
     "role": "operator",
-    "kid": "ra.gem-like.example.gov.in|k1",
+    "kid": "ra.gem-like.example.in|k1",
     "alg": "ES256",
     "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
   }

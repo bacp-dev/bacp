@@ -1,18 +1,21 @@
 # Security Policy
 
-BACP is a protocol for agents that move money and personal data, so security reports are taken seriously, even while the specification is a draft.
+BACP is a protocol for agents that move money and personal data, so security reports are taken seriously.
 
 ## Reporting a vulnerability
 
 **Do not report security vulnerabilities through public GitHub issues, discussions or pull requests.**
 
-Report them privately through GitHub Security Advisories:
+Report them privately in either of these ways:
 
-1. Go to <https://github.com/bacp-dev/bacp/security/advisories/new>.
-2. Describe the issue, the affected part of the specification, schema, OpenAPI binding or tooling, and the impact.
-3. Include steps or message sequences that show the problem, and a suggested fix if you have one.
+- **GitHub Security Advisories:** open a private advisory at <https://github.com/bacp-dev/bacp/security/advisories/new>. Only the reporter and the project maintainers can see it until it is published.
+- **Email:** write to `security@bacp.dev`.
 
-Only the reporter and the project maintainers can see a draft advisory.
+In either case:
+
+1. Describe the issue, the affected part of the specification, schema, OpenAPI binding or tooling, and the affected version (for example `2026-10-17` or `draft`).
+2. Include steps or message sequences that show the problem, and the impact.
+3. Add a suggested fix if you have one.
 
 ## What to report
 
@@ -26,10 +29,20 @@ Examples of issues in scope:
 
 Reports about a specific product or deployment that implements BACP should go to that product's vendor. Reports about a payment rail or network (for example UPI or ONDC) should go to its operator.
 
+### Incidents in live Indian deployments
+
+If a vulnerability has been exploited in a live deployment in India, the affected participant has its own legal reporting duties, which the BACP maintainers cannot carry out on its behalf. Under the CERT-In Directions of 28-04-2022 (issued under s.70B(6) of the Information Technology Act, 2000), covered entities must report specified cyber incidents to CERT-In within 6 hours of noticing them. The participant should also inform the relevant rail or network operator (for example NPCI for UPI, or ONDC) under that operator's rules. Reporting to BACP is about fixing the protocol; it is not a substitute for those reports.
+
 ## What to expect
 
-The maintainers will acknowledge a report, assess it, and keep the reporter informed. Response times will be published once the maintainer group is established (see [GOVERNANCE.md](GOVERNANCE.md)). Fixes to the specification are made in the open once a fix is ready. Reporters are credited in the advisory unless they ask not to be.
+| Step | Target |
+|---|---|
+| Acknowledge the report | Within 3 working days (IST) |
+| Triage: confirm or reject the issue, assess severity, and tell the reporter | Within 10 working days (IST) of acknowledgement |
+| Coordinated disclosure: publish the advisory and the fix | Within 90 days of the report, or earlier once a fix is available; the timeline may be agreed differently with the reporter |
+
+Working days are Monday to Friday, excluding public holidays in India. The maintainers keep the reporter informed throughout. Fixes to the specification are made in the open once it is safe to disclose them. Reporters are credited in the advisory unless they ask not to be.
 
 ## Supported versions
 
-Security fixes are made to the current draft (`main`) and, once dated releases exist, to the latest release.
+Security fixes land on `main` (the working draft) and on the latest dated release, currently `2026-10-17`. A backwards-compatible fix is backported to that release under the [backport policy](https://bacp.dev/versioning/#backport-policy); a fix that needs a breaking change ships in a new dated release, with the notice period shortened as the [versioning policy](https://bacp.dev/versioning/) allows for security fixes.

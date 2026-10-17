@@ -1,5 +1,8 @@
 # Reference
 
+!!! info "Version 2026-10-17"
+    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
 An index of the normative artefacts of this BACP version: the JSON Schemas, the OpenAPI document, the payment-handler
 registry and the example vectors. All of them are published next to this specification; the lists on this page are
 generated from the `source/` directory of the specification repository.
@@ -15,22 +18,22 @@ All schemas are JSON Schema draft 2020-12.
 
 | Schema | Title | Description |
 |---|---|---|
-| [`agent-credential.json`](https://bacp.dev/schemas/agent-credential.json) | AgentCredential | Claims of an SD-JWT VC (vct in.bacp.agent.1) issued by a registry-accredited issuer to an agent operated by a registered legal entity and bound to a BAP subscriber. |
-| [`beckn-context-bacp.json`](https://bacp.dev/schemas/beckn-context-bacp.json) | Beckn context extension: context.bacp | Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp] where a network validator rejects unknown context keys. |
-| [`common.json`](https://bacp.dev/schemas/common.json) | BACP common types | Shared definitions: `Amount`, `PositiveAmount`, `Hash`, `Jws`, `Jwk`, `Signature`, `Presence`, `LangText`, `RailType`, `Channel`, `Handler`, `Duration`, `IssueStatus`, `IssueMeta`, `HandlerId`, `HandlerRef`, `RailTypeV1`, `UdyamCategory`, `Party`, `DocumentRef`, `Citation` |
-| [`consent-receipt.json`](https://bacp.dev/schemas/consent-receipt.json) | ConsentReceipt (DPDP) | One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or for) a DPDP Consent Manager. |
-| [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-entry.json) | CreditLedgerEntry | One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger. Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler. |
-| [`fx.json`](https://bacp.dev/schemas/fx.json) | FX disclosure | Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)). |
-| [`handler-descriptor.json`](https://bacp.dev/schemas/handler-descriptor.json) | HandlerDescriptor | One entry of the BACP payment-handler registry. Descriptors are data: limits and rules are configuration, not code. |
-| [`instruction-log-entry.json`](https://bacp.dev/schemas/instruction-log-entry.json) | InstructionLogEntry | Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment. entry_hash = sha-256(JCS(entry minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested. |
-| [`loan-offer.json`](https://bacp.dev/schemas/loan-offer.json) | Credit-at-checkout offer list (KFS) | Key Fact Statement fields, unbiased multi-lender display (every matched offer, unmatched lenders named, pre-disclosed ranking metric), cooling-off, and the lender as repayment payee. RBI Digital Lending Directions 2025 paras 6(i), 6(iii), 6(iv), 8(i), 9(ii)-(iii), 10 (8 May 2025 numbering; RBI has since withdrawn these Directions in its consolidation into entity-wise directions, see [Credit and Split Tender](payments/credit-and-split-tender.md)). |
-| [`mandate-negotiation.json`](https://bacp.dev/schemas/mandate-negotiation.json) | NegotiationMandate (separate BACP negotiation mandate) | A separate BACP mandate that carries the bacp.neg.* constraints, so that legacy AP2/VI verifiers, which fail closed on unknown constraint types, still accept the AP2-compatible checkout and payment mandates. Same envelope conventions as mandate.json (SD-JWT over JCS, MM + principal signatures, status list). Verified only by the buyer's guard and credential provider, never by the seller. |
-| [`mandate.json`](https://bacp.dev/schemas/mandate.json) | Mandate | AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status, usage and signatures is signed and immutable. |
-| [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json) | NegotiationSession | Authoritative full-state view of one bilateral negotiation (one buyer, one seller, one transaction_id), as returned by the gateway (ACP full-state pattern). RFQs and auctions own several sessions. |
-| [`offer.json`](https://bacp.dev/schemas/offer.json) | Negotiation messages (Offer, CounterOffer, Accept, Reject, Withdraw, Terminate, RequestExtension, AcceptRevoke, BidCommit, BidReveal, BidRetract) | Structured, signed and expiring negotiation messages. Only these are binding. Discriminated by type. |
-| [`payment-plan.json`](https://bacp.dev/schemas/payment-plan.json) | PaymentPlan (split and multi-tender) | How one accepted all_in_total is paid: several tenders now (gift card + UPI) and/or tranches over time (token advance + loan + balance). One closed payment mandate and one Receipt per tender. Step-up and AFA are evaluated on the plan total, never per tender. |
-| [`receipt.json`](https://bacp.dev/schemas/receipt.json) | Receipt (rail-anchored) | Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family handler (upi.*, in.upi.*, in.cod.upi, in.pos.tap, in.pos.dynamic_qr) MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists utr. Any other successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence. |
-| [`termsheet.json`](https://bacp.dev/schemas/termsheet.json) | TermSheet | Multi-issue term sheet carried in every binding Offer. Every issue carries {value, negotiable, status}. Reservation values never appear here. Issues not listed are fixed. |
+| [`agent-credential.json`](https://bacp.dev/latest/schemas/agent-credential.json) | AgentCredential | Claims of an SD-JWT VC (vct in.bacp.agent.1) issued by a registry-accredited issuer to an agent operated by a registered legal entity and bound to a BAP subscriber. |
+| [`beckn-context-bacp.json`](https://bacp.dev/latest/schemas/beckn-context-bacp.json) | Beckn context extension: context.bacp | Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp] where a network validator rejects unknown context keys. |
+| [`common.json`](https://bacp.dev/latest/schemas/common.json) | BACP common types | Shared definitions: `Amount`, `PositiveAmount`, `Hash`, `Jws`, `Jwk`, `Signature`, `Presence`, `LangText`, `RailType`, `Channel`, `Handler`, `Duration`, `IssueStatus`, `IssueMeta`, `HandlerId`, `HandlerRef`, `RailTypeV1`, `UdyamCategory`, `Party`, `DocumentRef`, `Citation` |
+| [`consent-receipt.json`](https://bacp.dev/latest/schemas/consent-receipt.json) | ConsentReceipt (DPDP) | One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or for) a DPDP Consent Manager. |
+| [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | CreditLedgerEntry | One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger. Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler. |
+| [`fx.json`](https://bacp.dev/latest/schemas/fx.json) | FX disclosure | Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)). |
+| [`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json) | HandlerDescriptor | One entry of the BACP payment-handler registry. Descriptors are data: limits and rules are configuration, not code. |
+| [`instruction-log-entry.json`](https://bacp.dev/latest/schemas/instruction-log-entry.json) | InstructionLogEntry | Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment. entry_hash = sha-256(JCS(entry minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested. |
+| [`loan-offer.json`](https://bacp.dev/latest/schemas/loan-offer.json) | Credit-at-checkout offer list (KFS) | Key Fact Statement fields, unbiased multi-lender display (every matched offer, unmatched lenders named, pre-disclosed ranking metric), cooling-off, and the lender as repayment payee. RBI Digital Lending Directions 2025 paras 6(i), 6(iii), 6(iv), 8(i), 9(ii)-(iii), 10 (08-05-2025 numbering; RBI has since withdrawn these Directions in its consolidation into entity-wise directions, see [Credit and Split Tender](payments/credit-and-split-tender.md)). |
+| [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | NegotiationMandate (separate BACP negotiation mandate) | A separate BACP mandate that carries the bacp.neg.* constraints, so that legacy AP2/VI verifiers, which fail closed on unknown constraint types, still accept the AP2-compatible checkout and payment mandates. Same envelope conventions as mandate.json (SD-JWT over JCS, MM + principal signatures, status list). Verified only by the buyer's guard and credential provider, never by the seller. |
+| [`mandate.json`](https://bacp.dev/latest/schemas/mandate.json) | Mandate | AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status, usage and signatures is signed and immutable. |
+| [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) | NegotiationSession | Authoritative full-state view of one bilateral negotiation (one buyer, one seller, one transaction_id), as returned by the gateway (ACP full-state pattern). RFQs and auctions own several sessions. |
+| [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | Negotiation messages (Offer, CounterOffer, Accept, Reject, Withdraw, Terminate, RequestExtension, AcceptRevoke, BidCommit, BidReveal, BidRetract) | Structured, signed and expiring negotiation messages. Only these are binding. Discriminated by type. |
+| [`payment-plan.json`](https://bacp.dev/latest/schemas/payment-plan.json) | PaymentPlan (split and multi-tender) | How one accepted all_in_total is paid: several tenders now (gift card + UPI) and/or tranches over time (token advance + loan + balance). One closed payment mandate and one Receipt per tender. Step-up and AFA are evaluated on the plan total, never per tender. |
+| [`receipt.json`](https://bacp.dev/latest/schemas/receipt.json) | Receipt (rail-anchored) | Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family handler (upi.*, in.upi.*, in.cod.upi, in.pos.tap, in.pos.dynamic_qr) MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists utr. Any other successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence. |
+| [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | TermSheet | Multi-issue term sheet carried in every binding Offer. Every issue carries {value, negotiable, status}. Reservation values never appear here. Issues not listed are fixed. |
 
 ## OpenAPI document {#openapi}
 
@@ -41,7 +44,7 @@ All schemas are JSON Schema draft 2020-12.
 ## Payment-handler registry {#handler-registry}
 
 [`registry.json`](https://bacp.dev/latest/handlers/registry.json) holds 57 handler descriptors, each valid against
-[`handler-descriptor.json`](https://bacp.dev/schemas/handler-descriptor.json). The binding classes are explained in
+[`handler-descriptor.json`](https://bacp.dev/latest/schemas/handler-descriptor.json). The binding classes are explained in
 [Handler Registry](payments/handler-registry.md): **O** open-eligible, **C** closed (human present), **A** assisted or
 device-bound, **D** deferred (COD), **N** non-paying.
 
@@ -56,7 +59,7 @@ device-bound, **D** deferred (COD), **N** non-paying.
 | `in.upi.autopay` | UPI AutoPay (recurring e-mandate) | payment | O | live | `upi.autopay` |
 | `in.upi.credit_line` | Pre-sanctioned credit line on UPI | payment | C | live | — |
 | `in.upi.rupay_cc` | RuPay credit card on UPI | payment | C | live | — |
-| `in.upi.intl` | UPI international (outbound corridors, inbound FIR) | payment | C | live | `bacp.pay.xb.upi_global` |
+| `in.upi.intl` | UPI international (outbound corridors; inbound Foreign Inward Remittance to UPI) | payment | C | live | `bacp.pay.xb.upi_global` |
 | `in.upi.lite` | UPI Lite and Lite X (on-device, offline NFC) | payment | A | live | `upi.lite` |
 | `in.upi.123pay` | UPI 123PAY (feature phone, IVR) | payment | C | live | `upi.123pay` |
 | `in.upi.uap` | UPI agentic payments (UAP), reserved | payment | O | reserved | `upi.uap.*`, `in.upi.uap.*` |
@@ -65,7 +68,7 @@ device-bound, **D** deferred (COD), **N** non-paying.
 | `in.card.agentic` | Network agentic token (Mastercard Agent Pay, Visa Intelligent Commerce) | payment | O | pilot | — |
 | `in.card.emi` | Card EMI (credit or debit) | payment | C | live | — |
 | `in.card.present` | Card present (EMV, contactless) | payment | A | live | — |
-| `in.pos.tap` | UPI Tap and Pay / contactless at POS | payment | A | live | — |
+| `in.pos.tap` | UPI Tap & Pay / contactless at POS | payment | A | live | — |
 | `in.pos.dynamic_qr` | POS / soundbox dynamic QR | payment | A | live | — |
 | `in.netbanking` | Net banking (redirect) | payment | C | live | — |
 | `in.nach.debit` | NACH / eNACH debit mandate | payment | O | live | `in.enach`, `bacp.pay.nach.debit`, `bacp.mandate.enach.register` |
@@ -91,9 +94,9 @@ device-bound, **D** deferred (COD), **N** non-paying.
 | `in.bbps.b2b_invoice` | Bharat Connect for Business (B2B invoice) | payment | C | live | `bacp.pay.bbps.b2b_invoice` |
 | `in.bbps.upms` | BBPS UPMS recurring registration | mandate_registration | O | live | `bacp.mandate.bbps.upms` |
 | `in.erupi` | e-RUPI purpose-bound voucher | payment | O | live | `erupi`, `bacp.pay.erupi` |
-| `in.cbdc.retail` | e-rupee retail wallet | payment | C | pilot | `erupee`, `bacp.pay.cbdc.retail` |
-| `in.cbdc.programmed` | Programmable e-rupee (sponsor-locked) | payment | O | pilot | `bacp.pay.cbdc.programmed` |
-| `in.cbdc.wholesale` | Wholesale e-rupee settlement (reserved) | tracker | N | reserved | `bacp.settle.cbdc.wholesale` |
+| `in.cbdc.retail` | e₹ (Digital Rupee) retail wallet | payment | C | pilot | `erupee`, `bacp.pay.cbdc.retail` |
+| `in.cbdc.programmed` | Programmable e₹ (sponsor-locked) | payment | O | pilot | `bacp.pay.cbdc.programmed` |
+| `in.cbdc.wholesale` | Wholesale e₹ settlement (reserved) | tracker | N | reserved | `bacp.settle.cbdc.wholesale` |
 | `in.aeps.assisted` | AePS / Aadhaar Pay (assisted) | payment | A | live | `bacp.pay.aeps.assisted` |
 | `in.fin.treds` | TReDS invoice discounting | financing | N | live | `bacp.fin.treds` |
 | `in.fin.lc` | Letter of credit (verify and track) | security_verification | N | live | `bacp.fin.lc` |
@@ -114,28 +117,28 @@ OpenAPI document with `uv run python scripts/validate.py`.
 
 | Example | Schema | Expected |
 |---|---|---|
-| [`auction.reverse-l1.json`](https://bacp.dev/latest/examples/auction.reverse-l1.json) | [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | valid |
-| [`auction.sealed-no-deposit.invalid.json`](https://bacp.dev/latest/examples/auction.sealed-no-deposit.invalid.json) | [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | invalid (MUST fail) |
-| [`auction.seller-run.invalid.json`](https://bacp.dev/latest/examples/auction.seller-run.invalid.json) | [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | invalid (MUST fail) |
-| [`credit-ledger-entry.net60-micro.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.net60-micro.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
-| [`credit-ledger-entry.payment-no-evidence.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment-no-evidence.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
-| [`credit-ledger-entry.payment.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment.json) | [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-entry.json) | valid |
-| [`credit-ledger-entry.sale.json`](https://bacp.dev/latest/examples/credit-ledger-entry.sale.json) | [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-entry.json) | valid |
-| [`mandate-negotiation.buyer.json`](https://bacp.dev/latest/examples/mandate-negotiation.buyer.json) | [`mandate-negotiation.json`](https://bacp.dev/schemas/mandate-negotiation.json) | valid |
-| [`mandate-negotiation.disclosed.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.disclosed.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/schemas/mandate-negotiation.json) | invalid (MUST fail) |
-| [`mandate-negotiation.no-reservation.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.no-reservation.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/schemas/mandate-negotiation.json) | invalid (MUST fail) |
-| [`negotiation-session.agreed.json`](https://bacp.dev/latest/examples/negotiation-session.agreed.json) | [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json) | valid |
-| [`negotiation-session.old-state.invalid.json`](https://bacp.dev/latest/examples/negotiation-session.old-state.invalid.json) | [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json) | invalid (MUST fail) |
-| [`offer.accept-with-terms.invalid.json`](https://bacp.dev/latest/examples/offer.accept-with-terms.invalid.json) | [`offer.json`](https://bacp.dev/schemas/offer.json) | invalid (MUST fail) |
-| [`offer.accept.json`](https://bacp.dev/latest/examples/offer.accept.json) | [`offer.json`](https://bacp.dev/schemas/offer.json) | valid |
-| [`offer.b2c-counter.json`](https://bacp.dev/latest/examples/offer.b2c-counter.json) | [`offer.json`](https://bacp.dev/schemas/offer.json) | valid |
-| [`offer.escalate-but-firm.invalid.json`](https://bacp.dev/latest/examples/offer.escalate-but-firm.invalid.json) | [`offer.json`](https://bacp.dev/schemas/offer.json) | invalid (MUST fail) |
-| [`offer.no-acceptance-manner.invalid.json`](https://bacp.dev/latest/examples/offer.no-acceptance-manner.invalid.json) | [`offer.json`](https://bacp.dev/schemas/offer.json) | invalid (MUST fail) |
-| [`offer.withdraw.json`](https://bacp.dev/latest/examples/offer.withdraw.json) | [`offer.json`](https://bacp.dev/schemas/offer.json) | valid |
-| [`payment-plan.gift-upi.json`](https://bacp.dev/latest/examples/payment-plan.gift-upi.json) | [`payment-plan.json`](https://bacp.dev/schemas/payment-plan.json) | valid |
-| [`rfq.sealed.json`](https://bacp.dev/latest/examples/rfq.sealed.json) | [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json) `#/$defs/Rfq` | valid |
-| [`termsheet.b2b-net30.json`](https://bacp.dev/latest/examples/termsheet.b2b-net30.json) | [`termsheet.json`](https://bacp.dev/schemas/termsheet.json) | valid |
-| [`termsheet.b2c-saree.json`](https://bacp.dev/latest/examples/termsheet.b2c-saree.json) | [`termsheet.json`](https://bacp.dev/schemas/termsheet.json) | valid |
-| [`termsheet.emi-nocost.invalid.json`](https://bacp.dev/latest/examples/termsheet.emi-nocost.invalid.json) | [`termsheet.json`](https://bacp.dev/schemas/termsheet.json) | invalid (MUST fail) |
-| [`termsheet.net60-micro-trader.json`](https://bacp.dev/latest/examples/termsheet.net60-micro-trader.json) | [`termsheet.json`](https://bacp.dev/schemas/termsheet.json) | valid |
-| [`termsheet.net60-micro.invalid.json`](https://bacp.dev/latest/examples/termsheet.net60-micro.invalid.json) | [`termsheet.json`](https://bacp.dev/schemas/termsheet.json) | invalid (MUST fail) |
+| [`auction.reverse-l1.json`](https://bacp.dev/latest/examples/auction.reverse-l1.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | valid |
+| [`auction.sealed-no-deposit.invalid.json`](https://bacp.dev/latest/examples/auction.sealed-no-deposit.invalid.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | invalid (MUST fail) |
+| [`auction.seller-run.invalid.json`](https://bacp.dev/latest/examples/auction.seller-run.invalid.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/AuctionSpec` | invalid (MUST fail) |
+| [`credit-ledger-entry.net60-micro.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.net60-micro.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
+| [`credit-ledger-entry.payment-no-evidence.invalid.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment-no-evidence.invalid.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | invalid (MUST fail) |
+| [`credit-ledger-entry.payment.json`](https://bacp.dev/latest/examples/credit-ledger-entry.payment.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
+| [`credit-ledger-entry.sale.json`](https://bacp.dev/latest/examples/credit-ledger-entry.sale.json) | [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-entry.json) | valid |
+| [`mandate-negotiation.buyer.json`](https://bacp.dev/latest/examples/mandate-negotiation.buyer.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | valid |
+| [`mandate-negotiation.disclosed.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.disclosed.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |
+| [`mandate-negotiation.no-reservation.invalid.json`](https://bacp.dev/latest/examples/mandate-negotiation.no-reservation.invalid.json) | [`mandate-negotiation.json`](https://bacp.dev/latest/schemas/mandate-negotiation.json) | invalid (MUST fail) |
+| [`negotiation-session.agreed.json`](https://bacp.dev/latest/examples/negotiation-session.agreed.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) | valid |
+| [`negotiation-session.old-state.invalid.json`](https://bacp.dev/latest/examples/negotiation-session.old-state.invalid.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) | invalid (MUST fail) |
+| [`offer.accept-with-terms.invalid.json`](https://bacp.dev/latest/examples/offer.accept-with-terms.invalid.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | invalid (MUST fail) |
+| [`offer.accept.json`](https://bacp.dev/latest/examples/offer.accept.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | valid |
+| [`offer.b2c-counter.json`](https://bacp.dev/latest/examples/offer.b2c-counter.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | valid |
+| [`offer.escalate-but-firm.invalid.json`](https://bacp.dev/latest/examples/offer.escalate-but-firm.invalid.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | invalid (MUST fail) |
+| [`offer.no-acceptance-manner.invalid.json`](https://bacp.dev/latest/examples/offer.no-acceptance-manner.invalid.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | invalid (MUST fail) |
+| [`offer.withdraw.json`](https://bacp.dev/latest/examples/offer.withdraw.json) | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | valid |
+| [`payment-plan.gift-upi.json`](https://bacp.dev/latest/examples/payment-plan.gift-upi.json) | [`payment-plan.json`](https://bacp.dev/latest/schemas/payment-plan.json) | valid |
+| [`rfq.sealed.json`](https://bacp.dev/latest/examples/rfq.sealed.json) | [`negotiation-session.json`](https://bacp.dev/latest/schemas/negotiation-session.json) `#/$defs/Rfq` | valid |
+| [`termsheet.b2b-net30.json`](https://bacp.dev/latest/examples/termsheet.b2b-net30.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | valid |
+| [`termsheet.b2c-saree.json`](https://bacp.dev/latest/examples/termsheet.b2c-saree.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | valid |
+| [`termsheet.emi-nocost.invalid.json`](https://bacp.dev/latest/examples/termsheet.emi-nocost.invalid.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | invalid (MUST fail) |
+| [`termsheet.net60-micro-trader.json`](https://bacp.dev/latest/examples/termsheet.net60-micro-trader.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | valid |
+| [`termsheet.net60-micro.invalid.json`](https://bacp.dev/latest/examples/termsheet.net60-micro.invalid.json) | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | invalid (MUST fail) |
