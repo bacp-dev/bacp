@@ -65,7 +65,8 @@
       "process": {
         "max_rounds": 10,
         "deadline": "2026-10-13T20:00:00+05:30",
-        "firm_counter_allowed": true
+        "firm_counter_allowed": true,
+        "accept_confirmation": "ask"
       },
       "step_up": {
         "any_violation": true,

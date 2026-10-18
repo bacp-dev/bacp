@@ -1589,8 +1589,14 @@ paths:
         \ a bacp.neg TagGroup. The gateway never holds or uses an agent key.\n- A firm counter outside the negotiation mandate is never sent.\
         \ The response is 200 with `requires_escalation`, or the agent may resend with subject_to_principal_approval true (forces firm false).\n\
         - A counter that cites a non-live offer returns 409 NEG_STALE_OFFER. A counter on an expired offer returns 200\n  message NEG_OFFER_EXPIRED\
-        \ (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt. The crossing rule (earlier CounterSignature\
-        \ timestamp wins) is applied by\n  the gateway and reflected in offers[].state.\n- A firm offer, counter_offer or bid draft without\
+        \ (a fresh `offer` is allowed while rounds and deadline remain).\n- A withdraw is effective on receipt. The gateway decides\
+        \ crossings from transcript order, never from timestamps: times are informational. Read offers[].state and the message crossing_contested,\
+        \ and never resend. The response carries counter_signature (a CounterSignaturePayload) for the message just sent, returned in the synchronous\
+        \ response of the exchange; without a verifying one, a crossing that depends on it is contested.\n- A gateway fills sender_log_seq,\
+        \ sender_log_prev and protocol_terms in the signed bytes of every firm message; a model never supplies them. NEG_CLOCK_SKEW (422) means do\
+        \ not re-sign and retry. crossing_contested means stop: the principal decides.\n- A buyer withdraw that names accept_msg_hash withdraws\
+        \ the buyer's purchase offer (ICA s.5) until the seller's on_init receipt. It needs no presence proof. An agent terminate of an AGREED or\
+        \ BOUND negotiation without the Trusted Surface event negotiation.agreed.declined is refused with 403 presence_not_proven.\n- A firm offer, counter_offer or bid draft without\
         \ acceptance_revocation returns 400 NEG_SCHEMA_INVALID; the gateway never inserts a value. waived needs waiver_basis (a contract\
         \ or the buyer's own RFQ, with hash). A draft with acceptance_revocation allowed_until_receipt is refused with 403 capabilities_incompatible\
         \ and nothing is sent.\n- An accept_revoke draft carries accept_msg_hash and offer_hash. In this version no offer sets allowed_until_receipt,\
@@ -1683,7 +1689,15 @@ paths:
 
         checkout session, whose checkout_hash is the hash of the BPP-signed quote (not the offer hash).
 
-        Outside the mandate: 200 with requires_escalation, then retry with step_up_id after approval.
+        Outside the mandate: 200 with requires_escalation, then retry with step_up_id after approval. Where the accept_confirmation of the mandate
+
+        is ask or absent, an acceptable verdict also gives 200 with requires_escalation and a confirm step-up (reason accept_confirmation); call again
+
+        with step_up.step_up_id after the state leaves ESCALATED (the id goes to your gateway only). Under autonomous with a usable notice_route the gateway
+
+        sends the accept and the principal receives an agreed_by_agent or purchase_offered_by_agent notice by a route the agent does not control.
+
+        Within 5 seconds of the offer''s expires_at the gateway refuses locally with NEG_OFFER_EXPIRED and sends nothing.
 
         '
       parameters:
@@ -4898,8 +4912,9 @@ components:
           - recoverable
           - requires_buyer_input
           - requires_buyer_review
+          - requires_seller_review
           - unrecoverable
-          description: What the agent may do next; the value registered for this code in the error registry.
+          description: What the agent may do next; the value registered for this code in the error registry. requires_buyer_review addresses the buyer principal and requires_seller_review the seller principal of the emitting gateway; on either the agent MUST NOT approve.
         reasons:
           type: array
           items:
@@ -5001,6 +5016,7 @@ components:
           - recoverable
           - requires_buyer_input
           - requires_buyer_review
+          - requires_seller_review
           - unrecoverable
     Profile:
       type: object
@@ -6579,7 +6595,9 @@ components:
           - afa_crossborder_cnp
           - presence_proof
           - rail_fallback
-          description: presence_proof is the reason of a post_order step-up. rail_fallback is a confirm step-up raised when a leg of a
+          - accept_confirmation
+          - rfq_prescribes_waiver
+          description: accept_confirmation is the reason of a negotiation confirm step-up raised when the guard returned acceptable and the mandate's accept_confirmation is ask (or absent) and the agent calls accept. rfq_prescribes_waiver is the reason of a negotiation confirm step-up raised when an agent creates an RFQ that sets acceptance_revocation_required waived, because that waives the principal's own ICA s.5 right. presence_proof is the reason of a post_order step-up. rail_fallback is a confirm step-up raised when a leg of a
             multi-seller basket has no human-not-present handler, or when the planned payment of a leg changes its funding, fee-bearer, payee or
             collector; a rail-only change is logged in comparison[] and raises no step-up.
         summary:
@@ -7015,6 +7033,8 @@ components:
           - negotiation_mandate.revoked
           - negotiation.step_up.approved
           - negotiation.step_up.declined
+          - negotiation.agreed.declined
+          - negotiation.purchase_offer.withdrawn
           - negotiation.request_extension
           - instruments.reported
           - loan.accepted
@@ -7036,8 +7056,11 @@ components:
         presentation:
           $ref: '#/components/schemas/Presentation'
           description: What the Trusted Surface presented and what the principal did. REQUIRED on step_up.approved, negotiation.step_up.approved,
-            mandate.activated, loan.accepted and payment.afa_completed. On step_up.approved it MUST carry checkout_hash; on negotiation.step_up.approved
-            it MUST carry offer_hash; never both. On either approval its user_action is never decline.
+            negotiation.agreed.declined, negotiation.purchase_offer.withdrawn, mandate.activated, loan.accepted and payment.afa_completed. On
+            step_up.approved it MUST carry checkout_hash; on negotiation.step_up.approved, negotiation.agreed.declined and
+            negotiation.purchase_offer.withdrawn it MUST carry offer_hash; never both. On any of these its user_action is never decline; on
+            negotiation.agreed.declined and negotiation.purchase_offer.withdrawn the principal confirms the decline or the withdrawal with a factor,
+            and the signed event with its Presentation is the proof of presence for that act (no agent carries an hp_proof for it).
         source:
           type: object
           additionalProperties: true
@@ -7051,7 +7074,13 @@ components:
         offer_hash:
           $ref: '#/components/schemas/Hash'
           description: On negotiation.step_up.approved, the offer_hash of the offer the step-up names. Equals presentation.offer_hash; a mismatch
-            is refused with 403 ts_render_mismatch.
+            is refused with 403 ts_render_mismatch. On negotiation.agreed.declined, the offer_hash of the accepted offer whose agreed or bound
+            terms the principal declines. On negotiation.purchase_offer.withdrawn, the offer_hash of the non-firm offer that the principal's purchase
+            offer named.
+        end_negotiation:
+          type: boolean
+          description: On negotiation.step_up.declined only. true = the principal also ends the negotiation, so that declining stays as easy as approving;
+            the gateway sends terminate with reason principal_instruction.
         diff_ack:
           type: string
         attestation:
@@ -7071,6 +7100,8 @@ components:
               enum:
               - step_up.approved
               - negotiation.step_up.approved
+              - negotiation.agreed.declined
+              - negotiation.purchase_offer.withdrawn
               - mandate.activated
               - loan.accepted
               - payment.afa_completed
@@ -7079,6 +7110,27 @@ components:
         then:
           required:
           - presentation
+      - if:
+          properties:
+            event:
+              enum:
+              - negotiation.agreed.declined
+              - negotiation.purchase_offer.withdrawn
+          required:
+          - event
+        then:
+          required:
+          - negotiation_id
+          - offer_hash
+          - presentation
+          properties:
+            presentation:
+              required:
+              - offer_hash
+              properties:
+                user_action:
+                  not:
+                    const: decline
       - if:
           properties:
             event:
@@ -7595,11 +7647,17 @@ components:
             $ref: '#/components/schemas/TrustedSurfaceEvent'
         ts_renders:
           type: array
-          description: The gateway-signed ts_render (compact JWS) of every step-up that a step_up.approved or step_up.declined event in
-            trusted_surface_events names, byte-identical to what the Trusted Surface fetched. Verification step 6 checks each against its event's
+          description: The gateway-signed ts_render (compact JWS) of every step-up that a step_up.approved, step_up.declined,
+            negotiation.step_up.approved or negotiation.step_up.declined event in trusted_surface_events names, byte-identical to what the Trusted Surface fetched. Verification step 6 checks each against its event's
             content_hash and against the seller-signed quote.
           items:
             $ref: '#/components/schemas/Jws'
+        notice_renders:
+          type: array
+          description: For every autonomous act of the transaction, the gateway-signed notice render and the receipt of its delivery to the
+            principal by the notice_route, so that a reviewer can answer "I never agreed" from the notice's content_hash.
+          items:
+            $ref: '#/components/schemas/NoticeRender'
         ts_render_digests:
           type: array
           description: Only in a bundle released to a seller or a payer PSP. For each summary step-up over a multi-seller basket, the sha-256 of
@@ -7610,6 +7668,9 @@ components:
         verification:
           type: object
           description: Result of the dispute verification run by the gateway (the AP2 five steps plus step 6, Trusted Surface events)
+          required:
+          - steps_passed
+          - chain_valid
           properties:
             steps_passed:
               type: integer
@@ -7619,7 +7680,7 @@ components:
             catalogue_result:
               enum: [passed, failed, not_applicable]
               description: Result of the step-6 catalogue checks over the entries that were checked. not_applicable when the bundle has no
-                Disclosures.catalogue[]. A failed result does not stop POST /issues.
+                checkout.disclosures.catalogue[]. A failed result does not stop POST /issues.
             catalogue_unchecked:
               type: array
               uniqueItems: true
@@ -7722,7 +7783,8 @@ components:
           $ref: ../schemas/negotiation-session.json#/$defs/Mode
         profile:
           type: string
-          description: Trade-model profile id, e.g. b2c.ecom, b2b.procurement
+          description: Trade-model profile id, e.g. b2c.ecom, b2b.procurement. Derived by the gateway from the mandate and pinned when the session
+            opens; a value that differs from the mandate's is refused with 403 mandate_scope_mismatch.
         negotiation_mandate_ref:
           type: string
           pattern: ^mdt_[A-Za-z0-9]{12,40}$
@@ -7754,7 +7816,7 @@ components:
           default: 4000
     NegotiationMessageDraft:
       type: object
-      description: 'Agent-submitted draft. The gateway fills envelope fields (msg_id, round, dispatched_at, from, signatures), applies
+      description: 'Agent-submitted draft. The gateway fills envelope fields (msg_id, round, dispatched_at, sender_log_seq, sender_log_prev, protocol_terms, from, signatures), applies
 
         the patch to the live term sheet, computes all_in_total and expires_at, then guards, validates and signs.
 
@@ -7843,7 +7905,8 @@ components:
         accept_msg_hash:
           $ref: ../schemas/common.json#/$defs/Hash
           description: For accept_revoke, REQUIRED with offer_hash. The msg_hash of the accept to revoke; offer_hash is the offer that accept
-            names.
+            names. For withdraw by a buyer, optional with offer_hash. The msg_hash of the buyer's own accept whose legal_effect is purchase_offer,
+            so that the withdraw revokes that purchase offer until the seller's on_init receipt.
       allOf:
       - if:
           properties:
@@ -7898,13 +7961,61 @@ components:
           type: string
         step_up_id:
           type: string
-          description: Present after the principal approved an out-of-mandate deal
+          description: Present after the principal approved an out-of-mandate deal, or an acceptable deal under accept_confirmation ask. It goes to
+            the agent's own gateway only and never reaches the seller. A negotiation approval that names a checkout step-up is refused with 403
+            ts_render_mismatch.
       not:
         anyOf:
         - required:
           - term_sheet
         - required:
           - term_sheet_patch
+    CounterSignaturePayload:
+      $ref: ../schemas/offer.json#/$defs/CounterSignaturePayload
+    ProtocolTerms:
+      $ref: ../schemas/offer.json#/$defs/ProtocolTerms
+    AuctionState:
+      $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
+    StandingAccept:
+      $ref: ../schemas/negotiation-session.json#/$defs/StandingAccept
+    NoticeRender:
+      type: object
+      description: A gateway-signed notice (agreed_by_agent or purchase_offered_by_agent) about an autonomous negotiation act, built from the
+        gateway's templates in the principal's language and never from agent prose, with the receipt of its delivery by the mandate's notice_route.
+        It is not a step-up, and the principal approves nothing. It carries no URI other than revoke_route, the stop route and grievance_contact, and no
+        urgency text.
+      required:
+      - code
+      - render
+      - content_hash
+      - delivery
+      properties:
+        code:
+          enum:
+          - agreed_by_agent
+          - purchase_offered_by_agent
+        render:
+          $ref: '#/components/schemas/Jws'
+          description: The notice as a compact JWS signed with the gateway's BAP registry key over the JCS form of its content (party name,
+            offeror_kind, all-in total, quantity and unit, current-stage cancellation charge, stop route, revoke_route, grievance_contact).
+        content_hash:
+          $ref: '#/components/schemas/Hash'
+        delivery:
+          type: object
+          required:
+          - route
+          - delivered_at
+          properties:
+            route:
+              $ref: ../schemas/mandate-negotiation.json#/$defs/NegotiationConstraints/properties/process/properties/notice_route
+            delivered_at:
+              type: string
+              format: date-time
+            receipt_ref:
+              type: string
+              description: The delivery receipt of the route, where the route gives one.
+          additionalProperties: false
+      additionalProperties: false
     ReceiptRef:
       type: object
       required:

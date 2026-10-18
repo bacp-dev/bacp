@@ -1,0 +1,14 @@
+{
+  "max_price": {
+    "value": 180000,
+    "currency": "INR"
+  },
+  "qty": 10,
+  "mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+  "signature": {
+    "role": "mandate_manager",
+    "kid": "mm.psp.example.in|k3",
+    "alg": "ES256",
+    "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+  }
+}

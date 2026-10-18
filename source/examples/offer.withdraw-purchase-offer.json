@@ -1,0 +1,35 @@
+{
+  "type": "withdraw",
+  "msg_id": "nmsg_B5wdr2Kq2",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:12+05:30",
+  "sender_log_seq": 20,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz6",
+  "protocol_terms": {
+    "version": "2026-10-17",
+    "hash": "sha-256:9uJbQ1xqk3mQ0yP7Zf2c8nT5vRwLhA6sDeXoGiUy4Nc"
+  },
+  "from": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in",
+    "agent_id": "did:web:agents.vaani.example.in:sakhi",
+    "offeror_kind": "agent"
+  },
+  "signatures": [
+    {
+      "role": "bap",
+      "kid": "bap.vaani.example.in|ukid-7|ed25519",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "reason": "offeror_choice",
+  "to": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in"
+  },
+  "accept_msg_hash": "sha-256:lJRtoHUIQckYFk7BASGC6sKjJ-XUVuGwnPAf-YDVEAs"
+}

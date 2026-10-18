@@ -268,7 +268,8 @@ trusting the agent or its operator.
 | `discovery_response` | The signed `POST /discover` response as `{status, body, content_digest, signature_input, signature}`, where `body` is the response content exactly as sent, with no content coding, and its sha-256 is the `content_hash` of the session's agent-written `discover` InstructionLog entry. REQUIRED when `Disclosures.catalogue[]` is present and that entry exists. The verifier rebuilds the signature base from `status` (`@status`) and the stored `content_digest`. |
 | `discovery_sources[]` | For a session whose items came from `POST /discover`: the BPP-signed `on_search` callback behind every `source_digest` in `checkout.disclosures.catalogue[]`, each as `{body, authorization}` exactly as the gateway received it ([Retention of the signed callbacks](discovery.md#catalogue-retention)). A verifier checks that the sha-256 of each `body` equals the `source_digest` and that the `authorization` verifies against the BPP's registry key, and compares the item values in the body with `checkout.disclosures.catalogue[]`. |
 | `trusted_surface_events[]` | Every signed Trusted Surface event of the transaction, verbatim as received at `/trusted-surface/events` (step-up results, mandate activation, credit acceptance, AFA completion), each with its [`Presentation`](human-participants.md#presentation). |
-| `ts_renders[]` | The gateway-signed [`ts_render`](human-participants.md#ts-render) (compact JWS) of every step-up that a `step_up.approved` or `step_up.declined` event in `trusted_surface_events[]` names, byte-identical to what the Trusted Surface fetched. In a bundle released to a seller or a payer PSP, a summary step-up's render is left out and `ts_render_digests[]` carries it instead. |
+| `ts_renders[]` | The gateway-signed [`ts_render`](human-participants.md#ts-render) (compact JWS) of every step-up that a `step_up.approved`, `step_up.declined`, `negotiation.step_up.approved` or `negotiation.step_up.declined` event in `trusted_surface_events[]` names, byte-identical to what the Trusted Surface fetched. In a bundle released to a seller or a payer PSP, a summary step-up's render is left out and `ts_render_digests[]` carries it instead. |
+| `notice_renders[]` | For every autonomous negotiation act of the transaction: the gateway-signed notice (`agreed_by_agent` or `purchase_offered_by_agent`) and the receipt of its delivery to the principal by the mandate's `notice_route`, as `{code, render, content_hash, delivery}`. A notice is not a step-up and has no event. A reviewer answers "I never agreed" from its `content_hash`. |
 | `ts_render_digests[]` | Only in a bundle released to a seller or a payer PSP: for each summary step-up over a [multi-seller basket](checkout/index.md#multi-seller-basket), `{step_up_id, render_hash, cover}`, where `render_hash` is the sha-256 of its `ts_render` and `cover` is the `covers[]` entry of this transaction's leg. The other sellers' lines stay out of the bundle. |
 | `verification` | The gateway's own result: `steps_passed` (0 to 6), `chain_valid`, and for step 6 `catalogue_result` and `catalogue_unchecked[]`. |
 | `bundle_signature` | The operator's signature over the whole bundle minus `bundle_signature`. |
@@ -308,12 +309,18 @@ chain is valid, and the bundle signature verifies:
    carries. Every `step_up.approved`, `mandate.activated`, `loan.accepted` and
    `payment.afa_completed` event carries a `Presentation`, and for a step-up its `content_hash` is
    the hash of the step-up's `ts_render` and its `checkout_hash` is the bundle's `checkout_hash`.
+   A contested crossing records `late_receipt_party` in its transcript entry; two receipts at one `log_seq` that name different
+   entries, or a decrease of `received_at` along a chain without `clock_step_observed`, is `evidence_unverifiable`.
    A `negotiation.step_up.approved` event carries a `Presentation` with `offer_hash` instead of
    `checkout_hash`: the verifier **MUST** check that it equals the `offer_hash` of the step-up's
    `ts_render` and of the signed offer in the bundle's negotiation transcript, and that the
    `ts_render`'s `acceptance_revocation`, where present, equals that offer's value; the quote
    comparisons below do not apply to such an event.
-   For every step-up event, `ts_renders[]` **MUST** hold a `ts_render` whose sha-256 is that
+   `negotiation.step_up.approved` and `negotiation.step_up.declined` are step-up events for the next rule: their `ts_render`
+   MUST be in `ts_renders[]`, with its hash and signature checked, and a missing one is `evidence_unverifiable`; the
+   quote comparisons below never apply to them. A `negotiation.agreed.declined` or `negotiation.purchase_offer.withdrawn`
+   event carries a `Presentation` with `offer_hash`, which the verifier checks against the offer in the negotiation transcript.
+   For every other step-up event, `ts_renders[]` **MUST** hold a `ts_render` whose sha-256 is that
    `content_hash` (where the event carries one) and whose signature verifies against the gateway's
    registry key, and the verifier **MUST** compare its `total`, its payee (`seller_name`) and its
    `checkout_hash` with the BPP-signed quote in `checkout`, and its `price_breakup_hash` with
@@ -356,7 +363,9 @@ chain is valid, and the bundle signature verifies:
    recorded as unchecked and does not fail the step. This
    makes the verifier, not the gateway, the judge of whether the sponsorship and prior price shown at checkout are those
    the seller sent.
-   Any failure is `evidence_unverifiable`. Step 6 proves what the principal was shown and, through
+   Any other failure of step 6 is `evidence_unverifiable`; a catalogue check that fails or is unchecked is recorded in
+   `verification.catalogue_result` and `catalogue_unchecked[]` and does not stop the issue (see
+   [Attaching evidence to an IGM issue](#igm-attachment)). Step 6 proves what the principal was shown and, through
    [`EvidenceBundle.checkout.bpp_signed_payment_terms`](#contents), whom the seller asked to be
    paid; neither the quote nor `ts_render` carries the payee's VPA or settlement account.
 

@@ -4,7 +4,13 @@
   "negotiation_id": "neg_SAREE7Q2W9",
   "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
   "round": 3,
-  "dispatched_at": "2026-10-13T11:05:10.400+05:30",
+  "dispatched_at": "2026-10-13T11:05:10+05:30",
+  "sender_log_seq": 5,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz1",
+  "protocol_terms": {
+    "version": "2026-10-17",
+    "hash": "sha-256:9uJbQ1xqk3mQ0yP7Zf2c8nT5vRwLhA6sDeXoGiUy4Nc"
+  },
   "from": {
     "role": "buyer",
     "np_id": "bap.vaani.example.in",

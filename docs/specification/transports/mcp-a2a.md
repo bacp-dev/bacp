@@ -227,6 +227,8 @@ answer, so that a client agent never answers on the principal's behalf what only
 `TASK_STATE_AUTH_REQUIRED` is a signal, not an authorisation: the task resumes only after the Mandate Manager or PSP posts a
 signed step-up result to the gateway.
 
+**Negotiation notices and declines over A2A.** A2A has no state for "notice only". The `ask` confirmation (`accept_confirmation`), a contested crossing and the decline of an `AGREED` or `BOUND` deal map to `TASK_STATE_AUTH_REQUIRED` or `TASK_STATE_INPUT_REQUIRED` as the table shows (`ESCALATED`; a counter to answer). The `agreed_by_agent` and `purchase_offered_by_agent` notices are `info` messages that change no task state: the gateway delivers the notice to the principal by the mandate's `notice_route`, and a client agent MUST NOT forward, summarise or answer it. Every negotiation tool response and task DataPart carries the synchronous `counter_signature` for the message just sent, and a client agent that sees `crossing_contested` stops and does not resend.
+
 ### How mandates travel {#a2a-mandates}
 
 - Mandates are never created over A2A. `bacp.mandate` requests a mandate; the buyer approves it on the Trusted

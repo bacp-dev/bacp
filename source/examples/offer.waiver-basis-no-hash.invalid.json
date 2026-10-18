@@ -5,6 +5,12 @@
   "transaction_id": "3e7b9c10-5d2a-4f61-8a0e-6c4d2b1f9e27",
   "round": 1,
   "dispatched_at": "2026-10-14T10:00:00+05:30",
+  "sender_log_seq": 18,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz4",
+  "protocol_terms": {
+    "version": "2026-10-17",
+    "hash": "sha-256:9uJbQ1xqk3mQ0yP7Zf2c8nT5vRwLhA6sDeXoGiUy4Nc"
+  },
   "from": {
     "role": "seller",
     "np_id": "bpp.tilhan.example.in",

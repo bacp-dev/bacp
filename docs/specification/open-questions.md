@@ -116,6 +116,8 @@ are involved, the owner is the one that must give the answer.
 | [Q-81](#q-81) | Retained payment charges, MDR on refunds and on UPI mandates | Legal counsel, NPCI | Open, fail-safe default |
 | [Q-82](#q-82) | Whether the UCP checkout projection pins a tagged UCP release or a commit | BACP WG | Open, fail-safe default |
 | [Q-83](#q-83) | Counsel flags from the plan, ledger and trade-act bindings | Legal counsel | Open, fail-safe default |
+| [Q-84](#q-84) | Whether the Legal Metrology (Indian Standard Time) Rules reach machine timestamps | Legal counsel, ONDC | Open |
+| [Q-85](#q-85) | Counsel flags from the negotiation timing rules | Legal counsel | Open, fail-safe default |
 
 ## Questions {#questions}
 
@@ -392,6 +394,13 @@ REST, MCP or A2A no value is permitted, so only non-firm offers are possible the
 7. Does a "delete for everyone" in a messaging app, or a call asking the other party to stop before the message is
    read, count as a revocation under ss.4–5?
 
+**Protocol terms (18-10-2026).** Every firm message now names `protocol_terms{version, hash}`, which state, among other
+things, the stipulation of IT Act s.12(2). Two further points for counsel: whether IT Act s.11 attribution makes a hash
+that an agent sends the principal's agreement for s.13, and whether a consumer's approval on the Trusted Surface that
+cites the terms is "otherwise agreed" under s.13. Section 11 was not re-read for this change (not verified as of
+18-10-2026). Whether a buyer may revoke an agent's purchase offer until the seller's `on_init` is dispatched is also
+for counsel ([Withdrawal of a purchase offer](negotiation/index.md#withdrawal-rejection-and-termination)).
+
 ### Q-20 Fees and the MRP ceiling {#q-20}
 
 !!! note "Non-blocking: fail-safe default"
@@ -458,6 +467,13 @@ network validators accept. In this version an offer with `acceptance_revocation:
 every leg; on a Beckn leg the refusal stays until such a carrier exists
 ([sunset condition (e)](negotiation/index.md#acceptance-revocation-sunset)).
 
+**Beckn carriers for negotiation receipts and withdrawals (18-10-2026).** Two carriers are not defined for Beckn legs and
+go to ONDC: a `bacp.receipt` TagGroup in `Ack.tags` (RET 1.2.5 `Ack` has `tags`; ONDC core v0 has `status` only; whether
+validators and live participants accept it is not verified as of 18-10-2026), and a buyer's withdrawal of a purchase offer
+(an `init` withdrawn before `on_init`) with a buyer `terminate`. Until then every Beckn crossing that depends on an
+unreceipted message is contested, and the stop control is absent on a Beckn consumer purchase-offer notice. ONDC is also
+asked whether cancellation terms apply before `on_confirm`.
+
 ### Q-23 Transcript escrow key {#q-23}
 
 **Question.** Who governs the regulator escrow key for negotiation transcripts?<br>
@@ -479,6 +495,10 @@ every leg; on a Beckn leg the refusal stays until such a carrier exists
 
 **Working position.** A network-designated service; GeM and eNAM for their own markets. See
 [RFQ and Auctions](negotiation/rfq-and-auctions.md).
+
+**Dutch award audit (18-10-2026).** Dutch awards follow the auctioneer's chain order, and `tick_close` makes a later
+reordering provable. It does not prevent a rogue auctioneer from choosing the processing order of near-simultaneous
+arrivals in the first place, so a neutral auctioneer is still needed.
 
 ### Q-26 Unsolicited `on_select` {#q-26}
 
@@ -661,14 +681,33 @@ agreed to between the originator and the addressee", so the parties may agree th
 normative as protocol terms that participants agree to, in the sense of the Information Technology Act, 2000, s.13.
 Until Q-52 is settled:
 
-- When a `withdraw` and an `accept` cross and the outcome is decided by the BACP crossing rule, the buyer gateway
-  MUST NOT proceed to `init`, `complete` or `confirm` on that deal automatically. It MUST escalate to the buyer
-  principal on the Trusted Surface (`requires_buyer_review`), and proceeds only on the principal's confirmation.
-- The crossing outcome (`withdraw_lost_crossing`, `accept_void_withdrawn`, `seller_accept_void`) is still recorded
-  in the transcript as evidence.
+- When a `withdraw` and an `accept` cross and the outcome is decided by the BACP crossing rule, neither gateway
+  proceeds to `init`, `complete` or `confirm` on that deal automatically. The buyer gateway MUST escalate to the buyer
+  principal on the Trusted Surface (`requires_buyer_review`), the seller gateway MUST raise the case to the seller
+  principal (`requires_seller_review`) and MUST NOT auto-confirm, and each proceeds only on its principal's
+  confirmation. The fail-safe is two-sided.
+- The crossing outcome (`withdraw_lost_crossing`, `accept_void_withdrawn`, `seller_accept_void`, `crossing_contested`)
+  is still recorded in the transcript as evidence.
 
-Still open: whether the courts would treat CounterSignature timestamps and the crossing tie-break as the time of
-dispatch and receipt.
+**The rule since 18-10-2026.** A crossing is decided by transcript positions inside the loser's own chain, never by
+timestamps ([Contested crossings](negotiation/index.md#contested-crossings)). Where the positions do not decide it, the
+outcome is `crossing_contested`: BACP evidence does not settle formation, neither gateway proceeds and the protocol
+records no breach event. BACP does not say "no contract", because a protocol term cannot declare that no contract
+exists.
+
+Still open, for counsel:
+
+1. Whether an agreed protocol term (IT Act s.13 "save as otherwise agreed"; s.12(2); ICA s.7(2)) can fix the dispatch and
+   knowledge moments of ICA s.4 as countersigned transcript positions, with an unprovable order treated as "BACP
+   evidence does not settle formation".
+2. Whether a time tie-break survives anywhere against the Illustration to s.5 (moot under the committed-order rule
+   unless one is added).
+3. Whether a principal who declines a deal formed by a crossing and held under the fail-safe is in breach, and whether
+   a `principal_declined` under permitting terms is ever a breach.
+4. Whether an acceptance dispatched before `expires_at` but received after it is in time unless the offer prescribes
+   receipt, and whether the hashed `protocol_terms` statement that `expires_at` is a receipt deadline displaces that.
+5. Whether Rule 4(8) of the E-Commerce Rules (parity) limits a `principal_declined` charge before `CONTRACTED` in
+   consumer sessions.
 
 ### Q-54 Token requestor duties {#q-54}
 
@@ -754,6 +793,11 @@ Mandate at the gateway does not reach the MM, which revokes the root's Reserve P
 treats the siblings as revoked at once and keeps each block as exposure until its revocation is confirmed or it
 expires ([Revocation](mandates.md#revocation)). The same gap covers the status of a gateway's conformance attestation: the MM
 reads the attestation's status list itself ([Q-60](#q-60)), and a gateway-to-MM event for it is part of this question.
+
+**Notice route (18-10-2026).** BACP defines no gateway-to-Trusted-Surface notice channel either: `StepUp.delivery:
+app_push` is a push from the gateway to the principal with no defined endpoint. The negotiation mandate therefore carries
+`process.notice_route` (`mm_event`, `tel` or `sms`), and `autonomous` takes effect only with a usable one. If this
+question defines a gateway-to-Mandate-Manager event, it becomes an allowed `mm_event` value.
 
 ### Q-62 Certification of assisted operators {#q-62}
 
@@ -1047,6 +1091,46 @@ version. Whether a later BACP release re-pins to a tag is open; a re-pin re-runs
 (3) A `TCS` line never enters a buyer-facing total or a projected UCP total. (4) The question is recorded and no
 allocation is made by BACP. (5) Statement acknowledgements are limited as above and a per-entry dispute stays possible.
 
+### Q-84 Whether the Legal Metrology (Indian Standard Time) Rules reach machine timestamps {#q-84}
+
+**Question.** The Legal Metrology (Indian Standard Time) Rules, 2026 (G.S.R. 761(E)), Rule 7, say that "No entity shall use,
+display or record any time reference other than Indian Standard Time (IST) for all purposes". The Rules are notified and not
+in force as of 18-10-2026; they commence 180 days after publication, about 24-02-2027 (the exact day is not verified). From
+commencement, does Rule 7 prohibit (a) storing or transmitting RFC 3339 timestamps with `Z` or `+00:00` that denote the
+same instant as an IST time, (b) RFC 9421 `created` Unix-epoch integers, or (c) the `Z` timestamps that ONDC's validator
+requires on Beckn messages? Is the "standard format" of Rule 5 a mandatory format for machine records or only for display?
+Does Rule 7 reach entities outside the critical sectors of Rule 8(4)? Do Rules 5(2) and 6(1) bind times shown on a Trusted
+Surface render?<br>
+**Owner.** Legal counsel, ONDC (for the `Z` on `context.timestamp`).
+
+**Working position.** Every comparison is on instants. BACP-owned timestamps SHOULD carry `+05:30`; Beckn `context.timestamp`
+follows ONDC and keeps `Z`; every time shown or told to a person on a Trusted Surface is in IST; participants keep clocks
+traceable to NIC or NPL time. Under the committed-order rule the values that decide formation are integers, not time
+references. A schema pattern that required `+05:30` is not adopted now, because it would be breaking and cannot be met on
+Beckn. The SHOULD becomes a MUST, if counsel says Rule 7 reaches machine timestamps, in a release dated before 24-02-2027.
+
+### Q-85 Counsel flags from the negotiation timing rules {#q-85}
+
+**Question.** Points for legal counsel, none of which blocks the rules:
+
+1. Whether a principal-signed `standing_accept` is the principal's own acceptance under ICA s.7.
+2. Whether an agent may accept a bid for a farmer under eNAM or APMC rules.
+3. Whether one Trusted-Surface-signed negotiation mandate is "explicit and affirmative action" under Rule 4(9) of the
+   E-Commerce Rules for each later purchase.
+4. Whether a gateway or agent operator is the principal's agent under ICA Chapter X (s.214).
+5. Whether a buyer's signed declaration of commercial purpose can displace consumer status under the Consumer Protection Act,
+   2019, s.2(7) for a sole proprietor's livelihood purchase.
+6. Whether a Dutch tick acceptance is a bid under the Sale of Goods Act, 1930, s.64(2), whether an instant award is the
+   announcement, and whether s.62 can exclude retraction ([Q-35](#q-35)).
+
+**Owner.** Legal counsel.
+
+**Working position (fail-safe default).** (1) A standing accept exists only where the auctioneer enables it, and absent it
+only the base rule applies. (2) An `agri` seller gateway treats `accept_confirmation` as `ask`, so a farmer always taps their
+own acceptance. (3) `accept_confirmation` is never preselected and an absent key is `ask`. (4) The operator's role is
+recorded and no allocation is made by BACP. (5) A consumer marker always wins. (6) The text says that the bidder's tick
+message is legally a bid and that the award completes the sale.
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
@@ -1135,6 +1219,10 @@ depends?<br>
 
 Whether ONDC validators accept the `bacp` TagGroups at all is [Q-09](#q-09). See
 [Beckn / ONDC Binding](transports/beckn.md#signing) and [Negotiation](negotiation/index.md).
+
+**Receipts in `Ack.tags` (18-10-2026).** Transport `Ack` signing is still not required. A `bacp.receipt` TagGroup in the
+`Ack` carries a CounterSignature that verifies on its own by the counterparty's registry key, so it does not borrow trust
+from the transport. See [Q-22](#q-22) for the ONDC dependency.
 
 ### Q-47 Purpose-code governance {#q-47}
 

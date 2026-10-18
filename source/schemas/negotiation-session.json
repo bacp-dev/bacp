@@ -18,7 +18,8 @@
     "negotiation_deadline",
     "transcript",
     "messages",
-    "created_at"
+    "created_at",
+    "protocol_terms"
   ],
   "properties": {
     "negotiation_id": {
@@ -36,6 +37,19 @@
         "buyer",
         "seller"
       ]
+    },
+    "profile": {
+      "type": "string",
+      "readOnly": true,
+      "description": "The one trade profile the session declares (for example b2c.ecom or b2b.procurement), fixed when the session opens. The buyer side declares it in a buyer-signed message and the buyer gateway fills it from the mandate; a profile a model supplies that differs is refused with 403 mandate_scope_mismatch. Either party MAY refuse a profile with capabilities_incompatible (reason profile_not_supported or profile_misdescribed). A seller never reclassifies it."
+    },
+    "acting_for_kind": {
+      "enum": [
+        "individual",
+        "business"
+      ],
+      "readOnly": true,
+      "description": "Whom the buyer side acts for, declared at session open and pinned. A consumer marker always wins: a GSTIN does not end consumer status (Consumer Protection Act, 2019 s.2(7), Explanation (a))."
     },
     "state": {
       "enum": [
@@ -341,10 +355,21 @@
           },
           "counter_signature": {
             "$ref": "common.json#/$defs/Jws",
-            "description": "BACP CounterSignature: a JWS by the receiving participant's registry key over (request digest, message id); not a Beckn signed ACK, so it does not depend on the Beckn version. Its timestamp is received_at, the time of receipt. Proves communication (ICA s.4). Settled in Q-43. Its payload MAY carry log_entry_hash, the hash of the receiver's instruction-log entry that records the receipt."
+            "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash). Proves communication (ICA s.4). Settled in Q-43."
           },
           "log_entry_hash": {
             "$ref": "common.json#/$defs/Hash"
+          },
+          "clock_step_observed": {
+            "type": "boolean",
+            "description": "True when received_at on this entry is earlier than on an entry before it in the chain because the participant's clock stepped. REQUIRED when received_at decreases along the chain; an unflagged decrease is evidence_unverifiable. Order is by log position only."
+          },
+          "late_receipt_party": {
+            "enum": [
+              "offeror",
+              "offeree"
+            ],
+            "description": "On the record of a contested crossing: the party whose receipt (or logging) of the other's message came after its own dispatch, so that a reviewer sees who held the later position."
           }
         },
         "required": [
@@ -567,6 +592,7 @@
               "recoverable",
               "requires_buyer_input",
               "requires_buyer_review",
+              "requires_seller_review",
               "unrecoverable"
             ]
           }
@@ -581,6 +607,14 @@
     "updated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "protocol_terms": {
+      "$ref": "offer.json#/$defs/ProtocolTerms",
+      "description": "The protocol terms (ordering rule, receipt window, contested outcome, expires_at as a receipt deadline, IT Act s.12(2) acknowledgement) that govern this negotiation, named at session open in a buyer-signed message. A mismatch between the two sides is refused with capabilities_incompatible."
+    },
+    "counter_signature": {
+      "$ref": "common.json#/$defs/Jws",
+      "description": "On the response to a message the gateway has just sent: the counterparty's CounterSignature (payload CounterSignaturePayload) for that message, returned in the synchronous response of the exchange. Absent when the counterparty returned none or it did not verify, in which case a crossing that depends on that message is contested."
     }
   },
   "additionalProperties": false,
@@ -645,6 +679,24 @@
         },
         "pricing_ai_vendor": {
           "type": "string"
+        },
+        "step_up_cap": {
+          "type": "object",
+          "description": "Declared by the gateway in /.well-known/bacp. The most negotiation, fee-line and HNP step-ups the gateway creates per principal in a window. Beyond it the gateway answers the agent with 429 and Retry-After and nothing is visible to the counterparty: a capped offer lapses by silence. BACP sets no number.",
+          "properties": {
+            "count": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "window": {
+              "$ref": "common.json#/$defs/Duration"
+            }
+          },
+          "required": [
+            "count",
+            "window"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -812,7 +864,7 @@
             "msme_preference",
             "make_in_india_preference"
           ],
-          "description": "Dutch: always earliest auctioneer receipt timestamp, then earliest dispatch, then lowest msg_hash."
+          "description": "Dutch: always earliest_bid, which means the earliest position in the auctioneer's own hash chain; no clock reading decides a Dutch award. Other types: the stated rule."
         },
         "bid_deposit": {
           "type": "object",
@@ -899,6 +951,10 @@
         "signature": {
           "$ref": "common.json#/$defs/Signature",
           "description": "The neutral auctioneer's signature over the published spec, made before the first bid; rules MUST NOT change after it. Optional in a create request, where any signature is the requester's own and is not relied on. Required in the published spec (PublishedAuctionSpec)."
+        },
+        "standing_accepts_enabled": {
+          "type": "boolean",
+          "description": "Optional. true = the auctioneer takes StandingAccept objects before the auction opens and runs them as the Dutch rules describe. Absent or false means the base chain-order rule only."
         }
       },
       "required": [
@@ -1099,6 +1155,10 @@
           },
           "additionalProperties": false,
           "readOnly": true
+        },
+        "acceptance_revocation_required": {
+          "const": "waived",
+          "description": "Optional. Business sessions only. The buyer's own RFQ requires that quotations carry acceptance_revocation waived. The seller's gateway fills waiver_basis with doc_type rfq and the hash of the published RFQ. Refused in a consumer session. An RFQ created by an agent that sets it needs a confirm step-up with reason rfq_prescribes_waiver, because it waives the principal's own ICA s.5 right."
         }
       },
       "required": [
@@ -1153,6 +1213,53 @@
         },
         "caller_negotiation_id": {
           "type": "string"
+        },
+        "tick_close": {
+          "type": "object",
+          "description": "Dutch only. The auctioneer's signed close of one tick, published to every bidder at that tick: the countersigned acceptances in chain order and the chain head. An acceptance belongs to tick k when its receipt position precedes this entry. A bidder whose countersigned position is missing from accepts, or appears at another position, holds a signed contradiction (evidence_unverifiable, NEG_COLLUSION_SCREEN or a NEG_AWARD_RULE dispute).",
+          "properties": {
+            "tick": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Index of the tick in decrement_schedule."
+            },
+            "accepts": {
+              "type": "array",
+              "description": "Every acceptance countersigned at this tick, in the auctioneer's chain order. log_seq values MUST be unique, which a validator checks because JSON Schema cannot.",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "log_seq": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "msg_hash": {
+                    "$ref": "common.json#/$defs/Hash"
+                  }
+                },
+                "required": [
+                  "log_seq",
+                  "msg_hash"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "log_head": {
+              "$ref": "common.json#/$defs/Hash",
+              "description": "The auctioneer's chain head at the time of the close."
+            },
+            "signature": {
+              "$ref": "common.json#/$defs/Signature",
+              "description": "The auctioneer's signature over the JCS form of the object without signature."
+            }
+          },
+          "required": [
+            "tick",
+            "accepts",
+            "log_head",
+            "signature"
+          ],
+          "additionalProperties": false
         }
       },
       "required": [
@@ -1162,6 +1269,37 @@
         "closes_at"
       ],
       "description": "Bidder view. Never shows other bidders' identities or sealed bids.",
+      "additionalProperties": false
+    },
+    "StandingAccept": {
+      "type": "object",
+      "description": "A principal-signed standing acceptance lodged with the auctioneer before a Dutch auction opens, so that a bidder who cannot react in seconds (an IVR or feature-phone principal, for example) competes on price and not on reflexes. At the first tick whose price is at or below max_price the auctioneer runs standing accepts ahead of live accepts at that tick, in the chain order in which they were placed. Allowed only where the AuctionSpec sets standing_accepts_enabled.",
+      "properties": {
+        "max_price": {
+          "$ref": "common.json#/$defs/Amount",
+          "description": "The highest tick price at which the principal accepts."
+        },
+        "qty": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "The quantity the principal accepts, in the lot's unit."
+        },
+        "mandate_ref": {
+          "type": "string",
+          "pattern": "^mdt_[A-Za-z0-9]{12,40}$",
+          "description": "The negotiation mandate under which the principal signed the standing accept."
+        },
+        "signature": {
+          "$ref": "common.json#/$defs/Signature",
+          "description": "The principal's signature over the JCS form of the object without signature."
+        }
+      },
+      "required": [
+        "max_price",
+        "qty",
+        "mandate_ref",
+        "signature"
+      ],
       "additionalProperties": false
     }
   }

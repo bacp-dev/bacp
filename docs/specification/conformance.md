@@ -294,6 +294,18 @@ A BACP gateway MUST:
 
 - Publish a valid [profile](discovery.md#profile-document) at
   `/.well-known/bacp`, including `message_id_namespace`.
+- Decide a withdraw and accept crossing only by transcript positions inside the loser's own chain, return a
+  `CounterSignaturePayload` in the synchronous response to every firm message within 5 seconds of the sender's dispatch
+  on the sender's monotonic clock, return a byte-identical receipt on re-delivery, treat an unprovable order as
+  `crossing_contested` and never as a breach, raise a contested crossing to its own principal without auto-confirming
+  (a seller gateway too), keep one linearisable chain per `negotiation_id`, and fill `sender_log_seq`,
+  `sender_log_prev` and `protocol_terms` itself
+  ([Signed seller acceptance and clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew); cases T5-07
+  to T5-17, T5-19 to T5-24, T5-42, T5-45).
+- Raise a negotiation step-up only on an outgoing accept or firm-counter attempt, treat an absent
+  `accept_confirmation` as `ask`, honour `autonomous` only with a usable `notice_route`, deliver the notice of an
+  autonomous act through that route and not through the agent, accept a purchase-offer withdrawal, and accept a decline
+  of an `AGREED` or `BOUND` deal only as the Trusted Surface event (cases T5-03, T5-29 to T5-40).
 - Refuse request bodies over 256 KiB with `413`, then verify signatures on
   the raw bytes before parsing, in the specified order, with the replay
   cache and the 5-second skew
@@ -514,6 +526,10 @@ A seller app that does not implement BACP needs no change: it ignores
 
 A Mandate Manager MUST:
 
+- Write `process.accept_confirmation` on every negotiation mandate it issues, present `ask` and `autonomous` with equal
+  weight and preselect neither, capture `process.notice_route`, show the current-stage charge before the factor of a
+  decline of an `AGREED` or `BOUND` deal, and show every time in IST (cases T5-30, T5-38, T5-47).
+
 - Activate a mandate only after an explicit, affirmative approval by the
   principal on the Trusted Surface. An agent can never activate one.
 - Run its Trusted Surface to TS-1 to TS-5 and send a `Presentation` with
@@ -606,6 +622,11 @@ A payer PSP MUST:
 
 A verifier of an evidence bundle (a grievance officer's tool, an ODR body, a
 PSP or a seller) MUST:
+
+- Treat two receipts at one `log_seq` for different entries, a `received_at` that decreases along a chain without
+  `clock_step_observed`, a `CounterSignaturePayload` with a missing member and a negotiation step-up event with no
+  `ts_render` in `ts_renders[]` as `evidence_unverifiable`, and compare times as instants (cases T5-04, T5-06, T5-17,
+  T5-45, T5-49).
 
 - Run the six verification steps and the chain check, and report
   `evidence_unverifiable` on any failure, including a payment receipt whose
@@ -4235,13 +4256,13 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
         - {seq: n+2, msg_type: outcome, code: accept_revoke_honoured}
 
 - case_id: T3-09
-  title: An unmatched revoke is discarded after the hold and nothing changes
+  title: An unmatched revoke is discarded at the end of the hold, which runs to the offer's expires_at, and nothing changes
   fixture:
     leg: rest
     offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
   steps:
     - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}"}
-    - wait_for: {clock: "+6s"}
+    - wait_for: {clock: "expires_at + 1s"}
   expect:
     state: {offer: LIVE, negotiation: NEGOTIATING}
     log: {entry: {msg_type: accept_revoke, outcome: discarded}}
@@ -4380,7 +4401,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
     state: {offer: ACCEPT_REVOKED, negotiation: NEGOTIATING}
 
 - case_id: T3-34
-  title: The hold ends 5 seconds after the revoke's own dispatch, not after its receipt
+  title: The hold runs to the offer's expires_at, so an accept 5.5 seconds after the revoke still matches it
   fixture:
     leg: rest
     profile: b2b.procurement
@@ -6701,4 +6722,729 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     responses:
       - {status: 400, code: bacp_mandate_required, param: $.payment.instruments, count: 1}
     rail: {calls: 0}
+```
+
+## Negotiation timing cases {#negotiation-timing-cases}
+
+The cases below cover [Signed seller acceptance and clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew):
+the committed-order rule, the contested outcome, expiry, notice of an autonomous act, purchase-offer withdrawal, the decline
+of an `AGREED` or `BOUND` deal, the Dutch chain order and `tick_close`, and the clock-invariance property. They use the
+manifest form above, their ids use the prefix `T5-`, and they record state as `fixture.<machine>.state` and
+`expect.state.<machine>`. Case T5-28 is not used. Amounts are integer paise. They also use:
+
+- `chain` (fixture): the positions in each party's own chain, as `{sender_log_seq, cs_log_seq}` for each message, with `n`
+  names for the relative positions the case needs;
+- `incoming` (step) and `counterparty_receipt` (step), as in the acceptance-revocation cases, with `cs_returned_after`
+  giving how long after dispatch (on the sender's monotonic clock) the receipt came and `cs: omit` meaning none came;
+- `harness_clock` (fixture): an offset applied to every participant's wall clock, and `rerun` (a step) that runs the
+  named cases again under the given offsets.
+
+Levels: gateway cases `bacp.neg.1`; auctioneer cases `bacp.auction.1`; verifier cases `bacp.neg.1` with
+`system_under_test: verifier`; Mandate Manager cases `bacp.neg.1` with `system_under_test: trusted_surface`.
+
+**Clock-invariance property (T5-18).** Every ordering case (T5-07 to T5-13 and T5-24) runs three times: with every
+participant's wall clock offset by -3 s, 0 and +3 s (inside the existing 5-second band; fixture values, not limits).
+Outcome codes and offer states MUST be identical. Run again at +/-30 s, the only permitted difference is that a message is
+refused with `NEG_CLOCK_SKEW` before it enters ordering. No clock offset may ever change who wins: it may move an outcome
+only to a refusal or to contested.
+
+```yaml
+- case_id: T5-01
+  title: An offer or bid with allowed_until_receipt is refused on the MCP leg, the A2A leg and by the auctioneer
+  level: bacp.neg.1
+  fixture:
+    profile: b2b.procurement
+    negotiation: {state: NEGOTIATING}
+    variants: [mcp, a2a, reverse_l1_auction]
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: allowed_until_receipt}
+    - incoming: {type: bid, firm: true, acceptance_revocation: allowed_until_receipt}
+  expect:
+    responses:
+      - {status: 200, code: capabilities_incompatible, param: $.acceptance_revocation, count: 2}
+    state: {live_offer: none, negotiation: NEGOTIATING, bid: not_ranked}
+
+- case_id: T5-02
+  title: A negotiation approval that names a checkout step-up is refused
+  level: bacp.neg.1
+  fixture:
+    sessions: {count: 1, state: requires_escalation, step_up: {step_up_id: stp_C1, kind: confirm, reason: above_step_up_threshold}}
+    negotiation: {state: ESCALATED}
+  steps:
+    - trusted_surface_event: {type: negotiation.step_up.approved, step_up_id: stp_C1, presentation: {offer_hash: H_O}}
+  expect:
+    responses:
+      - {status: 403, code: ts_render_mismatch, count: 1}
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-03
+  title: Step-ups are created only on an accept attempt, one at a time, with a fatigue cap
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    profile: b2c.ecom
+    negotiation: {state: NEGOTIATING}
+    step_up_cap: {count: 2, window: PT1H}
+  steps:
+    - incoming: {type: counter_offer, firm: false, acceptance_revocation: omit, repeat: 3}
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: H_3}}
+    - incoming: {type: counter_offer, firm: false}
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: H_3}}
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: H_5}}
+  expect:
+    step_ups_created: [{after_step: 1, count: 0}, {after_step: 2, count: 1}]
+    responses:
+      - {path: accept, status: 409, code: NEG_STALE_OFFER, count: 1}
+      - {path: accept, status: 429, headers: {Retry-After: present}, count: 1}
+    seller_visible: nothing
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-04
+  title: A receipt that goes back in time along the chain verifies only with clock_step_observed, and order is by log_seq
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      transcript:
+        - {seq: n, msg_type: withdraw, received_at: "2026-10-13T11:05:10+05:30", log_seq: 10}
+        - {seq: n+1, msg_type: accept, received_at: "2026-10-13T11:05:09+05:30", log_seq: 11}
+    variants: [without_flag, clock_step_observed_on_n+1]
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict:
+      without_flag: {code: evidence_unverifiable}
+      clock_step_observed_on_n+1: {code: pass, warning: clock_step_observed, order: by_log_seq}
+
+- case_id: T5-05
+  title: A session whose buyer side declared acting_for individual is not reclassified by a seller message
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    profile: b2c.ecom
+    acting_for: {kind: individual}
+    negotiation: {state: NEGOTIATING}
+  steps:
+    - incoming: {type: offer, firm: true, acting_for: {kind: business}, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-1, hash: H_RC}}
+  expect:
+    responses:
+      - {status: 200, code: capabilities_incompatible, param: $.context.bacp.acting_for, count: 1}
+    state: {live_offer: none, negotiation: NEGOTIATING}
+
+- case_id: T5-06
+  title: A bundle with a negotiation step-up approval and no render in ts_renders does not verify
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      trusted_surface_events: [{type: negotiation.step_up.approved, step_up_id: stp_N1, presentation: {offer_hash: H_O}}]
+      ts_renders: []
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: T5-07
+  title: A held accept that crosses a withdraw is contested on both sides, never accept-wins, and the control case is decided
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    profile: b2b.procurement
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+    chain:
+      A: {sender_log_seq: 5, held: 4.5s}
+      W: {sender_log_seq: 10}
+      cs_W_at_offeree: {log_seq: 6, returned_after: 0.1s}
+      cs_A_at_offeror: {log_seq: 11}
+    variants: [{control: {cs_A_at_offeror: {log_seq: 9}}}]
+  steps:
+    - incoming: {type: withdraw, sender_log_seq: 10}
+    - incoming: {type: accept, sender_log_seq: 5, at: "+4.5s"}
+  expect:
+    messages: [crossing_contested]
+    absent_messages: [withdraw_lost_crossing]
+    state: {offer: LIVE, negotiation: ESCALATED}
+    control: {messages: [withdraw_lost_crossing], state: {offer: ACCEPTED, negotiation: AGREED}}
+
+- case_id: T5-08
+  title: A withdraw that the offeree logged before it dispatched its accept wins, whatever the stamps say
+  level: bacp.neg.1
+  fixture:
+    leg: rest
+    negotiation: {state: ACCEPT_PENDING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+    chain:
+      cs_W_at_offeree: {log_seq: 6}
+      A: {sender_log_seq: 9}
+    variants: [{received_at_late_by: 4.9s}]
+  steps:
+    - incoming: {type: withdraw, sender_log_seq: 10}
+  expect:
+    messages: [accept_void_withdrawn]
+    state: {offer: WITHDRAWN, negotiation: NEGOTIATING}
+    variants_unchanged: true
+
+- case_id: T5-09
+  title: Both order proofs holding is equivocation, treated as contested and screened
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      chain:
+        cs_W_at_offeree: {log_seq: 6}
+        A: {sender_log_seq: 9}
+        cs_A_at_offeror: {log_seq: 8}
+        W: {sender_log_seq: 10}
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable, treated_as: crossing_contested}
+    messages: [NEG_COLLUSION_SCREEN]
+
+- case_id: T5-10
+  title: A crossing whose withdraw has no receipt in the synchronous response is contested, on REST and on Beckn
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+    variants: [rest_no_counter_signature, beckn_ack_without_bacp_receipt]
+  steps:
+    - counterparty_receipt: {for: withdraw, cs: omit}
+    - incoming: {type: accept, sender_log_seq: 5}
+  expect:
+    messages: [crossing_contested]
+    state: {offer: LIVE, negotiation: ESCALATED}
+    never: AGREED_automatically
+
+- case_id: T5-11
+  title: A receiver that stalls the receipt of a withdraw gains nothing
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+    chain:
+      cs_W_at_offeree: {log_seq: 6, returned_after: 4.8s}
+      A: {sender_log_seq: 5}
+  steps:
+    - incoming: {type: withdraw, sender_log_seq: 10}
+    - incoming: {type: accept, sender_log_seq: 5}
+  expect:
+    messages: [crossing_contested]
+    absent_messages: [withdraw_lost_crossing]
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-12
+  title: An offeror that sends its withdraw before it logs the accept it holds a receipt for is recorded as the late party
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+    chain:
+      cs_A_at_offeror: {log_seq: 12, returned_after: 4.0s}
+      W: {sender_log_seq: 11}
+  steps:
+    - incoming: {type: accept, sender_log_seq: 5}
+  expect:
+    messages: [crossing_contested]
+    transcript: {entry: {outcome: crossing_contested, late_receipt_party: offeror}}
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-13
+  title: A receipt later than 5 seconds on the sender's monotonic clock is recorded and is not an order proof
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+    chain:
+      cs_W_at_offeree: {log_seq: 6, returned_after: 5.2s}
+      A: {sender_log_seq: 9}
+  steps:
+    - incoming: {type: accept, sender_log_seq: 9}
+  expect:
+    messages: [crossing_contested]
+    transcript: {entry: {msg_type: withdraw, counter_signature: recorded, order_proof: false}}
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-14
+  title: An inbound message whose created is 50 seconds before receipt is refused and enters no ordering
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+  steps:
+    - incoming: {type: accept, dispatched_at: "-50s", at: "+0s"}
+  expect:
+    responses:
+      - {status: 422, code: NEG_CLOCK_SKEW, resolution: recoverable, count: 1}
+    crossing_evaluated: false
+    state: {offer: LIVE, negotiation: NEGOTIATING}
+
+- case_id: T5-15
+  title: Identical bytes re-delivered 8 seconds later return the same CounterSignature with no freshness or expiry re-check
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, expires_at: "+10s"}
+  steps:
+    - incoming: {type: accept, sender_log_seq: 5, at: "+8s"}
+    - incoming: {type: accept, sender_log_seq: 5, at: "+16s", repeat_of: 1}
+  expect:
+    counter_signatures: {identical: true, log_seq: same}
+    state: {offer: ACCEPTED, negotiation: AGREED}
+
+- case_id: T5-16
+  title: On Beckn a re-delivered withdraw returns the identical receipt, and a second receipt at another position is equivocation
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+  steps:
+    - incoming: {type: withdraw, repeat: 2, same_message_id: true}
+    - incoming: {type: withdraw, second_receipt_log_seq: different}
+  expect:
+    beckn: {ack_tags: {"bacp.receipt": identical_for_first_two}}
+    verdict: {code: evidence_unverifiable}
+
+- case_id: T5-17
+  title: The same instant written with +05:30 and with Z compares as equal
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    vector: {received_at: ["2026-10-13T10:00:05+05:30", "2026-10-13T04:30:05Z"]}
+  steps:
+    - verify_bundle: {compare: instants}
+  expect:
+    verdict: {code: pass, equal: true, skew_computed_on: instants}
+
+- case_id: T5-18
+  title: No wall-clock offset changes who wins an ordering case
+  level: bacp.neg.1
+  system_under_test: harness
+  fixture:
+    cases: [T5-07, T5-08, T5-09, T5-10, T5-11, T5-12, T5-13, T5-24]
+  steps:
+    - rerun: {harness_clock: [-3s, 0s, +3s]}
+    - rerun: {harness_clock: [-30s, +30s]}
+  expect:
+    identical: {outcome_codes: true, offer_states: true, under: [-3s, 0s, +3s]}
+    at_30s: {permitted_difference: NEG_CLOCK_SKEW_refusal_only, different_winner: never}
+
+- case_id: T5-19
+  title: A contested crossing that both principals confirm proceeds as AGREED
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: ESCALATED, reason: crossing_contested, sides: both}
+  steps:
+    - trusted_surface_event: {side: buyer, type: negotiation.step_up.approved}
+    - trusted_surface_event: {side: seller, type: negotiation.step_up.approved}
+  expect:
+    state: {negotiation: AGREED}
+
+- case_id: T5-20
+  title: A contested crossing that neither principal answers closes as crossing_unconfirmed with no breach, no charge and one release
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: ESCALATED, reason: crossing_contested, sides: both}
+    exposure: {reserved: true}
+  steps:
+    - wait_for: {clock: "earlier of expires_at and step_up_link_end"}
+  expect:
+    messages: [crossing_unconfirmed]
+    state: {negotiation: CANCELLED, exposure_releases: 1}
+    breach_events: 0
+    charges: 0
+
+- case_id: T5-21
+  title: A contested crossing that the buyer confirms and the seller declines or ignores closes as formation_disputed
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: ESCALATED, reason: crossing_contested, sides: both}
+    variants: [seller_declines, seller_silent]
+  steps:
+    - trusted_surface_event: {side: buyer, type: negotiation.step_up.approved}
+  expect:
+    messages: [formation_disputed]
+    carries: [grievance_contact_buyer, grievance_contact_seller]
+    state: {negotiation: CANCELLED}
+    breach_events: 0
+    charges: 0
+
+- case_id: T5-22
+  title: A seller-side gateway raises a contested crossing to its principal, does not auto-confirm, and uses the seller resolution
+  level: bacp.neg.1
+  fixture:
+    role: seller
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived}
+  steps:
+    - incoming: {type: accept, sender_log_seq: 5}
+  expect:
+    messages: [{code: crossing_contested, resolution: requires_seller_review}]
+    state: {negotiation: ESCALATED}
+    auto_confirm: never
+
+- case_id: T5-23
+  title: An accept requested within 5 seconds of expires_at is refused locally and the principal is told the offer ran out
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, expires_at: "+3s"}
+    variants: [agent_calls_accept, approval_arrives_late]
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 403, code: NEG_OFFER_EXPIRED, count: 1}
+    sent_to_counterparty: nothing
+    ts_render: {language_template: offer_expired_during_approval}
+    state: {negotiation: NEGOTIATING}
+
+- case_id: T5-24
+  title: An accept refused as expired whose dispatch was not after expires_at is contested, and one dispatched after it is expired
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    offer: {state: LIVE, firm: true, acceptance_revocation: waived, expires_at: T}
+  steps:
+    - incoming: {type: accept, dispatched_at: "T - 1s", at: "T + 2s", note: passes_freshness}
+    - incoming: {type: accept, dispatched_at: "T + 1s", at: "T + 2s"}
+  expect:
+    messages: [crossing_contested]
+    responses:
+      - {status: 200, code: NEG_OFFER_EXPIRED, count: 1}
+    breach_events: 0
+
+- case_id: T5-25
+  title: A Dutch award follows the auctioneer's chain order and a tick_close that contradicts a receipt is flagged
+  level: bacp.auction.1
+  system_under_test: verifier
+  fixture:
+    auction: {type: dutch, tick_close: {tick: k, at_log_seq: n}}
+    variants:
+      - {name: a, bidder_cs_log_seq: 87, winner_log_seq: 88, same_tick: true}
+      - {name: b, tick_close_omits_countersigned_acceptance: true}
+      - {name: c, x: {log_seq: n-2, received_at: "10:00:04"}, y: {log_seq: n+1, received_at: "10:00:01"}}
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict:
+      a: {code: evidence_unverifiable, dispute: NEG_AWARD_RULE, messages: [NEG_COLLUSION_SCREEN]}
+      b: {code: evidence_unverifiable}
+      c: {x_in_tick: k, y_in_tick: k+1, timestamps_decide: false}
+
+- case_id: T5-26
+  title: Two acceptances at one tick award the first in chain order whatever dispatched_at claims
+  level: bacp.auction.1
+  fixture:
+    auction: {type: dutch, state: OPEN}
+  steps:
+    - incoming: {type: accept, auction_id: "{auction_id}", log_seq: first, dispatched_at: "-0s"}
+    - incoming: {type: accept, auction_id: "{auction_id}", log_seq: second, dispatched_at: "-3s"}
+  expect:
+    awarded: first
+    messages: [auction_closed_no_award]
+    flags: [dispatch_inversion]
+    state: {auction: AWARDED}
+
+- case_id: T5-27
+  title: A standing accept runs ahead of a live accept at the same tick
+  level: bacp.auction.1
+  fixture:
+    auction: {type: dutch, standing_accepts_enabled: true, state: OPEN}
+    standing_accepts: [{bidder: ivr_bidder, max_price: {value: 180000, currency: INR}, qty: 10}]
+  steps:
+    - wait_for: {tick_price: {value: 180000, currency: INR}}
+    - incoming: {type: accept, bidder: agent_bidder, at_tick: 180000}
+  expect:
+    awarded: ivr_bidder
+    messages: [auction_closed_no_award]
+
+- case_id: T5-29
+  title: An absent accept_confirmation is ask, and nothing seller-visible is sent before approval
+  level: bacp.neg.1
+  fixture:
+    mandate: {constraints: {negotiation: {process: {accept_confirmation: omit}}}}
+    negotiation: {state: NEGOTIATING, live_offer: {guard: acceptable}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: accept_confirmation, count: 1}
+    sent_to_counterparty: nothing
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-30
+  title: A mandate set-up that preselects either accept_confirmation value is refused
+  level: bacp.neg.1
+  system_under_test: trusted_surface
+  fixture:
+    presentation: {mandate_setup: true, preselected: [ask, autonomous]}
+  steps:
+    - render: {}
+  expect:
+    verdict: {code: ts_conformance_fail, rule: TS-2}
+    responses:
+      - {status: 403, code: ts_render_mismatch, count: 1}
+
+- case_id: T5-31
+  title: autonomous with no usable notice_route is treated as ask
+  level: bacp.neg.1
+  fixture:
+    mandate: {constraints: {negotiation: {process: {accept_confirmation: autonomous, notice_route: omit}}}}
+    negotiation: {state: NEGOTIATING, live_offer: {guard: acceptable}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: accept_confirmation, count: 1}
+    messages: [autonomous_unavailable_no_notice_route]
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-32
+  title: An autonomous accept sends a templated notice by the notice_route, recorded in the bundle, never through the agent
+  level: bacp.neg.1
+  fixture:
+    mandate: {constraints: {negotiation: {process: {accept_confirmation: autonomous, notice_route: {type: sms, ref: "sms:+919800000000"}}}}}
+    negotiation: {state: NEGOTIATING, live_offer: {guard: acceptable, firm: true}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: "{offer_hash}"}}
+    - verify_bundle: {}
+  expect:
+    messages: [{code: agreed_by_agent, type: info, resolution: recoverable}]
+    notice: {route: sms, content: gateway_template, uris_only: [revoke_route, stop_route, grievance_contact]}
+    bundle: {notice_renders: {count: 1, delivery_receipt: present}}
+    agent_outputs: {contain_notice: false}
+    state: {negotiation: AGREED}
+
+- case_id: T5-33
+  title: A seller agent under autonomous that accepts a buyer's firm offer sends the notice to the seller principal's route
+  level: bacp.neg.1
+  fixture:
+    role: seller
+    mandate: {constraints: {negotiation: {role: seller, process: {accept_confirmation: autonomous, notice_route: {type: tel, ref: "tel:+919811111111"}}}}}
+    negotiation: {state: NEGOTIATING, live_offer: {guard: acceptable, firm: true}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: "{offer_hash}"}}
+  expect:
+    messages: [agreed_by_agent]
+    notice: {delivered_to: seller_principal_route}
+    state: {negotiation: AGREED}
+
+- case_id: T5-34
+  title: In an agri session a seller gateway treats autonomous as ask
+  level: bacp.neg.1
+  fixture:
+    profile: agri
+    role: seller
+    mandate: {constraints: {negotiation: {role: seller, process: {accept_confirmation: autonomous, notice_route: {type: sms, ref: "sms:+919822222222"}}}}}
+    negotiation: {state: NEGOTIATING, live_offer: {guard: acceptable}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: "{offer_hash}"}}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.kind: confirm, count: 1}
+    state: {negotiation: ESCALATED}
+
+- case_id: T5-35
+  title: A buyer withdraws a purchase offer before the seller's on_init and no fee is charged
+  level: bacp.neg.1
+  fixture:
+    profile: kirana.khata
+    negotiation: {state: PURCHASE_OFFERED}
+    offer: {state: ACCEPTED, firm: false}
+  steps:
+    - incoming: {type: withdraw, from_role: buyer, accept_msg_hash: H_A, offer_hash: "{offer_hash}", cs_returned_before: on_init}
+  expect:
+    state: {negotiation: NEGOTIATING}
+    charges: 0
+    seller_app: buyer_withdrew_before_you_confirmed
+    crossing_with_on_init: decided_by_committed_order
+
+- case_id: T5-36
+  title: A withdraw that names an accept with legal_effect acceptance is refused
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: AGREED}
+    offer: {state: ACCEPTED, firm: true}
+    accept: {msg_hash: H_A, legal_effect: acceptance}
+  steps:
+    - incoming: {type: withdraw, from_role: buyer, accept_msg_hash: H_A, offer_hash: "{offer_hash}"}
+  expect:
+    messages: [accept_revoke_not_allowed]
+    state: {negotiation: AGREED}
+
+- case_id: T5-37
+  title: On a Beckn consumer leg with no carrier the purchase-offer notice shows no stop control
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    profile: b2c.ecom
+    mandate: {constraints: {negotiation: {process: {accept_confirmation: autonomous, notice_route: {type: sms, ref: "sms:+919800000000"}}}}}
+    negotiation: {state: NEGOTIATING, live_offer: {guard: acceptable, firm: false}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, body: {offer_hash: "{offer_hash}"}}
+  expect:
+    messages: [purchase_offered_by_agent]
+    notice: {stop_control: absent}
+    state: {negotiation: PURCHASE_OFFERED}
+
+- case_id: T5-38
+  title: An agent cannot decline a BOUND deal, and the principal's Trusted Surface event cancels it under the terms with the charge shown first
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: BOUND}
+    termsheet: {cancellation: {terms: [{stage: Pending, charge_pct: 0}]}}
+    variants: [agent_terminate, ts_event]
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/offers", tag: bacp-negotiate, body: {type: terminate, reason: principal_instruction}}
+    - trusted_surface_event: {type: negotiation.agreed.declined, offer_hash: "{offer_hash}", presentation: {user_action: upi_pin}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 1, variant: agent_terminate}
+    messages: [principal_declined]
+    render: {charge_shown_before_factor: true}
+    state: {negotiation: CANCELLED}
+    charges: 0
+    breach_events: 0
+
+- case_id: T5-39
+  title: A decline of an AGREED deal whose terms make the stage non-cancellable carries a breach claim and no finding
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: AGREED}
+    termsheet: {cancellation: {terms: [{stage: Pending, cancellable: false}]}}
+  steps:
+    - trusted_surface_event: {type: negotiation.agreed.declined, offer_hash: "{offer_hash}", presentation: {user_action: upi_pin}}
+  expect:
+    messages: [principal_declined]
+    flags: [{breach_claim: true, finding: false}]
+    state: {negotiation: CANCELLED}
+
+- case_id: T5-40
+  title: A profile the agent supplies that differs from the mandate's is refused
+  level: bacp.neg.1
+  fixture:
+    mandate: {principal: individual}
+  steps:
+    - request: {method: POST, path: /negotiations, tag: bacp-browse, body: {profile: b2b.procurement}}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, param: $.profile, count: 1}
+
+- case_id: T5-41
+  title: A seller serving an individual that declares a business profile is refused with profile_misdescribed
+  level: bacp.neg.1
+  fixture:
+    role: seller
+    acting_for: {kind: individual}
+  steps:
+    - incoming: {type: select, profile: b2b.procurement}
+  expect:
+    messages: [{code: capabilities_incompatible, param: $.context.bacp.profile, reason: profile_misdescribed}]
+    state: {live_offer: none}
+
+- case_id: T5-42
+  title: A firm offer whose protocol_terms hash differs is refused and one without protocol_terms is a schema error
+  level: bacp.neg.1
+  fixture:
+    negotiation: {state: NEGOTIATING}
+    variants: [hash_differs, protocol_terms_omitted]
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, protocol_terms: {version: "2026-10-17", hash: H_OTHER}}
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, protocol_terms: omit}
+  expect:
+    responses:
+      - {status: 200, code: capabilities_incompatible, param: $.protocol_terms, count: 1}
+      - {status: 400, code: NEG_SCHEMA_INVALID, param: $.protocol_terms, count: 1}
+
+- case_id: T5-43
+  title: A broadcast RFQ that requires waived makes awards by that RFQ final and nothing else
+  level: bacp.b2b.1
+  fixture:
+    rfq: {rfq_id: R1, acceptance_revocation_required: waived, broadcast: true, hash: H_R1}
+    profile: b2b.procurement
+    variants: [a_basis_H_R1, b_basis_H_R2, c_quotation_without_waived, d_consumer_session, e_agent_creates_rfq]
+  steps:
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: rfq, id: R1, hash: H_R1}}
+  expect:
+    variants:
+      a: {award: autonomous_permitted}
+      b: {messages: [{resolution: requires_buyer_review}]}
+      c: {messages: [capabilities_incompatible]}
+      d: {messages: [capabilities_incompatible]}
+      e: {step_up: {kind: confirm, reason: rfq_prescribes_waiver}}
+
+- case_id: T5-44
+  title: A dispatched_at with a fraction fails the schema
+  level: bacp.neg.1
+  system_under_test: schema
+  fixture:
+    vector: offer.dispatched-at-fraction.invalid.json
+  steps:
+    - validate: {}
+  expect:
+    verdict: {code: schema_invalid, path: $.dispatched_at}
+
+- case_id: T5-45
+  title: Two receipts from one participant at one log_seq naming different entries are equivocation
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      receipts: [{participant: seller, log_seq: 6, log_entry_hash: L6a}, {participant: seller, log_seq: 6, log_entry_hash: L6b}]
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable, treated_as: crossing_contested}
+    messages: [NEG_COLLUSION_SCREEN]
+
+- case_id: T5-46
+  title: Dormant data. Under a lifted refusal an earlier revoke R is held to expires_at and wins when its accept arrives 30 seconds later
+  system_under_test: gateway
+  fixture:
+    leg: rest
+    offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test, expires_at: "+60s"}
+  steps:
+    - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", at: "+0s"}
+    - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", at: "+30s"}
+  expect:
+    messages: [accept_revoke_honoured]
+    state: {offer: ACCEPT_REVOKED, negotiation: NEGOTIATING}
+
+- case_id: T5-47
+  title: One negotiation step-up is presented at a time, and a decline can end the negotiation
+  level: bacp.neg.1
+  system_under_test: trusted_surface
+  fixture:
+    negotiations: [{id: N1, state: ESCALATED}, {id: N2, state: ESCALATED}]
+  steps:
+    - trusted_surface_event: {type: negotiation.step_up.declined, negotiation_id: N1, end_negotiation: true}
+  expect:
+    presented_at_a_time: 1
+    messages: [{negotiation_id: N1, terminate_reason: principal_instruction}]
+    state: {negotiation: TERMINATED}
+
+- case_id: T5-48
+  title: A tick_close that repeats a log_seq is rejected by the validator
+  level: bacp.auction.1
+  system_under_test: verifier
+  fixture:
+    vector: {tick_close: {tick: 4, accepts: [{log_seq: 87, msg_hash: H1}, {log_seq: 87, msg_hash: H2}], log_head: H_HEAD}}
+  steps:
+    - validate: {}
+  expect:
+    verdict: {code: schema_invalid, path: $.tick_close.accepts}
+
+- case_id: T5-49
+  title: A CounterSignature payload with a missing member does not count as a receipt
+  level: bacp.neg.1
+  system_under_test: schema
+  fixture:
+    vector: counter-signature-payload.no-log-seq.invalid.json
+  steps:
+    - validate: {}
+  expect:
+    verdict: {code: schema_invalid, path: $.log_seq}
 ```

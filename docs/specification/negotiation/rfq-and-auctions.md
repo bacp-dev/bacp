@@ -24,6 +24,7 @@ An RFQ is a signed `Rfq` object (`negotiation-session.json#/$defs/Rfq`). It repl
 | `response_by` | **REQUIRED.** The time after which quotations are compared |
 | `min_responses` | **REQUIRED.** The minimum number of valid quotations before an award (for example 3 for an L1 purchase) |
 | `award_rule` | `l1_landed_cost`, `qcbs` or `best_score`, with `scoring_rule_ref` where needed |
+| `acceptance_revocation_required` | Optional, the constant `waived`. Business sessions only. See [Award](#award). |
 | `state` | `DRAFT → PUBLISHED → COLLECTING → CLOSED → REVEALED → SHORTLISTED → AWARDED`, or `CANCELLED` |
 | `comparison[]` | Every valid quotation normalised to **landed cost**, with rank. Kept for audit. |
 | `awarded` | The winning negotiation, offer hash and reason |
@@ -58,7 +59,7 @@ In `rfq_iterated`, the sealed round is followed by alternating rounds with a **s
 - **Award is acceptance.** An award is an `accept` of the winning quotation's `offer_hash`, signed under the tag `bacp-negotiate`, guarded like any acceptance and carrying the `within_bounds` attestation. The quotation's [`acceptance_revocation`](index.md#acceptance-revocation) term applies to the award as to any acceptance; BACP fixes no value for RFQ modes.
 - **Frozen comparison set.** The award rule is evaluated over the comparison set frozen when the RFQ closes; under `rfq_iterated` that is the close of the final shortlist round. Nothing that arrives later joins it, and it does not change when an award is revoked.
 - **Revoked award.** An award can be revoked only under the [sunset text](index.md#acceptance-revocation-sunset) for `allowed_until_receipt`; in this version every `accept_revoke` of an award is refused (`accept_revoke_not_allowed`). If an award is revoked (`accept_revoke_honoured`), the RFQ moves to `CANCELLED` and is flagged `NEG_COLLUSION_SCREEN` for review. It is not awarded again: any later award on it is refused with `NEG_AWARD_RULE`. A buyer that still wants the goods publishes a new RFQ.
-- **Buyer-prescribed `waived`.** A buyer that wants its awards to be final MAY require in its own RFQ that quotations carry `acceptance_revocation: waived` with a `waiver_basis` naming that RFQ (`doc_type: rfq`, the RFQ's id and the hash of the published RFQ). The buyer then gives up its own right to revoke the award, on terms it set itself. The profile rules of [Acceptance revocation](index.md#acceptance-revocation) still apply.
+- **Buyer-prescribed `waived`.** A buyer that wants its awards to be final MAY set `Rfq.acceptance_revocation_required: waived` in its own RFQ, so that quotations carry `acceptance_revocation: waived` with a `waiver_basis` of `doc_type: rfq`, the RFQ's id and the hash of the published RFQ. The **seller's gateway** fills `waiver_basis`. The buyer then gives up its own right to revoke the award, on terms it set itself. It is for business sessions only and is refused in consumer sessions with `capabilities_incompatible`. An RFQ that an agent creates with it needs a `confirm` step-up with reason `rfq_prescribes_waiver`, because it waives the principal's own ICA s.5 right. The profile rules of [Acceptance revocation](index.md#acceptance-revocation) still apply.
 - **Losers.** Every other child negotiation receives `terminate` with reason `rfq_not_awarded`, and its deposit is released.
 - **Audit trail.** The comparison set is kept with the award (for example, offers from at least three different manufacturers for an L1 purchase), together with who awarded it, under which mandate and why.
 
@@ -123,7 +124,8 @@ Every auction starts with an **AuctionSpec** (`negotiation-session.json#/$defs/A
 | `reserve_price`, `reserve_disclosed`, `start_price`, `increment`, `decrement_schedule[]` | Price rules |
 | `opens_at`, `closes_at`, `extension_rule{window, extend_by, max_extensions}` | Clock and anti-sniping |
 | `visibility` | `sealed`, `price_only` or `open` |
-| `tie_break` | `earliest_bid`, `lottery`, `msme_preference`, `make_in_india_preference` |
+| `tie_break` | `earliest_bid`, `lottery`, `msme_preference`, `make_in_india_preference`. In a Dutch auction always `earliest_bid`, the earliest position in the auctioneer's chain. |
+| `standing_accepts_enabled` | Optional. Dutch only. Whether the auctioneer takes principal-signed standing accepts ([Dutch auctions](#dutch-auctions-perishables)). |
 | `bid_deposit{amount, instrument, forfeit_on[]}` | Required for sealed auctions |
 | `retraction_rule` | `no_retraction`, `before_close_outside_window`, `obvious_error_only` |
 | `eligibility` | Bidder allow-list, technically qualified only, licence required; `exclude_suspended` is the constant `true` |
@@ -131,7 +133,7 @@ Every auction starts with an **AuctionSpec** (`negotiation-session.json#/$defs/A
 | `fixed_terms`, `scoring_rule_ref` | Non-price issues fixed for every bidder, or scored by a published rule |
 | `procurement_mode_reason` | Why this mode was chosen, for example the value threshold |
 
-**Publication.** The creator submits an AuctionSpec draft. Any signature on the draft is the requester's own and is not relied on. The neutral auctioneer MUST sign the **published** spec and freeze its `spec_hash`, which is authoritative. The rules MUST NOT change after the first bid. The auctioneer's CounterSignature timestamps fix bid order and close.
+**Publication.** The creator submits an AuctionSpec draft. Any signature on the draft is the requester's own and is not relied on. The neutral auctioneer MUST sign the **published** spec and freeze its `spec_hash`, which is authoritative. The rules MUST NOT change after the first bid. The auctioneer's chain positions (the `log_seq` of its CounterSignatures) fix bid order, and its own clock fixes the close.
 
 Bidders see an `AuctionState` view: `spec_hash`, state (`SCHEDULED`, `OPEN`, `EXTENDED`, `CLOSED`, `REVEALED`, `AWARDED`, `NO_AWARD`, `CANCELLED`), the current price where visibility allows, the caller's own rank, a bid count and `closes_at`. It never shows other bidders' identities or sealed bids. A bid outside `OPEN` or `EXTENDED` is refused with `auction_not_open`.
 
@@ -180,9 +182,34 @@ Used for perishables and end-of-day clearance.
 
 - The `decrement_schedule[]` is published in the spec, and its ticks MUST be non-increasing. A spec or runtime tick that rises is refused with `NEG_DUTCH_PRICE_INCREASE`.
 - A bidder accepts the **current tick** by sending an acceptance at that tick's price. An acceptance at any other price is refused with `NEG_STALE_OFFER`.
-- **The first conforming acceptance in the auctioneer's receipt order wins, and the award is final.** It is never replaced.
-- `tie_break` is the constant `earliest_bid`. Acceptances are ordered by the auctioneer's CounterSignature `received_at`, then by earlier `dispatched_at`, then by the lowest `msg_hash`.
-- Later acceptances for the awarded tick MUST still be recorded and ordered by that rule. Each receives `auction_closed_no_award`.
+- **The first conforming acceptance in the auctioneer's chain order wins, and the award is final.** It is never replaced. The bidder's tick message is legally a bid, and the award completes the sale (Sale of Goods Act, 1930, s.64(2)).
+- `tie_break` is the constant `earliest_bid`, meaning the earliest position in the auctioneer's own hash chain. A chain has no ties, so `msg_hash` stays only as a defensive last key. `dispatched_at` and `received_at` are recorded and never decide an award.
+- **Receipt and `tick_close`.** The auctioneer returns a synchronous CounterSignature with `log_seq` for every tick acceptance. At award it signs `tick_close{tick, accepts[{log_seq, msg_hash}], log_head}` and publishes it to every bidder at that tick (`AuctionState.tick_close`). The tick boundary is a chain entry, not a clock reading: an acceptance belongs to tick *k* when its receipt position precedes `tick_close{k}`. A validator rejects a `tick_close` whose `accepts` repeat a `log_seq`, because JSON Schema cannot.
+- A bidder whose countersigned position is missing from `tick_close`, or appears at another position, holds a signed contradiction: `evidence_unverifiable` with `NEG_COLLUSION_SCREEN`, or a `NEG_AWARD_RULE` dispute.
+- A winner that dispatched after a loser (a dispatch inversion) is flagged to the collusion screen.
+- Later acceptances for the awarded tick MUST still be recorded in chain order. Each receives `auction_closed_no_award`.
+- **Residual risk.** A rogue auctioneer can still choose the processing order of near-simultaneous arrivals. The log makes a later reordering provable and does not prevent the first ([Q-25](../open-questions.md#q-25)).
+
+??? note "Example: a signed `tick_close` (`auction-state.dutch-tick-close.json`)"
+    ```json
+    --8<-- "source/examples/auction-state.dutch-tick-close.json"
+    ```
+
+??? failure "Invalid: `tick_close` without `log_head` (`auction-state.tick-close-no-log-head.invalid.json`)"
+    ```json
+    --8<-- "source/examples/auction-state.tick-close-no-log-head.invalid.json"
+    ```
+
+**Standing accept (optional).** An auctioneer MAY set `AuctionSpec.standing_accepts_enabled: true`. A principal then lodges, before the auction opens, a principal-signed `standing_accept{max_price, qty, mandate_ref, signature}`. At the first tick whose price is at or below `max_price` the auctioneer runs standing accepts ahead of live accepts at that tick, in the chain order in which they were placed. A slow human bidder, for example one on IVR, then competes on price and not on reflexes, with no randomness. Absent the flag, only the base rule applies and slow bidders lose speed contests to agents. Whether a standing accept is the principal's own acceptance under ICA s.7 is open ([Q-85](../open-questions.md#q-85)).
+
+```json title="standing-accept.json"
+--8<-- "source/examples/standing-accept.json"
+```
+
+??? failure "Invalid: standing accept without `max_price` (`standing-accept.no-max-price.invalid.json`)"
+    ```json
+    --8<-- "source/examples/standing-accept.no-max-price.invalid.json"
+    ```
 
 ### Sealed-bid auctions
 

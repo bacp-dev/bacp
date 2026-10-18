@@ -36,23 +36,23 @@ labels for traceability between this page, the open questions and conformance re
 
 | Status | Requirements |
 |---|---|
-| Covered | 165 |
-| Partial | 55 |
+| Covered | 167 |
+| Partial | 59 |
 | Gap | 10 |
 | N/A | 6 |
-| **Total** | **236** |
+| **Total** | **242** |
 
 | Group | Requirements |
 |---|---|
 | [Reserve Bank of India (RBI)](#rbi) | 69 |
 | [NPCI and card networks](#npci) | 15 |
-| [MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar](#meity-dpdp) | 24 |
-| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 18 |
+| [MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar](#meity-dpdp) | 25 |
+| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 20 |
 | [ONDC network policy](#ondc) | 6 |
-| [GST, Income-tax and Legal Metrology](#gst-legal-metrology) | 9 |
+| [GST, Income-tax and Legal Metrology](#gst-legal-metrology) | 10 |
 | [MSMED and Competition](#msmed-competition) | 11 |
 | [FEMA and cross-border trade](#fema) | 4 |
-| [Other statutes and government procurement](#other-law) | 18 |
+| [Other statutes and government procurement](#other-law) | 20 |
 | [BACP policy and DPI design patterns](#bacp-policy) | 62 |
 
 ## Reserve Bank of India (RBI) {#rbi}
@@ -187,9 +187,10 @@ The CERT-In Directions of 28-04-2022 under s.70B(6) of the Information Technolog
 | **REQ-216** Large e-commerce: erase after 3 years inactive, with a 48 h warning | DPDP Rules 8(1)–(2), Third Schedule item 1 (e-commerce entities with at least two crore registered users in India) | Operator data-lifecycle duty ([Conformance: Operator](conformance.md#operator), attested, not tested) | N/A: operator duty outside the protocol |
 | **REQ-217** Report specified cyber incidents (including data breaches and leaks) to CERT-In within 6 hours of noticing them | CERT-In Directions under IT Act, 2000 s.70B(6) (No. 20(3)/2022-CERT-In, 28-04-2022; in force) (secondary) | Each participant's own report ([Security and Privacy](security-and-privacy.md#breach-notice)) | **Partial**: Reporting is a participant duty outside the protocol; no cross-participant signal to start other participants' clocks (proposed `bacp.breach_signal`) → [Q-17](open-questions.md#q-17) |
 | **REQ-218** Keep ICT system logs for a rolling 180 days within India; produce them to CERT-In on request | CERT-In Directions of 28-04-2022 (secondary) | Stated as a participant duty covering gateway and InstructionLog logs ([Security and Privacy](security-and-privacy.md#retention)) | **Partial**: No protocol retention table for InstructionLog, receipts, evidence or gateway logs → [Q-17](open-questions.md#q-17) |
-| **REQ-219** Synchronise ICT system clocks to the NTP servers of NIC or NPL, or servers traceable to them | CERT-In Directions of 28-04-2022 (secondary) | Signature `created` / `expires` with a 5 s clock-skew bound ([Security and Privacy](security-and-privacy.md#replay)) | N/A: operator duty outside the protocol |
+| **REQ-219** Synchronise ICT system clocks to the NTP servers of NIC or NPL, or servers traceable to them | CERT-In Directions of 28-04-2022 (secondary) | Signature `created` / `expires` with a 5 s clock-skew bound ([Security and Privacy](security-and-privacy.md#replay)); a clock-traceability MUST for negotiation participants, which is a duty on each clock and never an ordering input ([Negotiation](negotiation/index.md#signed-seller-acceptance-and-clock-skew)) | N/A: operator duty outside the protocol |
 | **REQ-407** Health purchases via UHI/NHCX; health data under an ABDM consent artefact, with separate consent | ABDM (programme, not a statute); separate consent for health data is BACP policy, since the DPDP Act has no sensitive-data category | Document reference type for an ABDM consent artefact ([Trade Profiles](trade-profiles.md)) | **Gap**: No health data scope or separate consent class → [Q-17](open-questions.md#q-17) |
 | **REQ-408** Notices in English plus the chosen Eighth Schedule language; log model and version | DPDP Act s.5(3), s.6(3); model logging is BACP policy | Multilingual notices; notice language and translation model recorded in ConsentReceipt and InstructionLog ([Security and Privacy](security-and-privacy.md#notice-and-consent)) | Covered |
+| **NEG-194** When an electronic record is despatched and received, save as otherwise agreed; an unacknowledged record is deemed never sent where an acknowledgement is stipulated | IT Act, 2000 s.12(2), s.13(1) | Protocol terms named in every firm message (`protocol_terms{version, hash}`) ([Negotiation](negotiation/index.md#indian-contract-act-timing)) | **Partial**: Whether the terms are "otherwise agreed" for a consumer, and s.11 attribution → [Q-19](open-questions.md#q-19), [Q-52](open-questions.md#q-52) |
 
 ## CCPA and Consumer Protection {#consumer-protection}
 
@@ -222,6 +223,8 @@ The Consumer Protection (E-Commerce) Rules 2020 and the Central Consumer Protect
 | **TRADE-133** Subscriptions: pause, skip, resume, change quantity, one-step cancel with proof | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; subscription trap); RBI E-mandate Framework 2026 | Mandate pause and revoke on the Trusted Surface ([Mandates](mandates.md)) | **Partial**: No skip, per-cycle quantity change or cancellation proof |
 | **TRADE-136** Dispute object with SLA clocks and escalation chain | Consumer Protection (E-Commerce) Rules r.4(5) | IGM issue with escalation chain ([Beckn binding](transports/beckn.md#igm)) | **Partial**: No auto-escalation on a missed 48-hour acknowledgement → [Q-57](open-questions.md#q-57) |
 | **TRADE-148** Returns with credit note; refund to source or the COD path | Consumer Protection (E-Commerce) Rules r.4(10) (refunds as prescribed by RBI); RBI PA Directions 2025 para 10(f) | Return path with refund to source or the COD path ([Post-order](checkout/post-order.md)) | Covered |
+| **NEG-190** No consent recorded automatically; an agent's autonomous acceptance is the principal's explicit choice | Consumer Protection (E-Commerce) Rules 2020 r.4(9) | `process.accept_confirmation`: an absent key is `ask`, never preselected, set only on the Trusted Surface; `autonomous` takes effect only with a `notice_route` ([Negotiation](negotiation/index.md#the-negotiation-mandate), [Trusted Surface](human-participants.md#ts-negotiation)) | Covered (see [Q-85](open-questions.md#q-85)) |
+| **NEG-191** No nagging: repeated and persistent interactions unless the user permits them; compliance and yearly self-audit from 01-01-2027 | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 ("nagging"); Consumer Protection (E-Commerce) Rules 2020 r.4(15) (from 01-01-2027) | A negotiation step-up only on an accept attempt; one pending per negotiation and one presented at a time per principal; a per-principal cap declared in `/.well-known/bacp` ([Negotiation](negotiation/index.md#step-up-to-the-trusted-surface)) | **Partial**: BACP sets no cap value |
 
 ## ONDC network policy {#ondc}
 
@@ -251,6 +254,7 @@ CGST rules on e-invoicing and e-way bills, Income-tax Act cash and TDS rules, an
 | **TRADE-125** E-way bill before dispatch above ₹50,000 | CGST Rule 138 (text not verified) | E-way bill before dispatch (`NEG_EWB_MISSING`) ([Trade Profiles](trade-profiles.md)) | **Partial**: No per-state intra-state limits |
 | **TRADE-127** Catalogue: loose units, price ≤ MRP, tier prices, slots | Legal Metrology (Packaged Commodities) Rules (text checked as of 18-10-2026) | TermSheet lines carry MRP and retail-package flag ([Negotiation](negotiation/index.md)) | **Partial**: `mrp` and `tax_inclusive` are now on catalogue items ([Catalogue disclosures](discovery.md#catalogue-disclosures)); the unit basis is still absent → [Q-20](open-questions.md#q-20) |
 | **TRADE-147** Compute and display TDS and s.43B(h) exposure | Income-tax Act | TermSheet TDS section; ledger tax flag ([Trade Profiles](trade-profiles.md)) | **Partial**: TDS computation and display not specified |
+| **REQ-331** No time reference other than IST for any purpose, once the Rules commence | Legal Metrology (Indian Standard Time) Rules, 2026 (G.S.R. 761(E)) r.7; r.6(4)–(5) traceability (notified; not in force as of 18-10-2026; commencement 180 days after publication, about 24-02-2027, exact day not verified) | Comparisons on instants; BACP-owned times SHOULD carry `+05:30`; every time shown or told to a person on the Trusted Surface is in IST; Beckn `context.timestamp` follows ONDC ([Negotiation](negotiation/index.md#signed-seller-acceptance-and-clock-skew), [Overview](overview/index.md#data-conventions)) | **Partial**: Whether r.7 reaches machine timestamps, and the `Z` that ONDC requires → [Q-84](open-questions.md#q-84) |
 
 ## MSMED and Competition {#msmed-competition}
 
@@ -293,7 +297,7 @@ The Indian Contract Act, government procurement rules (GFR, DoE, GeM), and secto
 | **PAY-141** No bank or system provider imposes a charge on RuPay debit and UPI up to ₹2,000 | Gazette S.O. 5067(E), 14-09-2026 (Payment and Settlement Systems Act s.10A); binds banks and system providers | Not cited against merchants ([Rail Bindings](payments/rails.md#upi-charges)) | N/A: binds banks and system providers, not BACP participants |
 | **NEG-110** One live offer; a COUNTER must cite it in `in_reply_to` | Indian Contract Act s.7 (unverified citation) | One live offer; a counter cites it (`NEG_STALE_OFFER`) ([Negotiation](negotiation/index.md)) | Covered (see [Q-52](open-questions.md#q-52)) |
 | **NEG-111** ACCEPT is explicit and signed; silence means EXPIRED | Indian Contract Act ss.4, 6(2), 7(2) (unverified citation) | ACCEPT is explicit and signed; silence ends EXPIRED ([Negotiation](negotiation/index.md)) | Covered (see [Q-52](open-questions.md#q-52)) |
-| **NEG-112** WITHDRAW allowed only until ACCEPT is dispatched; crossing rule | Indian Contract Act ss.4–5 (unverified citation) | WITHDRAW only until ACCEPT is dispatched; crossing rule ([Negotiation](negotiation/index.md)) | Covered; a deal decided by the crossing rule escalates to the principal until [Q-52](open-questions.md#q-52) is settled |
+| **NEG-112** WITHDRAW allowed only until ACCEPT is dispatched; crossing rule | Indian Contract Act ss.4–5 (unverified citation) | WITHDRAW only until ACCEPT is dispatched; a crossing is decided by transcript positions, otherwise it is `crossing_contested` with no breach event ([Negotiation](negotiation/index.md#contested-crossings)) | Covered; a deal decided by the crossing rule, or contested, escalates to each principal until [Q-52](open-questions.md#q-52) is settled |
 | **TRADE-103** Negotiation protocols declared up front | GeM practice (no primary instrument cited) | Negotiation mode declared up front ([Negotiation](negotiation/index.md)) | Covered |
 | **TRADE-105** Validity and firmness flag; accepting an expired offer fails | GeM practice (no primary instrument cited) | Absolute expiry and firmness flag on every offer; accepting an expired offer fails ([Negotiation](negotiation/index.md)) | Covered |
 | **TRADE-112** GeM 10-day CRAC window and 1%/month interest | DoE Office Memorandum F.6/18/2019-PPD of 03-07-2020 | 10-day CRAC window and interest tracked in the ledger ([Trade Profiles](trade-profiles.md)) | Covered |
@@ -305,6 +309,8 @@ The Indian Contract Act, government procurement rules (GFR, DoE, GeM), and secto
 | **TRADE-137** Graded incident record; exclude suspended sellers | GeM Incident Management Policy | Suspended sellers excluded from RFQs and auctions ([RFQ and Auctions](negotiation/rfq-and-auctions.md)) | **Partial**: No graded incident record |
 | **TRADE-138** Refundable deposits with release conditions and itemised deductions | Model Tenancy Act | Deposit terms with refundability and deductions ([Negotiation](negotiation/index.md)) | Covered |
 | **TRADE-146** Immutable public-procurement audit trail with comparison set | General Financial Rules 2017 (not checked against a primary text) | InstructionLog and RFQ comparison set kept for audit ([RFQ and Auctions](negotiation/rfq-and-auctions.md)) | Covered |
+| **NEG-192** A Dutch tick acceptance is a bid and the award completes the sale | Sale of Goods Act, 1930 s.64(2) | The award follows the auctioneer's chain order with a signed `tick_close` ([RFQ and Auctions](negotiation/rfq-and-auctions.md#dutch-auctions-perishables)) | Covered (see [Q-85](open-questions.md#q-85)) |
+| **NEG-193** A proposal may be revoked until the communication of its acceptance is complete as against the proposer | Indian Contract Act s.5 | A buyer's `withdraw` naming `accept_msg_hash`, until the seller's `on_init` receipt; free, not a cancellation ([Negotiation](negotiation/index.md#withdrawal-rejection-and-termination)) | **Partial**: No Beckn carrier for the withdrawal → [Q-22](open-questions.md#q-22) |
 
 ## BACP policy and DPI design patterns {#bacp-policy}
 

@@ -1,0 +1,151 @@
+{
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "mode": "alternating",
+  "role": "buyer",
+  "acting_for_kind": "company",
+  "state": "AGREED",
+  "counterparty": {
+    "bpp_id": "bpp.bunkar.example.in",
+    "provider_id": "P2",
+    "offeror_kind": "agent",
+    "udyam_category": "micro"
+  },
+  "capability": {
+    "negotiable_issues": [
+      "/lines/*/unit_price",
+      "/returns/return_type",
+      "/payment/selected_option_id"
+    ],
+    "modes": [
+      "fixed",
+      "alternating"
+    ],
+    "max_rounds": 10,
+    "round_timeout": "PT10M",
+    "min_offer_validity": "PT5M",
+    "sig_algs": [
+      "ES256",
+      "EdDSA"
+    ],
+    "firm_quote_supported": true,
+    "accepted_handlers": [
+      "in.upi.reservepay",
+      "in.upi.intent",
+      "in.cod",
+      "in.cod.upi"
+    ]
+  },
+  "mandate_ref": {
+    "id": "mdt_NEG7Q2W9X4K1M3",
+    "hash": "sha-256:NuNND_z4qhA_CZaDGKdqX_9Qm3p9V5VXzrM7DoSWYd8"
+  },
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "presence": "HNP",
+  "round": 3,
+  "max_rounds": 10,
+  "negotiation_deadline": "2026-10-13T20:00:00+05:30",
+  "offers": [
+    {
+      "offer_hash": "sha-256:WhY4bhJm9wXJk-7XHcqeRbQ3WSA4DqlPAhF9Djosj54",
+      "by": "seller",
+      "round": 0,
+      "firm": false,
+      "state": "SUPERSEDED",
+      "expires_at": "2026-10-13T12:00:00+05:30"
+    },
+    {
+      "offer_hash": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+      "by": "buyer",
+      "round": 1,
+      "firm": true,
+      "state": "REJECTED",
+      "expires_at": "2026-10-13T11:30:00+05:30"
+    },
+    {
+      "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+      "by": "seller",
+      "round": 2,
+      "firm": true,
+      "state": "ACCEPTED",
+      "expires_at": "2026-10-13T11:32:00+05:30",
+      "dispatched_at": "2026-10-13T11:02:00+05:30",
+      "received_at": "2026-10-13T11:02:01+05:30"
+    }
+  ],
+  "exposure": {
+    "principal_outstanding_firm": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "counted_against": [
+      "total_max",
+      "budget_P1M"
+    ],
+    "concurrent_negotiations": 1
+  },
+  "transcript": [
+    {
+      "seq": 0,
+      "msg_type": "offer",
+      "msg_hash": "sha-256:WhY4bhJm9wXJk-7XHcqeRbQ3WSA4DqlPAhF9Djosj54",
+      "by": "seller",
+      "at": "2026-10-13T10:58:00+05:30"
+    },
+    {
+      "seq": 1,
+      "msg_type": "counter_offer",
+      "msg_hash": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+      "by": "buyer",
+      "at": "2026-10-13T11:00:00+05:30"
+    },
+    {
+      "seq": 2,
+      "msg_type": "counter_offer",
+      "msg_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+      "by": "seller",
+      "at": "2026-10-13T11:02:00+05:30"
+    },
+    {
+      "seq": 3,
+      "msg_type": "accept",
+      "msg_hash": "sha-256:lJRtoHUIQckYFk7BASGC6sKjJ-XUVuGwnPAf-YDVEAs",
+      "by": "buyer",
+      "at": "2026-10-13T11:05:10+05:30",
+      "counter_signature": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "guard_verdicts": [
+    {
+      "at": "2026-10-13T11:00:00+05:30",
+      "msg_hash": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+      "direction": "outgoing",
+      "verdict": "pass",
+      "constraint_ids": [
+        "neg.price.total_max",
+        "neg.process.max_rounds"
+      ]
+    },
+    {
+      "at": "2026-10-13T11:05:09+05:30",
+      "msg_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+      "direction": "incoming",
+      "verdict": "pass",
+      "constraint_ids": [
+        "neg.price.reservation",
+        "neg.after_sales.min_return_window",
+        "neg.payment.handlers_allowed"
+      ]
+    }
+  ],
+  "validator_flags": [],
+  "accepted_offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "log_head": "sha-256:puM6b3R7BrQTlpr9p56R-_uigPyPOQaTc6_KCeiDQRU",
+  "messages": [],
+  "created_at": "2026-10-13T10:58:00+05:30",
+  "updated_at": "2026-10-13T11:05:11+05:30",
+  "protocol_terms": {
+    "version": "2026-10-17",
+    "hash": "sha-256:9uJbQ1xqk3mQ0yP7Zf2c8nT5vRwLhA6sDeXoGiUy4Nc"
+  }
+}

@@ -278,7 +278,7 @@ RFC 9421, covering `@status` and `content-digest` ([Response signature](discover
 | Shared state | A gateway that runs as several instances MUST share the nonce cache in an atomic store. |
 
 The same 5-second skew applies to every inbound signed message, including
-negotiation messages and the counterparty's receipts for messages BACP sent.
+negotiation messages and the counterparty's receipts for messages BACP sent. For negotiation it is a freshness bound only: the order of two negotiation messages comes from transcript positions, never from these times ([Signed seller acceptance and clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew)).
 
 ## Content-Digest
 
