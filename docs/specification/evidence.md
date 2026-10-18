@@ -1,7 +1,7 @@
 # Evidence and Instruction Log
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 When an agent buys something on a principal's behalf, every party may later need to show what was
 authorised, what was instructed, what was offered and what was paid. BACP produces that evidence

@@ -26,7 +26,7 @@
   "binding": {
     "class": "O",
     "open_eligible": false,
-    "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Held pending Q-59 and Q-46."
+    "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-18: its limits are enforced by the merchant, not by a rail or issuer. Held pending Q-59 and Q-46."
   },
   "mandate_primitives": [
     {

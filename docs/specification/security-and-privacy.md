@@ -1,7 +1,7 @@
 # Security and Privacy
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page states the BACP threat model and the controls that answer it, then how BACP handles personal data under
 India's Digital Personal Data Protection Act, 2023 and the DPDP Rules, 2025. The controls are defined normatively

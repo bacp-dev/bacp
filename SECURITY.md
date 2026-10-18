@@ -13,7 +13,7 @@ Report them privately in either of these ways:
 
 In either case:
 
-1. Describe the issue, the affected part of the specification, schema, OpenAPI binding or tooling, and the affected version (for example `2026-10-17` or `draft`).
+1. Describe the issue, the affected part of the specification, schema, OpenAPI binding or tooling, and the affected version (for example `2026-10-18` or `draft`).
 2. Include steps or message sequences that show the problem, and the impact.
 3. Add a suggested fix if you have one.
 
@@ -45,4 +45,4 @@ Working days are Monday to Friday, excluding public holidays in India. The maint
 
 ## Supported versions
 
-Security fixes land on `main` (the working draft) and on the latest dated release, currently `2026-10-17`. A backwards-compatible fix is backported to that release under the [backport policy](https://bacp.dev/versioning/#backport-policy); a fix that needs a breaking change ships in a new dated release, with the notice period shortened as the [versioning policy](https://bacp.dev/versioning/) allows for security fixes.
+Security fixes land on `main` (the working draft) and on the latest dated release, currently `2026-10-18`. A backwards-compatible fix is backported to that release under the [backport policy](https://spec.bacp.dev/versioning/#backport-policy); a fix that needs a breaking change ships in a new dated release, with the notice period shortened as the [versioning policy](https://spec.bacp.dev/versioning/) allows for security fixes.

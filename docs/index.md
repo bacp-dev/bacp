@@ -9,8 +9,8 @@ hide:
 
 **BACP lets an AI agent discover, negotiate, buy, pay for, return and raise grievances about goods and services in India, on behalf of a person or a business, within limits that person or business has signed.**
 
-!!! info "Version 2026-10-17"
-    BACP `2026-10-17` is the first dated release of the specification, and implementers can target it. Rules marked **Proposed** depend on an [open question](specification/open-questions.md) and may change in a later dated release. The conformance test suite is not yet published, so no participant can hold a conformance attestation yet. BACP is an independent proposal: it is not issued or endorsed by NPCI, ONDC, RBI or any other public body. Send feedback on [GitHub](https://github.com/bacp-dev/bacp).
+!!! info "Version 2026-10-18"
+    BACP `2026-10-18` is the first dated release of the specification, and implementers can target it. Rules marked **Proposed** depend on an [open question](specification/open-questions.md) and may change in a later dated release. The conformance test suite is not yet published, so no participant can hold a conformance attestation yet. BACP is an independent proposal: it is not issued or endorsed by NPCI, ONDC, RBI or any other public body. Send feedback on [GitHub](https://github.com/bacp-dev/bacp).
 
 [Read the specification](specification/overview/index.md){ .md-button .md-button--primary }
 [Core concepts](documentation/core-concepts/){ .md-button }
@@ -35,7 +35,7 @@ Every step leaves verifiable evidence, so that a dispute can be traced from the 
 
 ## What the first release covers
 
-BACP `2026-10-17` leads with marketplace and quick commerce (`b2c.ecom`), and launches with kirana khata, subscriptions and ticketing. These four trade profiles are stable. Distributor schemes and B2B procurement, services and social commerce are in the release as proposed profiles: attestable, but their rules MAY change in a later dated release. GeM, agri and mandi trade, cross-border trade, high-value purchases, rentals and assisted rural commerce are in review: described so that readers can comment, outside the conformance scope of this release, and open to change or removal. [Trade profiles](specification/trade-profiles.md#profile-table) lists the maturity of each.
+BACP `2026-10-18` leads with marketplace and quick commerce (`b2c.ecom`), and launches with kirana khata, subscriptions and ticketing. These four trade profiles are stable. Distributor schemes and B2B procurement, services and social commerce are in the release as proposed profiles: attestable, but their rules MAY change in a later dated release. GeM, agri and mandi trade, cross-border trade, high-value purchases, rentals and assisted rural commerce are in review: described so that readers can comment, outside the conformance scope of this release, and open to change or removal. [Trade profiles](specification/trade-profiles.md#profile-table) lists the maturity of each.
 
 ## Who it is for
 

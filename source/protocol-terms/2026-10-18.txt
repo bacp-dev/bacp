@@ -1,4 +1,4 @@
-BACP protocol terms, version 2026-10-17
+BACP protocol terms, version 2026-10-18
 
 These terms govern every firm message of a negotiation that names this version in protocol_terms. They are agreed by the parties in the sense of the Information Technology Act, 2000, s.13 ("save as otherwise agreed").
 

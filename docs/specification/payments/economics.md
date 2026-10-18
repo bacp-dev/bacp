@@ -1,7 +1,7 @@
 # Who pays
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. It is informative: it explains the rules that other pages make normative, and it states each fact with its binding status and an "as of" date. Where it says **MUST** or **SHOULD**, it repeats a rule from the page it links.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. It is informative: it explains the rules that other pages make normative, and it states each fact with its binding status and an "as of" date. Where it says **MUST** or **SHOULD**, it repeats a rule from the page it links.
 
 BACP makes normative what the principal pays and to whom. It leaves informative how sellers, payment aggregators (PAs) and banks split their own costs. So BACP has no `mdr`, `fee_bearer`, `payer` or `settlement_eta` field, and none of the seller's own costs appears in a quote line, a total, a `ts_render`, a message to the principal or a receipt.
 

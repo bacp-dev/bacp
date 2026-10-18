@@ -1,13 +1,13 @@
 # Contributing to BACP
 
-Thank you for helping to improve the Bharat Agentic Commerce Protocol. BACP is released as dated versions (the first is `2026-10-17`), and work towards the next release happens on `main`. Review is the most useful contribution: questions, corrections, missing Indian context and implementation experience are all welcome. Changes follow the review periods and release process in [GOVERNANCE.md](GOVERNANCE.md) and the [versioning policy](https://bacp.dev/versioning/).
+Thank you for helping to improve the Bharat Agentic Commerce Protocol. BACP is released as dated versions (the first is `2026-10-18`), and work towards the next release happens on `main`. Review is the most useful contribution: questions, corrections, missing Indian context and implementation experience are all welcome. Changes follow the review periods and release process in [GOVERNANCE.md](GOVERNANCE.md) and the [versioning policy](https://spec.bacp.dev/versioning/).
 
 By participating you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md). Do not report security vulnerabilities in public issues; follow [SECURITY.md](SECURITY.md) instead.
 
 ## Ways to contribute
 
 - **Open an issue** for a bug, an ambiguity, a factual error about a rail or a regulation, or a proposal. Cite a public primary source for any regulatory or rail fact (a circular, a gazette notification, an official specification).
-- **Comment on an open question** listed on the [open questions](https://bacp.dev/latest/specification/open-questions/) page.
+- **Comment on an open question** listed on the [open questions](https://spec.bacp.dev/latest/specification/open-questions/) page.
 - **Send a pull request** for editorial fixes, examples, schema changes or new specification text. For large or breaking changes, open an issue first so the approach can be discussed.
 
 ## Developer Certificate of Origin (DCO)
@@ -46,7 +46,7 @@ feat(mandates)!: rename constraints.budget.period to constraints.budget.window
 The files under `source/` are normative. Changes to them follow these rules:
 
 1. **Keep `$id` stable.** Every schema's `$id` MUST be `https://bacp.dev/schemas/<file name>`. The build rewrites it per version. Do not hard-code a version in `$id` or `$ref`.
-2. **Prefer additive changes.** Add optional fields rather than changing existing ones. Readers MUST ignore unknown fields, so additive changes are not breaking, except a request member of a capability that the receiver defines but does not list, which it refuses with `400 capability_unsupported` ([Extensibility](https://bacp.dev/latest/specification/overview/#extensibility) rule 1). Unknown mandate constraints MUST fail closed, so a new mandate constraint is breaking for verifiers. Mark it with `!`.
+2. **Prefer additive changes.** Add optional fields rather than changing existing ones. Readers MUST ignore unknown fields, so additive changes are not breaking, except a request member of a capability that the receiver defines but does not list, which it refuses with `400 capability_unsupported` ([Extensibility](https://spec.bacp.dev/latest/specification/overview/#extensibility) rule 1). Unknown mandate constraints MUST fail closed, so a new mandate constraint is breaking for verifiers. Mark it with `!`.
 3. **Amounts are integer paise.** Use the shared `Amount` definition in `common.json`. Do not introduce floating-point money.
 4. **Add examples.** Every new or changed schema needs at least one valid example in `source/examples/<schema>.<case>.json`. Add `<schema>.<case>.invalid.json` examples for each rule the schema is meant to reject.
 5. **Keep the OpenAPI binding in step.** If a schema change affects the REST binding, update `source/services/bacp.openapi.yaml` in the same pull request.
@@ -72,7 +72,7 @@ CI runs the same checks on every pull request.
 - Write in the present tense, and write "BACP", not "we".
 - Use real Indian context (UPI, ONDC/Beckn, RBI, NPCI, DPDP). Do not invent limits, dates or circular numbers. If a fact is uncertain, say so and link an open question.
 - Give amounts in integer paise in schemas and examples, and times in IST where they matter.
-- **Dates.** Human-facing dates use `DD-MM-YYYY` with zero padding (`07-12-2022`, `13-11-2026`) in prose, tables, diagrams, schema `description` strings and registry notes. Month-only dates stay as words ("April 2026"). Machine values keep ISO forms: RFC 3339 timestamps, JSON Schema `format: date` values and `YYYY-MM-DD` version identifiers (`2026-10-17`), as well as URLs, field names and branch names.
+- **Dates.** Human-facing dates use `DD-MM-YYYY` with zero padding (`07-12-2022`, `13-11-2026`) in prose, tables, diagrams, schema `description` strings and registry notes. Month-only dates stay as words ("April 2026"). Machine values keep ISO forms: RFC 3339 timestamps, JSON Schema `format: date` values and `YYYY-MM-DD` version identifiers (`2026-10-18`), as well as URLs, field names and branch names.
 - **Money.** Write `₹` with Indian digit grouping (₹1,00,000; ₹2,698), never "Rs", "Rs." or "INR 500" in prose or display strings (the `"currency": "INR"` code value is unchanged). Write out "lakh" and "crore" (₹1 lakh, ₹10 crore), not ₹1 L, ₹15k or ₹10 cr, and use lakh and crore for scale ("20 lakh", not "2 million").
 - **Spelling.** Use Indian/British spelling in prose: catalogue, cancelled, centre, programme (but "computer program"), licence (noun) / license (verb), fulfil and fulfilment, behaviour, colour, authorise, organisation, linearisable, judgement. Keep external wire and field names as they are (Beckn `catalog`, `FULFILLMENT`, the HTTP `Authorization` header).
 - **Hindi.** Display text under `hi-IN` is written in Devanagari (`"hi-IN": "घर का किराना सामान"`); Roman-script Hindi, such as voice transcripts, is tagged `hi-Latn-IN`. Never put English text under `hi-IN`. Where prose quotes Hindi, add a short English gloss.

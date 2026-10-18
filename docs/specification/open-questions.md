@@ -1,14 +1,14 @@
 # Open Questions
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
-This page lists every question that BACP version `2026-10-17` cannot answer on its own, and the questions it has
+This page lists every question that BACP version `2026-10-18` cannot answer on its own, and the questions it has
 settled. Each open question names the body whose answer BACP needs and the working position this version takes until
 then. Other pages link here with anchors such as `open-questions.md#q-16`.
 
-!!! note "No question blocks 2026-10-17"
-    No open question blocks version `2026-10-17`. One, [Q-77](#q-77), is marked Blocking for settlement only: its
+!!! note "No question blocks 2026-10-18"
+    No open question blocks version `2026-10-18`. One, [Q-77](#q-77), is marked Blocking for settlement only: its
     fail-safe default applies, and the mark means that settling it needs the approvals that GOVERNANCE.md requires for
     a Blocking question. No other question is marked Blocking. A question is Blocking when,
     without its answer, a dated release cannot make a normative, testable statement, or would publish a design that
@@ -251,7 +251,7 @@ the IGM 2.0 enum has only `AGENT`, which means a fulfilment agent?<br>
 ### Q-12 Class consent receipts for unknown sellers {#q-12}
 
 !!! note "Non-blocking: fail-safe default"
-    Was Blocking. The protocol rule is settled in `2026-10-17`; the legal question stays open with the fail-safe
+    Was Blocking. The protocol rule is settled in `2026-10-18`; the legal question stays open with the fail-safe
     default below. The default is relaxed only in a dated release
     ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance case T1-27 (cases T1-27 to
     T1-32 cover the six fail-safe defaults).
@@ -261,7 +261,7 @@ who are unknown when the mandate is set up? Must the per-seller receipt at `init
 released?<br>
 **Owner.** MeitY/DPDP, with legal counsel.
 
-**Settled in `2026-10-17`.** A per-seller ConsentReceipt, naming that seller's `bpp_id`, MUST be minted by the
+**Settled in `2026-10-18`.** A per-seller ConsentReceipt, naming that seller's `bpp_id`, MUST be minted by the
 Mandate Manager at `init` before any personal data reaches the seller. A class receipt (`recipient.bpp_id: "*"`) only
 pre-authorises: if the gateway does not hold an active per-seller receipt for the seller, it sends nothing and
 returns `403 mandate_scope_mismatch`.
@@ -1356,13 +1356,13 @@ and, for a balance left after expiry, a payment to the holder in a bank account 
 
 ## Settled {#settled}
 
-These questions are settled in BACP `2026-10-17`. Each answer is normative in this version; the linked pages state
+These questions are settled in BACP `2026-10-18`. Each answer is normative in this version; the linked pages state
 the rule. A settled answer changes only in a later dated release, under the [versioning policy](https://bacp.dev/versioning/).
 
 ### Q-28 Handler naming {#q-28}
 
 !!! success "Settled"
-    Settled in `2026-10-17`.
+    Settled in `2026-10-18`.
 
 **Question.** Who governs handler names (`in.*` or `bacp.*`), and how long is the alias deprecation window?<br>
 **Owner.** BACP WG.
@@ -1380,13 +1380,13 @@ alias is a breaking change and gets at least 90 days' notice. This also settles 
 ### Q-41 Closing open mandates {#q-41}
 
 !!! success "Settled"
-    Was Blocking. Settled in `2026-10-17`.
+    Was Blocking. Settled in `2026-10-18`.
 
 **Question.** What is the interoperable SD-JWT / KB-JWT encoding for closing open mandates, in place of the
 detached-JWS `cnf` closing?<br>
 **Owner.** BACP WG.
 
-**Answer.** BACP `2026-10-17` has one interoperable encoding for a closed mandate: an attached compact JWS whose
+**Answer.** BACP `2026-10-18` has one interoperable encoding for a closed mandate: an attached compact JWS whose
 payload is the Mandate JSON, including an inner signature with `role: agent` made by the open mandate's `cnf` key,
 and whose header `kid` is the `cnf` key id. The optional `kb_jwt` on `complete` keeps its current rules. An SD-JWT /
 KB-JWT selective-disclosure encoding is not part of this version; a later release may add it as a new mandate
@@ -1396,7 +1396,7 @@ KB-JWT selective-disclosure encoding is not part of this version; a later releas
 ### Q-42 Mandatory signature algorithm {#q-42}
 
 !!! success "Settled"
-    Was Blocking. Settled in `2026-10-17`.
+    Was Blocking. Settled in `2026-10-18`.
 
 **Question.** ES256 is mandatory and EdDSA allowed, but no ES256 test vectors exist and the implementation exercised
 so far signs only with EdDSA. Should ES256 stay mandatory, should EdDSA become mandatory, or should both be
@@ -1411,7 +1411,7 @@ suite will carry test vectors for both. See [Identity and Request Signing](ident
 ### Q-43 Network-leg signing {#q-43}
 
 !!! success "Settled"
-    Was Blocking. Settled in `2026-10-17`.
+    Was Blocking. Settled in `2026-10-18`.
 
 **Question.** Should Beckn messages be signed with a detached JWS over JCS, or with Beckn's Ed25519 + BLAKE2b
 `Authorization` header? Does BACP require Beckn 2.0 signed ACKs and the CounterSignature on which negotiation timing
@@ -1445,14 +1445,14 @@ from the transport. See [Q-22](#q-22) for the ONDC dependency.
 ### Q-47 Purpose-code governance {#q-47}
 
 !!! success "Settled"
-    Was Blocking. Settled in `2026-10-17`.
+    Was Blocking. Settled in `2026-10-18`.
 
 **Question.** Who governs the purpose-code registry and its bounds? The Sahamati Fair Use page that inspired it is
 marked "no longer relevant".<br>
 **Owner.** BACP WG.
 
 **Answer.** The BACP WG governs the purpose-code registry. The purpose-bounds table in
-[Mandates and Consent](mandates.md#purpose-bounds) is the normative registry for `2026-10-17`. A change to a code or
+[Mandates and Consent](mandates.md#purpose-bounds) is the normative registry for `2026-10-18`. A change to a code or
 a bound is a normative change under
 [`GOVERNANCE.md`](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md) and ships only in a dated release;
 lowering a bound or removing a code is a breaking change. A `purpose_code` that is not in the table is refused with
@@ -1527,7 +1527,7 @@ the open parts are [Q-70](#q-70) and [Q-71](#q-71).
 ### (a) Open mandates on class-O handlers {#proposed-a}
 
 !!! success "Settled"
-    Was proposed design choice (a). Settled in `2026-10-17` by owner decision of 17-10-2026, in a narrowed form.
+    Was proposed design choice (a). Settled in `2026-10-18` by owner decision of 17-10-2026, in a narrowed form.
 
 **Question.** May an open (human-not-present) payment mandate bind to any class-O handler, or only to the UPI standing
 authorities?<br>
@@ -1556,7 +1556,7 @@ See [Mandates and Consent](mandates.md#handler-binding) and [Handler Registry](p
 ### (c) Acceptance revocation {#proposed-c}
 
 !!! success "Settled"
-    Was proposed design choice (c), "acceptance revocation waived by default". Settled in `2026-10-17` by owner
+    Was proposed design choice (c), "acceptance revocation waived by default". Settled in `2026-10-18` by owner
     decision of 17-10-2026, amended the same day after review: `allowed_until_receipt` is refused everywhere, and the
     rules that would honour it are kept as sunset text.
 
@@ -1600,7 +1600,7 @@ See [Acceptance revocation](negotiation/index.md#acceptance-revocation),
 ### (d) Multi-seller hands-free shopping {#proposed-d}
 
 !!! success "Settled"
-    Was proposed design choice (d). Settled in `2026-10-17` by owner decision of 17-10-2026.
+    Was proposed design choice (d). Settled in `2026-10-18` by owner decision of 17-10-2026.
 
 **Question.** Given that a Reserve Pay block pays one seller, in what order does an agent fall back when it buys
 from several sellers with no human present, and what does each fallback mean for the principal?<br>
@@ -1701,7 +1701,7 @@ can carry `operator_id` and `person_ref` is a question for ONDC.
 rail binding is no longer eligible (`binding_ineligible`, `reissue_required`) or lifts such a pause, so that the
 Trusted Surface can show the principal why the agent cannot pay and can offer re-issue? If so, through which signed
 event and endpoint? `POST /trusted-surface/events` runs from the MM or PSP to the gateway, and every webhook runs from
-the gateway to the agent, so BACP `2026-10-17` has no channel in this direction.<br>
+the gateway to the agent, so BACP `2026-10-18` has no channel in this direction.<br>
 **Owner.** BACP WG.
 
 **Answer.** Yes, on the `audit_uri` that the mandate already carries, with no new Mandate Manager endpoint. The gateway

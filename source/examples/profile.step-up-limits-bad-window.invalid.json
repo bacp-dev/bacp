@@ -1,8 +1,8 @@
 {
   "bacp": {
-    "version": "2026-10-17",
+    "version": "2026-10-18",
     "supported_versions": [
-      "2026-10-17"
+      "2026-10-18"
     ]
   },
   "bap_id": "bap.vaani.example.in",

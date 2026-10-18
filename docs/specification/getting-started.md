@@ -1,7 +1,7 @@
 # Getting Started
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page walks through one complete BACP transaction, from mandate setup to a
 refund. It is a guided tour of the normative pages, not a replacement for them:

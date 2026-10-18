@@ -1,7 +1,7 @@
 # Beckn / ONDC Binding
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 BACP is an agent layer over Beckn and ONDC, not a fork. The BACP gateway speaks ordinary Beckn on the network leg,
 adds agent semantics in a namespaced extension that network participants who do not speak BACP can ignore, and
@@ -130,7 +130,7 @@ No other keys are allowed (`additionalProperties: false`).
   "language": "hi-IN",
   "ai_disclosure": true,
   "log_head": "sha-256:LCa0a2j_xo_5m0U8HTBBNBNCLXBkg7-g-YpeiGJm564",
-  "version": "2026-10-17"
+  "version": "2026-10-18"
 }
 ```
 

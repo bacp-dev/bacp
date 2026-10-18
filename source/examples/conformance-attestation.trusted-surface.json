@@ -6,8 +6,8 @@
   "iat": 1792200000,
   "exp": 1807750000,
   "jti": "att_9Tz4Hn3LcR8s",
-  "bacp_version": "2026-10-17",
-  "registry_version": "2026-10-17",
+  "bacp_version": "2026-10-18",
+  "registry_version": "2026-10-18",
   "levels": [
     "bacp.ts.1"
   ],

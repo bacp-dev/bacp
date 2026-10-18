@@ -1,7 +1,7 @@
 # RFQ and Auctions
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. This page extends the [negotiation module](index.md). Everything there (term sheets, signed messages, the guard, exposure, drift detection, contract timing) applies to RFQs and auctions too.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release. This page extends the [negotiation module](index.md). Everything there (term sheets, signed messages, the guard, exposure, drift detection, contract timing) applies to RFQs and auctions too.
 
 Two families of multi-party negotiation are covered here:
 

@@ -1,7 +1,7 @@
 # Handler Registry
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 The handler registry lists every Indian payment mode BACP can bind to: 57 handlers across UPI, cards, net banking, account-to-account transfers, NACH, PPIs, credit, COD, BBPS, e-RUPI, e₹, AePS, transit, trade finance, cross-border, GeM, PA settlement, cheques and the BACP credit ledger. Each entry is a **handler descriptor**: a JSON document that validates against [`handler-descriptor.json`](https://bacp.dev/schemas/handler-descriptor.json).
 
@@ -126,7 +126,7 @@ Who may sign the attestation that admits a `pilot` handler is data, like the han
   signing entry's scope is refused.
 - The list is the floor and the ceiling: a Mandate Manager MAY narrow it by publishing an exclusion list and MUST NOT
   add a signer to it.
-- The list ships empty in `2026-10-17`. Until an entry is added, no pilot handler can back an open mandate.
+- The list ships empty in `2026-10-18`. Until an entry is added, no pilot handler can back an open mandate.
 - Adding an entry, and moving any handler from `pilot` to `live`, needs the approvals in
   [GOVERNANCE.md](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md#interim-maintainer).
 
@@ -251,14 +251,14 @@ Generated from `binding.open_primitives` in the same file. An open payment manda
 | `in.nach.debit` | `nach_umrn` | — |
 | `in.ppi.wallet` | `ppi_emandate` | A wallet balance (`balance_cap`) never backs an open mandate |
 | `in.ppi.gift` | `balance_cap` | Only with a seller contracted with the issuer ([`issuer_contracted`](#descriptor-format)), and only when the PSP attestation states that the gift code vault is on the principal's side |
-| `in.store_credit` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
-| `in.loyalty` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
+| `in.store_credit` | — | not open-eligible in `2026-10-18` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
+| `in.loyalty` | — | not open-eligible in `2026-10-18` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
 | `in.ppi.netc_topup` | `topup_mandate` | — |
 | `in.ppi.ncmc_topup` | `topup_mandate` | — |
 | `in.bbps.upms` | `upms_registration` | — |
 | `in.erupi` | `voucher` | `pilot` until [Q-38](../open-questions.md#q-38) is answered: only when attested |
 | `in.cbdc.programmed` | `programmability_rules` | `pilot`: only when attested |
-| `bacp.credit_ledger` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
+| `bacp.credit_ledger` | — | not open-eligible in `2026-10-18` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
 
 ### Declared aliases
 

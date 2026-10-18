@@ -1,7 +1,7 @@
 # Identity and Request Signing
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page defines who an agent is on the wire and how every request proves
 it: the [AgentCredential](#agentcredential), the
@@ -67,7 +67,7 @@ payment data is open ([Q-15](open-questions.md#q-15)). Until it is settled:
   disclosures the gateway needs, in the `BACP-Agent` request header on every
   request except the unsigned `GET /.well-known/bacp` and
   `GET /payment-handlers` calls.
-- The legacy header name `BACP-Agent-Credential` is removed in `2026-10-17`.
+- The legacy header name `BACP-Agent-Credential` is removed in `2026-10-18`.
   An agent MUST NOT send it, and a gateway MUST NOT accept it in place of
   `BACP-Agent`.
 - The credential header is a [covered component](#covered-components) of the

@@ -1,7 +1,7 @@
 # Rail Bindings
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page binds the [payment model](index.md) to each Indian rail family. For every family it gives the handlers, the limits with the regulation or operator text they come from, the authentication model, how a mandate binds, and the refund and dispute path. The descriptors in the [Handler Registry](handler-registry.md) carry the same values as data, together with a verification grade for each limit.
 
@@ -321,8 +321,8 @@ Binding rules:
 | Handler | Class | Rule | Source |
 |---|---|---|---|
 | `in.ppi.gift` | O | Gift PPI: ≤ ₹10,000 per instrument, not reloadable, no cash-out; validity at least one year. **AFA-exempt**, so an agent may spend it HNP up to the balance. Reload and cash-out MUST be refused. | PPI MD para 10.1, 15.3(5) |
-| `in.store_credit` | O | A closed-system gift card or store credit usable only at the issuer is not an RBI payment system. Consumer-protection law and the E-Commerce Rules apply. The merchant alone enforces its limits, so in BACP `2026-10-17` it is not open-eligible and cannot back an open (HNP) payment mandate ([Q-59](../open-questions.md#q-59), settled as closed; the conditions for opening it later are Proposed text there). | PPI MD para 2.1 |
-| `in.loyalty` | O | Loyalty or reward points. No RBI regime was found. The agent MUST disclose the conversion value. The programme alone enforces its limits, so in BACP `2026-10-17` it is not open-eligible and cannot back an open (HNP) payment mandate ([Q-59](../open-questions.md#q-59), settled as closed; the conditions for opening it later are Proposed text there). | Programme terms *(not verified)* |
+| `in.store_credit` | O | A closed-system gift card or store credit usable only at the issuer is not an RBI payment system. Consumer-protection law and the E-Commerce Rules apply. The merchant alone enforces its limits, so in BACP `2026-10-18` it is not open-eligible and cannot back an open (HNP) payment mandate ([Q-59](../open-questions.md#q-59), settled as closed; the conditions for opening it later are Proposed text there). | PPI MD para 2.1 |
+| `in.loyalty` | O | Loyalty or reward points. No RBI regime was found. The agent MUST disclose the conversion value. The programme alone enforces its limits, so in BACP `2026-10-18` it is not open-eligible and cannot back an open (HNP) payment mandate ([Q-59](../open-questions.md#q-59), settled as closed; the conditions for opening it later are Proposed text there). | Programme terms *(not verified)* |
 
 - Gift and voucher codes are held in the Trusted Surface or the PSP-adapter vault and redeemed by the gateway's PSP adapter. The agent never sees them. Whether a PSP adapter may redeem gift-PPI codes on the user's behalf is open ([Q-30](../open-questions.md#q-30)).
 - In a [split tender](credit-and-split-tender.md#split-tender-payment-plans), stored-value tenders are captured first.

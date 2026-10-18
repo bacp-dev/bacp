@@ -5,11 +5,11 @@ participant can claim, the requirements each role MUST meet, the invariants
 that must hold after every interaction, and how conformance is tested and
 attested.
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 !!! note "Testing status"
-    The levels and checklists on this page are normative for BACP `2026-10-17`.
+    The levels and checklists on this page are normative for BACP `2026-10-18`.
     As of 17-10-2026, the automated conformance suite and the reference
     implementation are not yet published. Until they are, conformance is
     self-declared against these checklists.
@@ -129,7 +129,7 @@ the release manifest `source/handlers/release.json` records; its schema is
 `conformance_authority` ([Identity and Request Signing](identity-and-signing.md#conformance-authority-keys)) names a key that
 signs attestations and nothing else, and only a key of a listed entry qualifies.
 
-- **The list ships empty** in `2026-10-17`. No key qualifies until an entry is added, so a Mandate Manager still
+- **The list ships empty** in `2026-10-18`. No key qualifies until an entry is added, so a Mandate Manager still
   refuses open mandates on every `pilot` handler, as it did before this list existed. Adding an entry needs the
   further approval that [GOVERNANCE.md](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md#interim-maintainer)
   requires.
@@ -215,7 +215,7 @@ signs attestations and nothing else, and only a key of a listed entry qualifies.
 - **Unchanged for `in.upi.circle`.** Listing Circle in an authority's scope and in an attestation does not open the
   human-not-present path on `in.upi.circle` ([UPI Circle](payments/rails.md#upi-circle-delegate)).
 
-No open question blocks a conformance level of `2026-10-17`; the remaining
+No open question blocks a conformance level of `2026-10-18`; the remaining
 ones are listed on [Open Questions](open-questions.md), each with a fail-safe
 default that the conformance cases test. Core is attested against stable
 vectors: the signature algorithms ES256 and EdDSA, both mandatory to verify
@@ -1366,7 +1366,7 @@ Amounts are integer paise.
   level: bacp.core.1
   system_under_test: agent
   fixture:
-    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, registry_version: "2026-10-17", preinstalled: true}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, registry_version: "2026-10-18", preinstalled: true}
   steps:
     - request_from_gateway: {method: POST, path: "/sessions/{session_id}/complete", response: {status: 400, code: rail_binding_not_open_eligible, reasons: [reissue_required]}}
   expect:
@@ -2254,7 +2254,7 @@ every signer fails them. They use the manifest form above. A
 omit` leaves the `Presentation` out, `presentation: {…}` overrides its fields, and a field set to `omit` (for example
 `checkout_hash: omit`) is left out. Amounts are integer paise.
 
-T1-27 to T1-32 test that a fail-safe default is applied exactly as `2026-10-17` states it. Of the six, Q-12 and Q-52
+T1-27 to T1-32 test that a fail-safe default is applied exactly as `2026-10-18` states it. Of the six, Q-12 and Q-52
 escalate to the principal on the Trusted Surface, so their cases also expect a signed Trusted Surface event with a
 `Presentation` in the bundle; Q-15, Q-16 and Q-20 refuse or keep a feature off, with no escalation, and T1-31 now tests the fallback of the settled
 Q-44: a gateway that does not list `in.bacp.payment_plan` refuses `payment_plan`. T1-26
@@ -3953,7 +3953,7 @@ integer paise.
 ```
 
 !!! warning "Proposed"
-    T2-07 depends on a block-debit feed attested by the payer PSP, whose wire form `2026-10-17` does not define
+    T2-07 depends on a block-debit feed attested by the payer PSP, whose wire form `2026-10-18` does not define
     ([Q-10](open-questions.md#q-10)); it can run only through the harness keys `psp_attestation.block_debit_feed` and
     `rail_event`. T2-16 depends on `StepUp.delivery: ivr_callback`, which is Proposed until
     [Q-63](open-questions.md#q-63) is answered. Both are published as data for review and are not run against this
@@ -4378,7 +4378,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
 !!! warning "Proposed (sunset)"
     These cases test the [sunset text](negotiation/index.md#acceptance-revocation-sunset) for
     `allowed_until_receipt`. Each needs a live or accepted offer with that value, which no receiver creates in this
-    version, so they carry no conformance level and are not run against `2026-10-17`. They are published as data, and passing them is sunset condition (f). The non-monotonic chain check
+    version, so they carry no conformance level and are not run against `2026-10-18`. They are published as data, and passing them is sunset condition (f). The non-monotonic chain check
     that T3-16 exercises also applies in this version ([Clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew)).
     In these cases `log.entries[].counter_signature.returned: sync_response` means that the CounterSignature came
     back in the synchronous response to that message, and `before_step` names the step that it preceded; `replica`
@@ -7517,7 +7517,7 @@ only to a refusal or to contested.
     negotiation: {state: NEGOTIATING}
     variants: [hash_differs, protocol_terms_omitted]
   steps:
-    - incoming: {type: offer, firm: true, acceptance_revocation: waived, protocol_terms: {version: "2026-10-17", hash: H_OTHER}}
+    - incoming: {type: offer, firm: true, acceptance_revocation: waived, protocol_terms: {version: "2026-10-18", hash: H_OTHER}}
     - incoming: {type: offer, firm: true, acceptance_revocation: waived, protocol_terms: omit}
   expect:
     responses:
@@ -8340,7 +8340,7 @@ paise. Levels: gateway, schema and verifier cases `bacp.core.1` (T6-37 and T6-49
   title: A gateway at the previous version refuses a mandate that carries confirmation_floor
   level: bacp.core.1
   fixture:
-    gateway: {version: "2026-10-17"}
+    gateway: {version: "2026-10-18"}
     mandate: {constraints: {confirmation_floor: {min_user_action: tap_confirm}}}
     sessions: {count: 1, state: ready_for_complete}
   steps:
@@ -8578,11 +8578,11 @@ integer paise. Levels: gateway cases `bacp.pay.all.1` unless stated; schema case
   title: A pause recorded at registry serial 7 is lifted by serial 8 of the same dated release
   level: bacp.pay.all.1
   fixture:
-    registry: {version: "2026-10-17", serial: 7, in.upi.reservepay: {status: deprecated}}
+    registry: {version: "2026-10-18", serial: 7, in.upi.reservepay: {status: deprecated}}
     mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, status: PAUSED, pause_reasons: [binding_ineligible], pause_registry_serial: 7}
     sessions: {count: 0}
   steps:
-    - registry_update: {version: "2026-10-17", serial: 8, in.upi.reservepay: {status: live}}
+    - registry_update: {version: "2026-10-18", serial: 8, in.upi.reservepay: {status: live}}
     - sweep: {replicas: all}
   expect:
     state: {mandate: ACTIVE}
@@ -8594,8 +8594,8 @@ integer paise. Levels: gateway cases `bacp.pay.all.1` unless stated; schema case
   fixture:
     gateway: {replicas: 2}
     registry_by_replica:
-      replica_a: {version: "2026-10-17", serial: 8, published_at: -25h}
-      replica_b: {version: "2026-10-17", serial: 7}
+      replica_a: {version: "2026-10-18", serial: 8, published_at: -25h}
+      replica_b: {version: "2026-10-18", serial: 7}
     mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
     sessions: {count: 1, state: ready_for_complete}
   steps:
@@ -8928,7 +8928,7 @@ integer paise. Levels: gateway cases `bacp.pay.all.1` unless stated; schema case
   level: bacp.core.1
   system_under_test: agent
   fixture:
-    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, registry_version: "2026-10-17", preinstalled: true}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, registry_version: "2026-10-18", preinstalled: true}
   steps:
     - request_from_gateway: {method: POST, path: "/sessions/{session_id}/complete", response: {status: 400, code: rail_binding_not_open_eligible, reasons: [reissue_required]}}
   expect:
@@ -9085,7 +9085,7 @@ Case T8-CAP-05 is [BND-UCPF-06](#binding-cases).
   title: A gateway that does not list in.bacp.discounts refuses a POST /sessions that carries discounts, and creates no session
   level: bacp.core.1
   fixture:
-    gateway_version: "2026-10-17"
+    gateway_version: "2026-10-18"
     capabilities: {omits: [in.bacp.discounts]}
   steps:
     - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {discounts: {codes: [WELCOME50]}}}
@@ -9817,7 +9817,7 @@ The cases below cover the findings of the final review of the second round. They
   system_under_test: verifier
   fixture:
     vector: offer.protocol-terms-hash-stale.invalid.json
-    published_file: protocol-terms/2026-10-17.txt
+    published_file: protocol-terms/2026-10-18.txt
   steps:
     - verify_protocol_terms: {}
   expect:

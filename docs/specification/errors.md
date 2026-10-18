@@ -6,8 +6,8 @@ outcome the agent must act on, succeeds (200 or 201, or 202 where the operation 
 page defines both shapes, the resolution vocabulary that tells an agent what it may do next, and the registry of
 every code a conforming participant may emit.
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Codes are stable identifiers. A participant MUST NOT emit a code that is not registered on this page.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Codes are stable identifiers. A participant MUST NOT emit a code that is not registered on this page.
 
 ## Two channels {#channels}
 

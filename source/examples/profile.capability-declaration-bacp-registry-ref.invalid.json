@@ -1,8 +1,8 @@
 {
   "bacp": {
-    "version": "2026-10-17",
+    "version": "2026-10-18",
     "supported_versions": [
-      "2026-10-17",
+      "2026-10-18",
       "2026-11-01"
     ]
   },
@@ -38,7 +38,7 @@
   },
   "capability_declarations": {
     "in.bacp.discounts": {
-      "version": "2026-10-17",
+      "version": "2026-10-18",
       "extends": "in.bacp.checkout",
       "registry_ref": "ext/in.bacp.discounts"
     },
@@ -50,7 +50,7 @@
     }
   },
   "mcp_endpoints": {
-    "2026-10-17": "https://gw.bap.example.in/bacp/mcp/2026-10-17",
+    "2026-10-18": "https://gw.bap.example.in/bacp/mcp/2026-10-18",
     "2026-11-01": "https://gw.bap.example.in/bacp/mcp/2026-11-01"
   }
 }

@@ -1,7 +1,7 @@
 # UCP checkout projection
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 BACP is not wire-compatible with the checkout of the [Universal Commerce Protocol](https://ucp.dev) (UCP); the
 differences are listed in [BACP and other protocols](https://bacp.dev/latest/documentation/other-protocols/#ucp). A
@@ -61,7 +61,7 @@ checks and the same state machine; only the request and response shape differ. T
   `step_up`, `plan_options` and `payment_plan`. A UCP client ignores it.
 - The `ucp` envelope declares `dev.ucp.shopping.checkout` at version `2026-08-25` (the UCP version of the pinned
   release) and the session's BACP handlers as `payment_handlers`, each keyed by its UCP alias `dev.bacp.<handler id>`
-  and carrying the BACP handler id as `id` and the BACP release id (for example `2026-10-17`) as `version`, not the UCP version
+  and carrying the BACP handler id as `id` and the BACP release id (for example `2026-10-18`) as `version`, not the UCP version
   ([Namespaces and the handler keys](#namespaces)). It never
   declares `dev.ucp.common.payment.ap2_mandate` ([No AP2](#no-ap2)).
 

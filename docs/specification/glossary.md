@@ -1,7 +1,7 @@
 # Glossary
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This glossary defines the terms used across the BACP specification. Where a
 term is defined normatively on another page, the entry links to it. Terms are
@@ -577,5 +577,5 @@ Trade profile { #trade-profile }
 
 Version { #version }
 :   A BACP release, named by its date in `YYYY-MM-DD` form. The first dated
-    release is `2026-10-17`. The unreleased working version on `main` is
+    release is `2026-10-18`. The unreleased working version on `main` is
     `draft`. See [Versioning](https://bacp.dev/versioning/).

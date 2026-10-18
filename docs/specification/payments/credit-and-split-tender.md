@@ -1,7 +1,7 @@
 # Credit and Split Tender
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page covers the ways an order is paid other than one tender in full at checkout:
 
@@ -232,7 +232,7 @@ Disputes go to the lender's grievance officer and, after 30 days, to the RBI Int
 
 ## The khata credit ledger
 
-`bacp.credit_ledger` is a bilateral, hash-chained, signed ledger for credit between known parties: a kirana's khata, net-N trade credit, distributor credit, and GeM receivables. It is class O, but its limits are enforced by BACP rather than by a rail or issuer, so in BACP `2026-10-17` it is not open-eligible: an open (HNP) payment mandate cannot bind to it ([Handler binding](../mandates.md#handler-binding)). **No money moves on a ledger entry.** Money moves on another handler, and the ledger records that handler's receipt.
+`bacp.credit_ledger` is a bilateral, hash-chained, signed ledger for credit between known parties: a kirana's khata, net-N trade credit, distributor credit, and GeM receivables. It is class O, but its limits are enforced by BACP rather than by a rail or issuer, so in BACP `2026-10-18` it is not open-eligible: an open (HNP) payment mandate cannot bind to it ([Handler binding](../mandates.md#handler-binding)). **No money moves on a ledger entry.** Money moves on another handler, and the ledger records that handler's receipt.
 
 Schemas: [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-entry.json), with `$defs/CreditLedger` for the ledger header.
 

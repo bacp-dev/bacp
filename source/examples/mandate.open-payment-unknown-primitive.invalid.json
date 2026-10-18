@@ -84,7 +84,7 @@
     "rail_ref": "PPIEM-EXWL-000987654",
     "psp_id": "ppi.example.in",
     "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlBQSUVNIn0.c2lnbmF0dXJl",
-    "registry_version": "2026-10-17",
+    "registry_version": "2026-10-18",
     "rail_limits": {
       "per_txn": {
         "value": 150000,

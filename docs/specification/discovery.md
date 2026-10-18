@@ -1,7 +1,7 @@
 # Discovery and Profiles
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page defines how an agent learns what a BACP gateway supports, how the
 two sides agree on a protocol version, capabilities, negotiation features and
@@ -66,8 +66,8 @@ Receivers MUST ignore profile fields they do not understand.
 ```json
 {
   "bacp": {
-    "version": "2026-10-17",
-    "supported_versions": ["2026-10-17"]
+    "version": "2026-10-18",
+    "supported_versions": ["2026-10-18"]
   },
   "bap_id": "bap.vaani.example.in",
   "transports": ["rest", "mcp", "a2a"],
@@ -104,7 +104,7 @@ Receivers MUST ignore profile fields they do not understand.
 ## Version negotiation
 
 BACP versions are dates in `YYYY-MM-DD` form. The first dated release is
-`2026-10-17`; the unreleased working version on `main` is `draft` (see
+`2026-10-18`; the unreleased working version on `main` is `draft` (see
 [Versioning](https://bacp.dev/versioning/)).
 
 1. The agent fetches `/.well-known/bacp`.
@@ -117,7 +117,7 @@ BACP versions are dates in `YYYY-MM-DD` form. The first dated release is
    `context.bacp.version`.
 
 A participant that implements `draft` MUST expect breaking changes at any
-time. A dated release such as `2026-10-17` changes only as the
+time. A dated release such as `2026-10-18` changes only as the
 [Versioning](https://bacp.dev/versioning/) policy allows. Version strings are a
 release date (`YYYY-MM-DD`) or `draft`, as defined by
 [`ProtocolVersion`](https://bacp.dev/schemas/common.json).

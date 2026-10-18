@@ -6,8 +6,8 @@
   "iat": 1792200000,
   "exp": 1807750000,
   "jti": "att_7Kd2Qw9XmP4r",
-  "bacp_version": "2026-10-17",
-  "registry_version": "2026-10-17",
+  "bacp_version": "2026-10-18",
+  "registry_version": "2026-10-18",
   "levels": [
     "bacp.core.1",
     "bacp.pay.upi.1",

@@ -1,7 +1,7 @@
 # Orders and Post-order
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 Once `complete` succeeds, the seller (BPP) owns an **order**. The order's state stays Beckn's
 authoritative state machine; the gateway mirrors it and adds an append-only `adjustments[]` read

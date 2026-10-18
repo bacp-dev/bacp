@@ -20,7 +20,7 @@ The site is built in two modes (env DOCS_MODE), like ucp.dev:
 
 * ``root``: the unversioned landing site served at https://bacp.dev/ (Overview pages only).
 * ``spec``: one versioned copy of the specification, deployed by ``mike`` to
-  https://bacp.dev/{version}/ where version is ``draft``, ``latest`` or ``YYYY-MM-DD``.
+  https://spec.bacp.dev/{version}/ where version is ``draft``, ``latest`` or ``YYYY-MM-DD``.
 
 In spec mode, every file under ``source/`` is published next to the spec. JSON Schemas are written to the
 path named by their ``$id`` and every ``https://bacp.dev/schemas/...`` ``$id``/``$ref`` is rewritten to

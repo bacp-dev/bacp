@@ -1,10 +1,10 @@
 # Regulatory Mapping
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 This page maps every regulatory and policy requirement that BACP tracks to the part of the specification that
-answers it. Each row gives the requirement, the instrument it comes from, the BACP control, and whether BACP `2026-10-17`
+answers it. Each row gives the requirement, the instrument it comes from, the BACP control, and whether BACP `2026-10-18`
 **covers** it, covers it **partially**, or leaves a **gap**. Every partial or gap row names what is
 missing and, where one exists, links the open question that must be answered first.
 

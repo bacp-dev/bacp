@@ -1,7 +1,7 @@
 # Reference
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 An index of the normative artefacts of this BACP version: the JSON Schemas, the OpenAPI document, the payment-handler
 registry and the example vectors. All of them are published next to this specification; the lists on this page are

@@ -1,7 +1,7 @@
 # Mandates and Consent
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 A **mandate** is the signed, immutable statement of what a principal (the person or business on
 whose behalf an agent acts) has authorised the agent to do. Every BACP commitment that moves
@@ -119,7 +119,7 @@ than its parent's.
     "rail_ref": "SBMD-HDFX-000123456",
     "psp_id": "psp.example.in",
     "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl",
-    "registry_version": "2026-10-17",
+    "registry_version": "2026-10-18",
     "rail_limits": {
       "block_amount": {"value": 300000, "currency": "INR"},
       "expires_at": "2026-11-11T10:00:00+05:30"
@@ -468,7 +468,7 @@ A principal who changes buyer app or gateway does not move an open mandate: the 
 
 `purpose.code` comes from a purpose-code registry. Each purpose carries bounds that the gateway or
 MM enforces at `POST /mandates`. The table below is the normative purpose-code registry of
-BACP `2026-10-17`. The BACP working group governs it: a new code or a changed bound is a normative
+BACP `2026-10-18`. The BACP working group governs it: a new code or a changed bound is a normative
 change and ships only in a dated release, and lowering a bound or removing a code is a breaking
 change (settled in [Q-47](open-questions.md#q-47)). A `purpose_code` that is not in the table
 **MUST** be refused with `403 mandate_scope_mismatch`. Amounts are in rupees (₹).
@@ -658,7 +658,7 @@ signed by the `cnf` key with `aud` set to the seller's `bpp_id` and `nonce` set 
 
 !!! note "Encoding"
     The attached-JWS closing above is the only interoperable encoding of a closed mandate in BACP
-    `2026-10-17`, and the conformance suite will carry test vectors for it. An SD-JWT / KB-JWT
+    `2026-10-18`, and the conformance suite will carry test vectors for it. An SD-JWT / KB-JWT
     selective-disclosure encoding is not part of this version; a later release may add one as a
     new mandate `vct` (settled in [Q-41](open-questions.md#q-41)). Verifiers **MUST** support both
     ES256 and EdDSA (Ed25519) signatures (settled in [Q-42](open-questions.md#q-42); see
@@ -829,7 +829,7 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
 
 !!! note "Settled"
     Binding open mandates to class-O handlers through rail- or issuer-enforced primitives is settled
-    in `2026-10-17` ([design choice (a)](open-questions.md#proposed-a)). Agentic card tokens stay
+    in `2026-10-18` ([design choice (a)](open-questions.md#proposed-a)). Agentic card tokens stay
     pilot-gated ([Q-39](open-questions.md#q-39)), and `in.erupi` is `pilot` until
     [Q-38](open-questions.md#q-38) is answered.
 
@@ -894,7 +894,7 @@ Rules on the order:
   ([Failed payments](payments/index.md#failed-payments-tat-and-auto-reversal)).
 
 !!! note "Settled"
-    The per-leg rule settles [design choice (d)](open-questions.md#proposed-d) in `2026-10-17`. Whether an
+    The per-leg rule settles [design choice (d)](open-questions.md#proposed-d) in `2026-10-18`. Whether an
     agent-initiated draw on a Reserve Pay block counts as a customer action on the merchant's platform is
     open ([Q-65](open-questions.md#q-65)).
 

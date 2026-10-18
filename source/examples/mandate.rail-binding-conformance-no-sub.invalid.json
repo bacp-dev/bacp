@@ -81,7 +81,7 @@
     "rail_ref": "AGT-INTENT-000123456",
     "psp_id": "issuer.example.in",
     "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl",
-    "registry_version": "2026-10-17",
+    "registry_version": "2026-10-18",
     "rail_limits": {
       "per_txn": {
         "value": 300000,

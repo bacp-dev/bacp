@@ -1,6 +1,6 @@
 # BACP Governance
 
-This document describes how the Bharat Agentic Commerce Protocol (BACP) is maintained, how decisions are made and how dated releases are approved. It applies from BACP version `2026-10-17`.
+This document describes how the Bharat Agentic Commerce Protocol (BACP) is maintained, how decisions are made and how dated releases are approved. It applies from BACP version `2026-10-18`.
 
 ## To complete before publishing
 
@@ -87,17 +87,17 @@ If a question cannot be settled on its merits, the change is deferred and record
 
 ## Releases
 
-BACP is versioned by date (`YYYY-MM-DD`). See the [versioning policy](https://bacp.dev/versioning/).
+BACP is versioned by date (`YYYY-MM-DD`). See the [versioning policy](https://spec.bacp.dev/versioning/).
 
 1. **Proposal.** A maintainer opens a release issue listing the changes since the last release, the breaking changes, and any open questions that still block normative text.
 2. **Freeze and review.** No new normative changes are merged to `main` for that release for 7 days, while the release issue is reviewed.
 3. **Sign-off.** The release approver confirms that validation passes, the release notes are complete, and every breaking change has had its notice period. The approver records sign-off on the release issue.
-4. **Cut.** A maintainer creates `release/YYYY-MM-DD` from `main`. CI publishes it at `https://bacp.dev/YYYY-MM-DD/`, tags it `vYYYY-MM-DD` and moves `latest` to it.
+4. **Cut.** A maintainer creates `release/YYYY-MM-DD` from `main`. CI publishes it at `https://spec.bacp.dev/YYYY-MM-DD/`, tags it `vYYYY-MM-DD` and moves `latest` to it.
 5. **Release notes** list every breaking change, every deprecation, and the open questions resolved in the release.
 
 ### Deprecation and notice periods
 
-These match the [versioning policy](https://bacp.dev/versioning/):
+These match the [versioning policy](https://spec.bacp.dev/versioning/):
 
 - A deprecated field, code or handler alias stays supported for **at least two dated releases** after the release that deprecates it, **and** for at least **180 days** after that release, whichever is later.
 - A breaking change gets at least **90 days' notice** in the release notes before the dated release that introduces it is published.

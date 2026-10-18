@@ -1,7 +1,7 @@
 # MCP and A2A
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 Each BACP operation is defined once and bound three ways: [REST](rest.md), MCP tools and an A2A extension. The
 operation's semantics, mandate checks, error codes and state machines are identical in every binding; only the
@@ -230,7 +230,7 @@ is signed by a human support operator under tag `bacp-handoff` and is never a to
   `transports` of its BACP profile.
 - **Proposed:** the card declares the BACP extension in its capabilities, references the gateway's
   `/.well-known/bacp` profile, and is signed as a JWS over its JCS form, as A2A allows. The extension URI carries the
-  version, `https://bacp.dev/<version>/a2a` (for example `https://bacp.dev/2026-10-17/a2a`), and the card declares it with
+  version, `https://bacp.dev/<version>/a2a` (for example `https://bacp.dev/2026-10-18/a2a`), and the card declares it with
   `required: true`, so that a client that does not know the version cannot proceed without noticing. A gateway that lists
   more than one version lists one extension URI for each, and a task is pinned to the version of the URI it started under
   ([The version of a request](../discovery.md#request-version)).

@@ -5,8 +5,8 @@ maintained: the version identifiers, the URLs under which each version is
 published, how schema identifiers resolve, what counts as a breaking change,
 and when fixes are backported to a published release.
 
-!!! info "Version 2026-10-17"
-    The current dated release is `2026-10-17`, the first dated release of
+!!! info "Version 2026-10-18"
+    The current dated release is `2026-10-18`, the first dated release of
     BACP. Where this page says "approved", the approval is given by the
     release approvers defined in
     [`GOVERNANCE.md`](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md),
@@ -15,7 +15,7 @@ and when fixes are backported to a published release.
 ## Version identifiers
 
 BACP versions are calendar dates in the form **`YYYY-MM-DD`**, for example
-`2026-10-17`. The date is the day the release is cut. Dates give a clear
+`2026-10-18`. The date is the day the release is cut. Dates give a clear
 chronological order and make versions easy to compare. Version identifiers
 use `YYYY-MM-DD` so that they sort correctly in URLs, tags and schema ids;
 dates elsewhere in the documentation are shown as DD-MM-YYYY.
@@ -29,7 +29,7 @@ dates elsewhere in the documentation are shown as DD-MM-YYYY.
     - the OpenAPI document of the REST binding;
     - the payment handler registry and the conformance manifest.
 
-The first dated release is `2026-10-17`. `draft` remains the working
+The first dated release is `2026-10-18`. `draft` remains the working
 version built from `main`, where changes for later releases are made.
 
 A verifier chooses the rules to apply to a mandate by the dated release that the mandate names (for a Payment Mandate, the `rail_binding.registry_version` of the open Payment Mandate it is or narrows; a Checkout Mandate names none, and the verifier applies the release in force at its `iat`), never by its `vct`. The `vct` names a mandate type, such as
@@ -49,7 +49,7 @@ The specification is published at `bacp.dev` with one directory per version.
 | `https://bacp.dev/` | This site: the overview pages, which are not versioned |
 | `https://bacp.dev/draft/` | The specification built from `main`. Unstable. |
 | `https://bacp.dev/YYYY-MM-DD/` | The specification of the dated release `YYYY-MM-DD`. Stable, amended only by approved backports. |
-| `https://bacp.dev/latest/` | An alias of the newest dated release. It points at `2026-10-17`. |
+| `https://bacp.dev/latest/` | An alias of the newest dated release. It points at `2026-10-18`. |
 
 Links from the overview pages into the specification go to `/latest/`. To cite
 a rule that must not move, link to a dated release.

@@ -1,7 +1,7 @@
 # Trade Profiles
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Several thresholds rest on secondary sources; every regulatory number MUST be configurable.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Several thresholds rest on secondary sources; every regulatory number MUST be configurable.
 
 India trades in many ways at once: a quick-commerce order paid by UPI, a kirana's monthly khata, a distributor's "buy 10 get 1" scheme, an RFQ that ends in a net-30 purchase order, a GeM reverse auction, an eNAM lot sold to the highest bidder. A **trade profile** is a named, conformance-testable bundle of defaults over the [negotiation module](negotiation/index.md) and the [payment handler registry](payments/handler-registry.md). It fixes, for one trade model:
 
@@ -71,7 +71,7 @@ Every term sheet names its parties. One transaction can name a different orderin
 | [`high_value`](#high-value-purchases) | **experimental** | Cars, property, gold | `alternating` multi-issue bundles, `scheme` | **HP only** for commitment. C: UPI intent, card token, RTGS, credit / tranches token + loan + balance | Token, loan, balance tranches | RERA 10% token cap, Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 s.186) cash limit, PAN, HUID | No (consumer) |
 | [`ticketing`](#ticketing) | **launch** | Rail, air, bus, events | `posted_dynamic`, `fixed` | C: UPI intent, card token / O: Circle for low-value bus or metro | None | Honour the shown price within validity, anti-bot windows, ID binding | No (consumer) |
 
-**Maturity** says how far a profile is settled in BACP `2026-10-17` and whether a participant can be attested for it (as of 18-10-2026). It labels the profile and changes no rule inside it.
+**Maturity** says how far a profile is settled in BACP `2026-10-18` and whether a participant can be attested for it (as of 18-10-2026). It labels the profile and changes no rule inside it.
 
 | Maturity | Profiles | Meaning |
 |---|---|---|

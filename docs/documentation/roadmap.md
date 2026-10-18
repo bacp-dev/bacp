@@ -1,10 +1,10 @@
 # Status and Roadmap
 
-## Status: version 2026-10-17
+## Status: version 2026-10-18
 
-BACP `2026-10-17` is the first dated release of the specification. Implementers can target it.
+BACP `2026-10-18` is the first dated release of the specification. Implementers can target it.
 
-- The release is published at `/2026-10-17/` and aliased as `/latest/`. Work towards later releases continues on the `main` branch, published as `draft`. See [Versioning](../versioning.md).
+- The release is published at `/2026-10-18/` and aliased as `/latest/`. Work towards later releases continues on the `main` branch, published as `draft`. See [Versioning](../versioning.md).
 - The schemas, the OpenAPI binding and the payment-handler registry validate, and the examples are checked against them on every change.
 - Some rules depend on owner decisions that are still pending. These rules are marked **Proposed** in the specification, link to the [open questions](../specification/open-questions.md), and may change in a later dated release.
 - The conformance test suite is not yet published, so no participant can hold a conformance attestation yet.
@@ -27,7 +27,7 @@ The full list, with the current proposal for each, is on the [open questions](..
 
 ### 2. Later dated releases
 
-BACP versions its specification by date (`YYYY-MM-DD`). The first dated release, `2026-10-17`, is published at `/2026-10-17/` and aliased as `/latest/`. Later dated releases will be cut from `main` as open questions are decided, and will follow the deprecation and breaking-change notice rules in [Versioning](../versioning.md).
+BACP versions its specification by date (`YYYY-MM-DD`). The first dated release, `2026-10-18`, is published at `/2026-10-18/` and aliased as `/latest/`. Later dated releases will be cut from `main` as open questions are decided, and will follow the deprecation and breaking-change notice rules in [Versioning](../versioning.md).
 
 ### 3. Reference implementation and SDKs
 

@@ -1,5 +1,5 @@
 ---
-# Build and deploy bacp.dev (GitHub Pages, gh-pages branch), mirroring ucp.dev:
+# Build and deploy bacp.dev and spec.bacp.dev (GitHub Pages, gh-pages branch), mirroring ucp.dev:
 #   main               -> /draft/   (spec, mike) and /  (root landing site)
 #   release/YYYY-MM-DD -> /YYYY-MM-DD/ (spec, mike); the newest release is also /latest/
 name: Docs build and deploy

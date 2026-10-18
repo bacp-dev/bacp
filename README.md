@@ -4,12 +4,12 @@ BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, 
 
 It is a thin agent layer. It does not fork any rail. It adds a signed agent credential, signed mandates with budgets and step-up rules, an explicit human-presence flag, DPDP consent receipts, and verifiable evidence that joins each order to its UPI reference number.
 
-> **Status: Released, version `2026-10-17`** (the first dated release, published 17-10-2026). As of 17-10-2026 the automated conformance suite and reference implementation are not yet published, so conformance is self-declared. BACP is an independent open protocol and is not issued or endorsed by NPCI, ONDC, RBI or any other public body.
+> **Status: Released, version `2026-10-18`** (the first dated release, published 18-10-2026). As of 17-10-2026 the automated conformance suite and reference implementation are not yet published, so conformance is self-declared. BACP is an independent open protocol and is not issued or endorsed by NPCI, ONDC, RBI or any other public body.
 
 - Website: <https://bacp.dev>
-- Latest release: 2026-10-17: <https://bacp.dev/latest/specification/overview/> (pinned: <https://bacp.dev/2026-10-17/specification/overview/>)
-- Working draft (`main`, unstable): <https://bacp.dev/draft/specification/overview/>
-- Open questions: <https://bacp.dev/latest/specification/open-questions/>
+- Latest release: 2026-10-18: <https://spec.bacp.dev/latest/specification/overview/> (pinned: <https://spec.bacp.dev/2026-10-18/specification/overview/>)
+- Working draft (`main`, unstable): <https://spec.bacp.dev/draft/specification/overview/>
+- Open questions: <https://spec.bacp.dev/latest/specification/open-questions/>
 
 ## Repository layout
 
@@ -74,9 +74,9 @@ Built with MkDocs Material and mike. GitHub Actions (`.github/workflows/docs.yml
 | `main` | `/draft/` (the working draft), plus the root landing site at `/` |
 | `release/YYYY-MM-DD` | `/YYYY-MM-DD/`. The newest release is also aliased as `/latest/`. |
 
-`/latest/` points at the newest dated release, currently `/2026-10-17/`. Pull requests run validation, YAML lint and strict builds of both modes, but do not deploy.
+`/latest/` points at the newest dated release, currently `/2026-10-18/`. Pull requests run validation, YAML lint and strict builds of both modes, but do not deploy.
 
-BACP versions its specification by date (`YYYY-MM-DD`). See the [versioning page](https://bacp.dev/versioning/).
+BACP versions its specification by date (`YYYY-MM-DD`). See the [versioning page](https://spec.bacp.dev/versioning/).
 
 ### Releasing
 

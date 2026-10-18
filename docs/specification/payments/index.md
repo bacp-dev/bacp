@@ -1,7 +1,7 @@
 # Payments Overview
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 BACP does not move money itself. Money moves on Indian payment rails (UPI, cards, net banking, NACH, PPIs, BBPS, e-RUPI and others), operated by NPCI, the card networks, NBBL, banks and payment aggregators under RBI regulation. Beckn/ONDC carries only the payment *terms* of an order. The BACP gateway talks to the rail through the payer's PSP and records the result as a signed, rail-anchored receipt.
 
@@ -66,7 +66,7 @@ The descriptor schema enforces three consistency rules:
 - `binding.open_eligible: true` implies a non-empty `binding.open_primitives`;
 - `presence.device_bound: true` implies `binding.open_eligible: false`.
 
-`in.store_credit`, `in.loyalty` and `bacp.credit_ledger` are class O, but their limits are enforced by the merchant or by BACP, not by a rail or issuer. In BACP `2026-10-17` they have `open_eligible: false` and `presence.hnp: none`, and do not back open (HNP) payment mandates. Opening them is closed in this release ([Q-59](../open-questions.md#q-59) and [Q-46](../open-questions.md#q-46), settled); the conditions for opening them later are Proposed text in Q-59. `in.upi.circle` is class O but has `open_eligible: false` while [Q-77](../open-questions.md#q-77) is open, even when a conformance attestation lists it.
+`in.store_credit`, `in.loyalty` and `bacp.credit_ledger` are class O, but their limits are enforced by the merchant or by BACP, not by a rail or issuer. In BACP `2026-10-18` they have `open_eligible: false` and `presence.hnp: none`, and do not back open (HNP) payment mandates. Opening them is closed in this release ([Q-59](../open-questions.md#q-59) and [Q-46](../open-questions.md#q-46), settled); the conditions for opening them later are Proposed text in Q-59. `in.upi.circle` is class O but has `open_eligible: false` while [Q-77](../open-questions.md#q-77) is open, even when a conformance attestation lists it.
 
 ## Binding mandates to handlers
 

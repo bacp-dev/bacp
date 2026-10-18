@@ -12,14 +12,14 @@
       "dev.bacp.in.ppi.gift": [
         {
           "id": "in.ppi.gift",
-          "version": "2026-10-17",
+          "version": "2026-10-18",
           "schema": "https://bacp.dev/schemas/ucp/in.ppi.gift.json"
         }
       ],
       "dev.bacp.in.upi.circle": [
         {
           "id": "in.ppi.gift",
-          "version": "2026-10-17",
+          "version": "2026-10-18",
           "schema": "https://bacp.dev/schemas/ucp/in.upi.circle.json"
         }
       ]

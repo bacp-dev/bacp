@@ -14,7 +14,7 @@
 # limitations under the License.
 
 site_name: Bharat Agentic Commerce Protocol (BACP)
-site_url: !ENV [SITE_URL, "https://bacp.dev/"]
+site_url: !ENV [SITE_URL, "https://spec.bacp.dev/"]
 site_description: >-
   BACP is an open protocol that lets AI agents discover, negotiate, buy, pay
   for, and resolve issues with Indian commerce on behalf of people and
@@ -34,7 +34,7 @@ nav:
   - Overview:
       - Home: index.md
       - Core Concepts: documentation/core-concepts.md
-      - Specification: !ENV [SPEC_URL, "https://bacp.dev/latest/specification/overview/"]
+      - Specification: !ENV [SPEC_URL, "https://spec.bacp.dev/latest/specification/overview/"]
       - BACP and India's DPI: documentation/india-dpi.md
       - BACP and other protocols: documentation/other-protocols.md
       - Status and Roadmap: documentation/roadmap.md

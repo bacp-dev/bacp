@@ -60,7 +60,7 @@
     "afa_ref": {
       "handler": "in.upi.reservepay",
       "primitive": "sbmd_block",
-      "registry_version": "2026-10-17"
+      "registry_version": "2026-10-18"
     }
   },
   "tender": {

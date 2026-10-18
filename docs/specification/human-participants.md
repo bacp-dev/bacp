@@ -1,7 +1,7 @@
 # Human Participants and the Trusted Surface
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 Every BACP guarantee that a human agreed to something ends at the **Trusted Surface**: mandates are approved there,
 step-ups are confirmed there, and every fail-safe default escalates there. This page says who the human participants
@@ -816,7 +816,7 @@ in a dated release** of BACP:
   field signals a relaxed default; the profile is fetched unsigned and could not prove one.
 - An escalation to the Trusted Surface under a fail-safe default ([Q-12](open-questions.md#q-12),
   [Q-52](open-questions.md#q-52)) leaves a signed Trusted Surface event with a `Presentation` in the evidence bundle.
-- Conformance cases T1-27 to T1-32 test the six fail-safe defaults of `2026-10-17`
+- Conformance cases T1-27 to T1-32 test the six fail-safe defaults of `2026-10-18`
   ([Human-participant cases](conformance.md#human-participant-cases)).
 
 ## Evidence summary profile (informative) {#evidence-summary}

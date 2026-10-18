@@ -2,8 +2,8 @@
 
 This page explains the main ideas in BACP in plain terms. The [specification](../specification/overview/index.md) gives the normative rules. Where this page and the specification differ, the specification wins.
 
-!!! info "Version 2026-10-17"
-    This page describes BACP version `2026-10-17`. Rules marked **Proposed** in the specification depend on an open question and may change in a later dated release. They are listed on the [open questions](../specification/open-questions.md) page.
+!!! info "Version 2026-10-18"
+    This page describes BACP version `2026-10-18`. Rules marked **Proposed** in the specification depend on an open question and may change in a later dated release. They are listed on the [open questions](../specification/open-questions.md) page.
 
 ## The idea in one paragraph
 

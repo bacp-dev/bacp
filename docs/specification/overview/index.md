@@ -1,7 +1,7 @@
 # Bharat Agentic Commerce Protocol (BACP) Specification
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Each one links to the relevant entry in [Open Questions](../open-questions.md).
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release. Each one links to the relevant entry in [Open Questions](../open-questions.md).
 
 BACP is an open protocol that lets an AI agent run the full Indian commerce
 lifecycle on behalf of a person or a business: discover, negotiate, check out,
@@ -261,7 +261,7 @@ roles such as consignee, paying authority, broker, financier and a neutral
 auctioneer (see [Trade Profiles](../trade-profiles.md)).
 
 !!! note "Co-location"
-    In BACP `2026-10-17` the Mandate Manager is operated by, or co-located with, the
+    In BACP `2026-10-18` the Mandate Manager is operated by, or co-located with, the
     payer PSP that also provides the Trusted Surface, so that consent capture
     and PIN entry happen on one non-agentic surface. The roles stay logically
     separate so that an independent DPDP Consent Manager can take over. An
@@ -371,7 +371,7 @@ a snapshot of the whole protocol: the specification pages, the JSON Schemas,
 the OpenAPI document, the handler registry and the conformance manifest,
 published together.
 
-- The current dated release is `2026-10-17`. The working version on `main`
+- The current dated release is `2026-10-18`. The working version on `main`
   is `draft`, which has no date and may change without notice.
 - A gateway publishes the versions it supports in its
   [profile](../discovery.md#profile-document) (`bacp.version` and

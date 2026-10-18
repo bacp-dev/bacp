@@ -1,7 +1,7 @@
 # Sessions and Checkout
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 A **checkout session** is the gateway's synchronous, authoritative view of one purchase in
 progress. The agent talks to the gateway with UCP-style session verbs. The gateway translates each

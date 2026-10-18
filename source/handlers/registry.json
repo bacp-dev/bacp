@@ -3905,7 +3905,7 @@
   "binding": {
    "class": "O",
    "open_eligible": false,
-   "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
+   "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-18: its limits are enforced by the merchant, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
   },
   "mandate_primitives": [
    {
@@ -4023,7 +4023,7 @@
   "binding": {
    "class": "O",
    "open_eligible": false,
-   "open_requires": "Only where the programme allows API redemption. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
+   "open_requires": "Only where the programme allows API redemption. Not open-eligible in BACP 2026-10-18: its limits are enforced by the merchant, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
   },
   "mandate_primitives": [
    {
@@ -7634,7 +7634,7 @@
   "binding": {
    "class": "O",
    "open_eligible": false,
-   "open_requires": "Within a both-party-signed credit_limit. No money moves at order. Settlement entries cite another handler's receipt. Not open-eligible in BACP 2026-10-17: its limits are enforced by BACP, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
+   "open_requires": "Within a both-party-signed credit_limit. No money moves at order. Settlement entries cite another handler's receipt. Not open-eligible in BACP 2026-10-18: its limits are enforced by BACP, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
   },
   "mandate_primitives": [
    {

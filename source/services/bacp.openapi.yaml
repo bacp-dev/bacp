@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Bharat Agentic Commerce Protocol (BACP) — Gateway REST binding
-  version: "2026-10-17"
+  version: "2026-10-18"
   summary: REST binding that a BACP gateway exposes to AI agents.
   description: "Synchronous session API (its lifecycle and status names follow UCP checkout; it is not wire-compatible with UCP) that a BACP gateway (co-located with a Buyer App / BAP) exposes to AI agents.\nThe gateway\
     \ translates each call into signed Beckn/ONDC actions (search, select, init, confirm, status, cancel, update,\nIGM 2.0 issue/on_issue), waits\
@@ -78,9 +78,9 @@ paths:
                 default:
                   value:
                     bacp:
-                      version: '2026-10-17'
+                      version: '2026-10-18'
                       supported_versions:
-                      - '2026-10-17'
+                      - '2026-10-18'
                     bap_id: bap.vaani.example.in
                     transports:
                     - rest
@@ -3058,7 +3058,7 @@ webhooks:
                   pause:
                     change: added
                     reason: binding_ineligible
-                    registry_version: '2026-10-17'
+                    registry_version: '2026-10-18'
                     registry_serial: 2
               relinquished:
                 value:
@@ -3113,7 +3113,7 @@ webhooks:
                     reason: binding_ineligible
                     pause_reasons:
                     - binding_ineligible
-                    registry_version: '2026-10-17'
+                    registry_version: '2026-10-18'
                     affected_sessions:
                     - ses_01HZXD
               principal_paused_during_binding_pause:
@@ -3129,7 +3129,7 @@ webhooks:
                     pause_reasons:
                     - binding_ineligible
                     - principal_paused
-                    registry_version: '2026-10-17'
+                    registry_version: '2026-10-18'
                     affected_sessions: []
       responses:
         '200':
@@ -3267,7 +3267,7 @@ components:
       in: header
       name: BACP-Agent
       description: SD-JWT VC (vct in.bacp.agent.1) with only the disclosures the gateway needs. Checked against the registry status list. Covered
-        by the request signature. The legacy header name BACP-Agent-Credential was accepted only before the first dated release (`2026-10-17`);
+        by the request signature. The legacy header name BACP-Agent-Credential was accepted only before the first dated release (`2026-10-18`);
         a gateway MUST NOT accept it.
   parameters:
     BacpVersion:
@@ -4444,7 +4444,7 @@ components:
               type: string
               pattern: ^\d{4}-\d{2}-\d{2}$
               description: 'The handler-registry version against which the Mandate Manager checked this binding''s eligibility at issuance: the
-                identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A record of the
+                identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-18), never a copy served by a gateway. A record of the
                 issuance check only; the gateway re-checks eligibility against the current registry at every complete.'
             registry_digest:
               $ref: '#/components/schemas/Hash'
@@ -9974,7 +9974,7 @@ components:
           rail_ref: SBMD-HDFX-000123456
           psp_id: psp.example.in
           attestation: eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl
-          registry_version: '2026-10-17'
+          registry_version: '2026-10-18'
           rail_limits:
             block_amount:
               value: 300000
@@ -10264,7 +10264,7 @@ components:
         operator_name: Vaani Voice Commerce Pvt Ltd
         operator_grievance_contact: grievance@vaani.example.in
         log_head: sha-256:LbxjqEpNNB0__yQii0EQoD075bGKSD5idqqLneyswXg
-        version: '2026-10-17'
+        version: '2026-10-18'
     SessionQuoted:
       value:
         id: ses_01HZXB

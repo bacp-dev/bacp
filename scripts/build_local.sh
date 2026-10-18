@@ -1,5 +1,5 @@
 #!/bin/bash
-# Build the full bacp.dev site locally, the same way CI deploys it:
+# Build the full bacp.dev and spec.bacp.dev site locally, the same way CI deploys it:
 #   1. every release/YYYY-MM-DD branch -> /YYYY-MM-DD/ (mike), newest also aliased /latest/
 #   2. main -> /draft/ (mike); with --draft-only, /draft/ is also aliased /latest/
 #   3. the root landing site -> /

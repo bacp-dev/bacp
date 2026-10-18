@@ -1,7 +1,7 @@
 # REST
 
-!!! info "Version 2026-10-17"
-    This page is part of BACP version `2026-10-17`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+!!! info "Version 2026-10-18"
+    This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
 
 The REST binding is the reference binding of BACP. A BACP gateway, run by or for a registered buyer app (BAP),
 exposes it to AI agents. Each call is translated into signed Beckn/ONDC actions (see
@@ -39,7 +39,7 @@ this page and the OpenAPI document differ, this page is authoritative.
 | `Retry-After` | response | with 409 `idempotency_in_flight` and 429 `quota_exceeded` | Seconds to wait before retrying with the **same** key |
 
 `BACP-Agent-Credential`, a fallback name for `BACP-Agent`, was accepted only before the first dated release. From BACP
-`2026-10-17` it MUST NOT be accepted; agents send `BACP-Agent`.
+`2026-10-18` it MUST NOT be accepted; agents send `BACP-Agent`.
 
 ## Signatures {#signatures}
 

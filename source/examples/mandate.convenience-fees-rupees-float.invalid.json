@@ -92,7 +92,7 @@
     "rail_ref": "SBMD-HDFX-000123456",
     "psp_id": "psp.example.in",
     "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl",
-    "registry_version": "2026-10-17",
+    "registry_version": "2026-10-18",
     "rail_limits": {
       "block_amount": {
         "value": 300000,
