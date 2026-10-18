@@ -1,0 +1,32 @@
+{
+  "step_up_id": "stp_01HZYP",
+  "kind": "post_order",
+  "reason": "presence_proof",
+  "action": "GRN",
+  "order_id": "ORD-ANNA-000007",
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+  "total": {
+    "value": 45000,
+    "currency": "INR"
+  },
+  "seller_name": "NANDINI DAIRY STORE",
+  "summary": {
+    "hi-IN": "माल 01-11-2026 को मिला: 480 स्वीकार, 20 अस्वीकार। यह GRN भेजें?",
+    "en-IN": "Goods received 01-11-2026: 480 accepted, 20 rejected. Send this GRN?"
+  },
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T19:05:00+05:30",
+  "subject_hash": "sha-256:Qm8vXz1bN6dRtY0eWuS5cAfGhL2oP9iVxT4yKnBwJk3",
+  "subject_ref": {
+    "kind": "document",
+    "id": "grn_ANNA000041"
+  },
+  "counterparty_text": [
+    {
+      "label": "Reason on line L1 (author's text)",
+      "text": "20 sacks torn at the seam"
+    }
+  ]
+}

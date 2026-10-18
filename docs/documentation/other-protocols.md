@@ -25,7 +25,24 @@ The descriptions are based on each protocol's public specification or announceme
 
 The [Universal Commerce Protocol](https://ucp.dev) is an open standard for interoperable commerce between platforms (such as AI agents), businesses and payment providers. Businesses publish a profile at a well-known URL. Platforms negotiate capabilities such as checkout, cart, catalogue and orders, and the same operations are bound to REST, MCP and A2A. UCP versions its specification by date.
 
-**How BACP relates.** BACP follows UCP's checkout verbs and status vocabulary where it can, but it is not wire-compatible with UCP today: the paths, the spelling of some statuses, the form of totals and the request envelope differ. Whether and how to close that gap is an open topic under panel review, and this page will state the outcome when it is decided. BACP adds what UCP leaves out for India: discovery across a network rather than per business, write paths after an order (cancel, return, grievance), Indian payment rails, DPDP consent and GST.
+**How BACP relates.** BACP's checkout session follows UCP checkout's lifecycle and status names (BACP spells `cancelled` and adds `human_handoff`). BACP is not wire-compatible with UCP. Paths, totals and the sign of discounts, the `ucp` envelope, the `complete` payload and payment authority, and the MCP argument shape differ. A gateway that lists the capability `in.bacp.ucp_checkout` also serves a [projection](https://bacp.dev/latest/specification/transports/ucp-checkout/) in the shape of the UCP checkout, pinned to UCP commit `a5e7cfe`, and UCP clients use that projection. BACP adds what UCP leaves out for India: discovery across a network rather than per business, write paths after an order (cancel, return, grievance), Indian payment rails, DPDP consent and GST.
+
+**Where BACP differs from UCP.** The table lists every difference that matters to an agent built for UCP, in the order in which such an agent fails. The first row is the one that moves money: a UCP-built agent that reads a BACP discount as a UCP discount shows the buyer an extra charge instead of a saving. UCP facts are as of 18-10-2026, from the UCP repository at commit `a5e7cfe` ("draft after v2026-08-25"); UCP has published no tagged release to cite ([Q-82](../specification/open-questions.md#q-82)).
+
+| # | Difference | UCP | BACP | What a UCP-built agent gets wrong |
+|---|---|---|---|---|
+| 1 | **Discount sign** | A total of type `discount` or `items_discount` is a negative integer (`exclusiveMaximum: 0`) | A discount is a non-negative `Amount` on a `Total` line of type `discount`; the total is the sum of the lines | Adds the discount to the total: the buyer sees an extra charge, not a saving |
+| 2 | Declined payment | The checkout stays `incomplete`, with a recoverable `payment_failed` message | The session becomes `cancelled`, after any earlier tender of a plan has been refunded | Offers a retry on a session that has ended |
+| 3 | `canceled` against `cancelled` | A platform MUST NOT treat a checkout as canceled unless the business reports `status: canceled` | `cancelled` (two l's) | Never sees a cancelled session as cancelled |
+| 4 | `complete` payload and mandate encoding | `payment` is required; an AP2 `checkout_mandate` is an SD-JWT with key binding | Closed Checkout and Payment Mandates as attached compact JWS, with `checkout_hash` (or a `payment_plan`) | A UCP `complete` is refused; BACP mandates do not fit UCP's `payment` |
+| 5 | `continue_url` | MUST be present on `requires_escalation`, and the platform escalates through it | No `continue_url`: the step-up carries `trusted_surface_url` | Looks for a URL that is not there, or opens one a business set |
+| 6 | `human_handoff` | Not in UCP's closed status enum | A BACP status, entered by `POST /sessions/{session_id}/handoff` | Cannot parse the status |
+| 7 | Envelope | The checkout carries a required `ucp` envelope with `payment_handlers`, and a required `links` array | No envelope; payment handlers are in the gateway's profile | Rejects a BACP response as invalid |
+| 8 | `Amount` shape | A bare integer in minor units | `{value, currency}` | A type error on every amount |
+| 9 | Paths | `/checkout-sessions`, `/checkout-sessions/{id}`, `.../complete`, `.../cancel` | `/sessions`, `/sessions/{session_id}`, `.../complete`, `.../cancel` | `404` |
+| 10 | MCP arguments and tool names | Tools take `id` and `meta` | Tools take the request body's properties and the path parameters as flat arguments, and `idempotency_key` ([MCP and A2A](../specification/transports/mcp-a2a.md#mcp-tools)) | Wrong arguments to a differently named tool |
+| 11 | Messages | `content` is a string, with a `severity` | `content` is a `LangText` language map, with a `resolution` | Cannot read the text or the severity |
+| 12 | A2A extension header | UCP's A2A page activates its extension with `X-A2A-Extensions` | BACP follows A2A 1.0, which names the header `A2A-Extensions` | The extension is not activated |
 
 **How the two are organised.** UCP is organised as services (verticals such as shopping), capabilities inside each
 service, a common layer shared by all, and extensions that add to a capability. BACP has the same four ideas under
@@ -61,7 +78,7 @@ the Trusted Surface.
 
 **What BACP reuses from UCP.**
 
-- Checkout session verbs and status values, and recovery when a response is lost.
+- Checkout session lifecycle and status names, and recovery when a response is lost.
 - The pattern of defining operations once and binding them to REST, MCP and A2A.
 - HTTP Message Signatures (RFC 9421) with Content-Digest (RFC 9530), with ES256 and EdDSA (Ed25519) both mandatory to verify.
 - `Idempotency-Key` semantics and date-based versioning.
@@ -128,7 +145,7 @@ x402 is an HTTP 402 flow for paying per request: the server answers with a payme
 
 | From | BACP reuses |
 |---|---|
-| UCP | Checkout verbs and the status vocabulary (not wire-compatible today), three-way transport binding, RFC 9421 and RFC 9530 signing, idempotency keys, date-based versions, capability intersection |
+| UCP | Checkout lifecycle and status names (not wire-compatible), three-way transport binding, RFC 9421 and RFC 9530 signing, idempotency keys, date-based versions, capability intersection |
 | AP2 | Open and closed mandates as SD-JWT with key binding, the non-agentic Trusted Surface, fail-closed constraints, signed receipts |
 | ACP | Full-state responses, flat errors with resolution hints, strict idempotency responses |
 | A2A | Agent card, `TASK_STATE_AUTH_REQUIRED` step-up, data parts |

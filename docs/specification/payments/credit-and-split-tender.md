@@ -13,8 +13,8 @@ This page covers the ways an order is paid other than one tender in full at chec
 
 The general payment model, handler classes and refund rules are in the [Payments Overview](index.md).
 
-!!! warning "Proposed"
-    Payment plans, credit ledgers and trade documents are defined in this version as **service-level interfaces without a normative wire binding**. Their conformance is tested at library level. The REST, MCP and A2A bindings are open: [Q-44](../open-questions.md#q-44). Until Q-44 is settled, `CompleteRequest.payment_plan` is reserved: a gateway MUST reject a `complete` that carries it with `400 invalid_request` at `$.payment_plan`, and MUST NOT ignore it and charge a single tender instead. A checkout over REST, MCP or A2A is paid with one tender, and a gateway MUST NOT expose MCP tools or A2A DataParts for these interfaces.
+!!! info "Wire binding by capability"
+    Payment plans, credit ledgers and trade documents are bound on REST, MCP and A2A ([Q-44](../open-questions.md#q-44), settled 18-10-2026), each behind a capability id that a gateway lists in its [profile](../discovery.md#capabilities): `in.bacp.payment_plan`, `in.bacp.ledger` and `in.bacp.trade_document`. The rules marked as MUST for a capability bind only a gateway that lists it. A gateway that lists none of the three keeps the earlier behaviour: a `complete` that carries `payment_plan` is refused with `400 invalid_request` at `$.payment_plan` and is never ignored in favour of a single tender, and it exposes no MCP tool or A2A DataPart for these interfaces. Splitting an order into tranches over time is accepted only in the form [below](#token-plus-loan).
 
 ## Split tender: payment plans
 
@@ -26,9 +26,10 @@ A **payment plan** ([schema](https://bacp.dev/schemas/payment-plan.json)) says h
 | Field | Content |
 |---|---|
 | `plan_id` | `plan_` followed by 8 to 40 characters |
+| `plan_hash` | The sha-256 over the JCS form of the tenders: the array of `{tender_id, handler, amount, sequence}` objects (with `tranche_id` when present) in ascending `sequence`, without `payment_mandate` and without any response-only field |
 | `checkout_hash` | The hash of the BPP-signed quote. The same value for every tender. It is not the negotiation `offer_hash`, and nothing in BACP may assert that the two are equal. |
 | `all_in_total` | The accepted all-in total, in paise |
-| `tenders[]` | One to four tenders: `tender_id`, `handler`, `amount`, `sequence` (capture order), and optionally `tranche_id`, `presence`, `closed_payment_mandate_ref`, `auth_binding_type`, `rail_ref`, `funding`, `receipt_id`; `status` is `planned`, `held`, `captured`, `failed`, `released`, `refunded` or `partially_refunded` |
+| `tenders[]` | One to four tenders: `tender_id`, `handler`, `amount`, `sequence` (capture order), and optionally `tranche_id`, `presence`, `closed_payment_mandate_ref`, `auth_binding_type`, `rail_ref`, `funding`, `receipt_id`; `status` is `planned`, `held`, `captured`, `in_doubt`, `reversal_pending`, `failed`, `released`, `refunded` or `partially_refunded`; on the wire a tender record also carries `reversal_deadline` and `psp_key` (both set by the gateway) |
 | `refund_allocation` | `lifo` (default), `pro_rata` or `tender_specific` |
 | `atomicity` | `saga` |
 | `afa_evaluated_on` | `plan_total` |
@@ -38,10 +39,30 @@ A **payment plan** ([schema](https://bacp.dev/schemas/payment-plan.json)) says h
 1. **One checkout, many payment mandates.** A plan has one closed checkout mandate (one `checkout_hash`), and **one closed payment mandate and one receipt per tender**. Each tender is debited at most once.
 2. **Positive amounts.** Every tender amount MUST be an integer number of paise greater than zero. A zero or negative tender MUST be refused with `amount_not_positive`, even when the sum matches.
 3. **Exact sum.** The tender amounts MUST add up to `all_in_total` exactly. The gateway checks this and refuses a mismatch with `plan_sum_mismatch`. A plan has at most four tenders.
-4. **Capture order and atomicity.** Capture runs as a saga. Stored-value tenders (gift PPI, store credit, loyalty, e-RUPI) go first, held where the issuer supports holds, then rail tenders. If a later tender fails, the earlier ones are released or refunded to source at once; a PPI refund is immediate. A plan whose `sequence` breaks this order gets `plan_order_invalid`.
+4. **Capture order and atomicity.** Capture runs as a saga. Stored-value tenders (gift PPI, store credit, loyalty, e-RUPI) go first, held where the issuer supports holds, then rail tenders. If a later tender fails, the earlier ones are released or refunded to source at once. A refund of a failed, returned, rejected or cancelled PPI tender is applied to the PPI immediately (RBI Master Direction on Prepaid Payment Instruments, para 14.3(a), as updated 30-09-2026); the T+1 of the RBI turnaround-time circular (RBI/2019-20/67, 20-09-2019; later amendments not verified as of 18-10-2026) for an on-us PPI failure is a separate deadline. A plan whose `sequence` breaks this order gets `plan_order_invalid`.
 5. **Thresholds on the total.** Step-up thresholds, the ₹15,000 AFA threshold, contactless and Tap & Pay exemptions, and split-order detection are evaluated on the **plan total**. A plan that keeps each tender under a threshold while the total is above it gets `requires_escalation` with reason `split_tender_afa_on_total`.
 6. **Presence per tender.** Each tender's handler MUST be eligible at that tender's presence (see [handler classes](index.md#handler-classes)). For example a gift PPI may be captured HNP, but an HP card-token tender in the same plan needs a Trusted Surface approval, and that approval shows and covers the whole plan.
 7. **Code custody.** The agent never sees gift-card or voucher codes. They are held in the Trusted Surface or the PSP-adapter vault, and the gateway's PSP adapter redeems them.
+
+8. **Every tender carries an amount.** An open-amount tender is refused with `400 invalid_request` at `$.payment_plan.tenders[i].amount`.
+9. **At most one tender without a hold primitive, and it comes last.** A handler with no hold or void primitive cannot be unwound before the debit, so at most one tender of a plan may use one, and it MUST have the highest `sequence`; otherwise the plan gets `plan_order_invalid`. This is a BACP design rule that refuses some plans and never debits wrongly; a verified hold or void primitive for UPI P2M outside Reserve Pay and one-time-mandate blocks would relax it.
+10. **An in-doubt tender freezes the plan.** While any tender is `in_doubt`, the gateway MUST NOT release or refund any other tender, and the session stays `complete_in_progress`. The gateway reconciles the tender with the PSP by its derived key and applies the PSP-signed result.
+11. **Cancelled only after the credit settles.** When a later tender fails, the session becomes `cancelled` only when every unwound tender is `released` or `refunded` and its refund credit has settled. Until then the session stays `complete_in_progress` and the principal is told that the earlier amount "is being returned; it can take up to one day", never that "no money moved", because the issuer's own message shows two legs.
+12. **One PSP key for each tender.** The idempotency key that the gateway sends to the PSP for a tender MUST be derived deterministically from the `Idempotency-Key` of the `complete` request and the `tender_id`, so that a replay of `complete` never re-debits any tender and the PSP, which never sees the `tender_id`, can still de-duplicate. The key is recorded in the tender's `psp_key`, with `rail_ref` and `reversal_deadline` (the debit time plus the rail's turnaround time: T+5 for a UPI P2M debit that did not confirm, T+1 for a PPI on-us failure; RBI/2019-20/67, 20-09-2019, later amendments not verified as of 18-10-2026), so that support staff can answer a call from one record.
+13. **Refund allocation on the wire.** A plan names `lifo` or `tender_specific`. `pro_rata` is refused with `400 invalid_request` until [Q-40](../open-questions.md#q-40) is settled.
+
+### On the wire: `in.bacp.payment_plan` {#plan-wire}
+
+A gateway that lists `in.bacp.payment_plan` (which requires `in.bacp.checkout`) MUST support everything in this section.
+
+- **Offering.** The session carries `payment.plan_options[]`. Each [`PlanOption`](https://bacp.dev/schemas/payment-plan.json) has a `plan_id`, a `plan_hash`, a read-only `tenders[]`, the `all_in_total` and a one-sentence `description` that the gateway writes from its own templates, for example `hi-IN` "₹1,000 गिफ्ट कार्ड से और ₹1,160 UPI से" (in English: "₹1,000 from gift card and ₹1,160 by UPI"). A voice channel reads it unchanged. No option is marked as a default or is preselected, and the gateway records in the evidence bundle the order in which it showed the options, because a gateway that also issues the PPI may be tempted to prefer its own stored value.
+- **Choosing.** `complete` carries either `payment_mandate` (one tender, the whole total) or `payment_plan` (a [`PlanRequest`](https://bacp.dev/schemas/payment-plan.json)), never both. The request is sent in full: `plan_id` and, for each tender, `tender_id`, `handler`, `amount`, `sequence`, `payment_mandate` (and `tranche_id` where one applies).
+- **Offered or Trusted-Surface-confirmed only.** The tenders MUST hash to the `plan_hash` of an entry of `payment.plan_options[]`, or to the `plan_hash` of a plan that the principal confirmed on the Trusted Surface (an approved step-up whose `ts_render.plan` carries it). A plan that matches neither gets `400 plan_not_offered` at `$.payment_plan` and nothing is debited. A `plan_id` that names an offered option while the tenders hash differently gets `403 mandate_scope_mismatch`, and no tender is captured. The agent composes no tender amount of its own: it cannot see gift-card balances, hold capability or the AFA total across tenders, which are known only to the vault, the issuers and the gateway. This version defines no agent operation that proposes a custom split to the Trusted Surface.
+- **P1, one live plan.** For one `checkout_hash` the gateway holds at most one live plan. A `complete` with a different plan while one is live gets `409 plan_conflict`, or `409 session_state_conflict` while the session is `complete_in_progress`; nothing is debited and no mandate usage changes.
+- **P2, never over the total.** Inside the atomic section keyed on the root Checkout Mandate, the sum of held, captured and in-doubt tender amounts MUST NOT exceed `all_in_total`.
+- **P3, each mandate names its tender.** Each closed payment mandate carries `tender{plan_hash, tender_id}`, and its `amount` is that tender's amount (not the quote total). A mandate that carries `tender` MUST NOT pay a `complete` without `payment_plan`, and a tender's mandate whose `tender` does not match the plan is refused with `403 mandate_scope_mismatch`.
+- **P4, the principal sees the whole plan.** A step-up over a plan carries `ts_render.plan{plan_hash, tenders[]}`; the Trusted Surface shows every tender and its amount, and its approval event carries `Presentation.plan_hash` and lists `plan` in `Presentation.renders` ([Presentation record](../human-participants.md#presentation)).
+- **P5, no credentials in arguments.** No MCP tool argument and no A2A DataPart carries a gift-card code, a voucher code or an instrument credential. A call that does gets `400 invalid_request` and makes no rail call.
 
 ### Refunds of a split tender
 
@@ -51,12 +72,19 @@ A **payment plan** ([schema](https://bacp.dev/schemas/payment-plan.json)) says h
 
 Whether LIFO allocation satisfies the refund-to-source rule of PA Master Direction para 10(f) is open ([Q-40](../open-questions.md#q-40)).
 
-### Token plus loan
+### Token plus loan {#token-plus-loan}
 
 A tranche plan for a high-value purchase (a vehicle, a property booking) combines a token, a loan and a balance:
 
 - The token tranche is limited by RERA (a booking token of at most 10% without a registered agreement) and by the cash limit of Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 equivalent: s.186 per secondary sources, not verified as of 17-10-2026; cash of ₹2,00,000 or more is refused, `NEG_CASH_LIMIT`).
 - The loan tranche is an `in.credit.*` or `in.fin.ocen` tender with all the [credit-at-checkout](#credit-at-checkout-bnpl-and-loan-offers) duties: the KFS shown, HP acceptance, disbursal to the end beneficiary's account, and a cooling-off period of at least one day.
+
+**Tranches over the wire.** A gateway that lists `in.bacp.payment_plan` accepts `tranche_id` on a plan tender and displays the schedule, but a tranche carries no debit authority at `complete`:
+
+- only the tranche paid at `complete` is debited;
+- no later tranche is debited without its own fresh closed payment mandate and the rail's pre-debit notice at execution time (otherwise the debit is refused with no rail call);
+- a delivery tranche is a fresh closed mandate at delivery, never a pre-authorised debit; a delivery debit attempted without one is refused with no rail call;
+- if the principal refuses at delivery, the token is refunded under `refund_allocation`.
 
 ### Example
 
@@ -118,7 +146,7 @@ sequenceDiagram
     alt UPI debit fails
         N-->>G: Failure
         G->>GI: Refund ₹1,000 to the same gift PPI at once
-        G-->>A: Session cancelled, no net money moved
+        G-->>A: Earlier tender refunded; session cancelled when the refund settles
     end
     N-->>G: Receipt for tender 2 with RRN
     G->>S: confirm with payment PAID and both receipts
@@ -212,11 +240,12 @@ Schemas: [`credit-ledger-entry.json`](https://bacp.dev/schemas/credit-ledger-ent
 
 The `CreditLedger` header is signed by **both** parties at opening (at least two signatures). It records:
 
-- `creditor` and `debtor`;
+- `creditor` and `debtor`. The creditor carries `settlement_accounts[]` (at most 10: a UPI VPA, or a hash of the account number and IFSC), the accounts on which it accepts payment. Only the creditor may add one later, by a signed amendment;
 - `kind`: `khata`, `trade_credit`, `distributor_credit` or `gem_receivable`;
 - `credit_limit` and `default_credit_days`;
 - `interest_rule`: `none`, `msmed_statutory`, `contractual` or `gem_penal_1pct_pm`. The header selects exactly one rule;
 - `ack_window`: how long the counterparty has to acknowledge an entry (ISO 8601 duration);
+- `itemise_above` (optional): an amount above which an entry is always acknowledged on its own, never inside a statement acknowledgement;
 - `head_hash` and `opened_at`.
 
 ### Entries
@@ -234,15 +263,16 @@ Entry types are `opening_balance`, `sale`, `payment`, `credit_note`, `debit_note
 
 - An entry is acknowledged by the **counterparty of the poster**, never by the poster. When the seller books a sale, only the buyer can acknowledge it. An acknowledgement by anyone else gets `ack_not_by_counterparty`.
 - The acknowledgement MUST be signed with the counterparty's key, whatever the channel: a signature, a Trusted Surface tap, an SMS link, a voice confirmation, or an assisted operator. Every channel ends in the counterparty's signature over the entry hash, and the channel is recorded as `method`.
-- A `payment` entry is acknowledged automatically from the rail receipt it cites (`auto_from_rail_receipt`), because the PSP's signature is the evidence.
-- An entry still unacknowledged when `ack_window` expires becomes **`disputed`**, with a `dispute_ref`. A disputed entry does not count toward the balance or ageing, cannot be acknowledged (`entry_disputed`), and can be settled or credit-noted only after the dispute is resolved.
+- A `payment` entry is acknowledged automatically from the rail receipt it cites (`auto_from_rail_receipt`), because the PSP's signature is the evidence, **only when** the receipt's `payee` matches one of `creditor.settlement_accounts[]` (or `settlement_evidence.new_payee` after TReDS discounting) and the receipt's `issued_at` is not before the settled sale's `at`. A receipt that pays someone else, or that predates the sale, does not settle the sale: the entry is accepted as `pending_ack` for the creditor, with message `settlement_payee_unmatched`, and settles nothing until the creditor acknowledges it. A shop may collect on several VPAs, a family member's or a soundbox's, so a mismatch is not refused; it waits for the creditor's tap, SMS link or voice confirmation.
+- **Statement acknowledgement.** Beside the per-entry form, a gateway that lists `in.bacp.ledger` SHOULD support acknowledging a range: the subject is `ledger_range{ledger_id, through_seq, head_hash}`, and one acknowledgement event names the `head_hash` and covers every pending entry up to `through_seq`. The principal sees the count, the closing balance, the oldest unpaid date and every itemised entry first. A statement acknowledgement MUST NOT cover an entry above the ledger's `itemise_above` or above the 90th percentile of the amounts that the poster has posted on this ledger, and such an entry is acknowledged one by one (`422 invalid_request` at `$.subject.through_seq` otherwise, with no change). An entry posted after the render moves the head: the acknowledgement then gets `409 ledger_head_mismatch`, and the new entry is not covered. A per-entry dispute after a statement acknowledgement stays possible and moves only that entry. The 90th-percentile limit is a BACP design value against a hidden inflated line, not a legal rule, and has not been tested against trade practice.
+- An entry still unacknowledged when `ack_window` expires becomes **`disputed`**, with a `dispute_ref`; this applies only where a notice of the entry was delivered to the counterparty, and whether silence after a delivered notice is acceptance or dispute is flagged to counsel ([Q-83](../open-questions.md#q-83)). A disputed entry does not count toward the balance or ageing, cannot be acknowledged (`entry_disputed`), and can be settled or credit-noted only after the dispute is resolved.
 
 Entry `status` values: `pending_ack`, `acknowledged`, `disputed`, `settled`, `partially_settled`, `overdue`, `written_off`.
 
 ### Booking and settling
 
 - **Sale.** A `sale` is booked only within `credit_limit − balance` **and** within the negotiation mandate's `payment.credit_ledger.max_outstanding`. Otherwise it gets `credit_limit_exceeded`. Whether credit-ledger deals also count against the checkout mandate's budgets is open ([Q-46](../open-questions.md#q-46)); the working position counts them against both. Proposed: an HNP agent may book a sale under an open mandate once [Q-59](../open-questions.md#q-59) and Q-46 are settled; until then a sale is booked with the principal present (HP).
-- **Payment.** A `payment` entry MUST cite a PSP-signed receipt from another handler: `settlement_evidence.receipt_id` with its RRN or UTR. The gateway verifies the receipt signature against the PSP's registry key, and checks that the amount, result and RRN or UTR match. A screenshot or any other evidence MUST be refused, and the sale stays unpaid. A receipt settles ledger entries at most once.
+- **Payment.** A `payment` entry MUST cite a PSP-signed receipt from another handler: `settlement_evidence.receipt_id` with its RRN or UTR. The gateway verifies the receipt signature against the PSP's registry key, and checks that the amount, result and RRN or UTR match. A screenshot or any other evidence MUST be refused, and the sale stays unpaid. A receipt settles ledger entries at most once, and that is checked across every ledger that the creditor's custodian holds, keyed on the rail and the RRN or UTR (`receipt_reused`). The payee match of the [acknowledgement rules](#acknowledgement-the-creditor-cannot-self-confirm) applies. Every posting is a compare-and-swap on the chain head: a posting whose `prev_hash` is not the current head gets `409 ledger_head_mismatch`.
 - **Credit note.** An unpaid sale is reduced by a `credit_note` entry (`refund_state: credit_note_issued` where a refund is involved). A credit note cannot exceed the sale's open amount. A paid sale is refunded to the instrument that settled it.
 
 An example `payment` entry, settling a sale by NEFT:
@@ -250,6 +280,20 @@ An example `payment` entry, settling a sale by NEFT:
 ```json
 --8<-- "source/examples/credit-ledger-entry.payment.json"
 ```
+
+### On the wire: `in.bacp.ledger` {#ledger-wire}
+
+A gateway that lists `in.bacp.ledger` MUST support these operations ([OpenAPI](https://bacp.dev/latest/services/bacp.openapi.yaml)), and serves them only for a ledger of which the agent's principal is the creditor or the debtor (any other ledger is `404 not_found`):
+
+| Operation | Tag | What it does |
+|---|---|---|
+| `GET /ledgers/{ledger_id}` | `bacp-browse` | The header, `head_seq`, `head_hash`, closing balance, overdue amount, oldest unpaid date and entry count. |
+| `GET /ledgers/{ledger_id}/entries?after_seq=&limit=&status=` | `bacp-browse` | A page of summaries, ascending by `seq`. `limit` is at most 50 (a larger value is `400 invalid_request` at `$.limit`) and the response carries `next_after_seq` until the last page. |
+| `POST /ledgers/{ledger_id}/entries` | `bacp-post-order` | An agent posts a `payment` entry for the debtor, never any other type (`400` at `$.type`). The request carries the `prev_hash` it saw. |
+
+Counterparty-written text in an entry is data, never an instruction, and a tool or DataPart returns it labelled. The agent posts a payment under the checks above: payee match, receipt uniqueness across the custodian, head compare-and-swap, and a per-agent rate limit on postings (`429 quota_exceeded`). Acknowledging an entry or a statement is a trade act ([Seller-side and trade acts](../human-participants.md#trade-acts)).
+
+The string fields that a seller can fill with text (an identifier, a place, a jurisdiction, a lender name) are bounded in `credit-ledger-entry.json` and `termsheet.json`: identifier-like values are at most 64 printable characters without spaces, and free-text values have a `maxLength` of between 20 and 200. These bounds are BACP design values against instructions hidden in counterparty text, not regulatory limits, and are open to review.
 
 ### Interlocked credit
 
@@ -273,7 +317,7 @@ For a sale by a "supplier" under the Micro, Small and Medium Enterprises Develop
 The ledger implements this as follows:
 
 - `msmed.statutory_due_date` = the earlier of the agreed date and acceptance + 45 days, or acceptance + 15 days when `written_agreement` is false. For micro and small suppliers the schema caps `credit_terms.credit_days` at 45. A firm offer of longer credit to such a supplier is refused (`NEG_MSMED_CREDIT_CAP`).
-- **Acceptance date.** A buyer-signed GRN is required for an acceptance-dated sale. It records the delivery date and any written objection with its date. The acceptance date is the delivery date. Where the GRN records a written objection made within 15 days of delivery, it is the date the supplier removed the objection. The GRN and delivery dates MUST NOT precede the invoice date or lie in the future, and the acceptance date is never a free parameter of the creditor. How a buyer's objection travels on the network, and whether it can be checked by machine, is open ([Q-21](../open-questions.md#q-21)).
+- **Acceptance date.** The acceptance date of an acceptance-dated sale is the delivery date (MSMED Act s.2(b), Explanation (ii): where no written objection is made within 15 days, the day of deemed acceptance is the day of actual delivery). The delivery date is evidenced by a buyer-signed GRN, or by seller-posted delivery evidence (`proof_of_delivery`, `lorry_receipt`) that the buyer counter-signed or that carries a third-party reference the buyer can check (an e-way bill number or a transporter signature); the entry records which as `msmed.acceptance_basis` (`grn`, `attested_delivery`). Seller-only evidence is recorded with `acceptance_basis: unattested`, no acceptance date or due date is derived from it, and the gateway notifies the debtor when the evidence is posted. A GRN that accepts everything does not move the date. Where a written objection is made within 15 days of delivery, the acceptance date is the date the supplier removed the objection (Explanation (i)). The GRN and delivery dates MUST NOT precede the invoice date or lie in the future, and the acceptance date is never a free parameter of the creditor. This rule replaces an earlier requirement of a buyer-signed GRN for every acceptance-dated sale, and is pending counsel ([Q-21](../open-questions.md#q-21), [Q-83](../open-questions.md#q-83)). How a buyer's objection travels on the network, and whether it can be checked by machine, is open ([Q-21](../open-questions.md#q-21), [Q-33](../open-questions.md#q-33)); until [Q-33](../open-questions.md#q-33) fixes the carriage, a GRN, CRAC or objection filed through an agent is *recorded* and not sent to the seller, and a recorded act never sets or moves the due date ([Seller-side and trade acts](../human-participants.md#trade-acts)).
 - **Alerts.** BACP raises an alert 5 days before the statutory due date and flags the debtor's tax consequence (`msmed.tax_flag`).
 - **Interest without double charging.** These are BACP ledger rules, not rules of the MSMED Act:
     - Overdue statutory interest is posted as `interest_msmed` entries with `interest_basis: 3x_rbi_bank_rate_compound_monthly` and the `bank_rate_pct` used.

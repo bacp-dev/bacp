@@ -57,7 +57,7 @@ proves little. So:
 |---|---|---|---|
 | `bacp.core.1` | **Core** | — | Identity and request signatures (tags, purposes, replay), idempotency, resource limits, the mandate schema and deterministic verification (including the positive-amount rule and atomic reservation), the session state machine and payment saga, post-order writes, IGM grievances, the instruction log and evidence bundle, field-scoped webhooks, and conformance to the REST contract. Exercised against a reference mock rail. |
 | `bacp.pay.upi.1` | **Payments-UPI** | Core | Live UPI standing authorities and human-present PIN payments: Reserve Pay (one block per seller, fail-safe notice from the second debit), UPI Circle caps (per transaction, monthly, first 24 hours, at most five devices), AutoPay (24-hour pre-debit notice and opt-out), AFA at ₹15,000, UPI 123PAY caps, the basket-blind payment leg, and RRN/UTR receipts. |
-| `bacp.pay.all.1` | **Payments-All** | Payments-UPI, and in this version the negotiation endpoint (because handler intersection is negotiation-scoped, [Q-45](open-questions.md#q-45)) | The full handler registry and binding classes O, C, A, D and N; alias resolution; cards (e-mandate AFA, card-not-present disabled, cross-border card-not-present AFA, refund consent states); PPIs and gift instruments; net banking presence rules; COD and return-to-origin; credit (key fact statement offer list, human-present acceptance, cooling-off, repayment to the lender); eNACH caps; split tender; refunds to source; the FX disclosure view. |
+| `bacp.pay.all.1` | **Payments-All** | Payments-UPI, and in this version the negotiation endpoint (because handler intersection takes a `negotiation_id` unless the gateway lists `in.bacp.payment_plan`, [Q-45](open-questions.md#q-45)) | The full handler registry and binding classes O, C, A, D and N; alias resolution; cards (e-mandate AFA, card-not-present disabled, cross-border card-not-present AFA, refund consent states); PPIs and gift instruments; net banking presence rules; COD and return-to-origin; credit (key fact statement offer list, human-present acceptance, cooling-off, repayment to the lender); eNACH caps; split tender; refunds to source; the FX disclosure view. |
 | `bacp.neg.1` | **Negotiation** | Core (and Payments-UPI for the hand-off from negotiation to payment) | The separate negotiation mandate, term sheets, signed offers, the offer and negotiation state machines, the withdraw/accept crossing rule, the negotiation guard with atomic exposure checks, the validators that apply to bilateral bargaining, escalation with the diff card on the Trusted Surface only, protection of reservation values, and handling of untrusted counterparty text. |
 | `bacp.b2b.1` | **B2B** | Negotiation, Payments-All | RFQs (sealed, deposits, `response_by`, landed-cost comparison), purchase orders via `confirm`, the MSMED credit-days cap, document gates (e-invoice IRN, e-way bill), schemes, the `bacp.credit_ledger` (two-party header, hash chain, acknowledgement, rail-evidenced settlement), eNACH B2B subscriptions and maker–checker approval. |
 | `bacp.auction.1` | **Auctions** | Negotiation | A neutral auctioneer, a signed and frozen auction specification, anti-sniping, commit–reveal with deposits and forfeits, reverse (L1), English and Dutch rules, retraction rules, shill-bid refusal, and award rules. |
@@ -466,6 +466,10 @@ A BACP gateway MUST:
   and refund from the seller-signed revised quote
   ([Discounts](checkout/index.md#discounts); cases CD-42 to CD-46, CD-52,
   CD-R13 to CD-R18).
+- Pass the [binding cases](#binding-cases) for every one of `in.bacp.payment_plan`,
+  `in.bacp.ledger`, `in.bacp.trade_document` and `in.bacp.ucp_checkout` that its profile
+  lists, and, whatever it lists, the transport cases that bind every gateway (cases BND-TAG-01,
+  BND-TAG-02, BND-MCP-STDIO-01, BND-MCP-ARGS-01, BND-MCP-IDEM-01).
 
 ### Seller (BPP)
 
@@ -1217,8 +1221,9 @@ succeeds.
 T0-RT-19 tests only what an agent sends: it can show that the agent opens no
 re-issue or resume request, not what it says to the principal.
 
-T0-RT-13 is tested at library level, because payment plans have no wire
-binding until [Q-44](open-questions.md#q-44). With the ₹1,000 block counted as
+T0-RT-13 is tested at library level for a gateway that does not list
+`in.bacp.payment_plan` ([Q-44](open-questions.md#q-44), settled with a capability
+binding), and on the wire for one that does. With the ₹1,000 block counted as
 exposure ([Usage ledger](mandates.md#usage-ledger)), ₹1,000 is left: the plan's
 gift tender (₹1,200) does not fit, so the plan is refused whatever the order,
 and its block tender, which alone would fit, is not debited either. The single
@@ -1819,7 +1824,8 @@ omit` leaves the `Presentation` out, `presentation: {…}` overrides its fields,
 
 T1-27 to T1-32 test that a fail-safe default is applied exactly as `2026-10-17` states it. Of the six, Q-12 and Q-52
 escalate to the principal on the Trusted Surface, so their cases also expect a signed Trusted Surface event with a
-`Presentation` in the bundle; Q-15, Q-16, Q-20 and Q-44 refuse or keep a feature off, with no escalation. T1-26
+`Presentation` in the bundle; Q-15, Q-16 and Q-20 refuse or keep a feature off, with no escalation, and T1-31 now tests the fallback of the settled
+Q-44: a gateway that does not list `in.bacp.payment_plan` refuses `payment_plan`. T1-26
 relies on the atomic section keyed on the root open Checkout Mandate ([Usage ledger](mandates.md#usage-ledger)).
 
 ```yaml
@@ -2625,9 +2631,10 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
       - {messages: [NEG_MRP_EXCEEDED]}
 
 - case_id: T1-31
-  title: Q-44 default, a complete that carries a payment plan is refused
+  title: Q-44 default, a gateway that does not list in.bacp.payment_plan refuses a complete that carries a payment plan
   level: bacp.core.1
   fixture:
+    capabilities: {omits: [in.bacp.payment_plan]}
     sessions: {count: 1, state: ready_for_complete}
   steps:
     - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, body: {payment_plan: {tenders: 2}}}
@@ -5402,4 +5409,596 @@ Until counsel answers [Q-81](open-questions.md#q-81), no case passes a retained 
     - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
   expect:
     sessions: {count: 1, state: requires_escalation, step_up: {kind: confirm, reason: constraint_unresolved}, price_unchanged: true, handler_unchanged: true}
+```
+
+## Binding cases {#binding-cases}
+
+The cases below cover the wire binding of payment plans, credit ledgers and trade documents ([Q-44](open-questions.md#q-44)),
+the transport rules that go with them and the UCP projection. They use the manifest form above, and their ids use the
+prefix `BND-`. Amounts are integer paise. A case with `requires_capability` is required only of a gateway whose profile
+lists that capability: for any other gateway the runner records the case as not applicable, which is not a skipped
+case, and the gateway keeps the behaviour that case T1-31 checks. Cases without it bind every gateway.
+
+```yaml
+- case_id: BND-PLAN-01
+  title: A plan that matches an offered option is paid tender by tender, with one derived PSP key for each tender
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    sessions: {count: 1, state: ready_for_complete, all_in_total: {value: 216000, currency: INR}}
+    plan_options: [{plan_hash: H, tenders: [{handler: in.ppi.gift, amount: {value: 100000, currency: INR}, sequence: 1}, {handler: in.upi.circle, amount: {value: 116000, currency: INR}, sequence: 2}]}]
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, body: {payment_plan: {tenders_hash: H}, closed_mandates: [{tender: {plan_hash: H, tender_id: tdr_gift001}}, {tender: {plan_hash: H, tender_id: tdr_upi001}}]}}
+  expect:
+    sessions: {count: 1, state: completed}
+    receipts: {count: 2}
+    rail: {settled_debits: 2, psp_keys_distinct: true}
+
+- case_id: BND-PLAN-OFFER-01
+  title: A plan that hashes to no offered or confirmed option is refused and nothing is debited
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    sessions: {count: 1, state: ready_for_complete}
+    plan_options: [{plan_hash: H1}, {plan_hash: H2}]
+    ts_confirmed_plans: []
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, body: {payment_plan: {tenders_hash: H3}}}
+  expect:
+    responses:
+      - {status: 400, code: plan_not_offered, param: $.payment_plan, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: BND-PLAN-TS-01
+  title: A plan_id that names an approved option while the tenders hash to another option gets mandate_scope_mismatch
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    step_up: {approved_for: {plan_id: P1, kind: card_only_2160}}
+    plan_options: [{plan_id: P1}, {plan_id: P2}]
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HP, body: {payment_plan: {plan_id: P1, tenders_hash: H_P2}}}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: BND-PLAN-RACE-01
+  title: A second plan for the same checkout_hash while the first has an in-doubt tender is refused, and the first completes when the tender resolves
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    sessions: {count: 1, state: complete_in_progress}
+    plan: {plan: A, tenders: [{status: captured}, {status: in_doubt}]}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, idempotency_key: fresh, body: {payment_plan: {plan: B}}}
+    - rail: {resolve_in_doubt: success}
+  expect:
+    responses:
+      - {status: 409, code_any_of: [plan_conflict, session_state_conflict], count: 1}
+    rail: {settled_debits: 2}
+    mandate: {usage_unchanged_by_refused_call: true}
+    sessions: {count: 1, state: completed, plan: A}
+
+- case_id: BND-PLAN-DOUBT-01
+  title: An in-doubt tender freezes the plan; the earlier tender is neither released nor refunded
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    plan: {tenders: [{handler: in.ppi.gift, status: captured}, {handler: in.upi.circle, status: initiated}]}
+  steps:
+    - rail: {timeout_on_tender: tdr_upi001}
+  expect:
+    sessions: {count: 1, state: complete_in_progress}
+    plan: {tenders: [{status: captured}, {status: in_doubt}]}
+    rail: {refunds: 0}
+
+- case_id: BND-PLAN-FAIL-01
+  title: When the second tender fails the first is refunded, and the session is cancelled only after the refund credit settles
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    plan: {tenders: [{handler: in.ppi.gift, status: captured}, {handler: in.upi.circle, status: initiated}]}
+  steps:
+    - rail: {fail_tender: tdr_upi001}
+    - rail: {settle_refund: tdr_gift001}
+  expect:
+    plan: {tenders: [{status: refunded, reversal_deadline: present}, {status: failed}]}
+    sessions: {state_before_settlement: complete_in_progress, state: cancelled}
+    ts_read_out: {contains: being_returned, not_contains: no_money_moved}
+
+- case_id: BND-PLAN-IDEM-01
+  title: A repeated complete under the same key returns the stored response and re-debits no tender
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    sessions: {count: 1, state: completed, plan: completed_under_key_k}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, idempotency_key: k, body: same}
+  expect:
+    responses:
+      - {status: 200, header: {Idempotent-Replayed: "true"}, count: 1}
+    rail: {settled_debits: 2, psp_keys_unchanged: true}
+
+- case_id: BND-PLAN-RULES-01
+  title: Each plan rule is refused at its path and nothing is debited
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    sessions: {count: 1, state: ready_for_complete}
+    variants: [open_amount_tender, two_tenders_without_hold_primitive, tender_without_hold_primitive_not_last, refund_allocation_pro_rata, payment_plan_and_payment_mandate]
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, for_each: variants}
+  expect:
+    responses:
+      - {status: 400, code_any_of: [invalid_request, plan_order_invalid], count: 5}
+    rail: {settled_debits: 0}
+
+- case_id: BND-PLAN-P5-01
+  title: A tool call whose arguments carry a gift-card code or an instrument credential is refused with no rail call
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    transport: mcp
+  steps:
+    - tool_call: {name: bacp_checkout_complete, arguments: {payment_plan: {tenders: [{gift_card_code: present}]}}}
+  expect:
+    tool_result: {isError: true, "structuredContent.code": invalid_request}
+    rail: {calls: 0}
+
+- case_id: BND-PLAN-NODEFAULT-01
+  title: Plan options carry no default or preselected flag, even when the gateway also issues the PPI, and the display order is recorded
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    gateway: {also_ppi_issuer: true}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    sessions: {count: 1, "payment.plan_options[*].default": absent, "payment.plan_options[*].preselected": absent}
+    evidence: {plan_option_display_order: recorded}
+
+- case_id: BND-TRANCHE-01
+  title: Only the tranche paid at complete is debited, and a delivery tranche without a fresh closed mandate is refused
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    plan: {tenders: [{tranche_id: token, handler: in.upi.circle}, {tranche_id: delivery, handler: in.upi.circle}]}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+    - delivery_debit: {fresh_closed_mandate: false}
+    - delivery_refusal: {principal_refuses: true}
+  expect:
+    rail: {settled_debits: 1, calls_for_delivery_debit: 0}
+    refunds: {token: refunded, allocation: refund_allocation}
+
+- case_id: BND-LEDGER-READ-01
+  title: A ledger of 120 entries is read in pages of at most 50, and a limit of 51 is refused
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledgers: {count: 1, entries: 120}
+  steps:
+    - request: {method: GET, path: "/ledgers/{ledger_id}/entries?limit=50", tag: bacp-browse}
+    - request: {method: GET, path: "/ledgers/{ledger_id}/entries?limit=51", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 200, "body.entries.length": 50, "body.next_after_seq": 50, count: 1}
+      - {status: 400, code: invalid_request, param: $.limit, count: 1}
+
+- case_id: BND-CL-PAY-01
+  title: A payment receipt that paid another payee is accepted as pending_ack, settles nothing and auto-acknowledges nothing
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {creditor_settlement_accounts: ["k@psp"], entries: [{id: e7, type: sale, status: acknowledged, amount: {value: 480000, currency: INR}}]}
+    receipts: [{id: R, payee: "m@psp", amount: {value: 480000, currency: INR}, issued_at: after_e7}, {id: R2, payee: "k@psp", amount: {value: 480000, currency: INR}, issued_at: after_e7}]
+  steps:
+    - request: {method: POST, path: "/ledgers/{ledger_id}/entries", tag: bacp-post-order, idempotency_key: fresh, body: {type: payment, settles: [e7], receipt: R}}
+    - request: {method: POST, path: "/ledgers/{ledger_id}/entries", tag: bacp-post-order, idempotency_key: fresh, body: {type: payment, settles: [e7], receipt: R2}}
+  expect:
+    responses:
+      - {status: 201, "body.entry.status": pending_ack, "body.messages[0].code": settlement_payee_unmatched, count: 1}
+      - {status: 201, "body.entry.status": settled, count: 1}
+    ledger: {e7_after_first_step: acknowledged, auto_acknowledgement_events_after_first_step: 0, e7_after_second_step: settled}
+
+- case_id: BND-CL-PAY-02
+  title: A receipt that settled an entry on one ledger is refused on another ledger of the same custodian
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledgers: {count: 2, same_custodian: true}
+    receipts: [{id: R, settled_on: L1}]
+  steps:
+    - request: {method: POST, path: "/ledgers/{ledger_id}/entries", tag: bacp-post-order, idempotency_key: fresh, ledger: L2, body: {type: payment, receipt: R}}
+  expect:
+    responses:
+      - {status: 409, code: receipt_reused, count: 1}
+    ledger: {entries_appended: 0}
+
+- case_id: BND-CL-PAY-03
+  title: An agent that posts any type other than payment is refused and nothing is appended
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledgers: {count: 1}
+  steps:
+    - request: {method: POST, path: "/ledgers/{ledger_id}/entries", tag: bacp-post-order, idempotency_key: fresh, for_each_type: [sale, adjustment, limit_change]}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.type, count: 3}
+    ledger: {entries_appended: 0}
+
+- case_id: BND-LEDGER-CAS-01
+  title: A posting whose prev_hash is not the chain head is refused
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {head_seq: 41}
+  steps:
+    - request: {method: POST, path: "/ledgers/{ledger_id}/entries", tag: bacp-post-order, idempotency_key: fresh, body: {type: payment, prev_hash: hash_of_seq_40}}
+  expect:
+    responses:
+      - {status: 409, code: ledger_head_mismatch, count: 1}
+    ledger: {entries_appended: 0}
+
+- case_id: BND-TAG-01
+  title: A credential that holds only bacp-browse cannot sign a ledger posting
+  level: bacp.core.1
+  fixture:
+    agent_credential: {purposes: [bacp-browse]}
+  steps:
+    - request: {method: POST, path: "/ledgers/{ledger_id}/entries", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 401, code: signature_invalid, count: 1}
+    ledger: {entries_appended: 0}
+
+- case_id: BND-TA-STEP-01
+  title: A GRN without hp_proof returns a post_order step-up that names the subject and its hash, and sends nothing to the seller
+  level: bacp.core.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    orders: {count: 1}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: GRN, presence: HP}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, "body.step_up.kind": post_order, "body.step_up.ts_render.subject_hash": present, count: 1}
+    beckn: {messages_sent: 0}
+
+- case_id: BND-TA-BIND-01
+  title: A proof for a GRN with no objection does not cover a GRN with an objection, and is not consumed
+  level: bacp.core.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    step_up: {approved: true, subject_hash_covers: grn_without_objection}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: GRN, document: grn_with_objection}, hp_proof: approved}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 1}
+    hp_proof: {consumed: false}
+
+- case_id: BND-TA-REC-01
+  title: While Q-33 is unsettled a GRN is recorded and not sent, and the BACP due date does not move
+  level: bacp.core.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    q33: unsettled
+    ledger: {msmed_due_date: unset}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: GRN}, hp_proof: approved}
+  expect:
+    responses:
+      - {status: 200, "body.delivery": recorded, count: 1}
+    beckn: {grn_messages_sent: 0}
+    ledger: {msmed_due_date: unset}
+    views: {support: not_sent_to_seller, trusted_surface: recorded_not_yet_sent}
+
+- case_id: BND-TA-HNP-01
+  title: A trade act with presence HNP is refused
+  level: bacp.core.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    orders: {count: 1}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: GRN, presence: HNP}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_allowed, param: $.presence, count: 1}
+
+- case_id: BND-TA-RACE-01
+  title: Two concurrent acknowledgements that cite one approved proof for an order-less entry produce exactly one acknowledgement
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    gateway_instances: 2
+    ledger: {entries: [{type: opening_balance, status: pending_ack}]}
+    step_up: {approved: true, action: LEDGER_ACK}
+  steps:
+    - concurrent:
+        - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, instance: 1, hp_proof: approved}
+        - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, instance: 2, hp_proof: approved}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+      - {status: 403, code: presence_not_proven, count: 1}
+    ledger: {acknowledgement_events: 1}
+
+- case_id: BND-LEDGER-STMT-01
+  title: A statement acknowledgement may not cover an entry above itemise_above
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {itemise_above: {value: 1000000, currency: INR}, entries: [{seq: 40, amount: {value: 1850000, currency: INR}, status: pending_ack}]}
+    step_up: {approved: true, action: LEDGER_ACK, subject: {through_seq: 40}}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, through_seq: 40}, hp_proof: approved}
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, through_seq: 39}, hp_proof: approved_for_39}
+  expect:
+    responses:
+      - {status: 422, code: invalid_request, param: $.subject.through_seq, count: 1}
+      - {status: 200, count: 1}
+    ledger: {e40: pending_ack}
+
+- case_id: BND-LEDGER-STMT-02
+  title: A statement acknowledgement binds the head hash, covers the pending entries up to it and leaves later entries and later disputes alone
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {pending: {from_seq: 30, to_seq: 41, count: 12}, balance: {value: 435000, currency: INR}, head_hash: H}
+    posted_between_render_and_approval: {seq: 42}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, through_seq: 41, head_hash: H}, hp_proof: approved}
+    - dispute: {entry: 37}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+    ledger: {acknowledged_through_41: 12, acknowledgement_events: 1, event_names_head_hash: H, e42: pending_ack, e37_after_dispute: disputed, others_unchanged: true}
+
+- case_id: BND-LEDGER-STMT-03
+  title: A statement acknowledgement whose head is no longer the ledger head is refused
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {head_hash: H_new}
+    step_up: {approved: true, subject: {head_hash: H_old}}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, head_hash: H_old}, hp_proof: approved}
+  expect:
+    responses:
+      - {status: 409, code: ledger_head_mismatch, count: 1}
+
+- case_id: BND-LEDGER-ACK-01
+  title: A proof for one entry is refused for another entry and for the same entry re-posted with a new hash, and is not consumed
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    step_up: {approved: true, subject: {entry: e3, entry_hash: h3}}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, entry: e4}, hp_proof: approved}
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, entry: e3_reposted_with_new_hash}, hp_proof: approved}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 2}
+    hp_proof: {consumed: false}
+
+- case_id: BND-GRN-LINES-01
+  title: A GRN whose accepted and rejected quantities exceed the received quantity is refused (a sum that JSON Schema cannot state)
+  level: bacp.core.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    grn: {lines: [{qty_received: 500, qty_accepted: 490, qty_rejected: 20}]}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: GRN}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, count: 1}
+    beckn: {messages_sent: 0}
+
+- case_id: BND-MSME-POD-01
+  title: Seller-only delivery evidence derives no due date
+  level: bacp.b2b.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    documents: [{doc_type: lorry_receipt, signed_by: seller_only}]
+  steps:
+    - ledger_computes: {sale: S1}
+  expect:
+    ledger: {"msmed.acceptance_basis": unattested, "msmed.statutory_due_date": absent, debtor_notified: true}
+
+- case_id: BND-MSME-POD-02
+  title: Attested delivery evidence dates acceptance at the delivery date, with or without a GRN, and a recorded and sent objection moves it
+  level: bacp.b2b.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    delivery: "2026-11-01"
+    documents: [{doc_type: proof_of_delivery, ewb_no: "341009876543"}]
+    clock: "2026-11-16T10:00:00+05:30"
+  steps:
+    - ledger_computes: {sale: S1}
+    - control: {objection: {recorded_and_sent_on: "2026-11-10"}}
+  expect:
+    ledger: {"msmed.acceptance_date": "2026-11-01", "msmed.acceptance_basis": attested_delivery, control_acceptance_date: null_until_objection_removed}
+
+- case_id: BND-Q45-01
+  title: Intersect for a plain session returns enum-only reasons with a resolution, refuses a seller outside the session, and never leaks excluded[] to a seller
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    sessions: {count: 1, sellers: [bpp.dairy.example.in]}
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh, body: {session_id: S1, presence: HNP}}
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh, body: {session_id: S1, presence: HNP, bpp_id: bpp.other.example.in}}
+  expect:
+    responses:
+      - {status: 200, "body.excluded[*].reason": in_closed_enum, "body.excluded[*].resolution": present, "body.excluded[*].amount": absent, count: 1}
+      - {status: 404, code: not_found, count: 1}
+    beckn: {messages_containing_excluded: 0}
+
+- case_id: BND-Q45-02
+  title: A gateway that does not list in.bacp.payment_plan refuses an intersect that carries only a session_id
+  level: bacp.pay.all.1
+  fixture:
+    capabilities: {omits: [in.bacp.payment_plan]}
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh, body: {session_id: S1, presence: HNP}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.negotiation_id, count: 1}
+
+- case_id: BND-TAG-02
+  title: Every operation of the OpenAPI document declares its signature tag, and an unlisted agent endpoint gets 401
+  level: bacp.core.1
+  fixture:
+    artefact: bacp.openapi.yaml
+  steps:
+    - validate: {script: scripts/validate.py}
+    - request: {method: GET, path: /unlisted-agent-endpoint, tag: bacp-browse}
+  expect:
+    validation: {operations_without_x_bacp_signature_tag: 0}
+    responses:
+      - {status: 401, code: signature_invalid, count: 1}
+
+- case_id: BND-MCP-STDIO-01
+  title: A stdio MCP server offers no money tool, no trade-act tool and no ledger-posting tool
+  level: bacp.core.1
+  fixture:
+    transport: mcp_stdio
+  steps:
+    - mcp: {method: tools/list}
+  expect:
+    tools: {absent: [bacp_checkout_complete, bacp_trade_act_record, bacp_ledger_payment_post, bacp_order_cancel, bacp_order_return, bacp_issue_raise, bacp_issue_action]}
+
+- case_id: BND-MCP-ARGS-01
+  title: Path parameters are top-level tool arguments, and a missing one is an invalid_request at its own path
+  level: bacp.core.1
+  fixture:
+    transport: mcp_http
+    sessions: {count: 1}
+  steps:
+    - tool_call: {name: bacp_checkout_get, arguments: {session_id: S1}}
+    - tool_call: {name: bacp_checkout_update, arguments: {idempotency_key: fresh}}
+  expect:
+    tool_results:
+      - {isError: false, "structuredContent.id": S1}
+      - {isError: true, "structuredContent.code": invalid_request, "structuredContent.param": $.session_id}
+
+- case_id: BND-MCP-IDEM-01
+  title: Retrying a refused write with hp_proof under the same key gets idempotency_conflict, and the error names a new key
+  level: bacp.core.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    step_up: {approved: true}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: k1, body: {act: GRN}}
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: k1, body: {act: GRN}, hp_proof: approved}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 1}
+      - {status: 422, code: idempotency_conflict, resolution: recoverable, count: 1}
+
+- case_id: BND-UCP-01
+  title: A projected completed session validates against the pinned UCP checkout schema
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    sessions: {count: 1, state: completed}
+  steps:
+    - request: {method: GET, path: "/checkout-sessions/{id}", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 200, "body validates against": "source/ucp/shopping/checkout.json", count: 1}
+
+- case_id: BND-UCP-02
+  title: A ₹100 discount projects to -10000 and the UCP total equals the BACP all-in total
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    sessions: {count: 1, state: ready_for_complete, discount: {value: 10000, currency: INR}}
+  steps:
+    - request: {method: GET, path: "/checkout-sessions/{id}", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 200, "body.totals[type=discount].amount": -10000, "body.totals[type=total].amount": all_in_total, count: 1}
+    pinned_schema: {positive_discount_fails: true}
+
+- case_id: BND-UCPF-01
+  title: A complete under key k on /sessions is replayed on /checkout-sessions
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    sessions: {count: 1, state: completed, completed_under_key: k, via: /sessions}
+  steps:
+    - request: {method: POST, path: "/checkout-sessions/{id}/complete", tag: bacp-pay, idempotency_key: k, body: same_as_original}
+  expect:
+    responses:
+      - {status: 200, header: {Idempotent-Replayed: "true"}, count: 1}
+    rail: {settled_debits: 1}
+
+- case_id: BND-UCPF-02
+  title: A request signed with UCP's default signature (no nonce, created or tag) is refused
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  steps:
+    - request: {method: POST, path: /checkout-sessions, signature: ucp_default_without_nonce_created_tag}
+  expect:
+    responses:
+      - {status: 401, code: signature_invalid, count: 1}
+
+- case_id: BND-UCPF-03
+  title: An instrument credential that is not a BACP closed payment mandate is refused with no rail call
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/checkout-sessions/{id}/complete", tag: bacp-pay, idempotency_key: fresh, body: {payment: {instruments: [{credential: {type: card_token}}]}}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: "$.payment.instruments[0].credential", count: 1}
+    rail: {calls: 0}
+
+- case_id: BND-UCPF-04
+  title: continue_url is the step-up's trusted_surface_url, and links carry only typed policy links with gateway-template titles
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    bpp_quote_tags: {url: "https://seller.example/handoff"}
+    sessions: {count: 1, state: requires_escalation}
+  steps:
+    - request: {method: GET, path: "/checkout-sessions/{id}", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 200, "body.continue_url": step_up.trusted_surface_url, "body.links[*].type": typed_policy, "body.links[*].title": gateway_template, count: 1}
+
+- case_id: BND-UCPF-05
+  title: A complete that carries ap2.checkout_mandate is refused with no rail call, and the envelope never advertises the AP2 extension
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/checkout-sessions/{id}/complete", tag: bacp-pay, idempotency_key: fresh, body: {ap2: {checkout_mandate: present}}}
+    - request: {method: GET, path: "/checkout-sessions/{id}", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.ap2.checkout_mandate, count: 1}
+      - {status: 200, "body.ucp.capabilities": lacks_dev.ucp.common.payment.ap2_mandate, count: 1}
+    rail: {calls: 0}
+
+- case_id: BND-UCP-COMPLETE-01
+  title: A complete from a platform that carries no BACP closed payment mandate fails at complete with bacp_mandate_required and no rail call
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    platform_profile: {declares_bacp_mandate_path: false}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/checkout-sessions/{id}/complete", tag: bacp-pay, idempotency_key: fresh, body: {payment: {instruments: []}}}
+  expect:
+    responses:
+      - {status: 400, code: bacp_mandate_required, param: $.payment.instruments, count: 1}
+    rail: {calls: 0}
 ```

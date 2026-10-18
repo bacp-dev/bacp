@@ -1,0 +1,18 @@
+{
+  "surface": "psp.example.in",
+  "channel": "upi123pay",
+  "language": "hi-IN",
+  "modality": "audio",
+  "content_hash": "sha-256:Bm827PMImR-m3T6Og1qtyYWbfP6FnGgvFauB-iWKvhI",
+  "content_ref": "https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZXA",
+  "template_id": "psp.example.in/ivr/step-up-confirm/3",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "user_action": "upi_pin",
+  "shown_at": "2026-10-17T10:00:00+05:30",
+  "acted_at": "2026-10-17T10:00:41+05:30",
+  "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQSJ9.c2lnbmF0dXJl",
+  "renders": [
+    "plan"
+  ],
+  "plan_hash": "sha-256:Hq5vYd2m0aB7sKxP3oWc9eTnLuZ1fRiG4jXyVb6QhMA"
+}

@@ -343,6 +343,24 @@
       "$ref": "common.json#/$defs/PositiveAmount",
       "description": "Closed mandates only: exact payable amount, greater than zero"
     },
+    "tender": {
+      "type": "object",
+      "description": "Closed payment mandates only, and only one that pays one tender of a payment plan: the plan_hash of the plan and the tender_id this mandate pays. Its amount is then the tender's amount, not the quote total. A mandate that carries it MUST NOT pay a complete that has no payment_plan.",
+      "required": [
+        "plan_hash",
+        "tender_id"
+      ],
+      "properties": {
+        "plan_hash": {
+          "$ref": "common.json#/$defs/Hash"
+        },
+        "tender_id": {
+          "type": "string",
+          "pattern": "^tdr_[A-Za-z0-9]{6,40}$"
+        }
+      },
+      "additionalProperties": false
+    },
     "payee": {
       "type": "object",
       "description": "The party a payment under this mandate is paid to. An open Payment Mandate whose rail_binding.primitive is sbmd_block (a UPI Reserve Pay block) MUST name the block's payee seller: vpa, equal to the VPA in that seller's BPP-signed payment terms, and bpp_id. The Mandate Manager refuses a Reserve Pay mandate request without it (403 mandate_scope_mismatch at $.payee).",
@@ -738,6 +756,28 @@
             ]
           }
         }
+      }
+    },
+    {
+      "description": "A tender binding is only for a closed payment mandate.",
+      "if": {
+        "required": [
+          "tender"
+        ]
+      },
+      "then": {
+        "properties": {
+          "form": {
+            "const": "closed"
+          },
+          "kind": {
+            "const": "payment"
+          }
+        },
+        "required": [
+          "form",
+          "kind"
+        ]
       }
     }
   ]

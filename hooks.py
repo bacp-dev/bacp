@@ -171,6 +171,12 @@ def on_post_build(config):
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(f, dest)
             continue
+        if rel.startswith("ucp/"):
+            # Pinned copies of another protocol's schemas: published unchanged, never rewritten.
+            dest = site / rel
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, dest)
+            continue
         data = json.loads(f.read_text(encoding="utf-8"))
         sid = data.get("$id") if isinstance(data, dict) else None
         out_rel = sid.removeprefix(BACP_ORIGIN).lstrip("/") if isinstance(sid, str) and sid.startswith(SCHEMA_PREFIX) else rel

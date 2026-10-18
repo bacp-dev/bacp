@@ -1,0 +1,45 @@
+{
+  "act": "GRN",
+  "presence": "HP",
+  "subject": {
+    "order_id": "ORD-ANNA-000007"
+  },
+  "document": {
+    "doc_type": "grn",
+    "id": "grn_ANNA000041",
+    "parent_ids": [
+      "po_ANNA000007"
+    ],
+    "issuer": "buyer.annapurna.example.in",
+    "issued_at": "2026-11-02T10:30:00+05:30",
+    "hash": "sha-256:Qm8vXz1bN6dRtY0eWuS5cAfGhL2oP9iVxT4yKnBwJk3",
+    "payload": {
+      "delivery_date": "2026-11-01",
+      "lines": [
+        {
+          "line_ref": "L1",
+          "qty_received": 500,
+          "qty_accepted": 480,
+          "qty_rejected": 20,
+          "reason_code": "damaged",
+          "reason_text": "20 sacks torn at the seam"
+        },
+        {
+          "line_ref": "L2",
+          "qty_received": 100,
+          "qty_accepted": 100,
+          "qty_rejected": 0
+        }
+      ]
+    }
+  },
+  "actor": {
+    "kind": "agent",
+    "role": "agent",
+    "participant_ref": "did:web:agents.annapurna.example.in:proc"
+  },
+  "hp_proof": {
+    "ts_event_hash": "sha-256:FinjbiY40n09acxl_LdnJJeY3RTshXXlU4fbGQt6TC4",
+    "step_up_id": "stp_01HZPOANNA41"
+  }
+}

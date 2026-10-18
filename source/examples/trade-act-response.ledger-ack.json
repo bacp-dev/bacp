@@ -1,0 +1,8 @@
+{
+  "act": "LEDGER_ACK",
+  "recorded_at": "2026-11-02T10:45:00+05:30",
+  "ledger": {
+    "head_seq": 42,
+    "head_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc"
+  }
+}

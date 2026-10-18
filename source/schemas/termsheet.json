@@ -16,7 +16,10 @@
   ],
   "properties": {
     "term_sheet_id": {
-      "type": "string"
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[\\x21-\\x7e]+$",
+      "description": "Identifier: printable ASCII without spaces, at most 64 characters."
     },
     "version": {
       "const": "1"
@@ -88,10 +91,16 @@
         "type": "object",
         "properties": {
           "line_id": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[\\x21-\\x7e]+$",
+            "description": "Identifier: printable ASCII without spaces, at most 64 characters."
           },
           "item_id": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[\\x21-\\x7e]+$",
+            "description": "Identifier: printable ASCII without spaces, at most 64 characters."
           },
           "name": {
             "$ref": "common.json#/$defs/LangText"
@@ -490,7 +499,9 @@
           ],
           "properties": {
             "value": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 200,
+              "description": "At most 200 characters."
             }
           },
           "required": [
@@ -574,7 +585,10 @@
             "type": "object",
             "properties": {
               "option_id": {
-                "type": "string"
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[\\x21-\\x7e]+$",
+                "description": "Identifier: printable ASCII without spaces, at most 64 characters."
               },
               "handlers": {
                 "type": "array",
@@ -619,7 +633,10 @@
           ],
           "properties": {
             "value": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[\\x21-\\x7e]+$",
+              "description": "Identifier: printable ASCII without spaces, at most 64 characters."
             }
           },
           "required": [
@@ -633,7 +650,10 @@
             "type": "object",
             "properties": {
               "tranche_id": {
-                "type": "string"
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[\\x21-\\x7e]+$",
+                "description": "Identifier: printable ASCII without spaces, at most 64 characters."
               },
               "amount": {
                 "$ref": "common.json#/$defs/Amount"
@@ -665,7 +685,10 @@
                     "minimum": 0
                   },
                   "milestone_id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "Identifier: printable ASCII without spaces, at most 64 characters."
                   },
                   "date": {
                     "type": "string",
@@ -845,7 +868,9 @@
                   "maximum": 100
                 },
                 "lender": {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 120,
+                  "description": "At most 120 characters."
                 },
                 "kfs_ref": {
                   "type": "string",
@@ -1044,7 +1069,10 @@
               "type": "object",
               "properties": {
                 "ledger_id": {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 64,
+                  "pattern": "^[\\x21-\\x7e]+$",
+                  "description": "Identifier: printable ASCII without spaces, at most 64 characters."
                 },
                 "credit_limit": {
                   "$ref": "common.json#/$defs/Amount"
@@ -1332,7 +1360,9 @@
           ],
           "properties": {
             "value": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 200,
+              "description": "At most 200 characters."
             }
           },
           "required": [
@@ -1362,7 +1392,10 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "Identifier: printable ASCII without spaces, at most 64 characters."
                   },
                   "description": {
                     "$ref": "common.json#/$defs/LangText"
@@ -1397,7 +1430,10 @@
                 "type": "object",
                 "properties": {
                   "id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "Identifier: printable ASCII without spaces, at most 64 characters."
                   },
                   "description": {
                     "$ref": "common.json#/$defs/LangText"
@@ -1624,7 +1660,8 @@
             },
             "linked_agreement_ref": {
               "type": "string",
-              "description": "e.g. registered RERA agreement for sale, required above 10%."
+              "description": "e.g. registered RERA agreement for sale, required above 10%. At most 120 characters.",
+              "maxLength": 120
             }
           },
           "required": [
@@ -1656,7 +1693,9 @@
                 "type": "object",
                 "properties": {
                   "fulfilment_state": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 60,
+                    "description": "At most 60 characters."
                   },
                   "fee_pct": {
                     "type": "number",
@@ -1695,12 +1734,16 @@
           "type": "boolean"
         },
         "tds_section": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 20,
+          "description": "At most 20 characters."
         },
         "documents_required": {
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 120,
+            "description": "At most 120 characters."
           }
         }
       },
@@ -1770,7 +1813,9 @@
           "$ref": "common.json#/$defs/Amount"
         },
         "rate_source": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 60,
+          "description": "At most 60 characters."
         },
         "quoted_at": {
           "type": "string",
@@ -1785,7 +1830,9 @@
       "type": "object",
       "properties": {
         "spec_ref": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 120,
+          "description": "At most 120 characters."
         },
         "grade": {
           "allOf": [
@@ -1795,7 +1842,9 @@
           ],
           "properties": {
             "value": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 120,
+              "description": "At most 120 characters."
             }
           },
           "required": [
@@ -1814,7 +1863,9 @@
               "type": "object",
               "properties": {
                 "method": {
-                  "type": "string"
+                  "type": "string",
+                  "maxLength": 120,
+                  "description": "At most 120 characters."
                 },
                 "certificate": {
                   "$ref": "common.json#/$defs/DocumentRef"
@@ -1912,7 +1963,10 @@
       "type": "object",
       "properties": {
         "offer_id": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
         },
         "funder": {
           "enum": [
@@ -1944,7 +1998,10 @@
           "type": "object",
           "properties": {
             "item_id": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[\\x21-\\x7e]+$",
+              "description": "Identifier: printable ASCII without spaces, at most 64 characters."
             },
             "quantity": {
               "type": "number"
@@ -1982,7 +2039,9 @@
           "additionalProperties": false
         },
         "stacking_group": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 60,
+          "description": "At most 60 characters."
         },
         "exclusive": {
           "type": "boolean"

@@ -10,10 +10,10 @@ then. Other pages link here with anchors such as `open-questions.md#q-16`.
 !!! note "No blocking questions in 2026-10-17"
     No open question blocks version `2026-10-17`: **0** questions are marked Blocking. A question is Blocking when,
     without its answer, a dated release cannot make a normative, testable statement, or would publish a design that
-    conflicts with a rule already in force. Ten questions were Blocking before this release. Four are now
-    [settled](#settled) with a concrete rule ([Q-41](#q-41), [Q-42](#q-42), [Q-43](#q-43) and [Q-47](#q-47), plus
-    [Q-28](#q-28) and [Q-53](#q-53), which were not Blocking). The other six ([Q-12](#q-12), [Q-15](#q-15),
-    [Q-16](#q-16), [Q-20](#q-20), [Q-44](#q-44) and [Q-52](#q-52)) stay open but are non-blocking: each has a
+    conflicts with a rule already in force. Ten questions were Blocking before this release. Five are now
+    [settled](#settled) with a concrete rule ([Q-41](#q-41), [Q-42](#q-42), [Q-43](#q-43), [Q-44](#q-44) and [Q-47](#q-47), plus
+    [Q-28](#q-28) and [Q-53](#q-53), which were not Blocking). The other five ([Q-12](#q-12), [Q-15](#q-15),
+    [Q-16](#q-16), [Q-20](#q-20) and [Q-52](#q-52)) stay open but are non-blocking: each has a
     **fail-safe default** that the normative text states and that applies until the question is settled. A fail-safe
     default refuses, escalates to the principal on the Trusted Surface, or keeps a feature disabled; it never assumes
     the favourable answer.
@@ -76,8 +76,6 @@ are involved, the owner is the one that must give the answer.
 | [Q-41](#q-41) | Interoperable encoding for closing open mandates | BACP WG | Settled |
 | [Q-42](#q-42) | Mandatory signature algorithm | BACP WG | Settled |
 | [Q-43](#q-43) | Signing profile on the Beckn leg | ONDC | Settled |
-| [Q-44](#q-44) | REST, MCP and A2A binding for plans, ledgers and documents | BACP WG | Open, fail-safe default |
-| [Q-45](#q-45) | Handler intersection for plain checkout sessions | BACP WG | Open |
 | [Q-46](#q-46) | Exposure accounting for credit-ledger deals | BACP WG | Open |
 | [Q-47](#q-47) | Governance of purpose codes and bounds | BACP WG | Settled |
 | [Q-48](#q-48) | Agent signature on negotiation message bodies | BACP WG | Open |
@@ -114,6 +112,8 @@ are involved, the owner is the one that must give the answer.
 | [Q-79](#q-79) | Operator fees and commissions: duty to disclose, FAQ Q17, Rules r.5(7), tax | Legal counsel | Open |
 | [Q-80](#q-80) | ONDC recipient on the breakup, `misc` and the collector's MDR | ONDC | Open, fail-safe default |
 | [Q-81](#q-81) | Retained payment charges, MDR on refunds and on UPI mandates | Legal counsel, NPCI | Open, fail-safe default |
+| [Q-82](#q-82) | Which tagged UCP release the UCP checkout projection pins | BACP WG | Open, fail-safe default |
+| [Q-83](#q-83) | Counsel flags from the plan, ledger and trade-act bindings | Legal counsel | Open, fail-safe default |
 
 ## Questions {#questions}
 
@@ -594,35 +594,6 @@ para 10(f)?<br>
 
 **Working position.** LIFO by default; `tender_specific` where lines were bound to a tender.
 
-### Q-44 Binding for plans, ledgers and documents {#q-44}
-
-!!! note "Non-blocking: fail-safe default"
-    Was Blocking. Made non-blocking by keeping these features off the wire in `2026-10-17`. The default is relaxed
-    only in a dated release ([Fail-safe defaults](human-participants.md#fail-safe)); it is testable by conformance
-    case T1-31 (cases T1-27 to T1-32 cover the six fail-safe defaults).
-
-**Question.** What are the REST, MCP and A2A bindings for split-tender payment plans, credit ledgers and trade
-documents (GRN, CRAC, invoices)?<br>
-**Owner.** BACP WG.
-
-**Fail-safe default.** Until Q-44 is settled, payment plans, credit ledgers and trade documents are service-level
-interfaces with no wire binding in BACP `2026-10-17`, and conformance for them is tested at library level only:
-
-- `CompleteRequest.payment_plan` is reserved. A gateway MUST reject a `complete` that carries it with
-  `400 invalid_request` at `$.payment_plan`, and MUST NOT ignore it and charge a single tender instead.
-- A gateway MUST NOT expose MCP tools or A2A DataParts for payment plans, credit ledgers or trade documents.
-- A checkout over REST, MCP or A2A is paid with one tender. Buyer-issued GRN and CRAC on Beckn follow
-  [Q-33](#q-33).
-
-See [Credit and Split Tender](payments/credit-and-split-tender.md).
-
-### Q-45 Intersection for plain sessions {#q-45}
-
-**Question.** Should `POST /payment-handlers/intersect` support plain checkout sessions that have no TermSheet?<br>
-**Owner.** BACP WG.
-
-**Working position.** `negotiation_id` is required.
-
 ### Q-46 Exposure of credit-ledger deals {#q-46}
 
 **Question.** Should the cross-session exposure check count B2B credit-ledger deals against the checkout mandate's
@@ -1037,6 +1008,34 @@ or the gateway returns `refund_short_of_terms` without blocking the refund. No c
 payment-related charge, or a retention on a return for a defect, until this is answered. A refund is never reduced by
 MDR or aggregator fees. See [Refunds](payments/index.md#refunds).
 
+### Q-82 Pinned UCP release for the UCP checkout projection {#q-82}
+
+**Question.** Which tagged release of the Universal Commerce Protocol should the `in.bacp.ucp_checkout` projection pin, once
+UCP publishes one? As of 18-10-2026 the UCP repository that was checked has no release tags, and the schemas that
+BACP pins are those of commit `a5e7cfe` (described in the repository as "draft after v2026-08-25").<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** The projection is pinned to commit `a5e7cfe` and says so
+([UCP checkout projection](transports/ucp-checkout.md)). A gateway MUST NOT claim UCP compatibility on any other UCP
+version. When UCP publishes a tagged release, a later BACP release re-pins and re-runs the projection checks.
+
+### Q-83 Counsel flags from the plan, ledger and trade-act bindings {#q-83}
+
+**Question.** Five points for legal counsel, none of which blocks the bindings:
+
+1. Whether silence after a delivered notice of a ledger entry is acceptance or dispute (the `ack_window` default).
+2. Whether attested seller delivery evidence fixes the MSMED acceptance date, and whether BACP may drop the requirement of a buyer-signed GRN for an acceptance-dated sale (with [Q-21](#q-21)).
+3. Whether a `TCS` line (CGST Act s.52) may appear in a buyer-facing total.
+4. Who bears the ₹100-per-day compensation of the RBI turnaround-time circular when a split-tender plan is unwound.
+5. Whether the 90th-percentile limit on statement acknowledgements, a BACP design value, is enough to protect a principal.
+
+**Owner.** Legal counsel.
+
+**Working position (fail-safe default).** (1) An entry is `disputed` at `ack_window` only where a notice was delivered.
+(2) Seller-only evidence is recorded with `acceptance_basis: unattested` and no due date is derived from it.
+(3) A `TCS` line never enters a buyer-facing total or a projected UCP total. (4) The question is recorded and no
+allocation is made by BACP. (5) Statement acknowledgements are limited as above and a per-entry dispute stays possible.
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
@@ -1313,6 +1312,46 @@ See [Mandates and Consent](mandates.md#per-leg-rule) and
 [Sessions and Checkout](checkout/index.md#multi-seller-basket). Whether an agent draw on a block counts as a customer
 action is open ([Q-65](#q-65)).
 
+### Q-44 Binding for plans, ledgers and documents {#q-44}
+
+!!! success "Settled"
+    Was Blocking. Settled on 18-10-2026 (owner decision, panel round R2, topic T4).
+
+**Question.** What are the REST, MCP and A2A bindings for split-tender payment plans, credit ledgers and trade
+documents (GRN, CRAC, invoices)?<br>
+**Owner.** BACP WG.
+
+**Answer.** All three are bound, each behind a capability id that a gateway lists in its profile, so that a gateway that
+lists none keeps the earlier behaviour:
+
+- `in.bacp.payment_plan`: `payment.plan_options[]` on a session and `complete.payment_plan`. Plans are offered by the
+  gateway or confirmed on the Trusted Surface, never composed by the agent. See
+  [Wire binding of plans](payments/credit-and-split-tender.md#plan-wire).
+- `in.bacp.ledger`: paginated reads and an agent `payment` posting under a payee match, a `pending_ack` fall-back and a
+  head compare-and-swap. See [On the wire: in.bacp.ledger](payments/credit-and-split-tender.md#ledger-wire).
+- `in.bacp.trade_document`: `POST /trade-acts` for GRN, CRAC, MSMED objection and ledger acknowledgement, with
+  `subject_hash` on every act, and `GET /orders/{order_id}/documents`. See
+  [Seller-side and trade acts](human-participants.md#trade-acts).
+
+A gateway that does not list `in.bacp.payment_plan` still refuses a `complete` that carries `payment_plan` (conformance
+case T1-31). Tranches are accepted in the fail-safe form: a tranche carries no debit authority at `complete`. The carriage
+of a buyer-issued GRN or CRAC on Beckn stays with [Q-33](#q-33), so a trade act on a document is `delivery: recorded`
+until then. Counsel's points are in [Q-83](#q-83).
+
+### Q-45 Intersection for plain sessions {#q-45}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T4).
+
+**Question.** Should `POST /payment-handlers/intersect` support plain checkout sessions that have no TermSheet?<br>
+**Owner.** BACP WG.
+
+**Answer.** Yes, on a gateway that lists `in.bacp.payment_plan`: the request may carry a `session_id` alone. The answer
+covers only the session's own sellers, uses a closed reason enum with no amounts and no counterparty text, gives a
+`resolution` per reason and a `bpp_id` per seller, is rate-limited per agent before the lookup, is never forwarded to a
+seller and is never authority (`complete` re-evaluates). A gateway that does not list the capability keeps the
+`negotiation_id` requirement. See [Handler intersection](payments/index.md#handler-intersection-and-preference).
+
 ### Other settled points {#settled-other}
 
 | Question | Answer |
@@ -1326,4 +1365,5 @@ action is open ([Q-65](#q-65)).
 | What evidence do non-UPI receipts carry? | `rail.evidence` keyed by the descriptor's evidence references; see [Rail Bindings](payments/rails.md). |
 | Does BACP carry fee allocation (MDR, aggregator commission, finder fee, `settlement_eta`)? | No (18-10-2026). BACP makes normative what the principal pays and to whom, and keeps the seller's own costs informative ([Who pays](payments/economics.md)). |
 | Is a seller or agent `human_confirmation_required` field adopted? | No (18-10-2026). Sellers already refuse unattended payment through `accepted_handlers` and COD refusal. The guarded alternative is the seller `requires_principal_confirmation` profile, which MUST NOT change a price or a handler ([Discovery](discovery.md#principal-confirmation)). |
+| Is BACP wire-compatible with UCP checkout? | No (18-10-2026). Its checkout lifecycle and status names follow UCP's (BACP spells `cancelled` and adds `human_handoff`), but paths, totals and the sign of discounts, the `ucp` envelope, the `complete` payload and payment authority, and the MCP argument shape differ. The earlier claim of wire compatibility is retracted, and the differences are listed in [BACP and other protocols](https://bacp.dev/latest/documentation/other-protocols/#ucp). |
 | Is per-mandate evaluation atomic? | Yes, within one gateway, keyed on the root open checkout mandate ([Security and Privacy](security-and-privacy.md#atomic-reservation)); across gateways see [Q-36](#q-36). |

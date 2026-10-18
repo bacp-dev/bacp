@@ -203,7 +203,7 @@ carries only payment *terms*: money moves off-network.
 | Layer | What BACP reuses | What BACP adds |
 |---|---|---|
 | **Transport bindings** | REST (OpenAPI 3.1), MCP tools with `structuredContent`, A2A `DataPart` and the `TASK_STATE_AUTH_REQUIRED` task state. One operation set, bound three ways, as UCP does. | RFC 9421 agent signatures with separate tags for browsing, paying, post-order writes and negotiation. Step-up mapped to A2A `TASK_STATE_AUTH_REQUIRED` and MCP `insufficient_scope`. See [REST](../transports/rest.md) and [MCP and A2A](../transports/mcp-a2a.md). |
-| **Session facade** | UCP checkout verbs and statuses; ACP full-state responses, flat errors, `messages[].resolution` and idempotency; AP2's Trusted Surface and fail-closed constraint evaluation. | A synchronous session over asynchronous Beckn; the deterministic verifier; the instruction log; an in-doubt payment saga. See [Sessions and Checkout](../checkout/index.md). |
+| **Session facade** | UCP checkout lifecycle and status names; ACP full-state responses, flat errors, `messages[].resolution` and idempotency; AP2's Trusted Surface and fail-closed constraint evaluation. | A synchronous session over asynchronous Beckn; the deterministic verifier; the instruction log; an in-doubt payment saga. See [Sessions and Checkout](../checkout/index.md). |
 | **Beckn/ONDC backbone** | Beckn `{context, message}`, ACK plus `on_*` callbacks, Ed25519/BLAKE2b network signing, registry lookup, ONDC payment and settlement fields, IGM. | The [`context.bacp`](https://bacp.dev/schemas/beckn-context-bacp.json) extension, mandatory idempotency and a replay cache, and an IGM `actors[]` entry of type `AI_AGENT` (Proposed: [Q-11](../open-questions.md#q-11)). Agent semantics stay in a namespace that network participants can ignore. See [Beckn / ONDC Binding](../transports/beckn.md). |
 | **Payment rails** | Live Indian rails: UPI Reserve Pay, UPI Circle, UPI AutoPay, card e-mandates, eNACH, PPIs, COD and others, with their own regulatory limits. | Payment authority bound to a **live** rail primitive with a PSP-signed attestation; a basket-blind payment leg; rail-anchored receipts. See [Payments](../payments/index.md). |
 | **Consent** | AA/DEPA consent-artefact semantics: immutable, purpose-coded, use-counted, revocable. AP2-style open and closed mandates. | Periodic budgets, allow-lists, step-up thresholds, post-order action scopes, a separate negotiation mandate, revocation within 60 seconds, DPDP consent receipts. See [Mandates and Consent](../mandates.md). |
@@ -217,9 +217,9 @@ BACP makes four choices about how it sits on existing infrastructure:
    asynchronous grammar, registry PKI, post-order writes (cancel, return),
    grievance handling (IGM), reconciliation and settlement (RSF), and a
    production network. BACP carries agent semantics in `context.bacp` and
-   follows UCP's checkout verbs and status vocabulary where it can, so that global agents can
-   reuse much of their integration; BACP's paths, status spellings, totals and envelope differ from UCP's, and how far
-   to align them is an open topic under review. BACP is neither a UCP profile only (UCP has no
+   follows UCP checkout's lifecycle and status names (BACP spells `cancelled` and adds `human_handoff`). BACP is not
+   wire-compatible with UCP: paths, totals and the sign of discounts, the `ucp` envelope, the `complete` payload and payment
+   authority, and the MCP argument shape differ ([BACP and other protocols](https://bacp.dev/latest/documentation/other-protocols/#ucp)). BACP is neither a UCP profile only (UCP has no
    network discovery, post-order writes, Indian rails or DPDP) nor an ONDC
    domain specification only (that would lose global-agent interoperability
    and the AP2 mandate format).

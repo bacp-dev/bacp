@@ -258,7 +258,7 @@ in [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-en
 | `kind` | yes | `human` or `agent` |
 | `role` | yes | `principal` (the party itself or its authorised human), `seller_operator` (seller staff such as a munim or a sales officer), `assisted_operator`, `agent` (the party's own AI agent) or `sub_agent`. A `human` acts only as `principal`, `seller_operator` or `assisted_operator`; an `agent` only as `agent` or `sub_agent` |
 | `participant_ref` | yes | The acting participant's `participant_id`, or the agent id for an agent |
-| `mandate_ref` | no | The mandate under which an agent acted. It records the mandate; it does not authorise the act |
+| `mandate_ref` | no (REQUIRED for an agent's order-less ledger act) | The mandate under which an agent acted. It records the mandate; it does not authorise the act. For an order-less ledger act it also names the Mandate Manager that issues the step-up ([Step-up signers](human-participants.md#ts-signers)) |
 
 - A GRN, CRAC, objection or acknowledgement by an agent (`actor.kind: agent`) **MUST** carry `hp_proof` of the
   principal's confirmation on the Trusted Surface: a `post_order` step-up whose `ts_render` names the act
@@ -267,8 +267,11 @@ in [`credit-ledger-entry.json`](https://bacp.dev/latest/schemas/credit-ledger-en
   acknowledgement without it.
 - A ledger acknowledgement other than one taken automatically from a rail receipt (`auto_from_rail_receipt`) carries
   `actor`; the schema rejects one without it.
-- Until [Q-44](open-questions.md#q-44) is settled these documents have no wire binding, so the rule is tested at
-  library level. No operation yet lets an agent request a `post_order` step-up for a trade act, and a ledger entry
-  with no `order_id` (an opening balance, a payment or an adjustment) cannot be named by `ts_render.order_id`. Until
-  a request operation exists, an agent trade act is therefore refused. Whether an objection sent by an agent is an objection "in writing" under the MSMED Act is open
-  ([Q-21](open-questions.md#q-21)).
+- A gateway that lists `in.bacp.trade_document` or `in.bacp.ledger` binds these acts at `POST /trade-acts`
+  ([Seller-side and trade acts](human-participants.md#trade-acts)). The request names its subject (an order, a ledger entry
+  by `ledger_ref`, or a ledger statement by `ledger_range`), so a ledger entry with no `order_id` (an opening balance, a
+  payment or an adjustment) is named by `ts_render.subject_ref`, not by an order. Every trade-act `ts_render` carries
+  `subject_hash`. A GRN carries its lines (`line_ref`, quantities received, accepted and rejected, an enum reason), and
+  seller-posted delivery evidence (`proof_of_delivery`, `lorry_receipt`) dates acceptance only if the buyer counter-signs it or
+  it carries a third-party reference the buyer can check. Whether an objection sent by an agent is an objection "in writing"
+  under the MSMED Act is open ([Q-21](open-questions.md#q-21)).

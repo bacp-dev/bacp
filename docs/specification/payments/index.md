@@ -147,7 +147,23 @@ Every excluded handler is reported with a reason, for example `not_in_registry`,
 - **Multi-seller baskets.** For each leg of a [multi-seller basket](../checkout/index.md#multi-seller-basket) the fallback rungs of the [per-leg rule](../mandates.md#per-leg-rule) (the seller's existing payee-bound instrument, a gift PPI the principal designated, one planned human-present step) rank **below** the principal's designated preference (rule 1); no rung, and no any-merchant primitive, ranks above it. For every leg the `comparison[]` records the option chosen (`chosen: true`) and every option skipped, each with its `reason`.
 - If a card is excluded because card-not-present use is disabled on it, the agent MUST NOT silently try another card.
 
-The REST binding of the intersection is `POST /payment-handlers/intersect`. In this version it requires a `negotiation_id`, because the inputs come from a negotiated TermSheet. Whether plain sessions are supported is [Q-45](../open-questions.md#q-45).
+The REST binding of the intersection is `POST /payment-handlers/intersect`. It takes a `negotiation_id` (the inputs come from the negotiated TermSheet) or, on a gateway that lists `in.bacp.payment_plan`, a `session_id` alone for a plain checkout session ([Q-45](../open-questions.md#q-45), settled 18-10-2026). A gateway that does not list the capability still requires the `negotiation_id` and refuses a `session_id` alone with `400 invalid_request`.
+
+For a plain session:
+
+- the gateway covers only the session's own sellers: a `bpp_id` that is not a seller of the session gets `404 not_found`;
+- `excluded[].reason` is the closed enum of the OpenAPI document, with no amount, no bound and no text written by a counterparty, and each exclusion carries `resolution` and, for a session with several sellers, `bpp_id`;
+- the gateway counts a per-agent rate limit before it looks the session up (`429 quota_exceeded`);
+- `excluded[]` is for the buyer's own agent and is never forwarded to a seller, and an `eligible` handler is never authority: `complete` always re-evaluates the mandate, the rail limits and the seller's terms.
+
+| `excluded[].reason` | `resolution` |
+|---|---|
+| `not_in_registry`, `not_offered_by_bap`, `not_accepted_by_seller`, `not_in_term_sheet`, `pilot_not_attested` | `unrecoverable` |
+| `above_limit` | `recoverable` (choose a payment plan from `payment.plan_options[]`, or accept a step-up) |
+| `instrument_unavailable`, `card_not_enabled_for_cnp`, `cod_not_allowed`, `cod_open_orders_cap`, `credit_funding_not_allowed`, `reservepay_block_wrong_payee` | `requires_buyer_input` |
+| `not_in_mandate`, `presence_handler_mismatch` | `requires_buyer_review` |
+
+A plain-session agent that does not use this learns an ineligible handler only from a failed debit, which can cost money.
 
 ```mermaid
 sequenceDiagram

@@ -10,5 +10,9 @@ This product includes software adapted from the Universal Commerce Protocol
   hooks.py, Copyright 2026 UCP Authors, licensed under the Apache License,
   Version 2.0.
 
+  The JSON Schemas under source/ucp/ are unmodified copies of files of the Universal Commerce Protocol
+  repository at commit a5e7cfe3a03392899b2199ff751be6ae7c928c8a, Copyright 2026 UCP Authors, licensed under the
+  Apache License, Version 2.0 (see source/ucp/PINNED.txt).
+
 The way this site is built and published (MkDocs Material with mike,
 versioned by date) follows the approach used by ucp.dev for UCP.

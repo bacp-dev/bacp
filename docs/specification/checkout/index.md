@@ -290,7 +290,7 @@ It is the anchor that binds every later artefact to one basket and one price:
 - if `accepted_disclosures_hash` is sent, it **MUST** equal `disclosures.hash`;
 - the payment leg to the PSP carries `checkout_hash` instead of the basket, and the PSP's Receipt
   repeats it;
-- the rail allows at most one debit per `checkout_hash`;
+- the rail allows at most one debit per `checkout_hash` (under a payment plan, at most one per tender, and never more in total than `all_in_total`; see [Wire binding of plans](../payments/credit-and-split-tender.md#plan-wire));
 - the evidence bundle recomputes it from the BPP-signed quote ([Evidence](../evidence.md#bundle)).
 
 `checkout_hash` is the hash of the quote, **not** of an accepted negotiation offer. Nothing in
@@ -462,7 +462,9 @@ stateDiagram-v2
 | `requires_escalation` | `step_up.declined`, or `complete` after `expires_at` | `cancelled` | `step_up_declined` or `step_up_expired`; no money moves |
 | `ready_for_complete` | `complete` accepted by the atomic evaluation | `complete_in_progress` | `payment.status: initiated` |
 | `complete_in_progress` | Debit succeeds and `on_confirm` arrives | `completed` | `budget_after` |
-| `complete_in_progress` | PSP refuses or fails the debit | `cancelled` | `payment_failed`; reservation released |
+| `complete_in_progress` | PSP refuses or fails the debit (one tender) | `cancelled` | `payment_failed`; reservation released |
+| `complete_in_progress` | Under a payment plan, a later tender fails after an earlier one was captured | `complete_in_progress` | earlier tenders released or refunded to source; `cancelled` only when every unwound tender is `released` or `refunded` and its credit has settled |
+| `complete_in_progress` | Under a payment plan, one tender is `in_doubt` | `complete_in_progress` | no other tender is released or refunded until the outcome is known |
 | `complete_in_progress` | PSP times out | `complete_in_progress` | `payment_in_doubt`; reservation kept |
 | `complete_in_progress` | Debited, `on_confirm` still missing after re-send | `complete_in_progress` | `debited_not_confirmed`; `payment.status: reversal_pending` |
 | `complete_in_progress` | PSP reports the refund credit as settled | `cancelled` | `payment.status: reversed` |
@@ -741,6 +743,11 @@ If the PSP does not answer the debit, the outcome is unknown:
   `confirm`; failure releases the reservation and cancels the session with `payment_failed`.
 - The agent **MUST NOT** retry with a new Idempotency-Key. It calls `GET /sessions/{id}` or waits
   for `session.updated`. A retry with the **same** key returns the same state and never re-debits.
+- Under a [payment plan](../payments/credit-and-split-tender.md#plan-wire) the same rules apply tender by tender. A
+  tender in `in_doubt` freezes the plan: the gateway **MUST NOT** release or refund any other tender while it is
+  unresolved, and a `complete` that carries a different plan for the same `checkout_hash` gets `409 plan_conflict` or
+  `409 session_state_conflict` and debits nothing. When the in-doubt tender resolves as success, the session
+  completes under the original plan.
 
 ### Debited but not confirmed {#debited-not-confirmed}
 
@@ -827,7 +834,7 @@ in [Human participants](../human-participants.md#multi-seller).
 ## Idempotency, retries and races {#idempotency}
 
 Every `POST` and `PUT` **MUST** carry an `Idempotency-Key` of 22 to 64 printable ASCII characters,
-which **SHOULD** carry at least 128 bits of entropy. Keys are scoped to (agent, method, path).
+which **SHOULD** carry at least 128 bits of entropy. Keys are scoped to (agent, canonical operation, path parameters).
 
 | Situation | Result |
 |---|---|

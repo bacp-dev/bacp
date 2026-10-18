@@ -1,0 +1,20 @@
+{
+  "status": "completed",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "all_in_total": {
+    "value": 30200,
+    "currency": "INR"
+  },
+  "messages": [
+    {
+      "type": "disclosure",
+      "code": "ai_disclosure",
+      "content": {
+        "hi-IN": "आप एक AI सहायक से बात कर रहे हैं।",
+        "en-IN": "You are talking to an AI assistant."
+      },
+      "param": "$.ai_disclosure",
+      "resolution": "recoverable"
+    }
+  ]
+}

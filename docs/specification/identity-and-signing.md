@@ -211,13 +211,14 @@ A tag states what kind of action a request performs. An AgentCredential lists
 the tags its key may use in `purposes`, so an operator can, for example, issue
 a browse-only credential. Each endpoint accepts exactly one agent tag, or one
 of two for negotiation messages; any other tag MUST be rejected with
-`401 signature_invalid`, even if the credential lists it.
+`401 signature_invalid`, even if the credential lists it. An agent endpoint that is not listed in the table below gets
+`401 signature_invalid` as well: there is no default tag ([REST](transports/rest.md#signature-tags)).
 
 | Tag | Meaning | Endpoints |
 |---|---|---|
-| `bacp-browse` | Reads, discovery, cart building and other non-committing calls | `POST /discover`; `POST /sessions`, `GET` and `PUT /sessions/{id}`, `POST /sessions/{id}/cancel`, `POST /sessions/{id}/handoff` (`action: request`, and `action: release` before acceptance); `POST /mandates`, `GET /mandates/{id}`, `POST /mandates/{id}/relinquish`; `GET /orders/{id}`, `GET /orders/{id}/returns/{rid}`; `GET /issues/{id}`; `GET /evidence/{transaction_id}`; `POST /negotiations`, `GET /negotiations/{id}`, `GET /negotiations/{id}/offers`, and non-firm messages other than `withdraw` and `accept_revoke` on `POST /negotiations/{id}/offers`; `POST /rfqs`, `GET /rfqs/{id}`; `GET /auctions/{id}`; `POST /payment-handlers/intersect` |
-| `bacp-pay` | Commits money | `POST /sessions/{id}/complete` |
-| `bacp-post-order` | Mandate-scoped writes on an existing order | `POST /orders/{id}/cancel`; `POST /orders/{id}/returns`; `POST /issues`; `POST /issues/{id}/actions` |
+| `bacp-browse` | Reads, discovery, cart building and other non-committing calls | `POST /discover`; `POST /sessions`, `GET` and `PUT /sessions/{id}`, `POST /sessions/{id}/cancel`, `POST /sessions/{id}/handoff` (`action: request`, and `action: release` before acceptance); `POST /mandates`, `GET /mandates/{id}`, `POST /mandates/{id}/relinquish`; `GET /orders/{id}`, `GET /orders/{id}/returns/{rid}`; `GET /issues/{id}`; `GET /evidence/{transaction_id}`; `POST /negotiations`, `GET /negotiations/{id}`, `GET /negotiations/{id}/offers`, and non-firm messages other than `withdraw` and `accept_revoke` on `POST /negotiations/{id}/offers`; `POST /rfqs`, `GET /rfqs/{id}`; `GET /auctions/{id}`; `POST /payment-handlers/intersect`; `GET /discover/{transaction_id}/sources/{source_digest}`; `GET /ledgers/{id}`, `GET /ledgers/{id}/entries`; `GET /orders/{id}/documents`; `POST /checkout-sessions`, `GET` and `PUT /checkout-sessions/{id}`, `POST /checkout-sessions/{id}/cancel` |
+| `bacp-pay` | Commits money | `POST /sessions/{id}/complete`; `POST /checkout-sessions/{id}/complete` |
+| `bacp-post-order` | Mandate-scoped writes on an existing order, trade acts and ledger postings | `POST /orders/{id}/cancel`; `POST /orders/{id}/returns`; `POST /issues`; `POST /issues/{id}/actions`; `POST /trade-acts`; `POST /ledgers/{id}/entries` |
 | `bacp-negotiate` | Binds the principal in a negotiation | Firm offers and counter-offers, `withdraw` and `accept_revoke` on `POST /negotiations/{id}/offers`; `POST /negotiations/{id}/accept`; `POST /rfqs/{id}/award`; `POST /auctions`; bids on `POST /auctions/{id}/bids`; `POST /auctions/{id}/award` |
 | `bacp-ts` | Trusted Surface events and render fetches. **Never** an agent tag. | `POST /trusted-surface/events` and `GET /trusted-surface/step-ups/{step_up_id}`, signed with the registry key of the step-up's Mandate Manager or payer PSP |
 | `bacp-handoff` | A human support operator accepts or releases a handoff. **Never** an agent tag. | `POST /sessions/{id}/handoff` (`action: accept` or `release`), signed with a registry key whose role is support operator |
@@ -303,8 +304,8 @@ Every `POST` and `PUT` MUST carry an `Idempotency-Key`. `GET` requests do not.
   UUIDv4), MUST NOT be predictable from earlier keys, and MUST NOT be reused, even after the gateway's idempotency
   record has expired. The key binds the sellers' `on_search` callbacks to this search
   ([Verifying discovery results](discovery.md#verifying-results)).
-- Keys are scoped to (agent, method, path). The same key on a different
-  endpoint is a different key.
+- Keys are scoped to (agent, canonical operation, path parameters). The same key on a different
+  operation, or on the same operation with other path parameters, is a different key.
 - The gateway carries the key end to end: in `context.bacp.idempotency_key`
   and in the derivation of the Beckn `message_id` (see
   [Network leg signing](#network-leg-signing)).

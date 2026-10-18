@@ -135,9 +135,15 @@ operation whose capability the gateway does not list.
 | `in.bacp.discover` | `POST /discover`, `GET /discover/{transaction_id}/sources/{source_digest}` | [this page](#network-discovery) |
 | `in.bacp.checkout` | `/sessions`, `/sessions/{id}`, `/sessions/{id}/complete`, `/sessions/{id}/cancel` | [Sessions and Checkout](checkout/index.md) |
 | `in.bacp.discounts` | The `discounts` field of `POST /sessions` and `PUT /sessions/{id}`; extends `in.bacp.checkout` | [Discounts](checkout/index.md#discounts) |
+| `in.bacp.payment_plan` | `payment.plan_options[]` on a session, `complete.payment_plan`, and `session_id` on `POST /payment-handlers/intersect`; extends `in.bacp.checkout` | [Wire binding of plans](payments/credit-and-split-tender.md#plan-wire) |
+| `in.bacp.ledger` | `GET /ledgers/{id}`, `GET /ledgers/{id}/entries`, `POST /ledgers/{id}/entries` (agent: `type: payment` only), and `ledger_ref` and `ledger_range` acts on `POST /trade-acts` | [The khata credit ledger](payments/credit-and-split-tender.md#the-khata-credit-ledger) |
+| `in.bacp.trade_document` | `POST /trade-acts` (GRN, CRAC, MSMED objection), `GET /orders/{id}/documents` | [Seller-side and trade acts](human-participants.md#trade-acts) |
+| `in.bacp.ucp_checkout` | `/checkout-sessions`, `/checkout-sessions/{id}`, `/checkout-sessions/{id}/complete`, `/checkout-sessions/{id}/cancel`: the checkout in the shape of UCP checkout, pinned to UCP commit `a5e7cfe`; listed only if every entry criterion passes | [UCP checkout projection](transports/ucp-checkout.md) |
 | `in.bacp.mandate` | `/mandates`, `/mandates/{id}`, `/mandates/{id}/relinquish` | [Mandates and Consent](mandates.md) |
 | `in.bacp.order` | `/orders/{id}`, `/orders/{id}/cancel`, `/orders/{id}/returns` | [Orders and Post-order](checkout/post-order.md) |
 | `in.bacp.issue` | `/issues`, `/issues/{id}`, `/issues/{id}/actions`, `/evidence/{transaction_id}` | [Evidence and Instruction Log](evidence.md) |
+
+A gateway MUST support every operation of a capability it lists. `in.bacp.payment_plan` and `in.bacp.ucp_checkout` require `in.bacp.checkout` in the same list. A gateway that lists none of `in.bacp.payment_plan`, `in.bacp.ledger` and `in.bacp.trade_document` refuses a `complete` that carries `payment_plan` with `400 invalid_request` at `$.payment_plan`, and exposes no tool or DataPart for them on MCP or A2A.
 
 Negotiation, RFQs and auctions are advertised through the `negotiation` field
 rather than a capability id. Handler listing and intersection are advertised
@@ -215,9 +221,9 @@ registry as handler descriptors. The response **MUST** carry a
 24 hours. Because the response is unsigned, a Mandate Manager or gateway
 **MUST NOT** use it as its registry source for open-mandate eligibility
 ([Handler binding](mandates.md#handler-binding)). `POST /payment-handlers/intersect` computes an
-intersection. In BACP `2026-10-17` the intersect request MUST carry a
-`negotiation_id`; intersection for a plain checkout session is not yet
-supported ([Q-45](open-questions.md#q-45)). Details are on
+intersection. The intersect request carries a `negotiation_id` or, on a gateway that
+lists `in.bacp.payment_plan`, a `session_id` alone ([Q-45](open-questions.md#q-45),
+settled); any other gateway requires the `negotiation_id`. Details are on
 [Handler Registry](payments/handler-registry.md).
 
 ## Registry lookup

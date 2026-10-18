@@ -1,0 +1,16 @@
+{
+  "act": "LEDGER_ACK",
+  "presence": "HP",
+  "subject": {
+    "ledger_ref": {
+      "ledger_id": "ldg_KIRANAKHATA01",
+      "entry_id": "lde_KHATA00000007"
+    }
+  },
+  "actor": {
+    "kind": "agent",
+    "role": "agent",
+    "participant_ref": "did:web:agents.vaani.example.in:sakhi",
+    "mandate_ref": "mdt_CHK7Q2W9X4K1M3"
+  }
+}

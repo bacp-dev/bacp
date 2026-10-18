@@ -511,7 +511,7 @@ and every post-order write, and travels on the network in `context.bacp.presence
 - Returns, and accepting or rejecting an IGM resolution, are HP
   ([Post-order gate](checkout/post-order.md#post-order-gate)).
 - **HP is proven, not declared.** Every post-order write with `presence: HP` (cancel, return,
-  raise issue, issue action) **MUST** carry `hp_proof{ts_event_hash, step_up_id}`, both REQUIRED:
+  raise issue, issue action, and an agent's trade act: GRN, CRAC, MSMED objection, ledger acknowledgement) **MUST** carry `hp_proof{ts_event_hash, step_up_id}`, both REQUIRED:
   the id of a step-up of kind `post_order` whose gateway-signed `ts_render` names this write
   (`action`, `order_id` and, for an issue action, `issue_id` and, for `RESOLUTION_ACCEPTED` or
   `RESOLUTION_REJECTED`, the `subject_hash` of the resolution shown), and the sha-256 over the JCS form of the signed `step_up.approved` event
@@ -566,8 +566,11 @@ signed by the `cnf` key with `aud` set to the seller's `bpp_id` and `nonce` set 
     [Identity and Request Signing](identity-and-signing.md#signature-algorithms)).
 
 A closed Payment Mandate is single use. The gateway and the PSP adapter **MUST** allow at most one
-debit per closed Payment Mandate `mandate_id` and at most one per `checkout_hash`. Presenting a
-used one returns `403 mandate_scope_mismatch`.
+debit per closed Payment Mandate `mandate_id` and at most one per `checkout_hash`, except that under a
+payment plan each tender has its own closed Payment Mandate and is debited at most once, and the
+debits of all the tenders of one live plan together never exceed `all_in_total`. Presenting a
+used one returns `403 mandate_scope_mismatch`. A closed Payment Mandate that carries `tender` is for
+one tender of one plan and **MUST NOT** pay a `complete` that has no `payment_plan`.
 
 ## Handler binding of open mandates {#handler-binding}
 
@@ -884,7 +887,9 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
 3. **Presence.** `presence` is in `presence_allowed` (`403 presence_not_allowed`).
 4. **Closed mandates.** They are signed by the parent's `cnf` key (HNP) or principal (HP)
    (`mandate_invalid_signature`). `parent_mandate_id` binds. Validity is narrowed and current.
-   `checkout_hash` equals the hash of the BPP-signed quote. `amount` equals the quote total. The
+   `checkout_hash` equals the hash of the BPP-signed quote. `amount` equals the quote total or, on a
+   closed Payment Mandate that carries `tender{plan_hash, tender_id}`, the amount of that tender of
+   the session's payment plan ([Wire binding of plans](payments/credit-and-split-tender.md#plan-wire)). The
    payee matches. `checkout_mandate_ref` links the pair. An HNP `auth_binding.type` is
    `parent_rail_binding`. The closed Payment Mandate has not been used. Any mismatch gives
    `403 mandate_scope_mismatch`.

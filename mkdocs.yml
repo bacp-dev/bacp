@@ -69,6 +69,7 @@ nav:
           - REST: specification/transports/rest.md
           - Beckn / ONDC Binding: specification/transports/beckn.md
           - MCP and A2A: specification/transports/mcp-a2a.md
+          - UCP checkout projection: specification/transports/ucp-checkout.md
       - Reference: specification/reference.md
       - Open Questions: specification/open-questions.md
 

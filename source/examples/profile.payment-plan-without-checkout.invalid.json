@@ -1,0 +1,34 @@
+{
+  "bacp": {
+    "version": "2026-10-17",
+    "supported_versions": [
+      "2026-10-17"
+    ]
+  },
+  "bap_id": "bap.vaani.example.in",
+  "transports": [
+    "rest",
+    "mcp"
+  ],
+  "capabilities": [
+    "in.bacp.discover",
+    "in.bacp.payment_plan"
+  ],
+  "payment_handlers": [
+    "in.upi.reservepay",
+    "in.upi.circle",
+    "in.ppi.gift"
+  ],
+  "message_id_namespace": "55884fda-3b41-58be-87a9-2be7b3b43b7f",
+  "payment_handlers_registry": "https://gw.bap.example.in/bacp/payment-handlers",
+  "keys": {
+    "keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "ukid-7"
+      }
+    ]
+  }
+}

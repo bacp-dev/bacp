@@ -104,6 +104,14 @@
           "type": "string",
           "format": "date"
         },
+        "acceptance_basis": {
+          "enum": [
+            "grn",
+            "attested_delivery",
+            "unattested"
+          ],
+          "description": "What dates the acceptance. grn: a buyer-signed GRN. attested_delivery: delivery evidence that the buyer counter-signed or that carries a third-party reference (an e-way bill number or a transporter signature). unattested: seller-posted evidence only; no acceptance_date or statutory_due_date is derived from it, and the debtor is notified that evidence was posted."
+        },
         "written_agreement": {
           "type": "boolean",
           "description": "No written agreement means 15 days (MSMED s.15)."
@@ -136,7 +144,37 @@
       "required": [
         "applies"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "acceptance_basis": {
+                "const": "unattested"
+              }
+            },
+            "required": [
+              "acceptance_basis"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "acceptance_date"
+                  ]
+                },
+                {
+                  "required": [
+                    "statutory_due_date"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
     },
     "documents": {
       "type": "array",
@@ -145,7 +183,10 @@
       }
     },
     "order_id": {
-      "type": "string"
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[\\x21-\\x7e]+$",
+      "description": "Identifier: printable ASCII without spaces, at most 64 characters."
     },
     "offer_hash": {
       "$ref": "common.json#/$defs/Hash"
@@ -156,7 +197,10 @@
         "type": "object",
         "properties": {
           "entry_id": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[\\x21-\\x7e]+$",
+            "description": "Identifier: printable ASCII without spaces, at most 64 characters."
           },
           "amount": {
             "$ref": "common.json#/$defs/Amount"
@@ -177,17 +221,26 @@
           "$ref": "common.json#/$defs/HandlerRef"
         },
         "receipt_id": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
         },
         "rrn": {
           "type": "string",
           "pattern": "^[0-9]{12}$"
         },
         "utr": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
         },
         "factoring_unit_id": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
         },
         "new_payee": {
           "$ref": "common.json#/$defs/Party"
@@ -267,6 +320,24 @@
           "evidence_hash": {
             "$ref": "common.json#/$defs/Hash",
             "description": "Hash of the evidence of the acknowledgement, for example the counterparty's signature."
+          },
+          "covers": {
+            "type": "object",
+            "description": "Present when one statement acknowledgement covered this entry: the through_seq and the head_hash of the ledger that the principal was shown. One acknowledgement event names the head_hash. An entry above the ledger's itemise_above is never covered this way.",
+            "required": [
+              "through_seq",
+              "head_hash"
+            ],
+            "properties": {
+              "through_seq": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "head_hash": {
+                "$ref": "common.json#/$defs/Hash"
+              }
+            },
+            "additionalProperties": false
           }
         },
         "required": [
@@ -335,16 +406,25 @@
       "description": "An entry unacknowledged by the counterparty past its ack window becomes disputed."
     },
     "dispute_ref": {
-      "type": "string"
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[\\x21-\\x7e]+$",
+      "description": "Identifier: printable ASCII without spaces, at most 64 characters."
     },
     "agent": {
       "type": "object",
       "properties": {
         "id": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
         },
         "mandate_ref": {
-          "type": "string"
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
         },
         "presence": {
           "$ref": "common.json#/$defs/Presence"
@@ -488,6 +568,10 @@
         "ack_window": {
           "$ref": "common.json#/$defs/Duration"
         },
+        "itemise_above": {
+          "$ref": "common.json#/$defs/Amount",
+          "description": "Signed by both parties at opening, with the rest of the header. A statement acknowledgement MUST NOT cover an entry whose amount is above it (or above the 90th percentile of the amounts the poster has posted on this ledger, whichever is lower); such an entry is acknowledged one by one. When absent, only the percentile rule applies."
+        },
         "head_hash": {
           "$ref": "common.json#/$defs/Hash"
         },
@@ -514,7 +598,7 @@
         "opened_at",
         "signatures"
       ],
-      "description": "Ledger header, signed by both parties at opening.",
+      "description": "Ledger header, signed by both parties at opening. The creditor's settlement_accounts[] and itemise_above are part of what both sign; only the creditor may add a settlement account later, by a signed amendment.",
       "additionalProperties": false
     },
     "Actor": {

@@ -369,6 +369,39 @@
         "pricing_ai_vendor": {
           "type": "string",
           "description": "Third-party pricing or negotiation AI vendor."
+        },
+        "settlement_accounts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "description": "The accounts on which this party accepts a payment, used on the creditor of a CreditLedger: a UPI VPA, or a hash of the account number and IFSC. A payment receipt auto-acknowledges a ledger payment only when its payee matches one of them. Only the party itself adds one, by a signed amendment.",
+          "items": {
+            "type": "object",
+            "oneOf": [
+              {
+                "required": [
+                  "vpa"
+                ]
+              },
+              {
+                "required": [
+                  "account_hash"
+                ]
+              }
+            ],
+            "properties": {
+              "vpa": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9]{1,63}$",
+                "description": "A UPI virtual payment address."
+              },
+              "account_hash": {
+                "$ref": "#/$defs/Hash",
+                "description": "sha-256 over the account number and IFSC, so that the ledger does not carry the account number."
+              }
+            },
+            "additionalProperties": false
+          }
         }
       },
       "required": [
@@ -411,7 +444,10 @@
             "ledger_confirmation",
             "auction_slip",
             "bid_document",
-            "contract"
+            "contract",
+            "msmed_objection",
+            "proof_of_delivery",
+            "lorry_receipt"
           ]
         },
         "id": {
@@ -452,13 +488,125 @@
         "uri": {
           "type": "string",
           "format": "uri"
+        },
+        "payload": {
+          "type": "object",
+          "description": "The body of the document where BACP reads it. For a grn: the delivery date, the lines with quantities and enum reasons, and an optional written objection. For a proof_of_delivery or lorry_receipt: the attestations that make it count.",
+          "properties": {
+            "delivery_date": {
+              "type": "string",
+              "format": "date",
+              "description": "The date the goods were actually delivered. It MUST NOT precede the invoice date or lie in the future."
+            },
+            "lines": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 200,
+              "items": {
+                "type": "object",
+                "required": [
+                  "line_ref",
+                  "qty_received",
+                  "qty_accepted",
+                  "qty_rejected"
+                ],
+                "properties": {
+                  "line_ref": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "The line of the PO or invoice this line answers."
+                  },
+                  "qty_received": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "qty_accepted": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "qty_rejected": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "qty_accepted plus qty_rejected MUST NOT exceed qty_received; JSON Schema cannot state this sum, so a gateway checks it and refuses a GRN that breaks it."
+                  },
+                  "reason_code": {
+                    "enum": [
+                      "short_supply",
+                      "damaged",
+                      "wrong_item",
+                      "expired",
+                      "quality",
+                      "other"
+                    ],
+                    "description": "Required when qty_rejected is above zero."
+                  },
+                  "reason_text": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "Free text written by the document's author. It is counterparty text: every surface labels it and no agent treats it as an instruction."
+                  }
+                },
+                "additionalProperties": false,
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "qty_rejected": {
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "qty_rejected"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "reason_code"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "objection": {
+              "type": "object",
+              "required": [
+                "text",
+                "raised_on"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "maxLength": 500,
+                  "description": "The written objection. Counterparty text."
+                },
+                "raised_on": {
+                  "type": "string",
+                  "format": "date"
+                }
+              },
+              "additionalProperties": false,
+              "description": "A written objection to the goods or services, with its date."
+            },
+            "transporter_signature": {
+              "$ref": "#/$defs/Jws",
+              "description": "The transporter's signature over the delivery record: a third-party reference the buyer can check."
+            },
+            "buyer_countersignature": {
+              "$ref": "#/$defs/Jws",
+              "description": "The buyer's counter-signature of the seller-posted delivery evidence."
+            }
+          },
+          "additionalProperties": false
         }
       },
       "required": [
         "doc_type",
         "id"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "A typed reference to a trade document, with its hash. A GRN, a CRAC and an MSMED objection also carry their body in payload. Seller-posted delivery evidence (proof_of_delivery, lorry_receipt) dates MSMED acceptance only when the buyer counter-signed it or it carries a third-party reference the buyer can check (an e-way bill number, or a transporter signature); otherwise the ledger records acceptance_basis unattested."
     },
     "Citation": {
       "type": "object",
@@ -638,10 +786,11 @@
           "uniqueItems": true,
           "items": {
             "enum": [
-              "catalogue_disclosure"
+              "catalogue_disclosure",
+              "plan"
             ]
           },
-          "description": "The render fields beyond the base set of this version that the Trusted Surface presented, for example catalogue_disclosure. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure (the gateway refuses the event with 400 invalid_request otherwise); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field."
+          "description": "The render fields beyond the base set of this version that the Trusted Surface presented: catalogue_disclosure or plan. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure or plan (the gateway refuses the event with 400 invalid_request otherwise); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field."
         },
         "checkout_hash": {
           "$ref": "#/$defs/Hash",
@@ -650,6 +799,10 @@
         "offer_hash": {
           "$ref": "#/$defs/Hash",
           "description": "offer_hash of the offer a negotiation confirm step-up showed. REQUIRED on a negotiation.step_up.approved event and never present with checkout_hash. The gateway checks that it equals the ts_render's offer_hash and the offer the step-up names, or refuses the event with 403 ts_render_mismatch."
+        },
+        "plan_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "plan_hash of the payment plan a step-up showed. REQUIRED on a step_up.approved event whose ts_render carries plan, and never present otherwise. The gateway checks that it equals the ts_render's plan.plan_hash, or refuses the event with 403 ts_render_mismatch."
         },
         "user_action": {
           "enum": [

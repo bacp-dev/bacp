@@ -61,13 +61,16 @@ AgentCredential are in [Identity and Request Signing](../identity-and-signing.md
 ### Signature tags {#signature-tags}
 
 The `tag` parameter states what the signature authorises. The tag MUST be the one required by the endpoint, and it
-MUST be listed in the AgentCredential's `purposes`; otherwise the gateway returns 401 `signature_invalid`.
+MUST be listed in the AgentCredential's `purposes`; otherwise the gateway returns 401 `signature_invalid`. The table
+lists every agent endpoint. **An agent endpoint that is not listed gets `401 signature_invalid`: there is no default tag.**
+Every operation of the OpenAPI document carries its tag as `x-bacp-signature-tag`, and `scripts/validate.py` fails an
+operation without it.
 
 | Tag | Authorises | Endpoints |
 |---|---|---|
-| `bacp-browse` | Reads, discovery, building a cart, mandate requests, non-firm negotiation messages | Every agent endpoint not listed below |
-| `bacp-pay` | Moving money | `POST /sessions/{session_id}/complete` |
-| `bacp-post-order` | Protective writes on an existing order | `POST /orders/{order_id}/cancel`, `POST /orders/{order_id}/returns`, `POST /issues`, `POST /issues/{issue_id}/actions` |
+| `bacp-browse` | Reads, discovery, building a cart, mandate requests, non-firm negotiation messages, ledger reads | `POST /discover`, `GET /discover/{transaction_id}/sources/{source_digest}`, `POST /sessions`, `GET` and `PUT /sessions/{session_id}`, `POST /sessions/{session_id}/cancel`, `POST /sessions/{session_id}/handoff` (`action: request`, and `action: release` before acceptance), `POST /checkout-sessions`, `GET` and `PUT /checkout-sessions/{id}`, `POST /checkout-sessions/{id}/cancel`, `POST /mandates`, `GET /mandates/{mandate_id}`, `POST /mandates/{mandate_id}/relinquish`, `GET /orders/{order_id}`, `GET /orders/{order_id}/returns/{return_id}`, `GET /orders/{order_id}/documents`, `GET /issues/{issue_id}`, `GET /evidence/{transaction_id}`, `POST /negotiations`, `GET /negotiations/{negotiation_id}`, `GET /negotiations/{negotiation_id}/offers`, non-firm messages other than `withdraw` and `accept_revoke` on `POST /negotiations/{negotiation_id}/offers`, `POST /rfqs`, `GET /rfqs/{rfq_id}`, `GET /auctions/{auction_id}`, `POST /payment-handlers/intersect`, `GET /ledgers/{ledger_id}`, `GET /ledgers/{ledger_id}/entries` |
+| `bacp-pay` | Moving money | `POST /sessions/{session_id}/complete` and `POST /checkout-sessions/{id}/complete`, including a `payment_plan` ([Wire binding of plans](../payments/credit-and-split-tender.md#plan-wire)) |
+| `bacp-post-order` | Protective writes on an existing order, trade acts and ledger postings | `POST /orders/{order_id}/cancel`, `POST /orders/{order_id}/returns`, `POST /issues`, `POST /issues/{issue_id}/actions`, `POST /trade-acts`, `POST /ledgers/{ledger_id}/entries` |
 | `bacp-negotiate` | Binding negotiation acts: firm offers and counters, ACCEPT, bids, awards, and the acts that undo them (WITHDRAW, ACCEPT_REVOKE) | `POST /negotiations/{negotiation_id}/offers` when the message is firm or is a `withdraw` or `accept_revoke`, `POST /negotiations/{negotiation_id}/accept`, `POST /rfqs/{rfq_id}/award`, `POST /auctions`, `POST /auctions/{auction_id}/bids`, `POST /auctions/{auction_id}/award` |
 | `bacp-ts` | Trusted Surface events and render fetches, signed by the step-up's Mandate Manager or payer PSP, never by an agent | `POST /trusted-surface/events`, `GET /trusted-surface/step-ups/{step_up_id}` |
 | `bacp-handoff` | A human support operator accepting or releasing a handoff, signed by a registry key of role support operator, never by an agent | `POST /sessions/{session_id}/handoff` with `action: accept` or `release` |
@@ -79,7 +82,7 @@ signature.
 
 | # | Rule |
 |---|---|
-| 1 | `Idempotency-Key` is REQUIRED on every POST and PUT. A missing or malformed key returns 400 `idempotency_key_required`. Keys are scoped to (agent, method, path). |
+| 1 | `Idempotency-Key` is REQUIRED on every POST and PUT. A missing or malformed key returns 400 `idempotency_key_required`. Keys are scoped to (agent, canonical operation, path parameters): the operation, not the URL string, and the values of its path parameters. For every operation that exists today this is the same scope as (agent, method, path), and an MCP tool or an A2A DataPart that maps to the operation shares its keys, as does the `/checkout-sessions` twin of a `/sessions` operation. |
 | 2 | Body equality is semantic: `null` is not the same as an absent field. |
 | 3 | Same key and same body: the gateway returns the stored response with `Idempotent-Replayed: true`. |
 | 4 | Same key and a different body: 422 `idempotency_conflict`. |
@@ -87,6 +90,7 @@ signature.
 | 6 | Keys are kept at least 24 hours; 48 hours is RECOMMENDED. 5xx responses are never stored. |
 | 7 | If the idempotency store fails, writes fail closed with 503 `idempotency_store_unavailable`. |
 | 8 | After a lost response, a timeout or a 5xx, the agent MUST call `GET` on the resource first, and MAY retry only with the **same** key. A new key is a new purchase intent and is evaluated against the mandate afresh. |
+| 9 | A write refused with `403 presence_not_proven` is retried with `hp_proof` under a **new** key: the body differs, so the same key gets `422 idempotency_conflict`, whose message names a new key. |
 
 `complete` is protected twice: by the idempotency key and by the rule that a closed payment mandate is consumed at
 most once and a `checkout_hash` is debited at most once (see [Sessions and Checkout](../checkout/index.md)).
@@ -112,9 +116,11 @@ requests, or as the `?bpp_id=` query parameter on `GET /orders/{order_id}` and
 
 ## Pagination {#pagination}
 
-This version defines no pagination. List responses (`GET /payment-handlers`, `GET /negotiations/{negotiation_id}/offers`)
-return the complete list. `GET /payment-handlers` accepts the filters `presence`, `class`, `kind`, `segment` and
-`status`.
+Only `GET /ledgers/{ledger_id}/entries` is paginated, by keyset: `after_seq` (return entries whose `seq` is greater), `limit`
+(1 to 50, default 50; a larger value is `400 invalid_request` at `$.limit`) and `status`. The response carries
+`next_after_seq` until the last page and the ledger's `head_seq` and `head_hash`. The other list responses
+(`GET /payment-handlers`, `GET /negotiations/{negotiation_id}/offers`) return the complete list. `GET /payment-handlers`
+accepts the filters `presence`, `class`, `kind`, `segment` and `status`.
 
 ## Webhooks {#webhooks}
 
@@ -191,8 +197,18 @@ endpoint requires. This table is generated from `source/services/bacp.openapi.ya
 | POST | `/auctions/{auction_id}/bids` | auction | `bacp-negotiate` | required | Place a bid, bid_commit, bid_reveal or bid_retract (signed, bacp-negotiate) |
 | POST | `/auctions/{auction_id}/award` | auction | `bacp-negotiate` | required | Buyer or auctioneer award of the winning bid hash (reverse_l1), or seller acceptance of the highest bid (english) |
 | GET | `/payment-handlers` | payment-handlers | `none (public)` | — | The handler registry (HandlerDescriptor[]). Public, cacheable. |
-| GET | `/payment-handlers/{handler_id}` | payment-handlers | `none (public)` | — | getPaymentHandler |
-| POST | `/payment-handlers/intersect` | payment-handlers | `bacp-browse` | required | Eligible payment handlers for a negotiation, ordered by user preference then lowest all-in total |
+| GET | `/payment-handlers/{handler_id}` | payment-handlers | `none (public)` | — | One handler descriptor, by canonical id or legacy alias |
+| POST | `/payment-handlers/intersect` | payment-handlers | `bacp-browse` | required | Eligible payment handlers for a negotiation or, with `in.bacp.payment_plan`, a session, ordered by user preference then lowest all-in total |
+| GET | `/ledgers/{ledger_id}` | ledger | `bacp-browse` | — | A credit ledger: header, chain head, balance and oldest unpaid date (`in.bacp.ledger`) |
+| GET | `/ledgers/{ledger_id}/entries` | ledger | `bacp-browse` | — | A page of ledger entries (`after_seq`, `limit` at most 50, `status`) (`in.bacp.ledger`) |
+| POST | `/ledgers/{ledger_id}/entries` | ledger | `bacp-post-order` | required | Post a payment for the principal, the debtor; only `type: payment` (`in.bacp.ledger`) |
+| POST | `/trade-acts` | trade-act | `bacp-post-order` | required | Record a GRN, CRAC, MSMED objection or ledger acknowledgement after the principal approves it (`in.bacp.trade_document`, `in.bacp.ledger`) |
+| GET | `/orders/{order_id}/documents` | order | `bacp-browse` | — | The trade documents recorded against an order (`in.bacp.trade_document`) |
+| POST | `/checkout-sessions` | ucp-checkout | `bacp-browse` | required | Create a checkout in UCP shape (`in.bacp.ucp_checkout`; [projection](ucp-checkout.md)) |
+| GET | `/checkout-sessions/{id}` | ucp-checkout | `bacp-browse` | — | Get a checkout in UCP shape |
+| PUT | `/checkout-sessions/{id}` | ucp-checkout | `bacp-browse` | required | Update a checkout in UCP shape |
+| POST | `/checkout-sessions/{id}/complete` | ucp-checkout | `bacp-pay` | required | Complete a checkout in UCP shape: one UCP instrument for each tender, each carrying a BACP closed payment mandate |
+| POST | `/checkout-sessions/{id}/cancel` | ucp-checkout | `bacp-browse` | required | Cancel a checkout in UCP shape |
 
 The status codes each operation can return are documented in the OpenAPI document. Every operation documents every
 status it can return, including 401, 404, 409, 413, 422, 429, 502, 503 and 504 where they apply.

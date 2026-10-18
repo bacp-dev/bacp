@@ -40,8 +40,9 @@ ONDC { #ondc }
     with its registry, gateways, domain specifications, IGM and RSF.
 
 UCP { #ucp }
-:   Universal Commerce Protocol. BACP keeps UCP's checkout verbs and statuses
-    so that agents built for UCP can reuse their integration.
+:   Universal Commerce Protocol. BACP's checkout session follows UCP checkout's lifecycle and status names
+    (BACP spells `cancelled` and adds `human_handoff`). BACP is not wire-compatible with UCP; the differences are
+    listed in [BACP and other protocols](https://bacp.dev/latest/documentation/other-protocols/#ucp).
 
 UPI { #upi }
 :   Unified Payments Interface, India's real-time interoperable payment

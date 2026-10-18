@@ -55,6 +55,7 @@ and of its **payer PSP** (for a summary step-up, the Mandate Manager's only). Th
 | A session step-up (`confirm`, `rail_auth`) | The issuer of the session's mandate (the open Checkout Mandate) | The PSP named in `rail_binding.psp_id` of any of the leg's planned open Payment Mandates: those under the session's root that the gateway planned to pay this session with, more than one under split tender ([Per-leg rule](mandates.md#per-leg-rule)). Each names the Checkout Mandate in its `checkout_mandate_ref` |
 | A summary step-up over a [multi-seller basket](#multi-seller) (`covers[]` present) | The issuer of the shared root open Checkout Mandate | None: no payer PSP fetches or answers a summary, so that no PSP learns the rest of the basket |
 | A `post_order` step-up | The issuer of the mandate the order was placed under | The PSP named in `auth_binding.psp_id` of the order's closed Payment Mandate; under split tender, of any of the order's closed Payment Mandates |
+| A `post_order` step-up for an order-less ledger act (`LEDGER_ACK` of a `ledger_ref` or a `ledger_range`) | The issuer of the mandate named in `actor.mandate_ref` of the request, which a request for such an act MUST carry | None: there is no closed Payment Mandate |
 
 A Checkout Mandate carries no PSP binding, and a closed Payment Mandate exists only from `complete`, so the payer
 PSP of a session step-up is never taken from an `auth_binding`. On a human-present session there is no open Payment
@@ -110,8 +111,9 @@ The payload is described as data by the OpenAPI component `TsRender`.
 |---|---|
 | `step_up_id`, `session_id` | The step-up and its session. `session_id` is absent for `kind: post_order`, which has no session. |
 | `kind`, `reason` | As in the `step_up` object ([Step-up](mandates.md#step-up)). |
-| `action`, `order_id`, `issue_id` | For `kind: post_order` only: the write the principal confirms, the order, and for an issue action the issue ([Presence proof](#hp-proof)). `action` is exactly one of: `CANCEL`, `RETURN`, `RAISE_ISSUE`; for an issue action, the issue action's own `action` value from `POST /issues/{issue_id}/actions` (`INFO_PROVIDED`, `RESOLUTION_ACCEPTED`, `RESOLUTION_REJECTED`, `ESCALATED` or `CLOSED`); or a trade act `GRN`, `CRAC`, `MSMED_OBJECTION` or `LEDGER_ACK`. No other value is valid. |
-| `subject_hash` | For the issue actions `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED` only: the sha-256 over the JCS form of the issue's `resolution` as the gateway showed it in `summary`. Absent for every other action, including `ESCALATED`, `INFO_PROVIDED` and `CLOSED`, and when the issue has no `resolution`. |
+| `action`, `order_id`, `issue_id` | For `kind: post_order` only: the write the principal confirms, the order (absent for an order-less `LEDGER_ACK`), and for an issue action the issue ([Presence proof](#hp-proof)). `action` is exactly one of: `CANCEL`, `RETURN`, `RAISE_ISSUE`; for an issue action, the issue action's own `action` value from `POST /issues/{issue_id}/actions` (`INFO_PROVIDED`, `RESOLUTION_ACCEPTED`, `RESOLUTION_REJECTED`, `ESCALATED` or `CLOSED`); or a trade act `GRN`, `CRAC`, `MSMED_OBJECTION` or `LEDGER_ACK`. No other value is valid. |
+| `subject_hash` | REQUIRED for the trade acts `GRN`, `CRAC`, `MSMED_OBJECTION` and `LEDGER_ACK`: the sha-256 of exactly what the principal is shown. For a document, the JCS hash of the exact body; for a ledger entry, its `entry_hash`; for a ledger statement, the `head_hash` at `through_seq`. For the issue actions `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED`: the sha-256 over the JCS form of the issue's `resolution` as the gateway showed it in `summary`, absent when the issue has no `resolution`. Absent for every other action, including `ESCALATED`, `INFO_PROVIDED` and `CLOSED`. A trade-act render without `subject_hash` is invalid. |
+| `subject_ref` | REQUIRED for a trade act: `{kind, id, through_seq?}`. `kind` is `order` or `document` for a `GRN`, `CRAC` or `MSMED_OBJECTION` (with `order_id`), and `ledger_entry` (`id` is the entry id) or `ledger_statement` (`id` is the ledger id, `through_seq` REQUIRED) for a `LEDGER_ACK`, which has no `order_id`. For a GRN the Trusted Surface shows the delivery date and the accepted and rejected quantities with their enum reasons; for an MSMED objection, the objection text labelled as counterparty text; for a ledger entry, its amount, type and due date; for a statement, the count, the closing balance, the oldest unpaid date and every entry above `itemise_above`. |
 | `language` | The principal's language, as a BCP 47 tag (`LanguageTag`). |
 | `checkout_hash` | The `checkout_hash` of the quote the step-up is about. For `post_order` it is the `checkout_hash` of the order's closed Checkout Mandate (the hash of the BPP-signed quote the order was placed under, also on the order's `Receipt`); an `Order` carries no `checkout_hash` of its own. |
 | `total` | The total the principal pays, as a single figure (`Amount`, integer paise): the quote total plus the sum of the session's `operator_charges[]`. On a summary step-up, the sum of `basket[].amount`. |
@@ -124,6 +126,7 @@ The payload is described as data by the OpenAPI component `TsRender`.
 | `basket[]` | On a summary step-up over a [multi-seller basket](#multi-seller) only: one line per seller, `{bpp_id, payee_name, amount, handler, needs_pin, funds_locked, expires_at, funding}`. `payee_name` is the name the payer's bank returns for the payee VPA. `funds_locked` and `expires_at` are the amount a block reserves and when it is released. `funding` is `deposit` (the principal's own money) or `credit`. |
 | `covers[]` | On a summary step-up only: the legs the approval covers, each `{session_id, checkout_hash, payee, amount}` ([Step-up](mandates.md#step-up)). A summary's `session_id` and `checkout_hash` are those of the session whose `complete` raised it. |
 | `catalogue_disclosure[]` | Optional. On a session step-up (`confirm` or `rail_auth`, including a summary step-up) only: one entry for each line item whose `Disclosures.catalogue[]` entry is `sponsored` or `undeclared`, or carries a `prior_price`. Each entry is `{index, sponsorship, name_ref}` and, for a prior price, `prior_price` and `unit_price` (the discovered unit price shown with it). `index` is the position of the entry in that session's `Disclosures.catalogue[]`; on a summary step-up each entry also carries `cover`, the position in `covers[]` of the leg whose session it is. `name_ref` is the position of the item's name in `counterparty_text[]`. An entry for an item that is `not_sponsored` and has no `prior_price` is invalid. Never present on a `post_order` step-up or a negotiation `confirm`. It is hashed into `Presentation.content_hash` with the rest of the render ([Catalogue disclosure on the Trusted Surface](#ts-catalogue-disclosure)). |
+| `plan` | On a session step-up (`confirm` or `rail_auth`) over a [payment plan](payments/credit-and-split-tender.md#plan-wire) only: `{plan_hash, tenders[]}`, each tender `{tender_id, handler, amount, sequence}`. The Trusted Surface shows the whole plan, every tender and its amount, never one tender alone, and reads the plan's total as one figure with its tenders beside it. Requires `checkout_hash`. It is hashed into `Presentation.content_hash` with the rest of the render. |
 | `offer_hash` | On a negotiation `kind: confirm` step-up only: the `offer_hash` of the offer the principal is asked to approve ([Step-up to the Trusted Surface](negotiation/index.md#step-up-to-the-trusted-surface)). Never present with `checkout_hash`. |
 | `acceptance_revocation` | On a negotiation `kind: confirm` step-up about a firm offer only: the offer's [`acceptance_revocation`](negotiation/index.md#acceptance-revocation) value, copied unchanged; in this version only `waived` occurs, because receivers refuse `allowed_until_receipt`. Present only with `offer_hash`. It is hashed into `Presentation.content_hash` with the rest of the render. |
 | `revoke_route` | Where the principal revokes the mandate or cancels, as a URI. |
@@ -230,9 +233,10 @@ Trusted Surface showed, how, and what the principal did:
 | `user_action` | yes | `tap_confirm`, `upi_pin`, `biometric`, `passkey`, `voice_confirm_plus_device` or `decline`. `biometric` is the principal's own biometric enrolled for the principal on the Trusted Surface device, never an operator's. |
 | `shown_at`, `acted_at` | yes | When it was shown and when the principal acted. |
 | `template_id` | no | The Trusted Surface template and its version. |
-| `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` | The render fields beyond this version's base set that the Trusted Surface presented, for example `["catalogue_disclosure"]`. |
-| `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the `checkout_hash` of the order's closed Checkout Mandate. Never present with `offer_hash`. |
+| `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` or `plan` | The render fields beyond this version's base set that the Trusted Surface presented: `catalogue_disclosure` or `plan`, for example `["catalogue_disclosure", "plan"]`. |
+| `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the `checkout_hash` of the order's closed Checkout Mandate. Never present with `offer_hash`. A `post_order` step-up for an order-less ledger act has no quote, and its approval carries none. |
 | `offer_hash` | on `negotiation.step_up.approved` | The offer a negotiation `confirm` step-up showed. Never present with `checkout_hash`. |
+| `plan_hash` | on `step_up.approved` when the render carries `plan` | The `plan.plan_hash` of the payment plan the content showed. |
 | `device_signature` | no | The principal's device signature over the JCS form of `{step_up_id, content_hash, acted_at}` (for a step-up) or `{content_hash, acted_at}`. |
 | `voice_evidence` | no | Audio and transcript hashes and the translation model, for a voice confirmation. |
 | `assisted_by` | on `assisted` | The `participant_id` of the assisted operator, taken by the Trusted Surface from `ts_render.assisted_operators[]`, never from the agent. |
@@ -262,6 +266,9 @@ state change:
   that offer's value; otherwise it refuses the event with `403 ts_render_mismatch`, and nothing is sent;
 - on `step_up.approved` for a `ts_render` that carries `catalogue_disclosure[]`, that `presentation.renders` contains
   `catalogue_disclosure`; otherwise it refuses the event with `400 invalid_request` and nothing changes;
+- on `step_up.approved` for a `ts_render` that carries `plan`, that `presentation.renders` contains `plan`
+  (otherwise `400 invalid_request`, nothing changes) and that `presentation.plan_hash` equals the render's `plan.plan_hash`
+  (otherwise `403 ts_render_mismatch`);
 - that `presentation.acted_at` is not after the step-up's `expires_at`, or treat the step-up as expired
   (`step_up_expired`, no money moves);
 - on an assisted session, the [assisted channel](#assisted) rules.
@@ -451,15 +458,15 @@ handoff maps to Beckn `support` → `on_support`, and the MCP tool is `bacp_huma
 
 ## Presence proof {#hp-proof}
 
-`presence: HP` on a post-order write (cancel, return, raise issue, issue action) is not only a declaration. The
+`presence: HP` on a post-order write (cancel, return, raise issue, issue action) or on a trade act (GRN, CRAC, MSMED objection, ledger acknowledgement) is not only a declaration. The
 principal proves it on the Trusted Surface, through a step-up of kind `post_order`
 ([Presence](mandates.md#presence), [Post-order gate](checkout/post-order.md#post-order-gate)):
 
 1. A post-order write with `presence: HP` and no `hp_proof` gets `403 presence_not_proven`. The error carries
    `step_up`, a `StepUp` with `kind: post_order` and `reason: presence_proof`, whose `ts_render` names the write:
    `action`, `order_id` and, for an issue action, `issue_id` and, for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED`,
-   `subject_hash`. Nothing is sent to the network. The
-   gateway keeps at most one pending `post_order` step-up per `(order_id, action, issue_id)`: a step-up is pending
+   `subject_hash`; for a trade act, `subject_ref` and `subject_hash`. Nothing is sent to the network. The
+   gateway keeps at most one pending `post_order` step-up per `(subject_ref, action)` (for an order write, per `(order_id, action, issue_id)`): a step-up is pending
    until it expires, is declined, or its proof is consumed. A repeat of the refused write returns the same
    `step_up_id` and `ts_render`, except that for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED` on an issue whose
    `resolution` no longer hashes to the pending step-up's `subject_hash` the gateway voids that step-up and creates a
@@ -470,17 +477,24 @@ principal proves it on the Trusted Surface, through a step-up of kind `post_orde
 2. The principal confirms on the Trusted Surface, which posts the usual `step_up.approved` event with its
    `Presentation`. The gateway checks it as for any step-up approval.
 3. The agent retries the write with `hp_proof{ts_event_hash, step_up_id}`: the `post_order` step-up's id and the
-   sha-256 over the JCS form of its signed `step_up.approved` event. Both fields are REQUIRED.
+   sha-256 over the JCS form of its signed `step_up.approved` event. Both fields are REQUIRED. The retry uses a **new**
+   `Idempotency-Key`: the refused request and the retry differ in body, so the same key gets `422 idempotency_conflict`,
+   whose `resolution` is `recoverable` and whose message names a new key ([Idempotency](transports/rest.md#idempotency)).
 4. The gateway accepts the proof only for the `action`, `order_id` and `issue_id` named in that step-up's `ts_render`.
    A proof issued for another order, action or issue gets `403 presence_not_proven`. For `RESOLUTION_ACCEPTED` and
    `RESOLUTION_REJECTED` the gateway also hashes the issue's current `resolution` when the write arrives and refuses
    the proof with `403 presence_not_proven` if that hash is not the `ts_render`'s `subject_hash` (or if a `resolution`
    exists where none was shown): a remedy the seller revised after the principal confirmed needs a new confirmation.
    Any other issue action, in particular `ESCALATED`, is not bound to the `resolution` and is accepted on a valid
-   proof for its own `action`.
+   proof for its own `action`. For a trade act the gateway hashes the submitted subject (the exact document body, the
+   entry's `entry_hash`, or the `head_hash` at `through_seq`) and refuses the proof with `403 presence_not_proven`,
+   without consuming it, if that hash is not the `ts_render`'s `subject_hash`: an act that differs from what the principal
+   saw, for example a GRN with an objection added, needs a new confirmation. A statement acknowledgement whose
+   `head_hash` is no longer the ledger's head is refused with `409 ledger_head_mismatch`.
 5. An `hp_proof` is single-use. The gateway consumes it inside the atomic section keyed on the order's root Checkout
-   Mandate ([Usage ledger](mandates.md#usage-ledger)), so that of two writes citing one proof, on any instances, exactly
-   one succeeds and the other gets `403 presence_not_proven`.
+   Mandate ([Usage ledger](mandates.md#usage-ledger)), or, for a trade act that has no order, keyed on the `ledger_id`,
+   so that of two writes citing one proof, on any instances, exactly one succeeds and the other gets
+   `403 presence_not_proven`.
 
 A human-present `complete` is proven by the principal's signatures on the closed mandates and needs no `hp_proof`.
 
@@ -493,11 +507,30 @@ GRN, a CRAC and an MSMED written objection carry a typed `actor{kind, role, part
 `seller_operator`; an agent acts as `agent` or `sub_agent`.
 
 An agent records such an act only when the principal is present: the act **MUST** carry `hp_proof` of a `post_order`
-step-up whose `ts_render` names it (`action` `GRN`, `CRAC`, `MSMED_OBJECTION` or `LEDGER_ACK`). No mandate scope
-authorises an agent's trade act, and `mandate_ref` on the actor only records the mandate the agent acted under.
-Until a request operation exists ([Q-44](open-questions.md#q-44)), an agent trade act is refused: no operation yet lets
-an agent obtain a `post_order` step-up for one. Whether
-an objection sent by an agent is an objection "in writing" under the MSMED Act is open ([Q-21](open-questions.md#q-21)).
+step-up whose `ts_render` names it (`action` `GRN`, `CRAC`, `MSMED_OBJECTION` or `LEDGER_ACK`, with `subject_ref` and
+`subject_hash`). No mandate scope authorises an agent's trade act, and `mandate_ref` on the actor only records the
+mandate the agent acted under (for an order-less ledger act it also names the Mandate Manager that issues the step-up).
+
+A gateway that lists `in.bacp.trade_document` (GRN, CRAC, MSMED objection) or `in.bacp.ledger` (ledger acknowledgement)
+offers one operation, `POST /trade-acts` (tag `bacp-post-order`), and, for documents, `GET /orders/{order_id}/documents`:
+
+1. The agent posts the act with `presence: HP` and no `hp_proof`. `presence: HNP` is refused with `403 presence_not_allowed`.
+2. The gateway answers `403 presence_not_proven` with a `post_order` step-up whose `ts_render` carries `action`,
+   `subject_ref` and `subject_hash`. Nothing is sent to the seller and nothing is appended to a ledger.
+3. The principal approves on the Trusted Surface, which shows exactly the subject, and the agent retries with `hp_proof`
+   and a new `Idempotency-Key` ([Presence proof](#hp-proof)).
+4. The response carries, for a GRN, a CRAC or an MSMED objection, `delivery: recorded` or `delivery: sent`.
+
+**Recorded, not sent.** Until the carriage of a buyer-issued GRN or CRAC on Beckn is settled ([Q-33](open-questions.md#q-33)),
+`delivery` is `recorded`: the gateway **MUST NOT** emit a Beckn GRN or CRAC for a recorded act, a recorded act **MUST NOT**
+set or move the MSMED due date in the BACP ledger, and support staff see it as "not sent to seller". A principal who files an
+objection is told on the Trusted Surface that it is recorded but not yet sent to the seller, and that it does not stop the
+15-day clock of the MSMED Act until it is sent in writing (whether an objection sent by an agent is in writing, and whether
+a recorded objection starts or stops the clock, is open: [Q-21](open-questions.md#q-21), [Q-83](open-questions.md#q-83)).
+A ledger acknowledgement is BACP-native, takes effect at once and carries no `delivery`.
+
+The documents' bodies carry counterparty text (a reason, an objection). The Trusted Surface labels it as counterparty text,
+and an agent **MUST NOT** load a counterparty `DocumentRef.uri` into model context.
 
 ## Legal time bands {#time-bands}
 
