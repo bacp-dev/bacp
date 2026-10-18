@@ -40,7 +40,7 @@
   "captured_via": {
     "surface": "mm.psp.example.in",
     "user_action": "upi_pin",
-    "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQSJ9.c2lnbmF0dXJl",
+    "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQXE4VzNuSzV2UnQ3WWNMbTIifQ.c2lnbmF0dXJl",
     "presentation": {
       "surface": "mm.psp.example.in",
       "channel": "assisted",
@@ -52,7 +52,7 @@
       "user_action": "upi_pin",
       "shown_at": "2026-10-17T11:02:10+05:30",
       "acted_at": "2026-10-17T11:04:55+05:30",
-      "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQSJ9.c2lnbmF0dXJl",
+      "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQXE4VzNuSzV2UnQ3WWNMbTIifQ.c2lnbmF0dXJl",
       "assisted_by": "par_csc_operator_01"
     }
   },

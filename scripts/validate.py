@@ -84,6 +84,15 @@ def load_schemas() -> dict[str, dict]:
 def main() -> int:
     schemas = load_schemas()
     registry = Registry().with_resources((s["$id"], Resource.from_contents(s)) for s in schemas.values())
+    # A schema may $ref a component of the OpenAPI document (ts-render.json does), so the document is registered
+    # under a URI next to the schemas before any validator is built.
+    api_path = SRC / "services" / "bacp.openapi.yaml"
+    try:
+        registry = registry.with_resource(
+            "https://bacp.dev/services/bacp.openapi.yaml", DRAFT202012.create_resource(load_yaml(api_path.read_text()))
+        )
+    except yaml.YAMLError:
+        pass  # reported as a failure below
     validators = {n: Draft202012Validator(s, registry=registry, format_checker=FormatChecker()) for n, s in schemas.items()}
 
     # 2. dangling refs surface when the validator walks the schema; force it with an empty-instance pass

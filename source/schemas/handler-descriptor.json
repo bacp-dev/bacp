@@ -354,6 +354,11 @@
             "n_a"
           ]
         },
+        "rbi_annex1_item": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The row of Annexure-1 of the RBI authentication directions (RBI/2025-26/79) that exempts this handler from two-factor authentication. REQUIRED when model is exempt or exempt_below_threshold, and FORBIDDEN when model is at_block_creation or at_registration_only, so that a handler is never labelled as an RBI exemption when it relies on authentication at creation or registration. The upper bound is not fixed, because Annexure-1 says that any subsequent addition or modification also applies, so the registry maintains the set of rows. The item records which rule the debit relies on. It does not make the debit lawful: the issuer remains liable for a non-compliant debit."
+        },
         "threshold": {
           "$ref": "common.json#/$defs/Amount"
         },
@@ -377,7 +382,51 @@
         "model",
         "pre_debit_notice"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "model"
+            ],
+            "properties": {
+              "model": {
+                "enum": [
+                  "exempt",
+                  "exempt_below_threshold"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "rbi_annex1_item"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "model"
+            ],
+            "properties": {
+              "model": {
+                "enum": [
+                  "at_block_creation",
+                  "at_registration_only"
+                ]
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "rbi_annex1_item"
+              ]
+            }
+          }
+        }
+      ]
     },
     "refund": {
       "type": "object",

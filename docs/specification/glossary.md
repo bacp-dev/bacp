@@ -152,7 +152,7 @@ Trusted Surface { #trusted-surface }
     the principal reads notices in their language, approves mandates and
     step-ups, and enters a PIN or biometric. No agent can drive it, read the
     PIN, or post its events. It renders a step-up only from the gateway-signed
-    `ts_render` it fetches by `step_up_id`, meets requirements TS-1 to TS-5,
+    `ts_render` it fetches by `step_up_id`, meets requirements TS-1 to TS-6,
     and records a `Presentation` of what it showed. Events from the Trusted
     Surface reach the gateway only at `POST /trusted-surface/events`, signed
     under tag `bacp-ts` with the registry key of the step-up's Mandate
@@ -503,8 +503,8 @@ RSF { #rsf }
 Webhook { #webhook }
 :   A gateway-signed notification to the agent's `webhook_url`, such as
     `mandate.status_changed`, `session.updated`, `payment.receipt`,
-    `order.updated`, `return.updated`, `issue.updated` or
-    `pre_debit.notice`. Webhooks never
+    `order.updated`, `return.updated`, `issue.updated`, `pre_debit.notice` or
+    `step_up.updated`. Webhooks never
     embed signed receipts, only references with hashes.
 
 ## Negotiation

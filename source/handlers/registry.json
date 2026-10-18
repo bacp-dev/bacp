@@ -546,9 +546,9 @@
    "model": "at_block_creation",
    "pre_debit_notice": "unknown",
    "source": {
-    "file": "Pine Labs One-Time Mandate FAQs, https://www.pinelabs.com/docs/online-payments/one-time-mandate/faqs",
-    "section": "whole instrument",
-    "label": "VENDOR"
+    "file": "NPCI UPI Consolidated Circular v1.0 (NPCI/UPI/CC/01), 18-09-2026, https://www.npci.org.in/uploads/UPI_Consolidated_Circular_0641e910f7.pdf",
+    "section": "paras 15.2 and 15.4",
+    "label": "NPCI"
    }
   },
   "refund": {
@@ -700,9 +700,9 @@
    "model": "at_block_creation",
    "pre_debit_notice": "unknown",
    "source": {
-    "file": "https://bacp.dev/specification/open-questions/",
-    "section": "Q-03",
-    "label": "ANALYSIS"
+    "file": "NPCI UPI OC 200 'Enablement of UPI Mandate feature of Single Block Multiple Debits (SBMD)', 31-07-2024, https://www.npci.org.in/uploads/UPI_OC_No_200_FY_24_25_Enablement_of_UPI_Mandate_feature_of_Single_Block_Multiple_Debits_f2f9bc9230.pdf",
+    "section": "item 3, para (d)",
+    "label": "NPCI"
    }
   },
   "refund": {
@@ -1642,6 +1642,7 @@
   ],
   "afa": {
    "model": "exempt",
+   "rbi_annex1_item": 5,
    "pre_debit_notice": "not_applicable",
    "source": {
     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
@@ -2616,10 +2617,11 @@
   ],
   "afa": {
    "model": "exempt_below_threshold",
+   "rbi_annex1_item": 1,
    "pre_debit_notice": "not_applicable",
    "source": {
     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
-    "section": "Annexure-1",
+    "section": "Annexure-1, item 1",
     "label": "RBI"
    },
    "threshold": {
@@ -2754,6 +2756,7 @@
   ],
   "afa": {
    "model": "exempt_below_threshold",
+   "rbi_annex1_item": 7,
    "pre_debit_notice": "not_applicable",
    "source": {
     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
@@ -3783,6 +3786,7 @@
   ],
   "afa": {
    "model": "exempt",
+   "rbi_annex1_item": 3,
    "pre_debit_notice": "not_applicable",
    "source": {
     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
@@ -4143,10 +4147,11 @@
   ],
   "afa": {
    "model": "exempt",
+   "rbi_annex1_item": 4,
    "pre_debit_notice": "exempt",
    "source": {
     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
-    "section": "Annexure-1",
+    "section": "Annexure-1, item 4",
     "label": "RBI"
    }
   },
@@ -4292,10 +4297,11 @@
   ],
   "afa": {
    "model": "exempt",
+   "rbi_annex1_item": 4,
    "pre_debit_notice": "exempt",
    "source": {
     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
-    "section": "Annexure-1",
+    "section": "Annexure-1, item 4",
     "label": "RBI"
    }
   },
@@ -4415,10 +4421,11 @@
   ],
   "afa": {
    "model": "exempt",
+   "rbi_annex1_item": 3,
    "pre_debit_notice": "exempt",
    "source": {
     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
-    "section": "Annexure-1",
+    "section": "Annexure-1, item 3",
     "label": "RBI"
    }
   },

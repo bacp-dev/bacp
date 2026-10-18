@@ -36,23 +36,23 @@ labels for traceability between this page, the open questions and conformance re
 
 | Status | Requirements |
 |---|---|
-| Covered | 167 |
-| Partial | 59 |
-| Gap | 10 |
+| Covered | 176 |
+| Partial | 66 |
+| Gap | 15 |
 | N/A | 6 |
-| **Total** | **242** |
+| **Total** | **263** |
 
 | Group | Requirements |
 |---|---|
-| [Reserve Bank of India (RBI)](#rbi) | 69 |
-| [NPCI and card networks](#npci) | 15 |
-| [MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar](#meity-dpdp) | 25 |
-| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 20 |
+| [Reserve Bank of India (RBI)](#rbi) | 72 |
+| [NPCI and card networks](#npci) | 16 |
+| [MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar](#meity-dpdp) | 29 |
+| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 32 |
 | [ONDC network policy](#ondc) | 6 |
 | [GST, Income-tax and Legal Metrology](#gst-legal-metrology) | 10 |
 | [MSMED and Competition](#msmed-competition) | 11 |
 | [FEMA and cross-border trade](#fema) | 4 |
-| [Other statutes and government procurement](#other-law) | 20 |
+| [Other statutes and government procurement](#other-law) | 21 |
 | [BACP policy and DPI design patterns](#bacp-policy) | 62 |
 
 ## Reserve Bank of India (RBI) {#rbi}
@@ -137,6 +137,9 @@ RBI directions, master directions and circulars on authentication, e-mandates, p
 | **PAY-142** A card convenience fee is indicated to the cardholder transparently before the transaction | RBI Credit Card and Debit Card Directions 2025 para 77 (binds issuers; context only) | Fee lines shown before the factor; the consistency warning covers fees across debit modes | **Partial**: the duty binds issuers, not BACP participants |
 | **TRADE-113** Recurring payments as mandates; AFA above ₹15,000 | RBI E-mandate Framework 2026 | Recurring payments as mandates; AFA above threshold ([Rail Bindings](payments/rails.md)) | Covered |
 | **TRADE-116** Low-capability channels with enforced limits | RBI rules for 123PAY, Lite and AePS | Low-capability channel handlers with enforced limits ([Handler Registry](payments/handler-registry.md)) | Covered |
+| **REQ-119** Voice never releases money; authentication validates the originating customer's credentials, with one dynamic factor unique to the transaction | RBI/2025-26/79 paras 5(a), 5(f), 6(b); NPCI UPI Consolidated Circular v1.0 para 19.2.2; BACP policy for human-not-present | The gateway refuses `voice_confirm_plus_device` on `rail_auth` and on a debit-releasing `confirm`; a PIN is taken only on a PSP-operated surface ([Voice confirmation](human-participants.md#voice), [PIN rule](human-participants.md#ts-pin-rule)) | Covered (see [Q-13](open-questions.md#q-13) for non-money confirmations) |
+| **REQ-120** An authentication exemption is recorded against its RBI Annexure-1 row, never against a rail rule | RBI/2025-26/79 para 6(a) and Annexure-1 (seven rows; later additions apply) | Handler descriptor `afa.rbi_annex1_item`, REQUIRED for `exempt` and `exempt_below_threshold` and FORBIDDEN for `at_block_creation` and `at_registration_only`; the closed Payment Mandate's `afa_ref` ([Handler registry](payments/handler-registry.md)) | Covered (see [Q-88](open-questions.md#q-88)) |
+| **REQ-121** A debit authenticated with the account holder's own PIN, but induced through another person's step-up link, would fall outside the issuer's compensation duty | RBI/2025-26/79 para 9(b) | TS-6: a Trusted Surface renders a step-up only to the principal or payer that the render names (`mandate_id`, `payer_ref`) ([Requirements TS-1 to TS-6](human-participants.md#ts-requirements)) | **Partial**: Whether the induced debit is an unauthorised transaction is for counsel → [Q-86](open-questions.md#q-86) |
 
 ## NPCI and card networks {#npci}
 
@@ -159,6 +162,7 @@ NPCI scheme rules and circulars for UPI, NACH and Bharat Connect, and card-netwo
 | **PAY-208** No NACH presentment after cancellation; T+1 refund | NPCI NACH OC 008 (not verified); RBI TAT row 7b | No presentment after cancellation (`mandate_cancelled`); T+1 refund ([Rail Bindings](payments/rails.md)) | Covered |
 | **PAY-211** UPMS registration bound to an underlying mandate, inheriting its limits | NBBL circulars NPCI/2023-24/BBPS/009 (31-08-2023) and /016 (11-10-2023); RBI E-mandate Framework 2026 | UPMS registration bound to an underlying mandate ([Rail Bindings](payments/rails.md)) | Covered |
 | **TRADE-134** BBPS fetch-then-pay plus auto-pay | NBBL (Bharat Connect) UPMS circulars NPCI/2023-24/BBPS/009, /016 | BBPS fetch-then-pay and UPMS auto-pay handlers ([Handler Registry](payments/handler-registry.md)) | Covered |
+| **PAY-231** A Reserve Pay block and a UPI OTM are authenticated when they are created; execution is validated by digital signature | NPCI UPI OC 200 item 3, para (d); UPI Consolidated Circular v1.0 paras 15.2 and 15.4 | `afa.source` of `in.upi.reservepay` and `in.upi.otm` cites these rules; neither handler carries an `rbi_annex1_item` ([Handler registry](payments/handler-registry.md)) | Covered (see [Q-88](open-questions.md#q-88)) |
 
 ## MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar {#meity-dpdp}
 
@@ -191,6 +195,10 @@ The CERT-In Directions of 28-04-2022 under s.70B(6) of the Information Technolog
 | **REQ-407** Health purchases via UHI/NHCX; health data under an ABDM consent artefact, with separate consent | ABDM (programme, not a statute); separate consent for health data is BACP policy, since the DPDP Act has no sensitive-data category | Document reference type for an ABDM consent artefact ([Trade Profiles](trade-profiles.md)) | **Gap**: No health data scope or separate consent class → [Q-17](open-questions.md#q-17) |
 | **REQ-408** Notices in English plus the chosen Eighth Schedule language; log model and version | DPDP Act s.5(3), s.6(3); model logging is BACP policy | Multilingual notices; notice language and translation model recorded in ConsentReceipt and InstructionLog ([Security and Privacy](security-and-privacy.md#notice-and-consent)) | Covered |
 | **NEG-194** When an electronic record is despatched and received, save as otherwise agreed; an unacknowledged record is deemed never sent where an acknowledgement is stipulated | IT Act, 2000 s.12(2), s.13(1) | Protocol terms named in every firm message (`protocol_terms{version, hash}`) ([Negotiation](negotiation/index.md#indian-contract-act-timing)) | **Partial**: Whether the terms are "otherwise agreed" for a consumer, and s.11 attribution → [Q-19](open-questions.md#q-19), [Q-52](open-questions.md#q-52) |
+| **REQ-413** Consent to disclose whom an agent acts for; a sole proprietor's GSTIN and name are personal data | DPDP Act, 2023, s.6(1) and s.6(10) (from 13-05-2027) | `ACTING_FOR` in the ConsentReceipt `data_items[]`; the gateway sends `acting_for` to a seller only under a per-seller receipt that lists it ([Data minimisation](mandates.md)) | Covered |
+| **REQ-414** Notice and consent request in English or an Eighth Schedule language | DPDP Act, 2023, s.6(3) (from 13-05-2027), cited as alignment | Language fail-safe: a Trusted Surface that cannot render the step-up's language renders nothing, and the gateway answers `503 trusted_surface_unavailable` with handoff routes ([Language fail-safe](human-participants.md#ts-language-failsafe)) | **Partial**: A principal whose language no Trusted Surface serves gets a human route, not self-service |
+| **REQ-415** An assisted operator's act attributed to the principal | Information Technology Act, 2000, s.11(b) and s.11(c) | `assisted_by` and `Participant.ref` are attribution, never authentication; `ref_verification` is `asserted` until a registry exists ([Assisted channel](human-participants.md#assisted)) | **Partial**: Whether the operator's act is attributable, and what proves authority, is for counsel → [Q-86](open-questions.md#q-86) and [Q-62](open-questions.md#q-62) |
+| **REQ-416** Verifiable consent of the lawful guardian of a person with disability who has one | DPDP Act, 2023, s.9(1) (from 13-05-2027) | None in this version: a Proposed participant role `lawful_guardian`, with no disability data and no `ACTING_FOR` or assisted stand-in ([Legal time bands](human-participants.md#time-bands)) | **Gap**: No schema before a later release |
 
 ## CCPA and Consumer Protection {#consumer-protection}
 
@@ -225,6 +233,11 @@ The Consumer Protection (E-Commerce) Rules 2020 and the Central Consumer Protect
 | **TRADE-148** Returns with credit note; refund to source or the COD path | Consumer Protection (E-Commerce) Rules r.4(10) (refunds as prescribed by RBI); RBI PA Directions 2025 para 10(f) | Return path with refund to source or the COD path ([Post-order](checkout/post-order.md)) | Covered |
 | **NEG-190** No consent recorded automatically; an agent's autonomous acceptance is the principal's explicit choice | Consumer Protection (E-Commerce) Rules 2020 r.4(9) | `process.accept_confirmation`: an absent key is `ask`, never preselected, set only on the Trusted Surface; `autonomous` takes effect only with a `notice_route` ([Negotiation](negotiation/index.md#the-negotiation-mandate), [Trusted Surface](human-participants.md#ts-negotiation)) | Covered (see [Q-85](open-questions.md#q-85)) |
 | **NEG-191** No nagging: repeated and persistent interactions unless the user permits them; compliance and yearly self-audit from 01-01-2027 | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 ("nagging"); Consumer Protection (E-Commerce) Rules 2020 r.4(15) (from 01-01-2027) | A negotiation step-up only on an accept attempt; one pending per negotiation and one presented at a time per principal; a per-principal cap declared in `/.well-known/bacp` ([Negotiation](negotiation/index.md#step-up-to-the-trusted-surface)) | **Partial**: BACP sets no cap value |
+| **REQ-332** Decline as easy as approve; no confirm-shaming | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (3) | TS-2: the decline label is neutral, with no fear or shame wording, and the Trusted Surface never asks "Are you sure?" ([Requirements TS-1 to TS-6](human-participants.md#ts-requirements)) | Covered |
+| **REQ-333** No nagging after a decline or by a seller's repeated revisions | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (10); Consumer Protection (E-Commerce) Rules 2020 r.4(15) (from 01-01-2027) | The decline cool-off keyed on `(order_id, action, issue_id)` or `(session_id, kind)`, and the seller re-prompt cap per `(principal, issue_id)`, each published in `/.well-known/bacp` ([Limits on step-ups](human-participants.md#step-up-limits)) | Covered |
+| **REQ-334** No bait and switch: "out of stock", then a higher-priced product | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (7)(b) | A substitute item or seller at a higher total than the last BPP-signed quote needs a `confirm` step-up in human-present and human-not-present sessions ([Seller refusals and substitution](transports/beckn.md#seller-reasons)) | Covered |
+| **REQ-335** A seller does not refuse to take back defective goods; cancellation charges are symmetric | Consumer Protection (E-Commerce) Rules 2020 r.6(3) and r.4(8) | `return_refused` and `seller_cancelled` are `requires_buyer_review` with the `grievance_contact` and are never terminal ([Returns](checkout/post-order.md#returns)) | Covered |
+| **REQ-336** The complainant gets a copy of the complaint as recorded | Consumer Protection (E-Commerce) (Amendment) Rules 2026, G.S.R. 789(E) r.4(5) (from 01-01-2027) | `GET /evidence/{transaction_id}/summary`, which the grievance officer can fetch for the principal in her language ([Evidence summary](human-participants.md#evidence-summary)) | Covered |
 
 ## ONDC network policy {#ondc}
 
@@ -311,6 +324,7 @@ The Indian Contract Act, government procurement rules (GFR, DoE, GeM), and secto
 | **TRADE-146** Immutable public-procurement audit trail with comparison set | General Financial Rules 2017 (not checked against a primary text) | InstructionLog and RFQ comparison set kept for audit ([RFQ and Auctions](negotiation/rfq-and-auctions.md)) | Covered |
 | **NEG-192** A Dutch tick acceptance is a bid and the award completes the sale | Sale of Goods Act, 1930 s.64(2) | The award follows the auctioneer's chain order with a signed `tick_close` ([RFQ and Auctions](negotiation/rfq-and-auctions.md#dutch-auctions-perishables)) | Covered (see [Q-85](open-questions.md#q-85)) |
 | **NEG-193** A proposal may be revoked until the communication of its acceptance is complete as against the proposer | Indian Contract Act s.5 | A buyer's `withdraw` naming `accept_msg_hash`, until the seller's `on_init` receipt; free, not a cancellation ([Negotiation](negotiation/index.md#withdrawal-rejection-and-termination)) | **Partial**: No Beckn carrier for the withdrawal → [Q-22](open-questions.md#q-22) |
+| **REQ-337** Private service providers provide services in line with the accessibility rules made under s.40 | Rights of Persons with Disabilities Act, 2016, s.46 and s.89; Rajive Raturi v Union of India, 2024 INSC 858 (08-11-2024) | TS-3 (`modality`) is the BACP floor; accessibility beyond it stays a SHOULD with a conformance case ([Legal time bands](human-participants.md#time-bands)) | **Partial**: The mandatory accessibility standard is unsettled (not verified as of 18-10-2026) |
 
 ## BACP policy and DPI design patterns {#bacp-policy}
 

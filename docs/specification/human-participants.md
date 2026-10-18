@@ -28,15 +28,16 @@ Two kinds of human act outside a session:
   ([Q-11](open-questions.md#q-11)).
 - A **human support operator** of the agent operator accepts and releases a [handoff](#handoff). The operator's key
   is a registry key of role `support_operator`, and it signs only under the non-agent tag `bacp-handoff`
-  ([Signature tags](identity-and-signing.md#signature-tags)). How a registry enrols and revokes such keys is open
-  ([Q-64](open-questions.md#q-64)).
+  ([Signature tags](identity-and-signing.md#signature-tags)). Its registry record names the agent operator and one
+  person, with one key per person and no shared desk keys ([Registry lookup](discovery.md#registry-lookup);
+  [Q-64](open-questions.md#q-64), settled).
 
 Accessibility needs travel only as `Presentation.modality`. A participant record **MUST NOT** carry disability data.
 
 ## The Trusted Surface is a role {#trusted-surface}
 
 The Trusted Surface is a **role**, not an app. A payer PSP's app, a Mandate Manager's app, a PSP's IVR callback or an
-assisted counter run by a PSP or Mandate Manager is a Trusted Surface if it meets TS-1 to TS-5 below. In every case:
+assisted counter run by a PSP or Mandate Manager is a Trusted Surface if it meets TS-1 to TS-6 below. In every case:
 
 - it is non-agentic: no agent drives it, reads the factor the principal enters, or posts its events;
 - its events reach the gateway only at `POST /trusted-surface/events`, signed under tag `bacp-ts` with the registry
@@ -64,16 +65,58 @@ Mandate, so a session step-up has no payer PSP: only its Mandate Manager fetches
 the session's closed Payment Mandate (under split tender, of any of the session's closed Payment Mandates) under tag
 `bacp-ts`. Any other registry key gets `404 not_found`, never `403`, and nothing changes.
 
-### Requirements TS-1 to TS-5 {#ts-requirements}
+### Origins and delivery {#ts-origins}
 
-A Trusted Surface **MUST** meet all five:
+The registry record of every Mandate Manager and payer PSP ([`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json))
+carries the places where its Trusted Surface can be reached. The fields are optional unless stated, and a registry that
+cannot carry them is open ([Registry lookup](discovery.md#registry-lookup)):
+
+- **`ts_origins[]`**: `https` origins only (scheme, host and optional port, no path; RFC 6454). A `tel:` number is never an
+  origin.
+- **`ts_notify_url`**: an `https` endpoint for a content-free push.
+- **`ts_call_numbers[]`**: E.164 numbers from which the Trusted Surface calls. They are informative.
+- **`ts_languages[]`** and **`ts_modalities[]`**: the languages and modalities that the Trusted Surface claims, so that the
+  [language fail-safe](#ts-language-failsafe) can be tested.
+
+The gateway delivers a step-up by these rules:
+
+1. **Origin.** The gateway mints `trusted_surface_url` only on an origin in `ts_origins[]` of the step-up's signer
+   ([Step-up signers](#ts-signers)), and sets `StepUp.surface` to that signer's subscriber id so that a client can
+   show the host to the principal and check it against the subscriber. It accepts a Mandate Manager's mandate-approval
+   link only if it is an `https` URL on an origin of that Mandate Manager, or a rail deep link whose scheme the rail
+   defines, which opens the PSP's own app.
+2. **Content-free push.** If no origin of the signer conforms and the signer has a `ts_notify_url`, the gateway sets
+   `delivery: app_push` and sends a gateway-signed `POST` of `{step_up_id, expires_at}` to that URL, signed under RFC 9421
+   with a key in its profile's `keys`, as it signs a webhook ([Request signatures](identity-and-signing.md#request-signatures)).
+   The push carries no content, no link and no text. The Trusted Surface fetches the render by `step_up_id` as for any
+   step-up ([Render input](#ts-render)). The step-up carries no `trusted_surface_url` and `session.updated` carries no
+   link. The agent is not a party to the push.
+3. **Otherwise** the gateway answers `503 trusted_surface_unavailable`, `reason: no_conforming_origin`, with resolution
+   `requires_buyer_input`. The code is never `recoverable`, because a model reads a bare `503` as "retry"
+   ([Errors](errors.md#registry-transport)). With `reason: language_unavailable` or `reason: channel_not_allowed` the
+   error carries the session's `handoff_routes[]`.
+
+`ts_call_numbers[]` is a hint that an agent may speak ("this bank calls from these numbers"). It is never an
+authenticator, because caller identity can be spoofed. An agent that speaks it labels it "calls from" and always adds
+that the bank never asks for the PIN on a call it makes. Whether a PSP may publish the numbers it calls from is open
+([Q-63](open-questions.md#q-63)).
+
+An agent SHOULD check, before it shows the principal a `trusted_surface_url`, that the host of the URL is an origin of the
+subscriber in `StepUp.surface`, and an MCP client that does URL-mode elicitation shows that host as the MCP specification
+requires ([MCP and A2A](transports/mcp-a2a.md#mcp-results)).
+
+### Requirements TS-1 to TS-6 {#ts-requirements}
+
+A Trusted Surface **MUST** meet all six:
 
 - **TS-1. Signed and templated content only.** It renders a step-up only from the gateway-signed `ts_render` and its
   own templates. Text from a seller or other counterparty appears only in the labelled `counterparty_text` slot of
   `ts_render`, rendered as visibly labelled seller text (in quote marks or after a label such as "Seller's text:"),
   never interpolated into a template sentence and never as the Trusted Surface's own words.
 - **TS-2. Decline is as easy as approve.** Declining takes no more steps than approving; no option is preselected;
-  and expiry means decline.
+  and expiry means decline. The decline control carries a neutral label (for example "Decline" or "No"), with no fear,
+  guilt or shame wording, and the Trusted Surface never asks the principal to confirm a decline ("Are you sure?"). A
+  PIN is entered only as the [PIN rule](#ts-pin-rule) allows.
 - **TS-3. The principal's language and modality.** It renders in the principal's language (English or a language
   of the Eighth Schedule) and modality (`visual`, `audio` or `both`). Audio is read in full before the principal
   enters the factor. On every modality, before the factor, from its own templates and never from seller text, it
@@ -88,6 +131,44 @@ A Trusted Surface **MUST** meet all five:
   itself.
 - **TS-5. Record a Presentation.** It records a [`Presentation`](#presentation) for every approval and decline, and
   sends it inside its signed event.
+- **TS-6. Render a step-up only to the principal or payer it names.** A Trusted Surface renders a step-up only to the
+  principal (Mandate Manager) or payer (payer PSP) that the render names. Otherwise it shows nothing of the
+  content, and it posts nothing. A Mandate Manager's surface checks that `ts_render.mandate_id` names a mandate of
+  the principal who is logged in. A payer PSP's surface checks that `ts_render.payer_ref` equals the sha-256 over the
+  JCS form of `{step_up_id, payer_vpa}` that it computes for the payer who is logged in. Each signer binds what it can
+  check: the Mandate Manager knows the mandate, and the payer PSP knows only the payer. On a mismatch the Trusted
+  Surface shows only the fixed sentence below, in `ts_render.language` (or, if it cannot render that language, in
+  the principal's language), enters no factor and records a conformance failure for rule TS-6. On IVR the sentence
+  is read and the call ends without a factor being taken.
+
+| Language | Sentence |
+|---|---|
+| `en-IN` | "This request is for a different account. Do not enter anything here." |
+| `hi-IN` | "यह अनुरोध किसी दूसरे खाते के लिए है। यहाँ कुछ न डालें।" |
+
+The `hi-IN` sentence says, in English: "This request is for a different account. Do not enter anything here." A Trusted
+Surface in another language uses a fixed translation of the same sentence from its own templates. TS-6 closes the
+case in which a forwarded link opens on a surface that is logged in as someone else: TS-1 to TS-5 bind a surface to
+a signed render, never to the person. A principal who enters her own PIN on another person's request makes a
+two-factor-compliant debit, which is why the rule is a MUST.
+
+#### Language fail-safe {#ts-language-failsafe}
+
+A Trusted Surface that cannot render `ts_render.language` MUST NOT render another language
+unless the principal chooses it on the Trusted Surface (the approval then carries `Presentation.language_choice:
+principal_selected`). Otherwise it posts nothing, and the gateway answers `503 trusted_surface_unavailable` with
+`reason: language_unavailable` and the session's `HandoffRoute[]`. The gateway sets `ts_render.language` from the
+mandate, never from an agent's request. The DPDP Act, 2023, s.6(3) (the option of English or an Eighth Schedule
+language, from 13-05-2027) is cited as alignment, not as the source of the rule. A principal whose language no Trusted
+Surface serves gets a human route, not self-service.
+
+#### PIN rule {#ts-pin-rule}
+
+A UPI PIN is taken only on a PSP-operated surface: the PSP's app, or a call that the
+principal places to the PSP's published IVR number. It is never taken on a web page, and never on a call that the
+Trusted Surface places. This is BACP policy. That NPCI rules already say so is not verified as of 18-10-2026. A
+Trusted Surface that places a call can still confirm a non-money step-up by [voice](#presentation), and tells the
+principal in its own words to call the PSP's own number to enter a PIN.
 
 ### Render input: `ts_render` {#ts-render}
 
@@ -107,13 +188,31 @@ The session's `step_up` object carries it, and the Trusted Surface fetches it wi
   looks up the `step_up_id`, so that a `429` never depends on whether the step-up exists.
 
 The `trusted_surface_url` that the agent delivers carries only a reference to the step-up, never the content to show.
-The payload is described as data by the OpenAPI component `TsRender`.
+The payload is defined by [`ts-render.json`](https://bacp.dev/latest/schemas/ts-render.json), and the OpenAPI component `TsRender` refers to it.
+
+- **Typed JWS.** The JWS protected header of a `ts_render` MUST carry `typ: bacp-ts-render+jws` (RFC 8725 §3.11), and a
+  Trusted Surface MUST NOT render a JWS with any other `typ` or none. The name follows the `bacp-<name>+<suffix>`
+  convention of `bacp-conformance+jwt`. There is no `v` field: `typ` and the versioned schema identify the version.
+- **Per-kind rules.** The schema makes these rules testable: a `post_order` render carries `action` and `order_id` (an
+  order-less `LEDGER_ACK` has none) and no `session_id`; a session render carries `session_id` with its `checkout_hash`,
+  and a negotiation render carries `offer_hash`, never both hashes; a render with `covers[]` carries `basket[]` and no
+  `seller_name`; a `RETURN` carries `items[]`; and an issue action carries `issue_id`. `step_up_id` is at least 128 bits from a
+  cryptographically secure random source (`^stp_[A-Za-z0-9_-]{22,64}$`), opaque and never read aloud to or typed by a person.
+- **Must-understand is scoped.** A render MAY carry `render_required[]`, naming the fields that the principal must be
+  shown, for example `catalogue_disclosure`, `items` or `acceptance_revocation`. A Trusted Surface that does not understand a
+  name listed there renders nothing and posts nothing. It ignores an unknown field that is not listed, so that adding a
+  render field does not break every deployed Trusted Surface. The gateway refuses an approval whose
+  `presentation.renders` omits a listed name with `400 invalid_request` ([Presentation record](#presentation)).
+  `Presentation.renders` is the only extension point of `Presentation`.
 
 | Payload field | Content |
 |---|---|
 | `step_up_id`, `session_id` | The step-up and its session. `session_id` is absent for `kind: post_order`, which has no session. |
 | `kind`, `reason` | As in the `step_up` object ([Step-up](mandates.md#step-up)). |
+| `mandate_id` | REQUIRED. The mandate the step-up concerns: the session's open Checkout Mandate, or for `post_order` the mandate the order was placed under (for an order-less `LEDGER_ACK`, the mandate named in `actor.mandate_ref`). A Mandate Manager's surface renders the step-up only if the mandate belongs to the principal who is logged in ([TS-6](#ts-requirements)). |
+| `payer_ref` | REQUIRED exactly when [Step-up signers](#ts-signers) gives the step-up a payer PSP (an HNP session step-up with a planned open Payment Mandate, or a `post_order` step-up of an order with a closed Payment Mandate), and absent otherwise. The sha-256 over the JCS form of `{step_up_id, payer_vpa}`, where `payer_vpa` is taken from the Payment Mandate that makes the PSP a signer. A payer PSP's surface renders the step-up only if the hash equals the one it computes for the payer who is logged in ([TS-6](#ts-requirements)). |
 | `action`, `order_id`, `issue_id` | For `kind: post_order` only: the write the principal confirms, the order (absent for an order-less `LEDGER_ACK`), and for an issue action the issue ([Presence proof](#hp-proof)). `action` is exactly one of: `CANCEL`, `RETURN`, `RAISE_ISSUE`; for an issue action, the issue action's own `action` value from `POST /issues/{issue_id}/actions` (`INFO_PROVIDED`, `RESOLUTION_ACCEPTED`, `RESOLUTION_REJECTED`, `ESCALATED` or `CLOSED`); or a trade act `GRN`, `CRAC`, `MSMED_OBJECTION` or `LEDGER_ACK`. No other value is valid. |
+| `items[]`, `reason_code` | For `kind: post_order` only. On a `RETURN`, `items[]` (each `{id, quantity}`, at least one) and `reason_code` are REQUIRED. On a `CANCEL`, `reason_code` is REQUIRED and `items[]` is present only for a partial cancel. The gateway matches the write against them field by field ([Presence proof](#hp-proof)). The `summary` names each item and quantity from the gateway's templates, and an item name appears only in `counterparty_text[]`. |
 | `subject_hash` | REQUIRED for the trade acts `GRN`, `CRAC`, `MSMED_OBJECTION` and `LEDGER_ACK`: the sha-256 of exactly what the principal is shown. For a document, the JCS hash of the exact body; for a ledger entry, its `entry_hash`; for a ledger statement, the `head_hash` at `through_seq`. For the issue actions `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED`: the sha-256 over the JCS form of the issue's `resolution` as the gateway showed it in `summary`, absent when the issue has no `resolution`. Absent for every other action, including `ESCALATED`, `INFO_PROVIDED` and `CLOSED`. A trade-act render without `subject_hash` is invalid. The Trusted Surface shows how many times the `resolution` has been revised since the first step-up for this write. For `ESCALATED`, `INFO_PROVIDED` and `CLOSED` the Trusted Surface does not present a `resolution` as the thing confirmed; for `CLOSED` it states that closing does not accept a pending `resolution`. |
 | `subject_ref` | REQUIRED for a trade act: `{kind, id, through_seq?, payee?}`. `kind` is `order` or `document` for a `GRN`, `CRAC` or `MSMED_OBJECTION` (with `order_id`), and `ledger_entry` (`id` is the entry id; `payee` REQUIRED for a `payment` entry in `pending_ack` with `settlement_payee_unmatched`) or `ledger_statement` (`id` is the ledger id, `through_seq` REQUIRED) for a `LEDGER_ACK`, which has no `order_id`. For a GRN the Trusted Surface shows the delivery date and the accepted and rejected quantities with their enum reasons; for an MSMED objection, the objection text labelled as counterparty text; for a ledger entry, its amount, type and due date and, for a `payment` entry in `pending_ack` with `settlement_payee_unmatched`, the payee of the cited receipt, labelled as not one of the creditor's settlement accounts; for a statement, the count, the closing balance, the oldest unpaid date and every entry above `itemise_above`, counting only the entries the other party posted. |
 | `language` | The principal's language, as a BCP 47 tag (`LanguageTag`). |
@@ -135,6 +234,19 @@ The payload is described as data by the OpenAPI component `TsRender`.
 | `grievance_contact` | The agent operator's grievance officer contact. |
 | `expires_at` | As in the `step_up` object. |
 
+**Match code (`ts_match_code`).** A Trusted Surface and an agent MAY show a 4-digit code that both derive from the `content_hash` of the
+render: the first 4 bytes of the digest, as an unsigned big-endian integer, modulo 10000, written as 4 digits. The code is a derived display
+value, not a field of the render and not transmitted, and it is subject to these rules:
+
+- It is shown on an app or web delivery only. On IVR and `upi123pay` it is not read, so that the principal hears one number only, the voice
+  challenge ([Voice confirmation](#voice)).
+- It is never a voice challenge, never a control and never evidence. No gateway or verifier relies on it.
+- The text beside it says "A matching code does not make a link safe; only your bank's own app is safe" (`hi-IN`: "कोड मिलने का मतलब यह नहीं कि लिंक
+  सुरक्षित है; सिर्फ़ आपके बैंक का अपना ऐप सुरक्षित है।", which says the same in English). The wording is a draft, under review.
+- It is a MAY and not a SHOULD. A phishing page shows no code, so comparing two displays does not stop a phisher, and "the codes match, so it is safe"
+  is a compromised agent's best phishing line. It helps against a look-alike page that an honest agent relays and against a mix-up between concurrent
+  step-ups, and it adds nothing to the wire.
+
 Content rules for `ts_render` and every Trusted Surface template:
 
 1. The total is one figure, with the breakup reachable through its hash. Its fee lines are read separately
@@ -152,6 +264,12 @@ Content rules for `ts_render` and every Trusted Surface template:
    cancelled: cancelling after the contract is formed follows the cancellation terms.
 6. On a step-up whose render carries `catalogue_disclosure[]`, the Trusted Surface repeats what discovery showed, before
    the total, as [below](#ts-catalogue-disclosure).
+7. On an assisted session (`assisted_operators[]` present), before the factor, the Trusted Surface states from its
+   own templates that an assisted operator is present and that only the principal enters the factor (`hi-IN`:
+   "आपकी मदद एक सहायक कर रहे हैं। PIN सिर्फ़ आप डालें, किसी को न बताएँ।", in English: "An assistant is helping you.
+   Only you enter the PIN; tell it to no one."). The Trusted Surface does not read "unverified" aloud: the
+   [evidence summary](#evidence-summary) and the evidence bundle flag an operator reference as asserted, never
+   verified ([Assisted channel](#assisted)).
 
 | Value | `en-IN` | `hi-IN` |
 |---|---|---|
@@ -237,20 +355,20 @@ Trusted Surface showed, how, and what the principal did:
 
 | Field | Required | Meaning |
 |---|---|---|
-| `surface` | yes | The PSP or Mandate Manager whose surface presented it. Never the agent. |
+| `surface` | yes | The subscriber id of the PSP or Mandate Manager whose surface presented it, equal to the subscriber id of the registry key that signed the event. Never the agent. The gateway refuses an event whose `surface` is not the signer's subscriber id with `404 not_found`, and nothing changes. |
 | `channel` | yes | `Channel` (`app`, `ivr`, `upi123pay`, `assisted`, …). |
 | `language` | yes | `LanguageTag`, for example `hi-IN`. A language name such as `"Hindi"` is invalid. |
 | `modality` | yes | `visual`, `audio` or `both`. |
 | `content_hash` | yes | For a step-up, the sha-256 of the compact JWS `ts_render`. Otherwise the hash of the content the Trusted Surface rendered from its templates (for a mandate approval, the notice whose hash the ConsentReceipt carries in `notice.hash`). |
-| `content_ref` | yes | Where a party entitled to the evidence fetches that content to recompute the hash. |
+| `content_ref` | yes | Where a party entitled to the evidence fetches that content to recompute the hash. For a step-up, it names the entry of the bundle's `ts_renders[]` that holds the render, never the Mandate Manager and PSP only `GET /trusted-surface/step-ups/{step_up_id}`. |
 | `user_action` | yes | `tap_confirm`, `upi_pin`, `biometric`, `passkey`, `voice_confirm_plus_device` or `decline`. `biometric` is the principal's own biometric enrolled for the principal on the Trusted Surface device, never an operator's. |
 | `shown_at`, `acted_at` | yes | When it was shown and when the principal acted. |
 | `template_id` | no | The Trusted Surface template and its version. |
-| `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` or `plan` | The render fields beyond this version's base set that the Trusted Surface presented: `catalogue_disclosure` or `plan`, for example `["catalogue_disclosure", "plan"]`. |
+| `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` or `plan`, and on any step-up approval whose render lists a name in `render_required[]` | The render fields beyond this version's base set that the Trusted Surface presented: `catalogue_disclosure`, `plan`, `items` or `acceptance_revocation`, for example `["catalogue_disclosure", "plan"]`. It is the only extension point of `Presentation`. |
 | `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the `checkout_hash` of the order's closed Checkout Mandate. Never present with `offer_hash`. A `post_order` step-up for an order-less ledger act has no quote, and its approval carries none. |
 | `offer_hash` | on `negotiation.step_up.approved` | The offer a negotiation `confirm` step-up showed. Never present with `checkout_hash`. |
 | `plan_hash` | on `step_up.approved` when the render carries `plan` | The `plan.plan_hash` of the payment plan the content showed. |
-| `device_signature` | no | The principal's device signature over the JCS form of `{step_up_id, content_hash, acted_at}` (for a step-up) or `{content_hash, acted_at}`. |
+| `device_signature` | no | A JWS by a device key of the Trusted Surface over the JCS form of `{step_up_id, content_hash, acted_at}` (for a step-up) or `{content_hash, acted_at}`; its protected header carries the public key as `jwk`. Where the mandate lists `principal.device_jkt[]`, it MUST verify against a key whose RFC 7638 thumbprint is listed, or the gateway answers `403 presence_not_proven`. Where the mandate lists none, no verifier relies on it. It is never called an electronic signature under the Information Technology Act, 2000: whether it is an authentication technique under s.3A is not verified as of 18-10-2026 ([Q-86](open-questions.md#q-86)). |
 | `voice_evidence` | no | Audio and transcript hashes and the translation model, for a voice confirmation. |
 | `assisted_by` | on `assisted` | The `participant_id` of the assisted operator, taken by the Trusted Surface from `ts_render.assisted_operators[]`, never from the agent. |
 
@@ -269,6 +387,8 @@ state change:
 
 - that the event is signed by the step-up's Mandate Manager or payer PSP ([Step-up signers](#ts-signers)); any other
   registry key gets `404 not_found`, never `403`, and nothing changes;
+- that `presentation.surface` is the subscriber id of the signing key, or refuse the event with `404 not_found`
+  (nothing changes);
 - that `presentation.content_hash` is the sha-256 of that step-up's `ts_render`, or refuse the event with
   `403 ts_render_mismatch`;
 - on `step_up.approved`, that `presentation.checkout_hash` equals the session's current `checkout_hash` (for a
@@ -279,9 +399,16 @@ state change:
   that offer's value; otherwise it refuses the event with `403 ts_render_mismatch`, and nothing is sent;
 - on `step_up.approved` for a `ts_render` that carries `catalogue_disclosure[]`, that `presentation.renders` contains
   `catalogue_disclosure`; otherwise it refuses the event with `400 invalid_request` and nothing changes;
+- on a step-up approval for a `ts_render` that carries `render_required[]`, that `presentation.renders` contains every name
+  listed there; otherwise it refuses the event with `400 invalid_request` and nothing changes;
 - on `step_up.approved` for a `ts_render` that carries `plan`, that `presentation.renders` contains `plan`
   (otherwise `400 invalid_request`, nothing changes) and that `presentation.plan_hash` equals the render's `plan.plan_hash`
   (otherwise `403 ts_render_mismatch`);
+- where the mandate carries a [`confirmation_floor`](mandates.md#confirmation-floor), that `presentation.user_action` is not below its `min_user_action`
+  and `presentation.channel` is in its `channels_allow`; otherwise it refuses the event with `403 presence_not_proven` at `$.presentation.user_action` or
+  `$.presentation.channel` and nothing changes;
+- where the mandate lists `principal.device_jkt[]`, that `presentation.device_signature` verifies against a key whose thumbprint is
+  listed; otherwise it refuses the event with `403 presence_not_proven` and nothing changes;
 - that `presentation.acted_at` is not after the step-up's `expires_at`, or treat the step-up as expired
   (`step_up_expired`, no money moves);
 - on an assisted session, the [assisted channel](#assisted) rules.
@@ -291,6 +418,35 @@ not apply it. After the handoff is released it applies a held approval only if t
 `checkout_hash` still equals the session's ([Human handoff](#handoff)). For a summary step-up the re-check is per leg:
 a held approval applies to a released session only if that session's `covers[]` entry still equals its current
 `checkout_hash`, payee and amount.
+
+### Voice confirmation {#voice}
+
+`user_action: voice_confirm_plus_device` is a confirmation by voice or keypad on a call. Here "device" means the number or
+call leg that the Trusted Surface holds for the principal or payer, not a device key. The rules:
+
+- **The Trusted Surface draws the challenge.** It draws a challenge of at least 4 digits from its own random source,
+  on its own call leg, single-use, for one step-up. The challenge is never in `ts_render`, `StepUp`, `StepUpStatus` or
+  anything else that an agent sees, because an agent that bridges the call would know it. No field of the render derives it.
+- **The answer is bound in the event.** `voice_evidence.challenge_hash` is the sha-256 over the JCS form of
+  `{step_up_id, content_hash, challenge}`, and is REQUIRED with this `user_action`. The gateway cannot recompute it:
+  it is evidence, and the Trusted Surface's draw of an unpredictable value is a Trusted Surface conformance case, not a
+  gateway check. A challenge that is guessed after the call from the hash is harmless, because it is single-use and
+  ends with the call.
+- **Keypad equals speech.** The principal may answer by DTMF or by speech, with the same steps and the same weight, so that
+  a feature phone keeps its path. No rule depends on speech recognition of the challenge.
+- **Which calls count.** Voice counts only on a call that the Trusted Surface placed to the number it holds for the
+  principal or payer. It also counts when the principal dialled the Trusted Surface's published number from that
+  number, but only together with the Trusted Surface's own challenge, because caller identity can be spoofed. The number
+  is held by the Trusted Surface and is never in the mandate or the render.
+- **Never money.** The gateway refuses `voice_confirm_plus_device` on a `rail_auth` step-up, and on any `confirm`
+  step-up whose approval releases a debit, with `403 presence_not_proven` at `$.presentation.user_action`. Voice
+  confirms only what moves no money (a cancel, an issue acceptance). RBI/2025-26/79 paras 5(a) and 6(b) and UPI Consolidated
+  Circular v1.0 para 19.2.2 settle this for money ([Q-13](open-questions.md#q-13)). In human-not-present (HNP) the debit rests on the mandate's authentication
+  model, so the refusal there is BACP policy implementing Q-13, not an RBI requirement. A PIN entered over a UPI 123PAY
+  IVR stays `upi_pin`.
+- **No PIN on a Trusted Surface call.** A call that the Trusted Surface places never takes a UPI PIN ([PIN rule](#ts-pin-rule)).
+- **Agent side.** An agent's own voice channel MUST NOT stay on, conference or bridge the call leg of the Trusted Surface.
+  This is an agent conformance disclosure check and cannot be observed on the wire.
 
 ## Multi-seller basket on the Trusted Surface {#multi-seller}
 
@@ -341,10 +497,17 @@ evidence and cannot approve for the principal.
 - An assisted operator who reads discovery results aloud uses the same fixed sentences as an agent
   ([Disclosure phrases](#disclosure-phrases)).
 
-The Information Technology Act, 2000, s.11(c) attributes an electronic record to the originator when it is sent "by
+`assisted_by` and `Participant.ref` are attribution, never authentication. A `ref` is namespaced `scheme:id`, where `scheme` is
+`csc_vle`, `bank_bc`, `ondc_np_agent` or `other`, and the gateway sets `Participant.ref_verification` to `asserted` or `verified`. The gateway
+writes `verified` only when it can name the verifying registry, and none exists today ([Q-62](open-questions.md#q-62)), so `asserted`
+is the only value in practice. An agent that supplies `verified` gets `400 invalid_request`. The Trusted Surface does not read
+"unverified" aloud ([content rule 7](#ts-render)); the evidence summary and the bundle flag the reference as asserted.
+
+The Information Technology Act, 2000, s.11(b) attributes an electronic record to the originator when it is sent "by a person who had
+the authority to act on behalf of the originator in respect of that electronic record", and s.11(c) when it is sent "by
 an information system programmed by or on behalf of the originator to operate automatically"
 ([India Code text](https://www.indiacode.nic.in/bitstream/123456789/13116/1/it_act_2000_updated.pdf)). Whether an
-operator's tap could be attributed to the principal under it is a question for counsel, and whether voice, tap or
+operator's tap could be attributed to the principal under either is a question for counsel ([Q-86](open-questions.md#q-86)), and whether voice, tap or
 operator-relayed confirmation is valid consent is open ([Q-13](open-questions.md#q-13)). Who certifies assisted
 operators is open ([Q-62](open-questions.md#q-62)).
 
@@ -435,7 +598,8 @@ Example disclosure in Hindi ("You are talking to an AI assistant. Press 0 to tal
 A principal can ask for a human at any time, including after the mandate is revoked.
 
 1. The agent calls `POST /sessions/{session_id}/handoff` (tag `bacp-browse`) with `action: request` and one of the
-   session's `ai_disclosure.handoff_routes` (no route when the session lists none). The gateway **MUST** accept it in
+   session's `ai_disclosure.handoff_routes` (no route when the session lists none). The agent picks a route whose
+   `languages` include the session's language, where one exists, and otherwise says so to the principal. The gateway **MUST** accept it in
    every session state and whatever the mandate's status, and returns `201`.
 2. An open session moves to status **`human_handoff`**. While it is there, the gateway refuses `PUT` and `complete`
    from the agent with `409 session_state_conflict` at `$.status`, and holds any `step_up.approved` event without
@@ -443,15 +607,23 @@ A principal can ask for a human at any time, including after the mandate is revo
    `handoff`.
 3. A human support operator accepts with `action: accept`, signed with a registry key of role `support_operator` under
    tag `bacp-handoff`. Only then does the gateway set `handoff.accepted_by` (that key's id) and
-   `handoff.accepted_at`. An acceptance signed by any other key or under any other tag leaves the handoff requested,
-   never connected.
+   `handoff.accepted_at`. The gateway reads the key's [registry record](discovery.md#registry-lookup), which names the
+   agent operator (`operator_id`) and the one person who holds the key, and answers an acceptance as follows, each
+   time without changing the handoff:
+    - a key whose registry role is not `support_operator`, or a signature under any other tag: `401 signature_invalid`;
+    - a `support_operator` key of another agent operator than the session's: `404 not_found`, so that the key has no
+      standing and the answer is no oracle for which sessions exist;
+    - an `accept` while `accepted_by` is already set: `409 session_state_conflict` at `$.handoff.accepted_by`.
 4. The handoff ends with `action: release`. The gateway accepts a release signed under `bacp-handoff` by the
    `accepted_by` key, or signed by the agent under `bacp-browse` only while `accepted_by` is absent (withdrawing an
-   unanswered request). A release by any other key, including another support operator's key, leaves the session in
-   `human_handoff`. On release a session in `human_handoff` returns to `incomplete`, the gateway sets
+   unanswered request). A release leaves the session in `human_handoff`, changes nothing and is answered as follows:
+   a key whose role is not `support_operator`: `401 signature_invalid`; another agent operator's `support_operator` key:
+   `404 not_found`; a key of the same agent operator that is not `accepted_by`, or an agent's release after acceptance:
+   `409 session_state_conflict` at `$.handoff.accepted_by`. On release a session in `human_handoff` returns to `incomplete`, the gateway sets
    `handoff.ended_at`, and then applies a held approval only if its step-up has not expired and its `checkout_hash`
    still equals the session's.
-5. `accept` and `release` are each one **compare-and-set** on `handoff.accepted_by` and `handoff.ended_at`, so that
+5. The operator binding in steps 3 and 4 and this restart ship together, because each restart is a fresh chance for
+   a competitor's key to accept first. `accept` and `release` are each one **compare-and-set** on `handoff.accepted_by` and `handoff.ended_at`, so that
    they are linearisable on any instances. An `accept` sets `accepted_by` only while both are absent. An agent's
    `release` sets `ended_at` only while `accepted_by` is still absent; if an `accept` won, the release changes nothing.
    An `accept` after `ended_at` is set gets `409 session_state_conflict` at `$.status` and changes nothing. A `request`
@@ -478,23 +650,42 @@ principal proves it on the Trusted Surface, through a step-up of kind `post_orde
 1. A post-order write with `presence: HP` and no `hp_proof` gets `403 presence_not_proven`. The error carries
    `step_up`, a `StepUp` with `kind: post_order` and `reason: presence_proof`, whose `ts_render` names the write:
    `action`, `order_id` and, for an issue action, `issue_id` and, for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED`,
-   `subject_hash`; for a trade act, `subject_ref` and `subject_hash`. Nothing is sent to the network. The
+   `subject_hash`; for a trade act, `subject_ref` and `subject_hash`; for a `RETURN`, `items` and `reason_code`, and for a
+   `CANCEL`, `reason_code`. Nothing is sent to the network. The
    gateway keeps at most one pending `post_order` step-up per `(subject_ref, action)` (for an order write, per `(order_id, action, issue_id)`): a step-up is pending
    until it expires, is declined, or its proof is consumed. A repeat of the refused write returns the same
    `step_up_id` and `ts_render`, except that for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED` on an issue whose
    `resolution` no longer hashes to the pending step-up's `subject_hash` the gateway voids that step-up and creates a
    new one. A voided step-up is no longer pending: the gateway refuses every event for it with `404 not_found` and
-   nothing changes, and serves its `ts_render` to no one. The gateway rate-limits the creation of `post_order`
-   step-ups per agent and answers an excess with `429`; a step-up created to replace one voided because the
-   counterparty revised the `resolution` is not counted against the agent; replacements are limited per issue instead, and an excess gets `429` without voiding the pending step-up.
+   nothing changes, and serves its `ts_render` to no one. The creation of `post_order` step-ups is limited per
+   `(agent, principal)` and per `order_id`, a replacement for a step-up voided because the counterparty revised the
+   `resolution` is limited per `(principal, issue_id)` instead, and a principal who declined is not asked again at
+   once ([Limits on step-ups](#step-up-limits)). A step-up reaches its final state through the status read described
+   in step 3.
 2. The principal confirms on the Trusted Surface, which posts the usual `step_up.approved` event with its
    `Presentation`. The gateway checks it as for any step-up approval.
 3. The agent retries the write with `hp_proof{ts_event_hash, step_up_id}`: the `post_order` step-up's id and the
    sha-256 over the JCS form of its signed `step_up.approved` event. Both fields are REQUIRED. The retry uses a **new**
    `Idempotency-Key`: the refused request and the retry differ in body, so the same key gets `422 idempotency_conflict`,
    whose `resolution` is `recoverable` and whose message names a new key ([Idempotency](transports/rest.md#idempotency)).
+   The agent learns the `ts_event_hash` from the **step-up status**, never from the Trusted Surface: `GET /step-ups/{step_up_id}`
+   (tag `bacp-browse`, a different path from the render fetch of the Mandate Manager and PSP) returns `StepUpStatus`
+   `{step_up_id, kind, status, ts_event_hash?}`, where `status` is `pending`, `approved`, `declined`, `expired`,
+   `voided` or `superseded`, and `ts_event_hash` is present exactly when `status` is `approved`. The `step_up.updated`
+   webhook carries the same object. Only the agent credential whose request created the step-up may read it: any other
+   caller gets `404 not_found`, including another credential of the same agent operator. A step-up the gateway voided
+   after a counterparty's revision reads `voided`, and a write that cites it gets `403 presence_not_proven` with a new
+   `Error.step_up`.
 4. The gateway accepts the proof only for the `action`, `order_id` and `issue_id` named in that step-up's `ts_render`.
-   A proof issued for another order, action or issue gets `403 presence_not_proven`. For `RESOLUTION_ACCEPTED` and
+   A proof issued for another order, action or issue gets `403 presence_not_proven`. For a `RETURN` it also matches the
+   write field by field against the `ts_render`: the `items`, as a multiset of `{id, quantity}`, and the `reason_code`
+   (a `CANCEL` matches its `reason_code`, and its `items` where the render carries them). A write that differs gets
+   `403 presence_not_proven` and sends nothing to the network. No new hash travels on the wire: the render is signed,
+   so `content_hash` already covers both fields. The gateway's pending key for a `RETURN` adds a digest of
+   `{items sorted by id, reason_code}`, so that separate returns of milk and of atta do not collide; the digest is not a wire
+   field. The gateway consumes a `RETURN` proof only if no other approved `RETURN` proof of the same order overlaps it in
+   items; a second, overlapping proof gets `403 presence_not_proven`. While a `RETURN` step-up of an order is pending, the
+   gateway creates no second `RETURN` step-up of that order whose items overlap it: the repeat returns the existing one. For `RESOLUTION_ACCEPTED` and
    `RESOLUTION_REJECTED` the gateway also hashes the issue's current `resolution` when the write arrives and refuses
    the proof with `403 presence_not_proven` if that hash is not the `ts_render`'s `subject_hash` (or if a `resolution`
    exists where none was shown): a remedy the seller revised after the principal confirmed needs a new confirmation.
@@ -510,6 +701,39 @@ principal proves it on the Trusted Surface, through a step-up of kind `post_orde
    `403 presence_not_proven`.
 
 A human-present `complete` is proven by the principal's signatures on the closed mandates and needs no `hp_proof`.
+
+### Limits on step-ups {#step-up-limits}
+
+The gateway publishes every figure below in its profile (`step_up_limits` in [`/.well-known/bacp`](discovery.md#profile-document)),
+as a count over a window in the style of `negotiation.step_up_cap`. BACP sets no number: they are the gateway's own design
+values and are never presented as external limits. A gateway that declares none is tested against the limit that the
+conformance fixture sets.
+
+- **Creation.** The creation of `post_order` step-ups is counted per `(agent, principal)` and per `order_id`. A replacement
+  that the gateway creates after a counterparty's revision is not counted here. An excess gets `429` with `Retry-After`.
+  One principal's exhausted quota never blocks another principal of the same agent, whose write still gets
+  `403 presence_not_proven` with a `step_up`.
+- **Render fetch.** The `ts_render` fetch is counted per caller key before the step-up is looked up, as before, and
+  also per `(caller key, step_up_id)` after the standing check. An excess gets `429` with `Retry-After`.
+- **Decline cool-off.** Only an explicit `step_up.declined` starts it. Expiry does not, so a principal who was away has a
+  way back (for the step-up itself, expiry still means decline, [TS-2](#ts-requirements)). For a `post_order` step-up the key is `(order_id, action, issue_id)`, and for a session step-up it is
+  `(session_id, kind)`. Inside the published window, a new step-up for that key is refused with
+  `409 session_state_conflict` and `Retry-After` set to the time left, with no new step-up and no prompt. There is no
+  escape when the subject changes: a changed `reason_code` or quantity does not reopen the key, because an agent could
+  then flip a field to dodge the cool-off. A principal who declined by mistake waits out the window or uses the
+  grievance route. The Trusted Surface never asks the principal to confirm a decline, and the decline label is neutral
+  ([TS-2](#ts-requirements)). The basis is the dark-pattern guideline on "nagging" (Annexure 1, item 10) and, from
+  01-01-2027, Rule 4(15) of the E-Commerce Rules.
+- **Seller re-prompt cap.** A revision of an issue's `resolution` voids the pending step-up and would create a
+  replacement. Replacements are counted per `(principal, issue_id)` under the published limit. Past it, the gateway
+  creates no new step-up, answers the agent `409 session_state_conflict`, shows the principal no prompt, and the issue goes
+  to the grievance route. Each render of a replacement carries the template sentence "the seller has changed this offer
+  N times" (`hi-IN`: "विक्रेता ने यह प्रस्ताव N बार बदला है।"; draft wording), never seller text. Without the cap a
+  seller could revise again and again until a tired principal accepts a worse remedy. Past the cap a principal can no
+  longer accept a later, better offer in the flow and uses the grievance route.
+
+`Retry-After` is REQUIRED on each of these `429` and `409` responses. The `hi-IN` sentence says, in English: "The seller has
+changed this offer N times."
 
 ## Seller-side and trade acts {#trade-acts}
 
@@ -547,7 +771,7 @@ and an agent **MUST NOT** load a counterparty `DocumentRef.uri` into model conte
 
 ## Legal time bands {#time-bands}
 
-The rules on this page rest partly on law in force and partly on law with a later start date. As of 17-10-2026:
+The rules on this page rest partly on law in force and partly on law with a later start date. As of 18-10-2026:
 
 | From | Instrument | What it requires | Where BACP answers it |
 |---|---|---|---|
@@ -555,9 +779,12 @@ The rules on this page rest partly on law in force and partly on law with a late
 | In force | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 | Apply to platforms, advertisers and sellers; interface interference among the listed patterns | TS-1, TS-2, TS-4 |
 | In force | RBI AFA Directions 2025 (authentication mechanisms for digital payment transactions) | Authentication validates the credentials of the customer who originates the payment instruction | Principal's own factor; the [assisted](#assisted) rule goes further as BACP policy |
 | In force | Information Technology Act, 2000, s.11(c) ([India Code](https://www.indiacode.nic.in/bitstream/123456789/13116/1/it_act_2000_updated.pdf)) | A record sent "by an information system programmed by or on behalf of the originator to operate automatically" is attributed to the originator | `Presentation` and signed Trusted Surface events in the bundle |
-| In force | Rights of Persons with Disabilities Act, 2016, s.46 (not in the source corpus; not verified as of 17-10-2026) | Private service providers follow the accessibility rules made under s.40 | TS-3 (`modality`) |
+| In force | Rights of Persons with Disabilities Act, 2016, s.46 and s.89 | "The service providers whether Government or private shall provide services in accordance with the rules on accessibility formulated by the Central Government under section 40 within a period of two years from the date of notification of such rules" (s.46). A contravention is punishable with a fine up to ₹10,000 for the first and ₹50,000 to ₹5 lakh for a later one (s.89) | TS-3 (`modality`); Trusted Surface accessibility beyond `modality` stays a SHOULD, with a conformance case |
+| In force | Rajive Raturi v Union of India, 2024 INSC 858, 08-11-2024 | Rule 15(1) of the RPwD Rules was held ultra vires; the Union was directed to delineate mandatory rules, as s.40 requires, within three months of the judgment. Whether such rules have since been notified is not verified as of 18-10-2026 | The mandatory accessibility standard for Trusted Surfaces is unsettled; TS-3 stays the BACP floor |
+| In force | G.S.R. 359(E), 10-05-2023 | Inserted a requirement that websites, apps and ICT-based public facilities and services comply with IS 17802 (Part 1) 2021 and (Part 2) 2022, into the sub-rule that Raturi later held ultra vires. A draft S.O. 3962(E) of 16-07-2026 that is reported to propose IS 17802 is not verified as of 18-10-2026 | Informative only |
 | 13-11-2026 | DPDP Act s.6(9) and DPDP Rules r.4 | Consent Managers registered with the Board; records of consents given, denied or withdrawn | `captured_via.presentation`; [Q-16](open-questions.md#q-16) |
 | 01-01-2027 | Consumer Protection (E-Commerce) (Amendment) Rules, 2026, G.S.R. 789(E) | Complainant gets a copy of the complaint as recorded; compliance with the dark-pattern guidelines and a yearly self-audit | [Evidence summary](#evidence-summary); TS-2, TS-4 |
+| 13-05-2027 | DPDP Act s.9(1) | Verifiable consent of the lawful guardian of "a person with disability who has a lawful guardian" | A **Proposed** participant role `lawful_guardian` with no disability data in the participant record and no `ACTING_FOR` or assisted-operator stand-in for the guardian's consent; no schema in this version |
 | 13-05-2027 | DPDP Act ss.5(3), 6(3), 6(4), 6(10); DPDP Rules, 2025, r.3(c) and r.9 | Notice and consent request with the option of English or an Eighth Schedule language; the consent request gives the contact of the Data Protection Officer or an authorised person; the notice describes how to exercise rights and complain; that person's business contact information is published; withdrawal as easy as consent; the Data Fiduciary proves that notice was given and consent obtained | TS-3, TS-5; `ts_render` content rule 2; Trusted Surface events in the [bundle](evidence.md#bundle) |
 
 The mapping to requirement ids is on [Regulatory Mapping](regulatory-mapping.md).
@@ -595,7 +822,14 @@ complainant's language. The profile **`in.bacp.evidence.summary.1`** is an infor
     - impossible: "Both systems show they received the other's message first, so the record cannot be relied on and is treated as contested." / "दोनों सिस्टम दर्शाते हैं कि उन्हें दूसरे का संदेश पहले मिला, इसलिए रिकॉर्ड पर भरोसा नहीं किया जा सकता और इसे विवादित माना गया।"
 - It is **never evidence**. A reviewer verifies the bundle, not the summary.
 
-How a summary is requested over REST is not defined in this version. A gateway **MAY** offer one.
+**Requesting a summary.** `GET /evidence/{transaction_id}/summary?language=` (tag `bacp-browse`; MCP tool
+`bacp_evidence_summary_get` with the arguments `transaction_id` and `language`) returns `EvidenceSummary`:
+`{profile, bundle_hash, language, template_id, text, items[]}`, each item `{ref, verified}`. The callers are the callers
+of the bundle ([Access](evidence.md#bundle-access)), each served only the summary of the bundle built for it, so that a
+seller or a payer PSP gets no other seller's lines. The grievance officer named in the operator's `grievance_contact` may
+also fetch it, acting for the principal: the complainant's copy of the complaint, which G.S.R. 789(E) r.4(5) requires from
+01-01-2027, then reaches a principal who has no API client. Anyone else gets `403 evidence_forbidden`. A gateway **MAY**
+offer the endpoint; the summary is never evidence.
 
 ## Open questions {#open-questions}
 

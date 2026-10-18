@@ -150,7 +150,8 @@ the IGM issue's description tags. The mirror MUST carry at least `presence`, `ma
 strips `context.bacp`. It MAY also carry `acting_for` (as `acting_for.kind`, `acting_for.gstin` and
 `acting_for.display_name`), `operator_name` and `operator_grievance_contact`. `acting_for` names whom the agent acts
 for. The gateway sends `acting_for.gstin` and `acting_for.display_name`, in `context.bacp` and in the mirror, only
-when the mandate's `data_scopes` include `ACTING_FOR`; without that scope it omits both tags. A sole proprietor's
+when the mandate's `data_scopes` include `ACTING_FOR` and a per-seller ConsentReceipt of that seller lists `ACTING_FOR` in its
+`data_items[]`; without both it omits both tags. A sole proprietor's
 GSTIN or name is personal data ([Human participants](../human-participants.md#ai-disclosure)).
 
 ```json
@@ -201,6 +202,56 @@ normalisation.
 is the integer part times 100 plus the fractional part right-padded to two digits, computed on the string and never in
 floating point. Any other form (a JSON number, a sign, an exponent, a leading zero, more than two decimals) makes the
 field absent, and the gateway reports `prior_price_invalid` when the field was `prior_price`.
+
+### Seller refusals, requests for confirmation and substitution {#seller-reasons}
+
+A seller can say why it refuses, and can ask for the buyer's own confirmation, only in a BPP-signed message. The gateway reads
+each reason from the signed message and from nowhere else, and seller prose reaches the principal only in the labelled
+`counterparty_text` slot.
+
+**The seller asks for confirmation.** A BPP MAY send the tag `seller_confirmation` in the `bacp` tag group of a BPP-signed `on_select`
+or `on_init`, with a value of `first_cod_order`, `above_seller_threshold`, `new_credit_line`, `credit_limit_exceeded` or `other`.
+
+- The gateway, never the agent, turns it into a `confirm` step-up with reason `seller_confirmation` and a Trusted Surface template
+  sentence for the value (draft wording under review, with a fixed translation for other languages):
+
+    | Value | `en-IN` | `hi-IN` |
+    |---|---|---|
+    | `first_cod_order` | "The seller asks you to confirm this order: it is your first cash-on-delivery order with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह इस विक्रेता के साथ आपका पहला कैश-ऑन-डिलीवरी ऑर्डर है।" |
+    | `above_seller_threshold` | "The seller asks you to confirm this order: it is above the amount the seller wants you to confirm." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह उस राशि से ऊपर है जिस पर विक्रेता आपकी पुष्टि माँगता है।" |
+    | `new_credit_line` | "The seller asks you to confirm this order: it opens a new credit line with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: इससे इस विक्रेता के साथ उधार की नई सीमा खुलती है।" |
+    | `credit_limit_exceeded` | "The seller asks you to confirm this order: it is above your credit limit with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह इस विक्रेता के साथ आपकी उधार सीमा से ऊपर है।" |
+    | `other` | "The seller asks you to confirm this order." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें।" |
+
+  The `hi-IN` sentences say, in English, what the `en-IN` sentences say.
+- At most one such step-up is raised per `checkout_hash`. It is not counted against the agent, and it is counted in the
+  per-principal step-up cap of [Negotiation](../negotiation/index.md#step-up-to-the-trusted-surface).
+- Its resolution is `requires_buyer_review`, the same word as UCP's message resolution ([UCP checkout projection](ucp-checkout.md)).
+- A confirmation that the seller asks for at `on_init` through the `bacp.confirmation` group without having declared it at discovery
+  stays a `constraint_unresolved` step-up ([Seller confirmation profile](../discovery.md#principal-confirmation)).
+
+**The seller refuses.** `bpp_nack` carries an optional `seller_reason{code, beckn_code}` that the gateway sets only from the BPP-signed
+NACK ([Errors](../errors.md#error-object)). `code` is `item_unavailable`, `quantity_reduced`, `price_changed`, `not_serviceable`,
+`store_closed`, `agent_orders_not_accepted`, `terms_mismatch` or `other`, and a Beckn code that the gateway cannot map gives `other`.
+Which ONDC code maps to which value is for ONDC to answer: the code 40002 is unlabelled in the ONDC build file (not verified as of
+18-10-2026).
+
+**Substitution.** `bpp_nack` is `recoverable` only for a retry of the same item at a total no higher than the one that the principal
+was shown.
+
+- In a human-present session, a substitute item or seller at a higher total than the quote that the principal saw needs a new
+  `confirm` step-up, with its own `ts_render`.
+- In a human-not-present session the same rule applies: a substitute item or seller at a higher total than the last BPP-signed quote of the
+  session needs a `confirm` step-up (reason `constraint_unresolved`), and no money moves until the principal decides. A substitute at
+  or below that quote, within the mandate's constraints, is what the principal authorised. The `seller_reason` appears in the order
+  notice and in the receipt, in the principal's language. A higher-priced substitution is exactly where a principal who is not
+  present needs protection.
+- The basis is the dark-pattern guidance on bait and switch (Dark Patterns Guidelines, 2023, Annexure 1 (7), illustration (b):
+  "out of stock", then a higher-priced product).
+
+**After the order.** A seller's `RETURN_REJECTED` and an unsolicited `on_cancel` produce the messages `return_refused` and
+`seller_cancelled`, each with resolution `requires_buyer_review` and the `grievance_contact`. Neither is ever terminal
+([Errors](../errors.md#registry-session)).
 
 ### Charge recipient mapping {#recipient-mapping}
 

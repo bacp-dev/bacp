@@ -1,7 +1,8 @@
 {
-  "step_up_id": "stp_01HZYP",
+  "step_up_id": "stp_01HZYPq8W3nK5vRt7YcLm2",
   "kind": "post_order",
   "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "action": "GRN",
   "order_id": "ORD-ANNA-000007",
   "language": "hi-IN",
@@ -28,5 +29,6 @@
       "label": "Reason on line L1 (author's text)",
       "text": "20 sacks torn at the seam"
     }
-  ]
+  ],
+  "payer_ref": "sha-256:K--ciesPMEh5-AskOBsrSW3p1bNLmdpsrk0UH6mIIUE"
 }

@@ -210,7 +210,9 @@ Manager** (MM) issues it.
       anything reaches the rail, so the principal's PSP is never asked to create a block that the
       MM would then refuse.
 3. Otherwise the gateway returns `202` with a `MandateHandle` in `PENDING`, carrying a
-   `trusted_surface_url` deep link. The link expires after at most 15 minutes.
+   `trusted_surface_url` deep link, which is an `https` URL on an origin of the issuing Mandate Manager or a rail deep link
+   that opens the payer PSP's own app ([Origins and delivery](human-participants.md#ts-origins)). The link expires after
+   at most 15 minutes.
 4. The principal opens the link. The Trusted Surface shows the notice in the principal's language
    (English or a language of the Eighth Schedule): limits, categories, data items, recipient class,
    withdrawal route and grievance route, and the [operator compensation](#operator-compensation): what the
@@ -449,6 +451,7 @@ never against agent claims.
 | `cod_max_open_orders` | integer ≥ 0 | Maximum open COD orders the agent may hold HNP. Where a negotiation mandate also sets a cap, the stricter wins. | `403 cod_open_orders_cap` |
 | `credit_funding_allowed` | boolean | A credit-funded handler (BNPL, cardless EMI, a credit line) is refused unless this is `true`. | `403 credit_funding_not_allowed` |
 | `convenience_fees` | `{allowed, max_per_order?}` | In a human-not-present checkout, the agent may pay a convenience fee only when `allowed` is `true` and the total of the order's `convenience` and `other_charge` lines that apply to the handler being paid is at or below `max_per_order` (when it is set). With `allowed: false`, `max_per_order` MUST be absent. | `confirm` step-up, reason `constraint_unresolved`, before any money moves |
+| `confirmation_floor` | `{min_user_action?, channels_allow?}` (at least one member) | The principal's standing floor on how an approval is given on the Trusted Surface ([Confirmation floor](#confirmation-floor)). | `403 presence_not_proven` at `$.presentation.user_action` or `$.presentation.channel`; `503 trusted_surface_unavailable` (`channel_not_allowed`) |
 
 COD and credit funding are described in [Credit and Split Tender](payments/credit-and-split-tender.md).
 
@@ -462,6 +465,26 @@ so a verifier that does not know the key fails closed
 ([Fail-closed handling](#unknown-constraints)). Whether disclosure through the Trusted Surface meets para 7.5 is
 open ([Q-78](open-questions.md#q-78)). The check runs at `complete` against the handler actually debited, including after
 a `rail_fallback`. The existing split-order trigger applies when an order is split to stay under `max_per_order`.
+
+### Confirmation floor {#confirmation-floor}
+
+`confirmation_floor` records how the principal wants approvals to be given, as one object with two optional members and at least one
+present. It is a constraint, because only `constraints` fails closed: a gateway that does not know it refuses the mandate
+([Fail-closed handling](#unknown-constraints)), so a principal who sets a floor cannot use a gateway that has not upgraded.
+
+- `min_user_action` is the weakest `user_action` that the principal accepts. The ladder is `tap_confirm`, then
+  `voice_confirm_plus_device`, then `upi_pin`, `biometric` and `passkey`, which are equal. Voice never releases money
+  ([Voice confirmation](human-participants.md#voice)), so the ladder bites on non-money `confirm` and `post_order` approvals.
+- `channels_allow` lists the channels on which the principal accepts an approval (at least one, no repeats). A request such as "always call me, never
+  a tap" can be read aloud in the principal's language.
+- **Set only by the principal.** The floor is set or changed only by the principal on the Trusted Surface at issuance, never through
+  `MandateRequest` (a request that carries it is refused), so that an agent, including a grandson's agent acting for a grandmother, cannot lower
+  it. The activation notice reads it in full in the principal's language.
+- **Absent means any.** A mandate without it accepts any user action on any channel, so that a feature-phone principal on IVR keeps working.
+- **Enforcement.** The gateway refuses an approval below the floor, or outside the channels, with `403 presence_not_proven` at
+  `$.presentation.user_action` or `$.presentation.channel`, and it never offers a `delivery` outside the channels. If the only allowed channel is
+  unavailable it answers `503 trusted_surface_unavailable` with `reason: channel_not_allowed` and the session's handoff routes.
+- It is the principal's standing preference, which [TS-3](human-participants.md#ts-requirements) alone does not record. It is not a security closure.
 
 ### Budgets {#budgets}
 
@@ -514,6 +537,21 @@ and every post-order write, and travels on the network in `context.bacp.presence
   `in.upi.intent` with `auth_binding.type: upi.pin`. An HP payment does not draw on the open
   mandate's rail binding.
 - An HP step-up payment counts toward `usage.count` but not toward the open mandate's budgets.
+- **The basis of a debit that takes no new factor.** A closed Payment Mandate that executes under the parent's rail binding
+  (HNP) carries, in the record that the gateway stores, `auth_binding.afa_ref{handler, primitive, registry_version}`: a reference
+  to the registry descriptor at that version, not a copy. Only the gateway sets it, and an agent that supplies it gets
+  `400 invalid_request`. The principal's post-debit notice and the [evidence summary](human-participants.md#evidence-summary)
+  render the basis from the descriptor through a fixed template, so that support staff need no registry lookup. For the
+  `hi-IN` notice of a recurring AutoPay debit the sentence is "यह कटौती आपके पहले से मंज़ूर ऑटो-पे से है, इसलिए PIN नहीं माँगा
+  गया।", which says in English "This debit is under the AutoPay you approved earlier, so no PIN was asked." The basis records
+  which rule the debit relies on. It does not make the debit lawful: the issuer remains liable under RBI/2025-26/79 para 9(b) for a
+  non-compliant debit. The descriptor's `afa.rbi_annex1_item` names the Annexure-1 row where the handler relies on an RBI
+  exemption, and a handler that relies on authentication at block creation or registration (Reserve Pay, OTM, UPI Circle) has
+  none: it is never presented as an RBI exemption ([Handler registry](payments/handler-registry.md)). UPI Circle is not
+  open-eligible while [Q-77](open-questions.md#q-77) is open, so no HNP debit runs through it.
+- **Voice never releases money.** The gateway refuses `voice_confirm_plus_device` on a `rail_auth` step-up and on any
+  `confirm` step-up whose approval releases a debit, with `403 presence_not_proven` at `$.presentation.user_action`
+  ([Voice confirmation](human-participants.md#voice)).
 - Accepting a credit offer (a loan, BNPL) is always HP. An agent attempt returns
   `403 credit_acceptance_requires_hp`.
 - Returns, and accepting or rejecting an IGM resolution, are HP
@@ -786,9 +824,9 @@ There are three kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
-| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), a convenience fee that the mandate's [`convenience_fees`](#constraints) does not cover in HNP, an operator charge that the mandate's `operator_compensation` does not cover, the HNP `payment_mode_fee_inconsistent` warning ([Fees on the payer's screen](checkout/index.md#fee-lines)), an order that a seller's [`requires_principal_confirmation`](discovery.md#principal-confirmation) covers, or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, [fee-bearer](#fee-bearer-change), payee or collector ([Per-leg rule](#per-leg-rule)). |
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), a convenience fee that the mandate's [`convenience_fees`](#constraints) does not cover in HNP, an operator charge that the mandate's `operator_compensation` does not cover, the HNP `payment_mode_fee_inconsistent` warning ([Fees on the payer's screen](checkout/index.md#fee-lines)), an order that a seller's [`requires_principal_confirmation`](discovery.md#principal-confirmation) covers, or any check the gateway cannot resolve. `seller_confirmation`: a BPP-signed `on_select` or `on_init` carries the `bacp` tag `seller_confirmation`, so the seller's request for the buyer's own confirmation reaches the principal as a template sentence ([Seller refusals and substitution](transports/beckn.md#seller-reasons)); at most one per `checkout_hash`. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, [fee-bearer](#fee-bearer-change), payee or collector ([Per-leg rule](#per-leg-rule)). |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
-| `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`); a replacement for a step-up voided after a counterparty revised the issue's `resolution` is not counted ([Presence proof](human-participants.md#hp-proof)). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
+| `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per `(agent, principal)` and per order (`429` with `Retry-After`); a replacement for a step-up voided after a counterparty revised the issue's `resolution` is not counted there and is capped per `(principal, issue_id)`; and a repeat after an explicit decline waits out the published cool-off (`409`) ([Limits on step-ups](human-participants.md#step-up-limits)). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 
 Any other rail cap (per-transaction, per-period, remaining block, first 24 hours, channel caps)
 does **not** escalate. It returns `403 rail_limit_exceeded` with
@@ -797,11 +835,15 @@ local and rail reason.
 
 **Flow.**
 
-1. The gateway creates a `step_up` with a `step_up_id`, a `trusted_surface_url`, a `delivery`
-   (`deep_link`, `app_push`, `ivr_callback` or `assisted`) and an `expires_at` at most 15 minutes
+1. The gateway creates a `step_up` with a `step_up_id`, a `delivery`
+   (`deep_link`, `app_push`, `ivr_callback` or `assisted`), a `trusted_surface_url` and a `surface` (not with `app_push`,
+   which carries no link) and an `expires_at` at most 15 minutes
    ahead, and at least 5 minutes ahead for `ivr_callback` and `assisted` (a BACP design floor, not
    an external requirement), and sends `session.updated`. `ivr_callback` is **Proposed**
-   ([Q-63](open-questions.md#q-63)).
+   ([Q-63](open-questions.md#q-63)). The gateway mints `trusted_surface_url` only on an origin of the step-up's signer
+   (`surface` is the signer's subscriber id). If no origin of the signer conforms, it uses `app_push` through the
+   signer's `ts_notify_url`, a content-free push, and otherwise answers `503 trusted_surface_unavailable`
+   ([Origins and delivery](human-participants.md#ts-origins)).
 2. **Render binding.** The gateway signs a [`ts_render`](human-participants.md#ts-render) for the
    step-up, once, carrying its `checkout_hash`, the single-figure total and the breakup hash, and
    never changes it. The Trusted Surface fetches it by `step_up_id`
@@ -821,8 +863,8 @@ local and rail reason.
    [`Presentation`](human-participants.md#presentation) whose `content_hash` is the sha-256 of the
    `ts_render` and whose `checkout_hash` is REQUIRED and is the quote's (for a `post_order`
    step-up, the `checkout_hash` of the order's closed Checkout Mandate); its `user_action` is never `decline`; its `device_signature`, where
-   present, is the principal's device signature over the JCS form of
-   `{step_up_id, content_hash, acted_at}`.
+   present, is a signature by a device key of the Trusted Surface over the JCS form of
+   `{step_up_id, content_hash, acted_at}`, which MUST verify against `principal.device_jkt[]` where the mandate lists it.
    The gateway refuses an approval without `presentation`, without `presentation.checkout_hash` or
    with `user_action: decline` with `400 invalid_request`, one whose
    `content_hash` does not match with `403 ts_render_mismatch`, and one acted on after `expires_at`
@@ -1231,11 +1273,18 @@ Manager is open ([Q-16](open-questions.md#q-16)). Until it is settled, these fai
 
 - `principal.ref` is a pairwise pseudonymous id at the MM. It is never an Aadhaar number, and no
   BACP artefact carries one.
+- `principal.device_jkt[]` is optional: the RFC 7638 thumbprints of the device keys that the principal enrolled on the Trusted Surface at
+  issuance. It is not a constraint, so a gateway that does not know it ignores it. Where it is present, a Presentation's `device_signature`
+  MUST verify against one of the keys ([Presentation record](human-participants.md#presentation)); its absence never weakens an approval,
+  so a feature-phone principal keeps an equal path.
 - `data_scopes` lists the only personal data fields the agent may release: `NAME`, `PHONE`,
   `DELIVERY_ADDRESS`, `EMAIL`, `AGE_OVER_18`, `GSTIN`, `ACTING_FOR`. `ACTING_FOR` allows the gateway
   to tell the seller the GSTIN and display name of whom the agent acts for
   (`context.bacp.acting_for.gstin` and `display_name`, and their mirror tags); without it they are
-  omitted. The purpose limits which scopes may be requested.
+  omitted. The purpose limits which scopes may be requested. The gateway sends `acting_for` to a seller only under a
+  per-seller ConsentReceipt whose `data_items[]` lists `ACTING_FOR`, so that the principal's consent to this disclosure is
+  on record for that seller. For a sole proprietor, whose GSTIN or name is personal data, this serves the DPDP Act, 2023,
+  s.6(1) and s.6(10) from 13-05-2027.
 - When a session update shares data (`data_share`), the gateway **MUST** check that `SHARE_DATA`
   is in `action_scope`, that every field is in `data_scopes`, and that `consent_receipt_ref` names
   an active, not withdrawn, ConsentReceipt of this mandate (the class receipt, or a per-seller

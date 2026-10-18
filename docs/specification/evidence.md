@@ -304,7 +304,11 @@ chain is valid, and the bundle signature verifies:
    hash of the closed Payment Mandate; its `checkout_hash` and `amount` match; and it carries the
    rail evidence required for its handler ([Rail evidence](#rail-evidence)).
 6. **Trusted Surface events.** Every `trusted_surface_events[]` entry verifies against a
-   registry key of role Mandate Manager or PSP. Every InstructionLog entry at stage `step_up` that
+   registry key of role Mandate Manager or PSP. The signer of every `step_up.*` and `negotiation.step_up.*` event
+   MUST also be one of the keys that [Step-up signers](human-participants.md#ts-signers) derives from the
+   mandates in the bundle: the issuer of the mandate that the render's `mandate_id` names, or the PSP that the table names
+   for that step-up from the bundle's Payment Mandates. A registry Mandate Manager or PSP key that is not one of them
+   is `evidence_unverifiable`. Every InstructionLog entry at stage `step_up` that
    records an approval or a decline has a matching event, whose hash the entry's `content_hash`
    carries. Every `step_up.approved`, `mandate.activated`, `loan.accepted` and
    `payment.afa_completed` event carries a `Presentation`, and for a step-up its `content_hash` is

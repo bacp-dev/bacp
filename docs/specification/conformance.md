@@ -60,6 +60,7 @@ proves little. So:
 | `bacp.pay.all.1` | **Payments-All** | Payments-UPI, and in this version the negotiation endpoint (because handler intersection takes a `negotiation_id` unless the gateway lists `in.bacp.payment_plan`, [Q-45](open-questions.md#q-45)) | The full handler registry and binding classes O, C, A, D and N; alias resolution; cards (e-mandate AFA, card-not-present disabled, cross-border card-not-present AFA, refund consent states); PPIs and gift instruments; net banking presence rules; COD and return-to-origin; credit (key fact statement offer list, human-present acceptance, cooling-off, repayment to the lender); eNACH caps; split tender; refunds to source; the FX disclosure view. |
 | `bacp.neg.1` | **Negotiation** | Core (and Payments-UPI for the hand-off from negotiation to payment) | The separate negotiation mandate, term sheets, signed offers, the offer and negotiation state machines, the withdraw/accept crossing rule, the negotiation guard with atomic exposure checks, the validators that apply to bilateral bargaining, escalation with the diff card on the Trusted Surface only, protection of reservation values, and handling of untrusted counterparty text. |
 | `bacp.b2b.1` | **B2B** | Negotiation, Payments-All | RFQs (sealed, deposits, `response_by`, landed-cost comparison), purchase orders via `confirm`, the MSMED credit-days cap, document gates (e-invoice IRN, e-way bill), schemes, the `bacp.credit_ledger` (two-party header, hash chain, acknowledgement, rail-evidenced settlement), eNACH B2B subscriptions and maker–checker approval. |
+| `bacp.ts.1` | **Trusted Surface** | — | Requirements TS-1 to TS-6 of a Mandate Manager's or payer PSP's Trusted Surface ([Human participants](human-participants.md#ts-requirements)): signed and templated content only, decline as easy as approve, language and modality, no urgency, a recorded `Presentation`, rendering only to the principal or payer that the render names, the typed `ts_render` and `render_required[]`, the language fail-safe, the TS-drawn voice challenge with keypad equal to speech, no PIN on a call the Trusted Surface places, and the assisted announcement. Exercised with `system_under_test: trusted_surface`. |
 | `bacp.auction.1` | **Auctions** | Negotiation | A neutral auctioneer, a signed and frozen auction specification, anti-sniping, commit–reveal with deposits and forfeits, reverse (L1), English and Dutch rules, retraction rules, shill-bid refusal, and award rules. |
 
 ### Claiming a level
@@ -287,6 +288,9 @@ An agent (and its operator) MUST:
 - Submit no affiliate code of its operator when no human is present, and tell
   a present principal before it submits one
   ([Discounts](checkout/index.md#discounts); case CD-50).
+- Learn the `ts_event_hash` of a post-order approval only from `GET /step-ups/{step_up_id}` or `step_up.updated`, check the host of a
+  `trusted_surface_url` against `StepUp.surface`, keep its voice channel off the Trusted Surface's call leg, and never send `afa_ref`, `ref_verification: verified` or
+  `confirmation_floor` ([Presence proof](human-participants.md#hp-proof); cases T6-14, T6-19, T6-38, T6-42, T6-47c).
 
 ### Gateway
 
@@ -497,6 +501,11 @@ A BACP gateway MUST:
   and refund from the seller-signed revised quote
   ([Discounts](checkout/index.md#discounts); cases CD-42 to CD-46, CD-52,
   CD-R13 to CD-R18).
+- Mint a `trusted_surface_url` only on an origin of the step-up's signer, push content-free through `ts_notify_url` or answer
+  `503 trusted_surface_unavailable`; refuse `voice_confirm_plus_device` on `rail_auth` and on a debit-releasing `confirm`; bind a handoff to the session's agent operator's
+  support operator key; serve `GET /step-ups/{step_up_id}` to the issuing credential only; match a `RETURN` or `CANCEL` field by field with an overlap rule; and apply the
+  decline cool-off, the re-prompt cap and the declared limits ([Human participants](human-participants.md#step-up-limits); cases T6-05 to T6-09, T6-15 to T6-30, T6-33b,
+  T6-35 to T6-42, T6-44b, T6-46 to T6-49).
 - Pass the [binding cases](#binding-cases) for every one of `in.bacp.payment_plan`,
   `in.bacp.ledger`, `in.bacp.trade_document` and `in.bacp.ucp_checkout` that its profile
   lists, and, whatever it lists, the transport cases that bind every gateway (cases BND-TAG-01,
@@ -532,7 +541,7 @@ A Mandate Manager MUST:
 
 - Activate a mandate only after an explicit, affirmative approval by the
   principal on the Trusted Surface. An agent can never activate one.
-- Run its Trusted Surface to TS-1 to TS-5 and send a `Presentation` with
+- Run its Trusted Surface to TS-1 to TS-6 and send a `Presentation` with
   every `mandate.activated`, `step_up.approved`, `loan.accepted` and
   `payment.afa_completed` event
   ([Human participants](human-participants.md#ts-requirements)).
@@ -577,7 +586,9 @@ A Mandate Manager MUST:
   `data_scopes`, `audit_uri`, a data-retention period and at least one
   budget or `max_executions`.
 - Issue a consent receipt per recipient, in the principal's language,
-  with the withdrawal and grievance routes.
+  with the withdrawal and grievance routes, and list `ACTING_FOR` in a per-seller receipt before the gateway tells that seller whom the agent acts for.
+- Render a step-up only for a mandate of the principal who is logged in (TS-6), keep the principal's `confirmation_floor` and `device_jkt[]` under the
+  principal's own control on the Trusted Surface, and read the floor in full in the activation notice (`bacp.ts.1`; cases T6-02, T6-46, T6-47).
 - Publish mandate status in a status list and send signed status events
   (activation, pause, revocation) to the gateway within 60 seconds.
 - Remain data-blind: store mandates and logs only, never order or payment
@@ -591,7 +602,12 @@ A Mandate Manager MUST:
 A payer PSP MUST:
 
 - Run, or integrate with, a non-agentic Trusted Surface, and take the PIN
-  or biometric only there.
+  or biometric only there, on its own app or on a call that the principal places
+  to the PSP's published number, never on a web page and never on a call that
+  the Trusted Surface places ([PIN rule](human-participants.md#ts-pin-rule)).
+- Render a step-up only to the principal or payer that the render names (TS-6), draw its own voice challenge, accept a keypad answer as speech,
+  refuse an unknown listed `render_required[]` name and a JWS without `typ: bacp-ts-render+jws`, and render no other language than the step-up's unless the
+  principal chooses it (`bacp.ts.1`; cases T6-02, T6-03, T6-11 to T6-13, T6-32 to T6-34, T6-43 to T6-45).
 - Render a step-up only from the `ts_render` fetched by `step_up_id` and its
   own templates, with counterparty text only in `counterparty_text`, decline
   no harder than approve, nothing preselected, no urgency text, the
@@ -651,6 +667,8 @@ PSP or a seller) MUST:
   `acceptance_revocation` that differs from the signed offer, and a negotiation
   transcript in which a later entry has an earlier `received_at`
   ([Clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew)).
+- Accept a `step_up.*` or `negotiation.step_up.*` event only from a key that [Step-up signers](human-participants.md#ts-signers) derives from the bundle's
+  mandates (case T6-01).
 - Never accept a summary rendered under `in.bacp.evidence.summary.1` as
   evidence ([Evidence summary](human-participants.md#evidence-summary)).
 
@@ -2999,16 +3017,15 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
 ```
 
 !!! warning "Proposed"
-    T1-15 depends on a registry field listing a Mandate Manager's or PSP's Trusted Surface origins (`ts_origins`)
-    and on an error code for a link outside them, neither of which `2026-10-17` defines. T1-33 depends on
-    `StepUp.delivery: ivr_callback`, which is Proposed until [Q-63](open-questions.md#q-63) is answered. Both cases
-    are published as data for review and are not run against this version.
+    T1-33 depends on `StepUp.delivery: ivr_callback`, which is Proposed until [Q-63](open-questions.md#q-63) is answered.
+    It is published as data for review and is not run against this version. T1-15 is in force: it rests on the registry
+    field `ts_origins` and on `503 trusted_surface_unavailable` ([Origins and delivery](human-participants.md#ts-origins)).
+    Whether a registry other than the BACP schema can carry `ts_origins` is open with ONDC ([Q-87](open-questions.md#q-87)).
 
 ```yaml
 - case_id: T1-15
-  title: A Trusted Surface link outside the registered origins is never relayed
+  title: The gateway mints a Trusted Surface link only on a registered origin of the signer
   level: bacp.core.1
-  requirement: SHOULD
   fixture:
     registry: {mm.psp.example.in: {ts_origins: ["https://psp.example.in"]}}
     step_up_link: https://psp-example.in.invalid/approve/stp_X
@@ -3016,7 +3033,7 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
     - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
   expect:
     responses:
-      - {status: 503, code: trusted_surface_unavailable, count: 1}
+      - {status: 503, code: trusted_surface_unavailable, body.reason: no_conforming_origin, count: 1}
     agent_requests: []
 
 - case_id: T1-33
@@ -7447,4 +7464,742 @@ only to a refusal or to contested.
     - validate: {}
   expect:
     verdict: {code: schema_invalid, path: $.log_seq}
+```
+
+## Trusted Surface and human-participant cases {#ts-residual-cases}
+
+The cases below cover [Requirement TS-6](human-participants.md#ts-requirements), [Origins and delivery](human-participants.md#ts-origins),
+[Voice confirmation](human-participants.md#voice), [Limits on step-ups](human-participants.md#step-up-limits), the
+[typed `ts_render`](human-participants.md#ts-render), the handoff operator binding, the registry record, the seller reasons and the
+[confirmation floor](mandates.md#confirmation-floor). They use the manifest form above, their ids use the prefix `T6-`, and amounts are integer
+paise. Levels: gateway, schema and verifier cases `bacp.core.1` (T6-37 and T6-49 `bacp.pay.upi.1`); Trusted Surface cases `bacp.ts.1` with
+`system_under_test: trusted_surface`. They also use:
+
+- `registry` (fixture): the registry records the gateway reads, keyed by subscriber id, with the fields of
+  [`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json);
+- `seeded_rng` (fixture): a seed for the random source of the Trusted Surface under test, so that a drawn challenge is predictable to the runner only;
+- `logged_in_as` (fixture): the principal or payer whose session the Trusted Surface under test has open;
+- `limits` (fixture): the declared `step_up_limits` of the gateway for the case, as test settings and not as limits the specification sets;
+- `get_step_up` (step): `GET /step-ups/{step_up_id}` signed by the named credential (`credential: C1`);
+- the expect keys `ts_renders` (what the gateway put in the renders it signed), `notify` (the content-free pushes it sent), `ts_prompts`
+  (the prompts a Trusted Surface showed), `step_ups_created`, `agent_quota`, `log` and `messages`.
+
+```yaml
+- case_id: T6-01
+  title: A step-up approval signed by a PSP that the bundle's Payment Mandate does not name fails step 6
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      payment_mandates: [{of: session, rail_binding: {psp_id: psp-a.example.in}}]
+      trusted_surface_events: [{event: step_up.approved, signer: psp-b.example.in, signer_role: psp}]
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: T6-02
+  title: A human-present session step-up for principal A is not rendered to principal B's Mandate Manager app
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, mandate_id: mdt_A, language: hi-IN}
+    logged_in_as: {principal: B}
+  steps:
+    - render: {step_up_id: stp_A}
+  expect:
+    verdict:
+      code: ts_conformance_fail
+      rule: TS-6
+      rendered: refusal_sentence_in_language
+      content_shown: none
+    trusted_surface_events: []
+
+- case_id: T6-03
+  title: An HNP session step-up whose payer_ref is for a@psp is not rendered to the PSP app logged in as b@psp
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: rail_auth, mandate_id: mdt_A, payer_ref: "payer_ref(stp_A, a@psp)"}
+    logged_in_as: {payer: b@psp}
+  steps:
+    - render: {step_up_id: stp_A}
+  expect:
+    verdict: {code: ts_conformance_fail, rule: TS-6, content_shown: none}
+    trusted_surface_events: []
+    rail: {settled_debits: 0}
+
+- case_id: T6-04
+  title: A render without mandate_id, or a post_order render of an order without payer_ref, is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {vector: [ts-render.confirm-no-mandate-id.invalid, ts-render.mandate-id-empty.invalid, ts-render.post-order-no-payer-ref.invalid]}
+  expect:
+    verdict: {code: schema_invalid, count: 3}
+
+- case_id: T6-04b
+  title: A gateway puts payer_ref on an HNP session step-up that has a planned open Payment Mandate and on no HP session step-up
+  level: bacp.core.1
+  fixture:
+    sessions:
+      - {count: 1, presence: HNP, state: ready_for_complete, above_afa_limit: true}
+      - {count: 1, presence: HP, state: ready_for_complete, above_step_up_threshold: true}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, session: 1}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HP, session: 2}
+  expect:
+    ts_renders:
+      - {session: 1, payer_ref: present, mandate_id: present}
+      - {session: 2, payer_ref: absent, mandate_id: present}
+
+- case_id: T6-05
+  title: With no conforming origin and a ts_notify_url, the step-up is delivered by a content-free push
+  level: bacp.core.1
+  fixture:
+    registry: {mm.psp.example.in: {ts_origins: ["https://psp.example.in"], ts_notify_url: "https://push.psp.example.in/bacp"}}
+    sessions: {count: 1, state: ready_for_complete, above_step_up_threshold: true, offered_url_host: off-origin.example}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HP}
+  expect:
+    responses:
+      - {status: 200, body.step_up.delivery: app_push, body.step_up.trusted_surface_url: absent, count: 1}
+    webhooks:
+      - {type: session.updated, link: absent}
+    notify:
+      - {to: "https://push.psp.example.in/bacp", body: [step_up_id, expires_at], signed_by: gateway_profile_key, content: none}
+
+- case_id: T6-06
+  title: With no conforming origin and no ts_notify_url, the gateway answers 503 trusted_surface_unavailable
+  level: bacp.core.1
+  fixture:
+    registry: {mm.psp.example.in: {ts_origins: ["https://psp.example.in"]}}
+    sessions: {count: 1, state: ready_for_complete, above_step_up_threshold: true, offered_url_host: off-origin.example}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HP}
+  expect:
+    responses:
+      - {status: 503, code: trusted_surface_unavailable, resolution: requires_buyer_input, body.reason: no_conforming_origin, count: 1}
+
+- case_id: T6-07
+  title: A registry record whose ts_origins entry has a path or uses http, or whose ts_notify_url uses http, is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {vector: [registry-record.ts-origin-with-path.invalid, registry-record.ts-origin-http.invalid, registry-record.notify-http.invalid]}
+  expect:
+    verdict: {code: schema_invalid, count: 3}
+
+- case_id: T6-08
+  title: An event whose presentation.surface is not the signer's subscriber id is refused
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, state: requires_escalation, step_up: {step_up_id: stp_S, kind: confirm}}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_S, presentation: {surface: other.example.in}}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 1}
+    state: {session: requires_escalation}
+
+- case_id: T6-09
+  title: voice_confirm_plus_device is refused on a rail_auth step-up and on a confirm step-up that releases a debit
+  level: bacp.core.1
+  fixture:
+    sessions:
+      - {count: 1, state: requires_escalation, step_up: {step_up_id: stp_R, kind: rail_auth, reason: above_afa_limit}}
+      - {count: 1, state: requires_escalation, presence: HNP, step_up: {step_up_id: stp_H, kind: confirm, releases_debit: true}}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_R, presentation: {user_action: voice_confirm_plus_device}}
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_H, presentation: {user_action: voice_confirm_plus_device}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, param: $.presentation.user_action, count: 2}
+    rail: {settled_debits: 0}
+
+- case_id: T6-10
+  title: A voice_confirm_plus_device approval with no challenge_hash is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {vector: [common.presentation-voice-no-challenge.invalid]}
+  expect:
+    verdict: {code: schema_invalid}
+
+- case_id: T6-11
+  title: The voice challenge is not a function of the render or its hash
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    seeded_rng: 42
+    ts_render: {kind: confirm, reason: above_step_up_threshold, channel: ivr}
+  steps:
+    - render: {step_up_id: stp_V, action: draw_challenge, runs: 2, same_render: true}
+  expect:
+    verdict: {challenge: {length: ">= 4", differs_between_runs: true, derived_from: [rng], not_derived_from: [content_hash, ts_render]}}
+
+- case_id: T6-12
+  title: A Trusted Surface that places a call never asks for a PIN on it
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: rail_auth, reason: above_afa_limit, channel: ivr}
+    call: {placed_by: trusted_surface}
+  steps:
+    - render: {step_up_id: stp_R}
+  expect:
+    verdict: {offers_pin_entry: false, offers: "call the PSP's own number yourself"}
+
+- case_id: T6-12b
+  title: A Trusted Surface that asks for a PIN on a call it places fails TS-2
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: rail_auth, reason: above_afa_limit, channel: ivr}
+    call: {placed_by: trusted_surface}
+  steps:
+    - render: {step_up_id: stp_R, negative_control: asks_for_pin}
+  expect:
+    verdict: {code: ts_conformance_fail, rule: TS-2}
+
+- case_id: T6-13
+  title: A keypad answer to the voice challenge counts the same as speech
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    seeded_rng: 42
+    ts_render: {kind: post_order, action: CANCEL, channel: ivr}
+  steps:
+    - render: {step_up_id: stp_V, answer: {mode: dtmf}}
+    - render: {step_up_id: stp_V2, answer: {mode: speech}}
+  expect:
+    verdict: {accepted: [dtmf, speech], steps_equal: true}
+
+- case_id: T6-14
+  title: An agent's voice channel does not stay on or bridge the Trusted Surface's call leg
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    call: {placed_by: trusted_surface, agent_voice_channel: open}
+  steps:
+    - request_from_gateway: {response: {status: 403, code: presence_not_proven, body.step_up.delivery: ivr_callback}}
+  expect:
+    verdict: {agent_leg_state: ended_or_held, conference_with_ts_leg: false}
+
+- case_id: T6-15
+  title: Another agent operator's support_operator key gets 404 and nothing changes
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, agent_operator: X, state: human_handoff, handoff: {requested: true}}
+    registry: {op-y.example.in: {bacp_role: support_operator, operator_id: Y}}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-handoff, signer: op-y.example.in, body: {action: accept}}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 1}
+    state: {session: human_handoff, handoff.accepted_by: absent}
+
+- case_id: T6-16
+  title: A PSP key under bacp-handoff gets 401 signature_invalid
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, agent_operator: X, state: human_handoff, handoff: {requested: true}}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-handoff, signer: psp.example.in, body: {action: accept}}
+  expect:
+    responses:
+      - {status: 401, code: signature_invalid, count: 1}
+    state: {session: human_handoff, handoff.accepted_by: absent}
+
+- case_id: T6-17
+  title: A release by a second key of the same operator is refused at $.handoff.accepted_by
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, agent_operator: X, state: human_handoff, handoff: {accepted_by: support_operator_key_1}}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-handoff, signer: support_operator_key_2, body: {action: release}}
+  expect:
+    responses:
+      - {status: 409, code: session_state_conflict, param: $.handoff.accepted_by, count: 1}
+    state: {session: human_handoff}
+
+- case_id: T6-18
+  title: After a release and a restart, a competitor's key still gets 404 and the operator's key is accepted
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, agent_operator: X, state: human_handoff, handoff: {requested: true}}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-browse, body: {action: release}}
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-browse, body: {action: request, route: R1}}
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-handoff, signer: op-y_key, body: {action: accept}}
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-handoff, signer: support_operator_key_1, body: {action: accept}}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 1}
+      - {status: 200, body.handoff.accepted_by: support_operator_key_1, count: 1}
+
+- case_id: T6-19
+  title: The issuing agent reads the ts_event_hash of an approved RETURN step-up and the retried write is accepted
+  level: bacp.core.1
+  fixture:
+    orders: [{id: O1, state: Completed}]
+    step_ups: [{step_up_id: stp_PO1, kind: post_order, action: RETURN, order_id: O1, status: approved, credential: C1}]
+  steps:
+    - get_step_up: {step_up_id: stp_PO1, credential: C1}
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {hp_proof: {step_up_id: stp_PO1, ts_event_hash: "{event_hash}"}}}
+  expect:
+    responses:
+      - {status: 200, body.status: approved, body.ts_event_hash: "sha-256 of the JCS form of the stored event", count: 1}
+      - {status: 202, count: 1}
+
+- case_id: T6-20
+  title: Another credential of the same operator cannot read a step-up
+  level: bacp.core.1
+  fixture:
+    step_ups: [{step_up_id: stp_PO1, kind: post_order, status: approved, credential: C1}]
+  steps:
+    - get_step_up: {step_up_id: stp_PO1, credential: C2}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 1}
+
+- case_id: T6-21
+  title: A step-up voided by a seller's revision reads voided, and a retry citing it gets a new step-up
+  level: bacp.core.1
+  fixture:
+    issues: [{id: I1, resolution: R1}]
+    step_ups: [{step_up_id: stp_I1, kind: post_order, action: RESOLUTION_ACCEPTED, issue_id: I1, status: pending, credential: C1}]
+  steps:
+    - on_issue: {issue_id: I1, action: RESOLUTION_PROPOSED, resolution: R2}
+    - get_step_up: {step_up_id: stp_I1, credential: C1}
+    - request: {method: POST, path: "/issues/I1/actions", tag: bacp-post-order, presence: HP, body: {action: RESOLUTION_ACCEPTED, hp_proof: {step_up_id: stp_I1, ts_event_hash: "{event_hash_stp_I1}"}}}
+  expect:
+    responses:
+      - {status: 200, body.status: voided, count: 1}
+      - {status: 403, code: presence_not_proven, body.step_up: present, count: 1}
+
+- case_id: T6-22
+  title: A StepUpStatus with status approved and no ts_event_hash is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {vector: [step-up-status.approved-no-hash.invalid]}
+  expect:
+    verdict: {code: schema_invalid}
+
+- case_id: T6-23
+  title: A RETURN whose items or reason code differ from the approved render is refused
+  level: bacp.core.1
+  fixture:
+    orders: [{id: O1, state: Completed}]
+    step_ups: [{step_up_id: stp_PO1, kind: post_order, action: RETURN, order_id: O1, items: [{id: I-MILK-1L, quantity: 1}], reason_code: quality_issue, status: approved}]
+  steps:
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {items: [{id: I-TV, quantity: 1}], reason_code: quality_issue, hp_proof: {step_up_id: stp_PO1, ts_event_hash: "{event_hash}"}}}
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {items: [{id: I-MILK-1L, quantity: 1}], reason_code: changed_mind, hp_proof: {step_up_id: stp_PO1, ts_event_hash: "{event_hash}"}}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 2}
+    beckn: []
+
+- case_id: T6-24
+  title: A second approved RETURN proof that overlaps the first in items is refused
+  level: bacp.core.1
+  fixture:
+    orders: [{id: O1, state: Completed}]
+    step_ups:
+      - {step_up_id: stp_P1, kind: post_order, action: RETURN, order_id: O1, items: [{id: I-MILK-1L, quantity: 1}], status: approved}
+      - {step_up_id: stp_P2, kind: post_order, action: RETURN, order_id: O1, items: [{id: I-MILK-1L, quantity: 1}, {id: I-ATTA-5KG, quantity: 1}], status: approved}
+  steps:
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {items: [{id: I-MILK-1L, quantity: 1}], hp_proof: {step_up_id: stp_P1, ts_event_hash: "{event_hash_stp_P1}"}}}
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {items: [{id: I-MILK-1L, quantity: 1}, {id: I-ATTA-5KG, quantity: 1}], hp_proof: {step_up_id: stp_P2, ts_event_hash: "{event_hash_stp_P2}"}}}
+  expect:
+    responses:
+      - {status: 202, count: 1}
+      - {status: 403, code: presence_not_proven, count: 1}
+
+- case_id: T6-25
+  title: A pending RETURN step-up that an overlapping RETURN repeats returns the existing step-up
+  level: bacp.core.1
+  fixture:
+    orders: [{id: O1, state: Completed}]
+    step_ups: [{step_up_id: stp_P1, kind: post_order, action: RETURN, order_id: O1, items: [{id: I-MILK-1L, quantity: 1}], status: pending}]
+  steps:
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {items: [{id: I-MILK-1L, quantity: 1}, {id: I-ATTA-5KG, quantity: 1}]}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, body.step_up.step_up_id: stp_P1, count: 1}
+    step_ups_created: 0
+
+- case_id: T6-26
+  title: A decline starts the cool-off, and a changed reason code does not reopen it
+  level: bacp.core.1
+  fixture:
+    limits: {decline_cooloff: {window: PT10M}}
+    orders: [{id: O1, state: Completed}]
+    step_ups: [{step_up_id: stp_P1, kind: post_order, action: RETURN, order_id: O1, status: declined}]
+  steps:
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {items: [{id: I-MILK-1L, quantity: 1}], reason_code: other_reason}}
+  expect:
+    responses:
+      - {status: 409, code: session_state_conflict, headers: {Retry-After: present}, count: 1}
+    step_ups_created: 0
+    ts_prompts: 0
+
+- case_id: T6-27
+  title: An expired step-up does not start the cool-off
+  level: bacp.core.1
+  fixture:
+    limits: {decline_cooloff: {window: PT10M}}
+    orders: [{id: O1, state: Completed}]
+    step_ups: [{step_up_id: stp_P1, kind: post_order, action: RETURN, order_id: O1, status: expired}]
+  steps:
+    - request: {method: POST, path: "/orders/O1/returns", tag: bacp-post-order, presence: HP, body: {items: [{id: I-MILK-1L, quantity: 1}], reason_code: quality_issue}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, body.step_up: present, count: 1}
+    step_ups_created: 1
+
+- case_id: T6-28
+  title: Past the re-prompt cap a seller's revision creates no step-up and no prompt
+  level: bacp.core.1
+  fixture:
+    limits: {reprompt_per_issue: {count: 2, window: P7D}}
+    issues: [{id: I1, resolution: R1, replacements_in_window: 2}]
+    step_ups: [{step_up_id: stp_I1, kind: post_order, action: RESOLUTION_ACCEPTED, issue_id: I1, status: pending, credential: C1}]
+  steps:
+    - on_issue: {issue_id: I1, action: RESOLUTION_PROPOSED, resolution: R4}
+    - request: {method: POST, path: "/issues/I1/actions", tag: bacp-post-order, presence: HP, body: {action: RESOLUTION_ACCEPTED}}
+  expect:
+    responses:
+      - {status: 409, code: session_state_conflict, count: 1}
+    step_ups_created: 0
+    ts_prompts: 0
+    state: {issue: grievance_route}
+
+- case_id: T6-29
+  title: One principal's exhausted post_order quota does not block another principal of the same agent
+  level: bacp.core.1
+  fixture:
+    limits: {post_order_per_principal: {count: 1, window: PT1H}}
+    orders: [{id: O1, principal: P1}, {id: O2, principal: P2}]
+  steps:
+    - request: {method: POST, path: "/orders/O1/cancel", tag: bacp-post-order, presence: HP, order: O1}
+    - request: {method: POST, path: "/orders/O1/cancel", tag: bacp-post-order, presence: HP, order: O1, reason_code: other}
+    - request: {method: POST, path: "/orders/O2/cancel", tag: bacp-post-order, presence: HP, order: O2}
+  expect:
+    responses:
+      - {path: O2, status: 403, code: presence_not_proven, body.step_up: present, count: 1}
+
+- case_id: T6-30
+  title: Past the declared (agent, principal) limit a creation gets 429 with Retry-After
+  level: bacp.core.1
+  fixture:
+    limits: {post_order_per_principal: {count: 2, window: PT1H}}
+    orders: [{id: O1}, {id: O2}, {id: O3}]
+  steps:
+    - request: {method: POST, path: "/orders/O1/cancel", tag: bacp-post-order, presence: HP}
+    - request: {method: POST, path: "/orders/O2/cancel", tag: bacp-post-order, presence: HP}
+    - request: {method: POST, path: "/orders/O3/cancel", tag: bacp-post-order, presence: HP}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 2}
+      - {status: 429, code: quota_exceeded, headers: {Retry-After: present}, count: 1}
+
+- case_id: T6-31
+  title: Step-ups whose kind, reason, covers or id disagree, and renders without the per-kind fields, are invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate:
+        vector:
+          - step-up.post-order-rail-fallback.invalid
+          - step-up.confirm-presence-proof.invalid
+          - step-up.covers-no-rail-fallback.invalid
+          - step-up.short-id.invalid
+          - ts-render.return-no-items.invalid
+          - ts-render.post-order-with-session.invalid
+          - ts-render.short-id.invalid
+  expect:
+    verdict: {code: schema_invalid, count: 7}
+
+- case_id: T6-32
+  title: A render whose JWS header has no typ, or another typ, is not rendered
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, header: {alg: ES256}}
+  steps:
+    - render: {step_up_id: stp_S}
+    - render: {step_up_id: stp_S, header: {alg: ES256, typ: JWT}}
+  expect:
+    verdict: {rendered: none, count: 2}
+    trusted_surface_events: []
+
+- case_id: T6-33
+  title: A listed render_required name that the Trusted Surface does not know stops it, and the gateway refuses an approval that omits it
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, render_required: [catalogue_disclosure]}
+    ts_knows: []
+  steps:
+    - render: {step_up_id: stp_S}
+  expect:
+    verdict: {rendered: none}
+    trusted_surface_events: []
+
+- case_id: T6-33b
+  title: The gateway refuses an approval whose renders omits a name in render_required
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, state: requires_escalation, step_up: {step_up_id: stp_S, kind: confirm, render_required: [catalogue_disclosure]}}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_S, presentation: {renders: [plan]}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, count: 1}
+    state: {session: requires_escalation}
+
+- case_id: T6-34
+  title: An unlisted unknown render field is ignored and the approval is accepted without it
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, x_promo: "ignored"}
+  steps:
+    - render: {step_up_id: stp_S}
+  expect:
+    verdict: {rendered: true, x_promo_shown: false, renders_lists: [], event_accepted: true}
+
+- case_id: T6-35
+  title: Without ACTING_FOR in the per-seller receipt, acting_for is not sent to the seller
+  level: bacp.core.1
+  fixture:
+    consent_receipts: [{recipient: bpp.kirana.example.in, data_items: [NAME]}]
+    mandate: {data_scopes: [NAME, ACTING_FOR]}
+    sessions: {count: 1, presence: HP, acting_for: {kind: business, gstin: "27AAAPL1234C1ZV", display_name: "Shree Ganesh Kirana"}}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, body: {billing: filled}}
+  expect:
+    beckn: [{action: init, bacp_tags_absent: [acting_for.gstin, acting_for.display_name]}]
+
+- case_id: T6-36
+  title: A seller's summary has no other seller's lines, and the grievance officer can fetch it in hi-IN
+  level: bacp.core.1
+  fixture:
+    bundle: {transaction_id: T1, sellers: [seller-a, seller-b]}
+  steps:
+    - request: {method: GET, path: "/evidence/T1/summary?language=hi-IN", tag: bacp-browse, signer: seller-a}
+    - request: {method: GET, path: "/evidence/T1/summary?language=hi-IN", tag: bacp-browse, signer: grievance_officer}
+  expect:
+    responses:
+      - {status: 200, body.bundle_hash: present, body.text: "no payee_name of seller-b", count: 1}
+      - {status: 200, body.language: hi-IN, count: 1}
+
+- case_id: T6-37
+  title: A descriptor that labels Reserve Pay with an Annex-1 row, or an exempt handler with none, is invalid
+  level: bacp.pay.upi.1
+  system_under_test: schema
+  steps:
+    - validate: {vector: [handler-descriptor.reservepay-annex-item.invalid, handler-descriptor.exempt-no-item.invalid]}
+  expect:
+    verdict: {code: schema_invalid, count: 2}
+
+- case_id: T6-38
+  title: An agent that sends afa_ref is refused, and the closed Payment Mandate record carries the gateway's afa_ref
+  level: bacp.pay.upi.1
+  fixture:
+    sessions: {count: 1, presence: HNP, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, body: {closed_payment_mandate: {auth_binding: {afa_ref: {handler: in.upi.reservepay}}}}}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, count: 1}
+      - {status: 200, body.status: completed, count: 1}
+    log: [{stage: payment, auth_binding.afa_ref: {handler: in.upi.reservepay, primitive: sbmd_block, registry_version: present}}]
+
+- case_id: T6-39
+  title: A BPP-signed seller_confirmation tag raises a confirm step-up that holds no seller text
+  level: bacp.core.1
+  fixture:
+    bpp_quote: {on_init_tags: {bacp: {seller_confirmation: first_cod_order}}}
+    sessions: {count: 1, presence: HNP, state: ready_for_complete, mandate_covers: true}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.reason: seller_confirmation, count: 1}
+    ts_renders: [{summary_contains_seller_text: false}]
+    agent_quota: unchanged
+    state: {session: requires_escalation}
+
+- case_id: T6-40
+  title: In a human-present session a substitute seller at a higher total needs a new confirm step-up
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, presence: HP, state: incomplete, quoted_total: {value: 45000, currency: INR}}
+    bpp_nack: {code_signed_by_bpp: true, beckn_code: "40002"}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, body: {substitute: {bpp_id: seller-b, total: {value: 52000, currency: INR}}}}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.kind: confirm, count: 1}
+
+- case_id: T6-40b
+  title: In a human-not-present session a substitute at a higher total raises a confirm step-up and moves no money
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, presence: HNP, state: ready_for_complete, quoted_total: {value: 45000, currency: INR}}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, body: {substitute: {bpp_id: seller-b, total: {value: 52000, currency: INR}}}}
+  expect:
+    responses:
+      - {status: 200, body.status: requires_escalation, body.step_up.kind: confirm, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T6-41
+  title: A rejected return is not terminal for the principal
+  level: bacp.core.1
+  fixture:
+    orders: [{id: O1, state: Completed, return: {id: R1, status: RETURN_INITIATED}}]
+  steps:
+    - on_update: {order_id: O1, return_id: R1, fulfilment: Return_Rejected}
+  expect:
+    messages: [{code: return_refused, resolution: requires_buyer_review, args: [grievance_contact]}]
+    state: {return: RETURN_REJECTED}
+
+- case_id: T6-42
+  title: An agent that supplies ref_verification verified gets 400
+  level: bacp.core.1
+  steps:
+    - request: {method: POST, path: "/sessions", tag: bacp-browse, body: {channel: assisted, participants: [{participant_id: op_1, role: assisted_operator, ref: "csc_vle:CSC-UP-0042117", ref_verification: verified}]}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: "$.participants[0].ref_verification", count: 1}
+
+- case_id: T6-43
+  title: On an assisted session the announcement precedes the factor and "unverified" is not read aloud
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, assisted_operators: [{participant_id: op_1, ref: "csc_vle:CSC-UP-0042117"}], channel: assisted, modality: both}
+  steps:
+    - render: {step_up_id: stp_S}
+  expect:
+    verdict: {announcement_before_factor: true, reads_unverified_aloud: false}
+
+- case_id: T6-44
+  title: A Trusted Surface with no ta-IN renders nothing for a ta-IN step-up, and the gateway offers a human route
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, language: ta-IN}
+    registry: {psp.example.in: {ts_languages: [en-IN, hi-IN]}}
+    principal_language_choice: none
+  steps:
+    - render: {step_up_id: stp_S}
+  expect:
+    verdict: {rendered: none, other_language_rendered: false}
+    trusted_surface_events: []
+
+- case_id: T6-44b
+  title: The gateway answers 503 language_unavailable with handoff routes and ignores an agent-sent language
+  level: bacp.core.1
+  fixture:
+    registry: {mm.psp.example.in: {ts_languages: [en-IN, hi-IN]}}
+    mandate: {language: ta-IN}
+    sessions: {count: 1, state: ready_for_complete, above_step_up_threshold: true}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HP, body: {language: hi-IN}}
+  expect:
+    responses:
+      - {status: 503, code: trusted_surface_unavailable, body.reason: language_unavailable, body.handoff_routes: present, count: 1}
+
+- case_id: T6-45
+  title: A render shown with countdown text fails TS-4
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, expires_at: "+10m"}
+  steps:
+    - render: {step_up_id: stp_S, negative_control: countdown_text}
+  expect:
+    verdict: {code: ts_conformance_fail, rule: TS-4}
+
+- case_id: T6-46
+  title: A device_signature by a key that the mandate does not list is refused
+  level: bacp.core.1
+  fixture:
+    mandate: {principal: {device_jkt: [k1]}}
+    sessions: {count: 1, state: requires_escalation, step_up: {step_up_id: stp_S, kind: confirm}}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_S, presentation: {device_signature: {signed_by: k2}}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T6-47
+  title: An approval below the confirmation floor, or outside its channels, is refused
+  level: bacp.core.1
+  fixture:
+    mandate: {constraints: {confirmation_floor: {min_user_action: upi_pin, channels_allow: [app]}}}
+    sessions: {count: 1, state: requires_escalation, step_up: {step_up_id: stp_S, kind: confirm}}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_S, presentation: {channel: ivr, user_action: upi_pin}}
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_S, presentation: {channel: app, user_action: tap_confirm}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, param: $.presentation.channel, count: 1}
+      - {status: 403, code: presence_not_proven, param: $.presentation.user_action, count: 1}
+
+- case_id: T6-47b
+  title: When the only allowed channel is unavailable the gateway answers 503 channel_not_allowed with handoff routes
+  level: bacp.core.1
+  fixture:
+    mandate: {constraints: {confirmation_floor: {channels_allow: [app]}}}
+    registry: {mm.psp.example.in: {available_channels: [ivr]}}
+    sessions: {count: 1, state: ready_for_complete, above_step_up_threshold: true}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HP}
+  expect:
+    responses:
+      - {status: 503, code: trusted_surface_unavailable, body.reason: channel_not_allowed, body.handoff_routes: present, count: 1}
+
+- case_id: T6-47c
+  title: A mandate request that proposes confirmation_floor is refused
+  level: bacp.core.1
+  steps:
+    - request: {method: POST, path: "/mandates", tag: bacp-browse, body: {proposed_constraints: {confirmation_floor: {min_user_action: tap_confirm}}}}
+  expect:
+    responses:
+      - {status: 400, code: mandate_schema_invalid, param: $.proposed_constraints.confirmation_floor, count: 1}
+
+- case_id: T6-48
+  title: A gateway at the previous version refuses a mandate that carries confirmation_floor
+  level: bacp.core.1
+  fixture:
+    gateway: {version: "2026-10-17"}
+    mandate: {constraints: {confirmation_floor: {min_user_action: tap_confirm}}}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 403, code: constraint_unknown, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T6-49
+  title: UPI Circle is refused for human-not-present payment while Q-77 is open
+  level: bacp.pay.upi.1
+  fixture:
+    mandate: {rail: in.upi.circle}
+    sessions: {count: 1, presence: HNP, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    rail: {settled_debits: 0}
 ```

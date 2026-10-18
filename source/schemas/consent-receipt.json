@@ -85,8 +85,10 @@
               "DELIVERY_ADDRESS",
               "EMAIL",
               "AGE_OVER_18",
-              "GSTIN"
-            ]
+              "GSTIN",
+              "ACTING_FOR"
+            ],
+            "description": "The personal data item covered. ACTING_FOR is the GSTIN and display name of whom the agent acts for, which the gateway tells the seller only under a per-seller receipt that lists it."
           },
           "form": {
             "enum": [

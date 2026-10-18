@@ -1,14 +1,15 @@
 {
-  "step_up_id": "stp_01HZXK",
+  "step_up_id": "stp_01HZXKq8W3nK5vRt7YcLm2",
   "kind": "confirm",
   "reason": "rail_fallback",
   "summary": {
     "hi-IN": "3 दुकानें, कुल ₹932। 2 भुगतानों के लिए आपके UPI PIN की ज़रूरत है। कृपया UPI ऐप में पुष्टि करें।",
     "en-IN": "3 sellers, ₹932 in all. 2 payments need your UPI PIN. Please confirm in your UPI app."
   },
-  "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXK",
-  "ts_render": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYSyJ9.c2ln",
-  "delivery": "app_push",
+  "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXKq8W3nK5vRt7YcLm2",
+  "surface": "psp.example.in",
+  "ts_render": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImJhY3AtdHMtcmVuZGVyK2p3cyJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYS3E4VzNuSzV2UnQ3WWNMbTIifQ.c2ln",
+  "delivery": "deep_link",
   "covers": [
     {
       "session_id": "ses_01HZXB",

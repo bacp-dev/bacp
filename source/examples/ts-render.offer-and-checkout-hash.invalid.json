@@ -1,7 +1,8 @@
 {
-  "step_up_id": "stp_01HZYN",
+  "step_up_id": "stp_01HZYNq8W3nK5vRt7YcLm2",
   "kind": "confirm",
   "reason": "negotiation_between_reservation_and_max",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "language": "hi-IN",
   "offer_hash": "sha-256:WKKmq8K0e3cRnS6iOO5kEBXsGKuGOw9FdzlnlmLsPgA",
   "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",

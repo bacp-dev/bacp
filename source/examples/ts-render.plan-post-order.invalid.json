@@ -1,7 +1,8 @@
 {
-  "step_up_id": "stp_01HZXA",
+  "step_up_id": "stp_01HZXAq8W3nK5vRt7YcLm2",
   "kind": "post_order",
   "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "language": "hi-IN",
   "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
   "total": {
@@ -41,5 +42,6 @@
     ]
   },
   "action": "CANCEL",
-  "order_id": "ord_01HZY4"
+  "order_id": "ord_01HZY4",
+  "payer_ref": "sha-256:hbG5UDc1sZNEW6CSFwpfP8V6HWk5sEyIXps8d8bPTBc"
 }

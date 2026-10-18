@@ -1,8 +1,9 @@
 {
-  "step_up_id": "stp_01HZXA",
+  "step_up_id": "stp_01HZXAq8W3nK5vRt7YcLm2",
   "session_id": "ses_01HZXB",
   "kind": "confirm",
   "reason": "above_step_up_threshold",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "language": "hi-IN",
   "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
   "total": {
@@ -58,5 +59,8 @@
   ],
   "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
   "grievance_contact": "grievance@vaani.example.in",
-  "expires_at": "2026-10-22T18:45:00+05:30"
+  "expires_at": "2026-10-22T18:45:00+05:30",
+  "render_required": [
+    "catalogue_disclosure"
+  ]
 }

@@ -143,12 +143,13 @@
       }
     ],
     "step_up": {
-      "step_up_id": "stp_01HZXA",
+      "step_up_id": "stp_01HZXAq8W3nK5vRt7YcLm2",
       "kind": "confirm",
       "reason": "above_step_up_threshold",
-      "trusted_surface_url": "https://mm.psp.example.in/step-ups/stp_01HZXA",
+      "trusted_surface_url": "https://mm.psp.example.in/step-ups/stp_01HZXAq8W3nK5vRt7YcLm2",
+      "surface": "mm.psp.example.in",
       "expires_at": "2026-10-22T18:45:00+05:30"
     }
   },
-  "continue_url": "https://mm.psp.example.in/step-ups/stp_01HZXA"
+  "continue_url": "https://mm.psp.example.in/step-ups/stp_01HZXAq8W3nK5vRt7YcLm2"
 }

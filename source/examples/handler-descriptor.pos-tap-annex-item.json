@@ -1,0 +1,133 @@
+{
+  "handler_id": "in.pos.tap",
+  "aliases": [],
+  "name": {
+    "en-IN": "UPI Tap & Pay / contactless at POS"
+  },
+  "family": "pos",
+  "kind": "payment",
+  "status": "live",
+  "rail": {
+    "operator": "NPCI and networks"
+  },
+  "regulator": [
+    {
+      "body": "RBI",
+      "instrument": "AFA Directions 2025 Annex-1"
+    }
+  ],
+  "presence": {
+    "human_presence": "required",
+    "hp": true,
+    "hnp": "none",
+    "device_bound": false,
+    "assisted_only": true
+  },
+  "binding": {
+    "class": "A",
+    "open_eligible": false,
+    "closed_auth": [
+      "upi.pin"
+    ]
+  },
+  "mandate_primitives": [
+    {
+      "type": "none",
+      "limits_enforced_by": "none"
+    }
+  ],
+  "limits": [
+    {
+      "name": "no_afa_debit",
+      "source": {
+        "file": "NPCI press release 'RBI Governor Unveils New UPI Capabilities at GFF 2026', https://www.npci.org.in/uploads/NPCI_Press_Release_RBI_Governor_Unveils_New_UPI_Capabilities_at_GFF_2026_AI_Powered_Customer_Support_and_Seamless_Tap_and_Pay_Experience_bb763a7670.pdf",
+        "section": "UPI 'Tap & Pay'",
+        "label": "NPCI"
+      },
+      "verification": "verified",
+      "configurable": false,
+      "amount": {
+        "value": 500000,
+        "currency": "INR"
+      },
+      "applies_to": "UPI Tap & Pay on NFC POS: PIN-less up to ₹5,000; card contactless follows in.card.present"
+    }
+  ],
+  "afa": {
+    "model": "exempt_below_threshold",
+    "rbi_annex1_item": 7,
+    "pre_debit_notice": "not_applicable",
+    "source": {
+      "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
+      "section": "Annexure-1, item 7",
+      "label": "RBI"
+    },
+    "threshold": {
+      "value": 500000,
+      "currency": "INR"
+    }
+  },
+  "refund": {
+    "route": "source",
+    "source": {
+      "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693",
+      "section": "Annex",
+      "label": "RBI"
+    },
+    "failed_txn_tat": "P5D",
+    "compensation_per_day": {
+      "value": 10000,
+      "currency": "INR"
+    }
+  },
+  "dispute": {
+    "channels": [
+      "UDIR in payer app",
+      "MyUPI automated chargeback",
+      "RBI Integrated Ombudsman"
+    ]
+  },
+  "settlement": {
+    "mechanism": "NPCI UPI settlement cycles (10 authorisation cycles a day, separate dispute cycles OC 222)",
+    "evidence_refs": [
+      "rrn",
+      "utr"
+    ],
+    "escrow": "pa_escrow"
+  },
+  "data_minimisation": {
+    "payment_leg_fields": [
+      "payee",
+      "amount",
+      "mandate_ref",
+      "checkout_hash"
+    ],
+    "never_collect": [
+      "pin",
+      "otp",
+      "card_pan",
+      "cvv",
+      "card_expiry",
+      "netbanking_credentials",
+      "aadhaar_number",
+      "biometric",
+      "basket"
+    ],
+    "basket_blind": true
+  },
+  "funding": "debit",
+  "credit_disclosure_required": false,
+  "segments": [
+    "assisted"
+  ],
+  "requirements": [
+    "PAY-135"
+  ],
+  "sources": [
+    {
+      "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
+      "section": "Annexure-1",
+      "label": "RBI"
+    }
+  ]
+}

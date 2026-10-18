@@ -243,9 +243,10 @@
         "bacp.pay.all.1",
         "bacp.neg.1",
         "bacp.b2b.1",
-        "bacp.auction.1"
+        "bacp.auction.1",
+        "bacp.ts.1"
       ],
-      "description": "Id of a conformance level: bacp.core.1 (Core), bacp.pay.upi.1 (Payments-UPI), bacp.pay.all.1 (Payments-All), bacp.neg.1 (Negotiation), bacp.b2b.1 (B2B), bacp.auction.1 (Auctions)."
+      "description": "Id of a conformance level: bacp.core.1 (Core), bacp.pay.upi.1 (Payments-UPI), bacp.pay.all.1 (Payments-All), bacp.neg.1 (Negotiation), bacp.b2b.1 (B2B), bacp.auction.1 (Auctions), bacp.ts.1 (Trusted Surface)."
     },
     "MandatePrimitiveType": {
       "description": "Type of the rail object that carries a standing authority, as listed in a handler descriptor's mandate_primitives[].type, for example sbmd_block (UPI Reserve Pay block), upi_autopay_umn, card_emandate, nach_umrn, ppi_emandate or balance_cap.",
@@ -657,7 +658,7 @@
     },
     "Participant": {
       "type": "object",
-      "description": "One participant in a checkout session. The principal is referred to by a pairwise pseudonymous reference, never by an Aadhaar number. Accessibility needs travel only as Presentation.modality, never as disability data.",
+      "description": "One participant in a checkout session. The principal is referred to by a pairwise pseudonymous reference, never by an Aadhaar number. Accessibility needs travel only as Presentation.modality, never as disability data. For an assisted_operator, ref and ref_verification are attribution, never authentication: neither proves who the operator is or that the principal gave the operator authority.",
       "required": [
         "participant_id",
         "role"
@@ -673,9 +674,37 @@
         },
         "ref": {
           "type": "string",
-          "description": "Who the participant is: the pairwise pseudonymous principal reference for a principal; the identifier issued to an assisted operator by the body that certifies it (who certifies assisted operators is an open question); the seller-side reference for a seller operator; the agent id for a sub-agent."
+          "description": "Who the participant is: the pairwise pseudonymous principal reference for a principal; for an assisted_operator, a namespaced reference scheme:id, where scheme is csc_vle, bank_bc, ondc_np_agent or other, issued to the operator by the body that certifies it (who certifies assisted operators is an open question); the seller-side reference for a seller operator; the agent id for a sub-agent."
+        },
+        "ref_verification": {
+          "enum": [
+            "asserted",
+            "verified"
+          ],
+          "description": "Set only by the gateway, for an assisted_operator. asserted means that the agent operator supplied ref and the gateway has not checked it against a registry. verified is written only when the gateway can name the verifying registry, and none exists today, so asserted is the only value in practice. An agent that supplies verified gets 400 invalid_request. An absent value reads as asserted."
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "const": "assisted_operator"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ref": {
+                "pattern": "^(csc_vle|bank_bc|ondc_np_agent|other):[^\\s]+$"
+              }
+            }
+          }
+        }
+      ]
     },
     "HandoffRoute": {
       "type": "object",
@@ -750,7 +779,7 @@
         "surface": {
           "type": "string",
           "minLength": 1,
-          "description": "Trusted Surface id: the registry subscriber id of the payer PSP or Mandate Manager whose app, IVR or assisted counter presented the content. Never the agent."
+          "description": "Trusted Surface id: the registry subscriber id of the payer PSP or Mandate Manager whose app, IVR or assisted counter presented the content, equal to the subscriber id of the registry key that signed the event. The gateway refuses an event whose surface is not the signer's subscriber id with 404 not_found. Never the agent."
         },
         "channel": {
           "$ref": "#/$defs/Channel"
@@ -766,6 +795,12 @@
             "both"
           ],
           "description": "visual (on screen), audio (read aloud in full before the factor was entered) or both."
+        },
+        "language_choice": {
+          "enum": [
+            "principal_selected"
+          ],
+          "description": "Present, with the value principal_selected, only when the Trusted Surface could not render the language of ts_render and the principal chose another language on the Trusted Surface. Absent otherwise. A Trusted Surface MUST NOT render a language other than ts_render.language without it."
         },
         "content_hash": {
           "$ref": "#/$defs/Hash",
@@ -787,10 +822,12 @@
           "items": {
             "enum": [
               "catalogue_disclosure",
-              "plan"
+              "plan",
+              "items",
+              "acceptance_revocation"
             ]
           },
-          "description": "The render fields beyond the base set of this version that the Trusted Surface presented: catalogue_disclosure or plan. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure or plan (the gateway refuses the event with 400 invalid_request otherwise); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field."
+          "description": "The render fields beyond the base set of this version that the Trusted Surface presented: catalogue_disclosure, plan, items or acceptance_revocation. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure or plan, and on any step-up approval whose ts_render lists a name in render_required (the gateway refuses the event with 400 invalid_request if any such name is missing); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field. renders is the only extension point of Presentation."
         },
         "checkout_hash": {
           "$ref": "#/$defs/Hash",
@@ -814,7 +851,7 @@
             "voice_confirm_plus_device",
             "decline"
           ],
-          "description": "The principal's action: the ConsentReceipt captured_via values, or decline. biometric is the principal's own enrolled biometric, never an operator's."
+          "description": "The principal's action: the ConsentReceipt captured_via values, or decline. biometric is the principal's own enrolled biometric, never an operator's. voice_confirm_plus_device is a voice confirmation on a call that the Trusted Surface placed to, or received from, the number it holds for the principal or payer; 'device' there means that Trusted Surface-bound number or call leg, not a device key. It carries voice_evidence.challenge_hash, and the gateway refuses it on a rail_auth step-up and on any confirm step-up whose approval releases a debit (403 presence_not_proven)."
         },
         "shown_at": {
           "type": "string",
@@ -832,15 +869,24 @@
           "type": "object",
           "properties": {
             "audio_hash": {
-              "$ref": "#/$defs/Hash"
+              "$ref": "#/$defs/Hash",
+              "description": "sha-256 of the recorded audio of the confirmation."
             },
             "transcript_hash": {
               "$ref": "#/$defs/Hash"
             },
             "translation_model": {
               "type": "string"
+            },
+            "challenge_hash": {
+              "$ref": "#/$defs/Hash",
+              "description": "sha-256 over the JCS form of {step_up_id, content_hash, challenge}, where challenge is the single-use value of at least 4 digits that the Trusted Surface drew from its own random source for this step-up and the principal answered by speech or by keypad (DTMF carries the same weight). The challenge is never in ts_render, StepUp, StepUpStatus or anything else an agent sees."
             }
-          }
+          },
+          "description": "Evidence of a voice confirmation (user_action voice_confirm_plus_device). challenge_hash is REQUIRED. The Trusted Surface draws the voice challenge itself, on its own call leg, and the gateway never sees the challenge, so it cannot recompute the hash: it is evidence that the answer was bound to an unpredictable value, not a check the gateway makes.",
+          "required": [
+            "challenge_hash"
+          ]
         },
         "assisted_by": {
           "type": "string",
@@ -873,6 +919,23 @@
                 "description": "On channel assisted the principal approves with the principal's own factor (UPI PIN, or biometric meaning the principal's own biometric enrolled for the principal on the Trusted Surface device), never a tap (BACP policy)."
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "user_action": {
+                "const": "voice_confirm_plus_device"
+              }
+            },
+            "required": [
+              "user_action"
+            ]
+          },
+          "then": {
+            "required": [
+              "voice_evidence"
+            ]
           }
         },
         {

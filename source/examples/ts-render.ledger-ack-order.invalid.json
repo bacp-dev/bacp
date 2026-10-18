@@ -1,7 +1,8 @@
 {
-  "step_up_id": "stp_01HZYP",
+  "step_up_id": "stp_01HZYPq8W3nK5vRt7YcLm2",
   "kind": "post_order",
   "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "action": "LEDGER_ACK",
   "language": "hi-IN",
   "total": {
@@ -21,5 +22,6 @@
     "id": "ldg_KIRANAKHATA01",
     "through_seq": 41
   },
-  "order_id": "ORD-1"
+  "order_id": "ORD-1",
+  "payer_ref": "sha-256:K--ciesPMEh5-AskOBsrSW3p1bNLmdpsrk0UH6mIIUE"
 }

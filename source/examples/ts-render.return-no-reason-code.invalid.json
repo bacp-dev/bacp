@@ -1,0 +1,35 @@
+{
+  "step_up_id": "stp_01HZYRq8W3nK5vRt7YcLm2",
+  "kind": "post_order",
+  "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "action": "RETURN",
+  "order_id": "ord_01HZY4",
+  "items": [
+    {
+      "id": "I-MILK-1L",
+      "quantity": 1
+    }
+  ],
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+  "total": {
+    "value": 45000,
+    "currency": "INR"
+  },
+  "seller_name": "NANDINI DAIRY STORE",
+  "summary": {
+    "hi-IN": "1 × दूध (1 लीटर) वापस करें: गुणवत्ता में समस्या।",
+    "en-IN": "Return 1 × milk (1 litre): quality issue."
+  },
+  "counterparty_text": [
+    {
+      "label": "Item name (seller's text)",
+      "text": "Toned Milk 1 L"
+    }
+  ],
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T19:05:00+05:30",
+  "payer_ref": "sha-256:_I-aUyBOKheM7kKqCaO-fIFmXvIrMRaxTyVH56disSA"
+}

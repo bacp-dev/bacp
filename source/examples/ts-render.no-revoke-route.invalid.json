@@ -1,7 +1,8 @@
 {
-  "step_up_id": "stp_01HZYP",
+  "step_up_id": "stp_01HZYPq8W3nK5vRt7YcLm2",
   "kind": "post_order",
   "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "action": "CANCEL",
   "order_id": "ord_01HZY4",
   "language": "hi-IN",
@@ -16,5 +17,6 @@
     "en-IN": "Cancel the ₹450 order from Nandini Dairy Store?"
   },
   "grievance_contact": "grievance@vaani.example.in",
-  "expires_at": "2026-10-22T19:05:00+05:30"
+  "expires_at": "2026-10-22T19:05:00+05:30",
+  "payer_ref": "sha-256:K--ciesPMEh5-AskOBsrSW3p1bNLmdpsrk0UH6mIIUE"
 }

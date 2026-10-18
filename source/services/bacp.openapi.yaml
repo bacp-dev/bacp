@@ -41,6 +41,8 @@ tags:
 - name: evidence
 - name: trusted-surface
   description: Callbacks from Mandate Manager / payer PSP (Trusted Surface). Never callable by agents.
+- name: step-up
+  description: The agent's read of the state of a step-up that it caused, and the only way to learn the hash of the signed approval
 - name: negotiation
   description: Bilateral negotiation sessions
 - name: rfq
@@ -575,12 +577,17 @@ paths:
         `409 session_state_conflict` at `$.status`. A session in any other state keeps its status and records `handoff`.
 
         A human support operator accepts (`action: accept`) with a request signed by a registry key whose role is support operator, under tag
-        `bacp-handoff`. Only then does the gateway set `handoff.accepted_by` (that key''s id) and `handoff.accepted_at`. An acceptance signed by
-        any other key, or under any other tag, leaves the handoff requested. While the session is in `human_handoff`, a `step_up.approved` event
-        is held, not applied.
+        `bacp-handoff`. Only then does the gateway set `handoff.accepted_by` (that key''s id) and `handoff.accepted_at`. The gateway reads the key''s registry
+        record, which names the agent operator and the one person who holds the key, and refuses without changing the handoff: a key whose role
+        is not support operator, or a signature under any other tag, with `401 signature_invalid`; a support operator key of another agent
+        operator than the session''s with `404 not_found`; an `accept` while `accepted_by` is set with `409 session_state_conflict` at
+        `$.handoff.accepted_by`. While the session is in `human_handoff`, a `step_up.approved` event is held, not applied.
 
         `action: release` ends the handoff. The gateway accepts it from the `accepted_by` key under tag `bacp-handoff`, or from the agent under
-        tag `bacp-browse` only while `accepted_by` is absent; a release from any other key leaves the session in `human_handoff`. A session in
+        tag `bacp-browse` only while `accepted_by` is absent. Any other release leaves the session in `human_handoff` and changes nothing: a key whose role is
+        not support operator gets `401 signature_invalid`; another agent operator''s support operator key gets `404 not_found`; a key of the same
+        agent operator that is not `accepted_by`, and an agent''s release after acceptance, get `409 session_state_conflict` at
+        `$.handoff.accepted_by`. A session in
         `human_handoff` returns to `incomplete`, and `handoff.ended_at` is set. A held approval then applies only if its step-up has not expired
         and its `checkout_hash` still equals the session''s. Every act is written to the InstructionLog at stage `handoff`.
 
@@ -949,7 +956,7 @@ paths:
               stepUpApproved:
                 value:
                   event: step_up.approved
-                  step_up_id: stp_01HZXA
+                  step_up_id: stp_01HZXAq8W3nK5vRt7YcLm2
                   session_id: ses_01HZXB
                   closed_checkout_mandate: eyJhbGciOiJFUzI1NiJ9.eyJ1c2VyIjoxfQ.c2ln
                   auth_binding:
@@ -962,7 +969,7 @@ paths:
                     language: hi-IN
                     modality: visual
                     content_hash: sha-256:t1dVn6mjcxJp1xBJ6Q1uN3lvlK1D5oQh0pX8wv5cY4E
-                    content_ref: https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZXA
+                    content_ref: https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZXAq8W3nK5vRt7YcLm2
                     template_id: psp.example.in/app/step-up-confirm/3
                     checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
                     user_action: upi_pin
@@ -1041,6 +1048,62 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /step-ups/{step_up_id}:
+    parameters:
+    - name: step_up_id
+      in: path
+      required: true
+      description: "A step-up that the calling agent's request caused, from the step_up object of a session or of a 403 presence_not_proven."
+      schema:
+        type: string
+    get:
+      tags:
+      - step-up
+      operationId: getStepUpStatus
+      x-bacp-signature-tag: bacp-browse
+      x-bacp-mcp-tool: bacp_step_up_status
+      x-bacp-idempotent: false
+      summary: Read the state of a step-up and, once approved, the hash of the signed approval event (bacp.step_up_status).
+      description: 'Signed by the agent under tag `bacp-browse`. This is not the Trusted Surface render fetch at `/trusted-surface/step-ups/{step_up_id}`,
+        which only the step-up''s Mandate Manager or payer PSP may call. The response carries no render, no total and no text for the principal.
+
+        Only the agent credential whose request created the step-up may read it. Any other caller gets `404 not_found`, including another credential of
+        the same agent operator, so that the endpoint does not reveal which step-ups exist.
+
+        Once `status` is `approved`, `ts_event_hash` is the sha-256 over the JCS form of the signed `step_up.approved` event that the gateway stored.
+        A `post_order` write retries with `hp_proof{ts_event_hash, step_up_id}` built from it. `voided` means that the gateway voided the step-up
+        because the counterparty revised the resolution it showed, and a write that cites it gets `403 presence_not_proven` with a new step_up.
+        `superseded` means a negotiation step-up whose offer was superseded.
+
+        '
+      security:
+      - httpSignature: []
+        agentCredential: []
+      parameters:
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      responses:
+        '200':
+          description: The state of the step-up
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StepUpStatus'
+              examples:
+                approved:
+                  value:
+                    step_up_id: stp_01HZYPq8W3nK5vRt7YcLm2
+                    kind: post_order
+                    status: approved
+                    ts_event_hash: sha-256:Vk2fQeRz0b3dYk7pLmN4tHq8sXw1cUa5JrZ9oEi6GfA
+        '401':
+          $ref: '#/components/responses/Unauthorized'
         '404':
           $ref: '#/components/responses/NotFound'
         '429':
@@ -1173,7 +1236,7 @@ paths:
                   presence: HP
                   hp_proof:
                     ts_event_hash: sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU
-                    step_up_id: stp_01HZPORET01
+                    step_up_id: stp_01HZPORET01q8W3nK5vRt7YcLm2
                   evidence:
                   - type: image
                     hash: sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A
@@ -1400,7 +1463,7 @@ paths:
                   presence: HP
                   hp_proof:
                     ts_event_hash: sha-256:Jq7Kx0n2Yb3s4V9cR1mT8wQ6eL5uH2pF0gD7aZ3kN1o
-                    step_up_id: stp_01HZPOISS01
+                    step_up_id: stp_01HZPOISS01q8W3nK5vRt7YcLm2
                   note:
                     en-IN: No response in 48 hours
       responses:
@@ -1452,6 +1515,51 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EvidenceBundle'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /evidence/{transaction_id}/summary:
+    parameters:
+    - name: transaction_id
+      in: path
+      required: true
+      description: "The transaction id of the order flow whose evidence bundle is summarised, as carried on its session and order."
+      schema:
+        type: string
+    get:
+      tags:
+      - evidence
+      operationId: getEvidenceSummary
+      x-bacp-signature-tag: bacp-browse
+      x-bacp-mcp-tool: bacp_evidence_summary_get
+      x-bacp-idempotent: false
+      summary: A human-readable summary of the evidence bundle in one language (profile in.bacp.evidence.summary.1). Informative, never evidence.
+      description: 'The summary is built only from the signed artefacts of the bundle that the gateway built for the caller, with the gateway''s own
+        templates, so that the same bundle, language and template version give identical bytes. The callers are the callers of the bundle itself, and each
+        is served only the summary of the bundle built for it: a seller or a payer PSP gets no other seller''s lines. The grievance officer named in the
+        operator''s grievance_contact may also fetch it, acting for the principal, so that a principal who has no API client gets a copy of her
+        complaint in her own language. Anyone else gets 403 evidence_forbidden. A reviewer verifies the bundle, never the summary.
+
+        '
+      parameters:
+      - name: language
+        in: query
+        required: true
+        description: The language of the summary, as a BCP 47 tag, for example hi-IN.
+        schema:
+          $ref: '#/components/schemas/LanguageTag'
+      responses:
+        '200':
+          description: The summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EvidenceSummary'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -2683,6 +2791,56 @@ paths:
           $ref: '#/components/responses/ServiceUnavailable'
       x-bacp-canonical-operation: cancelSession
 webhooks:
+  trusted_surface.step_up_notify:
+    post:
+      summary: Content-free push from the gateway to the ts_notify_url of the step-up's Mandate Manager or payer PSP, when no origin of the signer
+        conforms.
+      description: Signed by the gateway under RFC 9421 with a key in its profile's keys, as a webhook is. The body carries only the step_up_id and
+        expires_at, never the render, the total or any text. The Trusted Surface then fetches the render with GET /trusted-surface/step-ups/{step_up_id}.
+        The agent is not a party to it and never sees it. A receiver that cannot verify the signature ignores the push.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TsNotify'
+            examples:
+              push:
+                value:
+                  step_up_id: stp_01HZXAq8W3nK5vRt7YcLm2
+                  expires_at: '2026-10-22T19:05:00+05:30'
+      responses:
+        '200':
+          description: Acknowledged
+  step_up.updated:
+    post:
+      summary: A step-up that the agent's request caused reached a final state, so that the agent can fetch its ts_event_hash.
+      description: Sent to the webhook_url of the agent credential whose request created the step-up, with the StepUpStatus as data. The body
+        carries no render and no text for the principal. GET /step-ups/{step_up_id} returns the same state, and an agent that receives no
+        webhook reads it there.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/WebhookEvent'
+              - type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StepUpStatus'
+            examples:
+              approved:
+                value:
+                  event_id: evt_01HZXV
+                  type: step_up.updated
+                  created_at: '2026-10-22T19:03:10+05:30'
+                  data:
+                    step_up_id: stp_01HZYPq8W3nK5vRt7YcLm2
+                    kind: post_order
+                    status: approved
+                    ts_event_hash: sha-256:Vk2fQeRz0b3dYk7pLmN4tHq8sXw1cUa5JrZ9oEi6GfA
+      responses:
+        '200':
+          description: Acknowledged
   mandate.status_changed:
     post:
       summary: Mandate status changed (ACTIVE, PAUSED, REVOKED, EXPIRED, EXHAUSTED). Delivered within 60 s of the Trusted Surface event.
@@ -3051,7 +3209,7 @@ components:
               value:
                 type: authorization_error
                 code: ts_render_mismatch
-                message: presentation.content_hash is not the hash of the ts_render of stp_01HZXA
+                message: presentation.content_hash is not the hash of the ts_render of stp_01HZXAq8W3nK5vRt7YcLm2
                 param: $.presentation.content_hash
                 resolution: unrecoverable
     MandateRejected:
@@ -3084,12 +3242,13 @@ components:
                 param: $.hp_proof
                 resolution: requires_buyer_review
                 step_up:
-                  step_up_id: stp_01HZPO7K2M
+                  step_up_id: stp_01HZPO7K2Mq8W3nK5vRt7YcLm2
                   kind: post_order
                   reason: presence_proof
-                  trusted_surface_url: https://psp.example.in/approve/stp_01HZPO7K2M
-                  ts_render: eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpQTzdLMk0ifQ.c2ln
-                  delivery: app_push
+                  trusted_surface_url: https://psp.example.in/approve/stp_01HZPO7K2Mq8W3nK5vRt7YcLm2
+                  surface: psp.example.in
+                  ts_render: eyJhbGciOiJFUzI1NiIsInR5cCI6ImJhY3AtdHMtcmVuZGVyK2p3cyJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpQTzdLMk1xOFczbks1dlJ0N1ljTG0yIn0.c2ln
+                  delivery: deep_link
                   expires_at: '2026-10-23T09:15:00+05:30'
             railCap:
               value:
@@ -3212,7 +3371,7 @@ components:
                 message: Request body exceeds 262144 bytes
                 resolution: unrecoverable
     QuotaExceeded:
-      description: Per-agent idempotency-key quota exhausted, or a rate limit exceeded (render fetches per caller key, post_order step-up creation per agent) (quota_exceeded).
+      description: Per-agent idempotency-key quota exhausted, or a rate limit exceeded (render fetches per caller key and per step-up, post_order step-up creation per agent and principal and per order) (quota_exceeded). Retry-After is REQUIRED.
       content:
         application/json:
           schema:
@@ -3226,11 +3385,13 @@ components:
                 resolution: recoverable
       headers:
         Retry-After:
+          required: true
           schema:
             type: integer
           example: 5
     ServiceUnavailable:
-      description: The idempotency store is unavailable; writes fail closed (idempotency_store_unavailable).
+      description: The idempotency store is unavailable and writes fail closed (idempotency_store_unavailable), or no Trusted Surface can take the step-up
+        (trusted_surface_unavailable, whose reason says why and which carries the session's handoff routes).
       content:
         application/json:
           schema:
@@ -3242,6 +3403,20 @@ components:
                 code: idempotency_store_unavailable
                 message: Idempotency store unreachable; request not processed
                 resolution: recoverable
+            trustedSurfaceUnavailable:
+              value:
+                type: service_unavailable
+                code: trusted_surface_unavailable
+                message: The signer of this step-up has no registered Trusted Surface origin and no notify endpoint
+                reason: no_conforming_origin
+                resolution: requires_buyer_input
+                handoff_routes:
+                - channel: ivr
+                  uri: tel:+91-80-00000001
+                  dtmf: '0'
+                  languages:
+                  - hi-IN
+                  hours: 24x7
   schemas:
     Amount:
       type: object
@@ -3378,7 +3553,7 @@ components:
         accepted_by:
           type: string
           description: Registry key id of the human support operator who accepted, verified from a request signed under tag bacp-handoff by a
-            key whose registry role is support operator. Never an agent key.
+            key whose registry role is support operator and whose registry record names the session's agent operator. Never an agent key.
         accepted_at:
           type: string
           format: date-time
@@ -4903,10 +5078,47 @@ components:
           - plan_conflict
           - ledger_head_mismatch
           - settlement_payee_unmatched
+          - trusted_surface_unavailable
         message:
           type: string
         param:
           type: string
+        reason:
+          enum:
+          - no_conforming_origin
+          - language_unavailable
+          - channel_not_allowed
+          description: 'REQUIRED on trusted_surface_unavailable, and absent on every other code. no_conforming_origin: the step-up''s signer has no
+            registered Trusted Surface origin that the gateway may use and no notify endpoint. language_unavailable: no Trusted Surface of the
+            signer renders the language of the step-up. channel_not_allowed: the only channels that the mandate''s confirmation floor allows are unavailable.'
+        seller_reason:
+          type: object
+          description: On bpp_nack only, and only when the seller's own BPP-signed NACK states one, the reason the seller refused, as the gateway maps it. The gateway never
+            sets it from any unsigned message and never from the agent's text. An unmapped Beckn code gives other.
+          required:
+          - code
+          properties:
+            code:
+              enum:
+              - item_unavailable
+              - quantity_reduced
+              - price_changed
+              - not_serviceable
+              - store_closed
+              - agent_orders_not_accepted
+              - terms_mismatch
+              - other
+            beckn_code:
+              type: string
+              description: The Beckn or ONDC error code of the NACK as received.
+          additionalProperties: false
+        handoff_routes:
+          type: array
+          minItems: 1
+          description: On trusted_surface_unavailable with reason language_unavailable or channel_not_allowed, the session's handoff routes, so that the
+            agent can offer the principal a human. Taken from the session's ai_disclosure.handoff_routes, and absent when the session lists none.
+          items:
+            $ref: '#/components/schemas/HandoffRoute'
         resolution:
           enum:
           - recoverable
@@ -4981,13 +5193,16 @@ components:
           - charge_recipient_unmapped
           - charge_recipient_invalid
           - operator_compensation_mismatch
+          - return_refused
+          - seller_cancelled
         origin:
           enum:
           - gateway
           - counterparty
           default: gateway
           description: Who wrote content. A gateway-written message never contains counterparty text; counterparty text travels only in args[]
-            with origin counterparty, or as a whole message with code untrusted_counterparty_text and origin counterparty.
+            with origin counterparty, or as a whole message with code untrusted_counterparty_text and origin counterparty. REQUIRED whenever args[] is
+            present. Without args[], an absent origin means gateway.
         content:
           $ref: '#/components/schemas/LangText'
         args:
@@ -5018,6 +5233,15 @@ components:
           - requires_buyer_review
           - requires_seller_review
           - unrecoverable
+      allOf:
+      - if:
+          required:
+          - args
+        then:
+          required:
+          - origin
+          description: A message that carries args[] states its origin, so that a reader never has to rely on the default to tell a gateway-written message
+            from a counterparty one.
     Profile:
       type: object
       required:
@@ -5102,6 +5326,42 @@ components:
           description: The conformance levels the participant claims, its attestation and, for a Mandate Manager, its exclusion list.
         negotiation:
           $ref: ../schemas/negotiation-session.json#/$defs/Capability
+        step_up_limits:
+          type: object
+          description: 'The limits that the gateway applies to step-ups, each declared as a count over a window, in the style of negotiation.step_up_cap.
+            BACP sets no number: these are the gateway''s own design values, never presented as external limits. A gateway that declares none is tested
+            against the limit that the conformance fixture sets. A request beyond a count limit gets 429, and a request refused by the decline cool-off
+            gets 409 session_state_conflict, each with Retry-After.'
+          properties:
+            post_order_per_principal:
+              $ref: '#/components/schemas/StepUpLimit'
+              description: The most post_order step-ups the gateway creates per (agent, principal) in the window. Replacements for a step-up voided by
+                a counterparty's revision are not counted.
+            post_order_per_order:
+              $ref: '#/components/schemas/StepUpLimit'
+              description: The most post_order step-ups the gateway creates per order_id in the window.
+            reprompt_per_issue:
+              $ref: '#/components/schemas/StepUpLimit'
+              description: The most replacement step-ups, caused by a counterparty's revision of an issue's resolution, that the gateway creates per
+                (principal, issue_id) in the window. Past it the gateway creates no new step-up, answers the agent 409 session_state_conflict, shows the
+                principal no prompt and leaves the issue to the grievance route.
+            decline_cooloff:
+              type: object
+              required:
+              - window
+              properties:
+                window:
+                  $ref: ../schemas/common.json#/$defs/Duration
+              additionalProperties: false
+              description: How long after an explicit step_up.declined the gateway refuses a new step-up for the same (order_id, action, issue_id) or
+                (session_id, kind) with 409 session_state_conflict and a Retry-After equal to the time left. Expiry does not start it.
+            render_fetch_per_key:
+              $ref: '#/components/schemas/StepUpLimit'
+              description: The most ts_render fetches per caller key in the window, counted before the step-up is looked up.
+            render_fetch_per_step_up:
+              $ref: '#/components/schemas/StepUpLimit'
+              description: The most ts_render fetches per (caller key, step_up_id) in the window, counted after the standing check.
+          additionalProperties: false
         payment_handlers_registry:
           type: string
           description: URI of GET /payment-handlers
@@ -6241,334 +6501,133 @@ components:
           - prior_price
       unevaluatedProperties: false
     TsRender:
+      $ref: ../schemas/ts-render.json
+    EvidenceSummary:
       type: object
-      description: The payload of a ts_render, the compact JWS that the gateway signs once per step-up over the JCS form of this object and
-        serves to the step-up's Mandate Manager or payer PSP. The fields are defined on the Human participants page.
+      description: The informative rendering of one evidence bundle, profile in.bacp.evidence.summary.1. It is built only from the signed artefacts in the
+        bundle, never from operator-written summaries, and it is never evidence.
+      required:
+      - profile
+      - bundle_hash
+      - language
+      - template_id
+      - text
+      - items
+      properties:
+        profile:
+          const: in.bacp.evidence.summary.1
+        bundle_hash:
+          $ref: '#/components/schemas/Hash'
+          description: The sha-256 over the JCS form of the bundle that this summary summarises.
+        language:
+          $ref: '#/components/schemas/LanguageTag'
+        template_id:
+          type: string
+          minLength: 1
+          description: The template and its version, so that the same bundle, language and template give identical bytes.
+        text:
+          type: string
+          description: The summary text, in the stated language, with amounts in rupees with Indian digit grouping and times in IST. Counterparty text is
+            labelled.
+        items:
+          type: array
+          description: One entry for each artefact the summary rests on.
+          items:
+            type: object
+            required:
+            - ref
+            - verified
+            properties:
+              ref:
+                type: string
+                description: Names the artefact in the bundle (a mandate, a receipt, a Trusted Surface event) by its id.
+              verified:
+                type: boolean
+                description: Whether the signature of that artefact verified when the summary was built.
+            additionalProperties: false
+      additionalProperties: false
+    StepUpLimit:
+      type: object
+      description: A limit declared as a count over a window. BACP sets no number.
+      required:
+      - count
+      - window
+      properties:
+        count:
+          type: integer
+          minimum: 1
+        window:
+          $ref: ../schemas/common.json#/$defs/Duration
+      additionalProperties: false
+    StepUpStatus:
+      type: object
+      description: The state of one step-up, as the agent that caused it reads it. It carries no render and no text for the principal.
       required:
       - step_up_id
       - kind
-      - reason
-      - language
-      - revoke_route
-      - grievance_contact
+      - status
+      properties:
+        step_up_id:
+          type: string
+          pattern: ^stp_[A-Za-z0-9_-]{22,64}$
+        kind:
+          $ref: '#/components/schemas/StepUp/properties/kind'
+        status:
+          enum:
+          - pending
+          - approved
+          - declined
+          - expired
+          - voided
+          - superseded
+          description: pending until the principal acts, the step-up expires, or the gateway voids or supersedes it. voided covers the void on a seller's
+            revision of an issue resolution. superseded is a negotiation step-up whose offer was superseded.
+        ts_event_hash:
+          $ref: '#/components/schemas/Hash'
+          description: The sha-256 over the JCS form of the signed step_up.approved event that the gateway stored. REQUIRED when status is approved,
+            and absent otherwise.
+      allOf:
+      - if:
+          required:
+          - status
+          properties:
+            status:
+              const: approved
+        then:
+          required:
+          - ts_event_hash
+        else:
+          not:
+            required:
+            - ts_event_hash
+      additionalProperties: false
+    TsNotify:
+      type: object
+      description: The body of the content-free push that the gateway sends to a signer's ts_notify_url. It carries nothing to show to the principal.
+      required:
+      - step_up_id
       - expires_at
       properties:
         step_up_id:
           type: string
-        session_id:
-          type: string
-        kind:
-          $ref: '#/components/schemas/StepUp/properties/kind'
-        reason:
-          $ref: '#/components/schemas/StepUp/properties/reason'
-        action:
-          enum:
-          - CANCEL
-          - RETURN
-          - RAISE_ISSUE
-          - INFO_PROVIDED
-          - RESOLUTION_ACCEPTED
-          - RESOLUTION_REJECTED
-          - ESCALATED
-          - CLOSED
-          - GRN
-          - CRAC
-          - MSMED_OBJECTION
-          - LEDGER_ACK
-          description: For kind post_order only, the write the principal confirms. No other value is valid.
-        order_id:
-          type: string
-        issue_id:
-          type: string
-        subject_hash:
-          $ref: '#/components/schemas/Hash'
-          description: 'REQUIRED for the trade acts GRN, CRAC, MSMED_OBJECTION and LEDGER_ACK: the hash of exactly what the principal is shown (for a
-            document, the JCS hash of the exact body; for a ledger entry, its entry_hash; for a ledger statement, the head_hash at through_seq). For the
-            issue actions RESOLUTION_ACCEPTED and RESOLUTION_REJECTED: the sha-256 over the JCS form of the issue''s resolution as shown, absent when the issue
-            has no resolution. Absent for every other action, including ESCALATED, INFO_PROVIDED and CLOSED; a render that carries it for another action is invalid.'
-        subject_ref:
-          type: object
-          description: For a trade act, what the act is about. REQUIRED with the trade acts GRN, CRAC, MSMED_OBJECTION and LEDGER_ACK. kind order or
-            document for a GRN, CRAC or MSMED_OBJECTION (the order_id is then also present); ledger_entry (id is the entry_id) or ledger_statement
-            (id is the ledger_id, with through_seq) for a LEDGER_ACK, which has no order_id.
-          required:
-          - kind
-          - id
-          properties:
-            kind:
-              enum:
-              - order
-              - ledger_entry
-              - ledger_statement
-              - document
-            id:
-              type: string
-              minLength: 1
-              maxLength: 64
-            through_seq:
-              type: integer
-              minimum: 0
-            payee:
-              type: string
-              maxLength: 256
-              description: The payee of the cited rail receipt. REQUIRED when kind is ledger_entry and the entry is a payment in pending_ack with settlement_payee_unmatched.
-          if:
-            properties:
-              kind:
-                const: ledger_statement
-            required:
-            - kind
-          then:
-            required:
-            - through_seq
-          additionalProperties: false
-        language:
-          $ref: '#/components/schemas/LanguageTag'
-        checkout_hash:
-          $ref: '#/components/schemas/Hash'
-        total:
-          $ref: '#/components/schemas/Amount'
-          description: The total the principal pays, as one figure. It is the quote total plus the sum of the session's operator_charges. On a summary
-            step-up, the sum of basket[].amount.
-        charge_lines:
-          type: array
-          minItems: 1
-          description: The fee read-out of a step-up that pays for an order, before the factor. One entry for each fee line (convenience, platform, payment_handling,
-            handling, cod_fee, and every operator charge), then one remainder entry for everything else. The amounts add up to total. The Trusted
-            Surface reads each line from its own templates, never from seller text. An order with no fee line has no charge_lines.
-          items:
-            $ref: '#/components/schemas/ChargeLine'
-        price_breakup_hash:
-          $ref: '#/components/schemas/Hash'
-        seller_name:
-          type: string
-          description: The payee seller, from the BPP-signed quote. Absent on a summary step-up, whose sellers are in basket[].
-        assisted_operators:
-          type: array
-          items:
-            type: object
-            properties:
-              participant_id:
-                type: string
-              ref:
-                type: string
-        summary:
-          $ref: '#/components/schemas/LangText'
-        counterparty_text:
-          type: array
-          items:
-            type: object
-            required:
-            - label
-            - text
-            properties:
-              label:
-                type: string
-              text:
-                type: string
-        revoke_route:
-          type: string
-          format: uri
-        grievance_contact:
-          type: string
-        basket:
-          type: array
-          minItems: 2
-          description: On a summary step-up over a multi-seller basket, one line per seller, in the order the Trusted Surface states them. The
-            Trusted Surface states the number of sellers first.
-          items:
-            $ref: '#/components/schemas/BasketLine'
-        covers:
-          type: array
-          minItems: 1
-          description: On a summary step-up only, the legs the approval covers. Only the shared root's Mandate Manager fetches a render that
-            carries covers[] and posts its result.
-          items:
-            $ref: '#/components/schemas/CoverEntry'
-        catalogue_disclosure:
-          type: array
-          minItems: 1
-          description: One entry for each line item of the step-up's session or sessions whose Disclosures.catalogue[] entry is sponsored or undeclared,
-            or carries a prior_price, so that the Trusted Surface repeats what discovery showed before the total. Only on a session step-up of kind confirm
-            or rail_auth, never on a post_order step-up or a negotiation confirm. It is hashed into Presentation.content_hash with the rest of the render.
-          items:
-            $ref: '#/components/schemas/TsCatalogueDisclosure'
-        plan:
-          type: object
-          description: 'On a session step-up (confirm or rail_auth) over a payment plan, the whole plan the principal approves, so that the Trusted
-            Surface shows every tender and its amount, never one tender alone. It is hashed into Presentation.content_hash with the rest of the render, and
-            the approval event carries Presentation.plan_hash equal to plan.plan_hash.'
-          required:
-          - plan_hash
-          - tenders
-          properties:
-            plan_hash:
-              $ref: '#/components/schemas/Hash'
-              pattern: '^sha-256:'
-            tenders:
-              type: array
-              minItems: 1
-              maxItems: 4
-              items:
-                type: object
-                required:
-                - tender_id
-                - handler
-                - amount
-                - sequence
-                properties:
-                  tender_id:
-                    type: string
-                  handler:
-                    $ref: ../schemas/common.json#/$defs/HandlerRef
-                  amount:
-                    $ref: ../schemas/common.json#/$defs/PositiveAmount
-                  sequence:
-                    type: integer
-                    minimum: 1
-                additionalProperties: false
-          additionalProperties: false
-        offer_hash:
-          $ref: '#/components/schemas/Hash'
-          description: On a negotiation confirm step-up, the offer_hash of the offer the principal is asked to approve.
-        acceptance_revocation:
-          enum:
-          - waived
-          - allowed_until_receipt
-          description: On a negotiation confirm step-up about a firm offer, the offer's acceptance_revocation value, copied unchanged. The Trusted
-            Surface never shows the token; it shows the fixed consequence sentence for the value, followed by the offer's cancellation terms.
-            In this version only waived occurs. Present only together with offer_hash.
         expires_at:
           type: string
           format: date-time
-      dependentRequired:
-        acceptance_revocation:
-        - offer_hash
-      not:
-        required:
-        - checkout_hash
-        - offer_hash
-      allOf:
-      - if:
-          required:
-          - action
-          properties:
-            action:
-              enum:
-              - GRN
-              - CRAC
-              - MSMED_OBJECTION
-              - LEDGER_ACK
-        then:
-          required:
-          - subject_hash
-          - subject_ref
-          properties:
-            kind:
-              const: post_order
-      - if:
-          required:
-          - action
-          properties:
-            action:
-              not:
-                enum:
-                - GRN
-                - CRAC
-                - MSMED_OBJECTION
-                - LEDGER_ACK
-                - RESOLUTION_ACCEPTED
-                - RESOLUTION_REJECTED
-        then:
-          not:
-            required:
-            - subject_hash
-      - if:
-          required:
-          - action
-          properties:
-            action:
-              const: LEDGER_ACK
-        then:
-          properties:
-            subject_ref:
-              properties:
-                kind:
-                  enum:
-                  - ledger_entry
-                  - ledger_statement
-          not:
-            required:
-            - order_id
-      - if:
-          required:
-          - action
-          properties:
-            action:
-              enum:
-              - GRN
-              - CRAC
-              - MSMED_OBJECTION
-        then:
-          required:
-          - order_id
-          properties:
-            subject_ref:
-              properties:
-                kind:
-                  enum:
-                  - order
-                  - document
-      - if:
-          required:
-          - plan
-        then:
-          required:
-          - checkout_hash
-          properties:
-            kind:
-              enum:
-              - confirm
-              - rail_auth
-      - if:
-          required:
-          - catalogue_disclosure
-        then:
-          required:
-          - checkout_hash
-          properties:
-            kind:
-              enum:
-              - confirm
-              - rail_auth
-      - if:
-          required:
-          - catalogue_disclosure
-          - covers
-        then:
-          properties:
-            catalogue_disclosure:
-              items:
-                required:
-                - cover_index
-        else:
-          properties:
-            catalogue_disclosure:
-              items:
-                not:
-                  required:
-                  - cover_index
+      additionalProperties: false
     StepUp:
       type: object
       required:
       - step_up_id
       - kind
       - reason
-      - trusted_surface_url
       - expires_at
       properties:
         step_up_id:
           type: string
+          pattern: ^stp_[A-Za-z0-9_-]{22,64}$
+          description: 'The step-up''s id: at least 128 bits from a cryptographically secure random source, opaque, and never parsed or read aloud to or
+            typed by a person. The pattern applies to ids that a gateway mints now. HpProof.step_up_id and the event fields do not carry it, so that an id
+            from an earlier gateway still works.'
         kind:
           enum:
           - confirm
@@ -6578,7 +6637,7 @@ components:
             example the UPI PIN) because an AFA threshold applies. post_order = the principal confirms one post-order write or trade act, named
             in the ts_render, to obtain hp_proof (carried in Error.step_up of 403 presence_not_proven). At most one post_order step-up is pending
             per (order_id, action, issue_id), and a repeat of the refused write returns the same step_up_id; their creation is rate-limited per
-            agent (429). Other rail caps never escalate; they return 403 rail_limit_exceeded.
+            (agent, principal) and per order (429 with Retry-After). Other rail caps never escalate; they return 403 rail_limit_exceeded.
         reason:
           enum:
           - above_step_up_threshold
@@ -6597,7 +6656,8 @@ components:
           - rail_fallback
           - accept_confirmation
           - rfq_prescribes_waiver
-          description: accept_confirmation is the reason of a negotiation confirm step-up raised when the guard returned acceptable and the mandate's accept_confirmation is ask (or absent) and the agent calls accept. rfq_prescribes_waiver is the reason of a negotiation confirm step-up raised when an agent creates an RFQ that sets acceptance_revocation_required waived, because that waives the principal's own ICA s.5 right. presence_proof is the reason of a post_order step-up. rail_fallback is a confirm step-up raised when a leg of a
+          - seller_confirmation
+          description: seller_confirmation is the reason of a confirm step-up that the gateway raises when a BPP-signed on_select or on_init carries the bacp tag seller_confirmation, so that the seller's own request for the buyer's confirmation reaches the principal as a template sentence and never as seller text. accept_confirmation is the reason of a negotiation confirm step-up raised when the guard returned acceptable and the mandate's accept_confirmation is ask (or absent) and the agent calls accept. rfq_prescribes_waiver is the reason of a negotiation confirm step-up raised when an agent creates an RFQ that sets acceptance_revocation_required waived, because that waives the principal's own ICA s.5 right. presence_proof is the reason of a post_order step-up. rail_fallback is a confirm step-up raised when a leg of a
             multi-seller basket has no human-not-present handler, or when the planned payment of a leg changes its funding, fee-bearer, payee or
             collector; a rail-only change is logged in comparison[] and raises no step-up.
         summary:
@@ -6605,11 +6665,17 @@ components:
         trusted_surface_url:
           type: string
           description: Opaque link or reference for the principal's Trusted Surface. It carries the step_up_id, never the content to show; the agent
-            delivers it to the principal and never fetches it.
+            delivers it to the principal and never fetches it. The gateway mints it only on a ts_origins entry of the step-up's signer, whose
+            subscriber id is surface.
+        surface:
+          type: string
+          minLength: 1
+          description: The registry subscriber id of the Mandate Manager or payer PSP whose origin trusted_surface_url is on. A client that shows the
+            link to the principal checks that its host is an origin of this subscriber. REQUIRED with trusted_surface_url, and absent when delivery is app_push, which carries no link on a
+            web origin.
         ts_render:
           $ref: '#/components/schemas/Jws'
-          description: Gateway-signed render input for the Trusted Surface (compact JWS over the JCS form of the payload defined on the Human
-            participants page). Signed once when the step-up is created and never changed for its step_up_id. The Trusted Surface fetches it by
+          description: Gateway-signed render input for the Trusted Surface (compact JWS, with the protected header typ bacp-ts-render+jws, over the JCS form of the payload defined by ts-render.json). Signed once when the step-up is created and never changed for its step_up_id. The Trusted Surface fetches it by
             step_up_id with the key of the step-up's Mandate Manager or payer PSP and never takes it from the agent.
         delivery:
           enum:
@@ -6617,7 +6683,8 @@ components:
           - app_push
           - ivr_callback
           - assisted
-          description: How the step-up reaches the principal. ivr_callback is Proposed until it is confirmed that an IVR or UPI 123PAY flow can carry
+          description: How the step-up reaches the principal. app_push is a content-free push that the gateway sends to the signer's ts_notify_url, used when no
+            origin of the signer conforms; it carries the step_up_id and expires_at and never the content. ivr_callback is Proposed until it is confirmed that an IVR or UPI 123PAY flow can carry
             the confirmation. For ivr_callback and assisted, expires_at is at least 5 minutes ahead (a BACP design floor, not an external
             requirement).
         expires_at:
@@ -6645,6 +6712,59 @@ components:
           - insufficient_scope
           description: How the MCP binding surfaced the step-up. url_elicitation when the MCP client declared URL-mode elicitation; otherwise
             insufficient_scope.
+      allOf:
+      - if:
+          required:
+          - kind
+          properties:
+            kind:
+              const: post_order
+        then:
+          properties:
+            reason:
+              const: presence_proof
+      - if:
+          required:
+          - reason
+          properties:
+            reason:
+              const: presence_proof
+        then:
+          properties:
+            kind:
+              const: post_order
+      - if:
+          required:
+          - covers
+        then:
+          properties:
+            reason:
+              const: rail_fallback
+      - if:
+          required:
+          - reason
+          properties:
+            reason:
+              const: seller_confirmation
+        then:
+          properties:
+            kind:
+              const: confirm
+      - if:
+          required:
+          - delivery
+          properties:
+            delivery:
+              const: app_push
+        then:
+          not:
+            required:
+            - trusted_surface_url
+          description: With delivery app_push the principal is reached by the content-free push to the signer's ts_notify_url, and the step-up carries no link.
+        else:
+          required:
+          - trusted_surface_url
+          - surface
     PaymentState:
       type: object
       required:
@@ -6914,6 +7034,11 @@ components:
             $ref: '#/components/schemas/Presence'
         proposed_constraints:
           $ref: '#/components/schemas/Mandate/properties/constraints'
+          description: The constraints that the agent proposes. confirmation_floor is never proposed by an agent. The principal sets it only on the Trusted
+            Surface, so that an agent cannot lower it, and a request that carries it is refused.
+          not:
+            required:
+            - confirmation_floor
         data_scopes:
           type: array
           items:
@@ -7264,6 +7389,11 @@ components:
               at:
                 type: string
                 format: date-time
+        messages:
+          type: array
+          description: Gateway-written messages about the order, such as seller_cancelled. Each carries a resolution, and the grievance contact in its args.
+          items:
+            $ref: '#/components/schemas/Message'
         return_window_ends:
           type: string
           format: date-time
@@ -7362,6 +7492,11 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ItemRef'
+        messages:
+          type: array
+          description: Gateway-written messages about the return, such as return_refused. Each carries a resolution, and the grievance contact in its args.
+          items:
+            $ref: '#/components/schemas/Message'
         refund:
           type: object
           properties:
@@ -7712,6 +7847,7 @@ components:
           - return.updated
           - issue.updated
           - pre_debit.notice
+          - step_up.updated
         created_at:
           type: string
           format: date-time
@@ -9378,13 +9514,14 @@ components:
             value: 135000
             currency: INR
         step_up:
-          step_up_id: stp_01HZXA
+          step_up_id: stp_01HZXAq8W3nK5vRt7YcLm2
           kind: confirm
           reason: above_step_up_threshold
           summary:
             hi-IN: ₹1,350 का ऑर्डर आपकी ₹1,200 की सीमा से ज़्यादा है। कृपया UPI ऐप में पुष्टि करें।
-          trusted_surface_url: https://psp.example.in/approve/stp_01HZXA
-          ts_render: eyJhbGciOiJFUzI1NiIsImtpZCI6ImJhcC52YWFuaS5leGFtcGxlLmlufHVraWQtN3xlczI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQSJ9.c2ln
+          trusted_surface_url: https://psp.example.in/approve/stp_01HZXAq8W3nK5vRt7YcLm2
+          surface: psp.example.in
+          ts_render: eyJhbGciOiJFUzI1NiIsImtpZCI6ImJhcC52YWFuaS5leGFtcGxlLmlufHVraWQtN3xlczI1NiIsInR5cCI6ImJhY3AtdHMtcmVuZGVyK2p3cyJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQXE4VzNuSzV2UnQ3WWNMbTIifQ.c2ln
           delivery: deep_link
           expires_at: '2026-10-22T18:40:00+05:30'
           a2a_state: TASK_STATE_AUTH_REQUIRED

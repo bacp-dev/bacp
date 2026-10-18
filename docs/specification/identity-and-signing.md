@@ -46,7 +46,7 @@ registry. It MUST be `null` or absent until such a registry is published.
 `conformance` MUST carry `levels[]`, the ids of the
 [conformance levels](conformance.md#conformance-levels) passed (`bacp.core.1`,
 `bacp.pay.upi.1`, `bacp.pay.all.1`, `bacp.neg.1`, `bacp.b2b.1`,
-`bacp.auction.1`), plus the signed `attestation`.
+`bacp.auction.1`, `bacp.ts.1`), plus the signed `attestation`.
 
 RBI's directive on Storage of Payment System Data (RBI/2017-18/153,
 06-04-2018) already requires RBI-authorised payment system providers to store
@@ -107,7 +107,10 @@ The registry is the root of trust for every key BACP uses: AgentCredential
 issuers, BAPs, BPPs, Mandate Managers and PSPs. A gateway MUST resolve every
 key by its registry key id, for example `bap.example.in|ukid-7|ed25519`, and
 MUST NOT trust a key presented only in a request. See
-[Registry lookup](discovery.md#registry-lookup).
+[Registry lookup](discovery.md#registry-lookup), which names the
+[`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json) fields that BACP reads, among them the
+`operator_id` of a `support_operator` key (the agent operator that the key serves) and the Trusted Surface origins of a
+Mandate Manager or PSP.
 
 ### Conformance-authority keys {#conformance-authority-keys}
 
@@ -219,7 +222,7 @@ of two for negotiation messages; any other tag MUST be rejected with
 
 | Tag | Meaning | Endpoints |
 |---|---|---|
-| `bacp-browse` | Reads, discovery, cart building and other non-committing calls | `POST /discover`; `POST /sessions`, `GET` and `PUT /sessions/{id}`, `POST /sessions/{id}/cancel`, `POST /sessions/{id}/handoff` (`action: request`, and `action: release` before acceptance); `POST /mandates`, `GET /mandates/{id}`, `POST /mandates/{id}/relinquish`; `GET /orders/{id}`, `GET /orders/{id}/returns/{rid}`; `GET /issues/{id}`; `GET /evidence/{transaction_id}`; `POST /negotiations`, `GET /negotiations/{id}`, `GET /negotiations/{id}/offers`, and non-firm messages other than `withdraw` and `accept_revoke` on `POST /negotiations/{id}/offers`; `POST /rfqs`, `GET /rfqs/{id}`; `GET /auctions/{id}`; `POST /payment-handlers/intersect`; `GET /discover/{transaction_id}/sources/{source_digest}`; `GET /ledgers/{id}`, `GET /ledgers/{id}/entries`; `GET /orders/{id}/documents`; `POST /checkout-sessions`, `GET` and `PUT /checkout-sessions/{id}`, `POST /checkout-sessions/{id}/cancel` |
+| `bacp-browse` | Reads, discovery, cart building and other non-committing calls | `POST /discover`; `POST /sessions`, `GET` and `PUT /sessions/{id}`, `POST /sessions/{id}/cancel`, `POST /sessions/{id}/handoff` (`action: request`, and `action: release` before acceptance); `POST /mandates`, `GET /mandates/{id}`, `POST /mandates/{id}/relinquish`; `GET /orders/{id}`, `GET /orders/{id}/returns/{rid}`; `GET /issues/{id}`; `GET /evidence/{transaction_id}`; `GET /evidence/{transaction_id}/summary`; `GET /step-ups/{step_up_id}`; `POST /negotiations`, `GET /negotiations/{id}`, `GET /negotiations/{id}/offers`, and non-firm messages other than `withdraw` and `accept_revoke` on `POST /negotiations/{id}/offers`; `POST /rfqs`, `GET /rfqs/{id}`; `GET /auctions/{id}`; `POST /payment-handlers/intersect`; `GET /discover/{transaction_id}/sources/{source_digest}`; `GET /ledgers/{id}`, `GET /ledgers/{id}/entries`; `GET /orders/{id}/documents`; `POST /checkout-sessions`, `GET` and `PUT /checkout-sessions/{id}`, `POST /checkout-sessions/{id}/cancel` |
 | `bacp-pay` | Commits money | `POST /sessions/{id}/complete`; `POST /checkout-sessions/{id}/complete` |
 | `bacp-post-order` | Mandate-scoped writes on an existing order, trade acts and ledger postings | `POST /orders/{id}/cancel`; `POST /orders/{id}/returns`; `POST /issues`; `POST /issues/{id}/actions`; `POST /trade-acts`; `POST /ledgers/{id}/entries` |
 | `bacp-negotiate` | Binds the principal in a negotiation | Firm offers and counter-offers, `withdraw` and `accept_revoke` on `POST /negotiations/{id}/offers`; `POST /negotiations/{id}/accept`; `POST /rfqs/{id}/award`; `POST /auctions`; bids on `POST /auctions/{id}/bids`; `POST /auctions/{id}/award` |
@@ -245,18 +248,21 @@ which sessions and step-ups exist.
 
 A handoff acceptance (`action: accept` on `POST /sessions/{id}/handoff`) MUST
 be signed under tag `bacp-handoff` by a registry key whose role is
-**support operator**: a key the registry issues to a human support operator of
-the agent operator, never to an agent. `bacp-handoff` is not a value of an
-AgentCredential's `purposes`. An acceptance under any other tag is refused
-with `401 signature_invalid`, and one signed by a key of any other role leaves
-the handoff requested. The gateway records the key id as
+**support operator**: a key the registry issues to one human support operator of
+the agent operator, never to an agent and never as a shared desk key. `bacp-handoff` is not a value of an
+AgentCredential's `purposes`. An acceptance under any other tag, or signed by a key whose role is not support operator,
+is refused with `401 signature_invalid`; one signed by a support operator key of another agent operator is
+answered `404 not_found`; and one that arrives while `accepted_by` is set is answered `409 session_state_conflict`.
+The same split applies to a release. Revocation of the key takes effect at the next registry refresh, as for other keys. The gateway records the key id as
 `handoff.accepted_by` ([Human handoff](checkout/index.md#handoff)). Only that
 key, under `bacp-handoff`, may later release the handoff (`action: release`).
 A request under `bacp-handoff` carries no `BACP-Agent` header, and its
 signature does not cover `bacp-agent`.
 
 The gateway signs its webhooks to the agent with a key published in its
-profile's `keys`, so that the agent can verify them. It signs the response of `POST /discover` with the same key, under
+profile's `keys`, so that the agent can verify them. It signs the content-free `app_push` that it sends to a Mandate
+Manager's or payer PSP's `ts_notify_url` the same way, and a receiver that cannot verify the signature ignores the push
+([Origins and delivery](human-participants.md#ts-origins)). It signs the response of `POST /discover` with the same key, under
 RFC 9421, covering `@status` and `content-digest` ([Response signature](discovery.md#response-signature)).
 
 !!! warning "Proposed"

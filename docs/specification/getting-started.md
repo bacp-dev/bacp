@@ -423,7 +423,7 @@ only once ([Presence proof](human-participants.md#hp-proof)).
   "reason_code": "002",
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
   "presence": "HP",
-  "hp_proof": {"ts_event_hash": "sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU", "step_up_id": "stp_01HZPORET01"},
+  "hp_proof": {"ts_event_hash": "sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU", "step_up_id": "stp_01HZPORET01q8W3nK5vRt7YcLm2"},
   "evidence": [
     {
       "type": "image",

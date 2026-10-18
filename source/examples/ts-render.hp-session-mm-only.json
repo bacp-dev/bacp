@@ -1,0 +1,21 @@
+{
+  "step_up_id": "stp_01HZXAq8W3nK5vRt7YcLm2",
+  "session_id": "ses_01HZX9",
+  "kind": "confirm",
+  "reason": "above_step_up_threshold",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "total": {
+    "value": 120000,
+    "currency": "INR"
+  },
+  "seller_name": "SHREE GANESH KIRANA",
+  "summary": {
+    "hi-IN": "श्री गणेश किराना से ₹1,200 का ऑर्डर पक्का करें?",
+    "en-IN": "Confirm the ₹1,200 order from Shree Ganesh Kirana?"
+  },
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T19:05:00+05:30"
+}

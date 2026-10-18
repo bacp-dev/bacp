@@ -1,0 +1,658 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/ts-render.json",
+  "title": "TsRender",
+  "type": "object",
+  "description": "The payload of a ts_render, the compact JWS that the gateway signs once per step-up over the JCS form of this object and serves to the step-up's Mandate Manager or payer PSP. The fields are defined on the Human participants page.",
+  "required": [
+    "step_up_id",
+    "kind",
+    "reason",
+    "mandate_id",
+    "language",
+    "revoke_route",
+    "grievance_contact",
+    "expires_at"
+  ],
+  "properties": {
+    "step_up_id": {
+      "type": "string",
+      "pattern": "^stp_[A-Za-z0-9_-]{22,64}$",
+      "description": "The step-up's id: at least 128 bits from a cryptographically secure random source, opaque, and never parsed or read aloud to or typed by a person."
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "kind": {
+      "$ref": "../services/bacp.openapi.yaml#/components/schemas/StepUp/properties/kind"
+    },
+    "reason": {
+      "$ref": "../services/bacp.openapi.yaml#/components/schemas/StepUp/properties/reason"
+    },
+    "mandate_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The id of the mandate that the step-up concerns: the open Checkout Mandate of a session step-up, or the mandate the order was placed under for a post_order step-up. The Mandate Manager that issued it resolves the principal from its own records, and a Trusted Surface that cannot find the mandate as one of its own principal's renders nothing and posts nothing."
+    },
+    "payer_ref": {
+      "$ref": "common.json#/$defs/Hash",
+      "description": "The sha-256 over the JCS form of {step_up_id, payer_vpa}, where payer_vpa is the payer's UPI address taken from the Payment Mandate that makes a payer PSP a signer of the step-up. REQUIRED when the step-up has a payer PSP, and absent otherwise. A payer PSP renders the step-up only when the hash equals the one it computes for the payer logged in on its surface."
+    },
+    "action": {
+      "enum": [
+        "CANCEL",
+        "RETURN",
+        "RAISE_ISSUE",
+        "INFO_PROVIDED",
+        "RESOLUTION_ACCEPTED",
+        "RESOLUTION_REJECTED",
+        "ESCALATED",
+        "CLOSED",
+        "GRN",
+        "CRAC",
+        "MSMED_OBJECTION",
+        "LEDGER_ACK"
+      ],
+      "description": "For kind post_order only, the write the principal confirms. No other value is valid."
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "issue_id": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "description": "For kind post_order with action RETURN, the items being returned, each with its quantity: REQUIRED. For action CANCEL, present only for a partial cancel. The gateway matches the write against it field by field, items as a multiset. The Trusted Surface names each item and quantity from its own templates and reads the item names only from counterparty_text.",
+      "items": {
+        "$ref": "../services/bacp.openapi.yaml#/components/schemas/ItemRef"
+      }
+    },
+    "reason_code": {
+      "type": "string",
+      "minLength": 1,
+      "description": "For kind post_order with action RETURN or CANCEL, the reason code of the write, as the agent sends it (from the seller's Beckn reasons). REQUIRED for both actions. The gateway matches the write's reason_code against it."
+    },
+    "subject_hash": {
+      "$ref": "common.json#/$defs/Hash",
+      "description": "REQUIRED for the trade acts GRN, CRAC, MSMED_OBJECTION and LEDGER_ACK: the hash of exactly what the principal is shown (for a document, the JCS hash of the exact body; for a ledger entry, its entry_hash; for a ledger statement, the head_hash at through_seq). For the issue actions RESOLUTION_ACCEPTED and RESOLUTION_REJECTED: the sha-256 over the JCS form of the issue's resolution as shown, absent when the issue has no resolution. Absent for every other action, including ESCALATED, INFO_PROVIDED and CLOSED; a render that carries it for another action is invalid."
+    },
+    "subject_ref": {
+      "type": "object",
+      "description": "For a trade act, what the act is about. REQUIRED with the trade acts GRN, CRAC, MSMED_OBJECTION and LEDGER_ACK. kind order or document for a GRN, CRAC or MSMED_OBJECTION (the order_id is then also present); ledger_entry (id is the entry_id) or ledger_statement (id is the ledger_id, with through_seq) for a LEDGER_ACK, which has no order_id.",
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "order",
+            "ledger_entry",
+            "ledger_statement",
+            "document"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "through_seq": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "payee": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "The payee of the cited rail receipt. REQUIRED when kind is ledger_entry and the entry is a payment in pending_ack with settlement_payee_unmatched."
+        }
+      },
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "ledger_statement"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "through_seq"
+        ]
+      },
+      "additionalProperties": false
+    },
+    "language": {
+      "$ref": "common.json#/$defs/LanguageTag"
+    },
+    "checkout_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "total": {
+      "$ref": "common.json#/$defs/Amount",
+      "description": "The total the principal pays, as one figure. It is the quote total plus the sum of the session's operator_charges. On a summary step-up, the sum of basket[].amount."
+    },
+    "charge_lines": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The fee read-out of a step-up that pays for an order, before the factor. One entry for each fee line (convenience, platform, payment_handling, handling, cod_fee, and every operator charge), then one remainder entry for everything else. The amounts add up to total. The Trusted Surface reads each line from its own templates, never from seller text. An order with no fee line has no charge_lines.",
+      "items": {
+        "$ref": "../services/bacp.openapi.yaml#/components/schemas/ChargeLine"
+      }
+    },
+    "price_breakup_hash": {
+      "$ref": "common.json#/$defs/Hash"
+    },
+    "seller_name": {
+      "type": "string",
+      "description": "The payee seller, from the BPP-signed quote. Absent on a summary step-up, whose sellers are in basket[]."
+    },
+    "assisted_operators": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "participant_id": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "summary": {
+      "$ref": "common.json#/$defs/LangText"
+    },
+    "counterparty_text": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "label",
+          "text"
+        ],
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "revoke_route": {
+      "type": "string",
+      "format": "uri"
+    },
+    "grievance_contact": {
+      "type": "string"
+    },
+    "basket": {
+      "type": "array",
+      "minItems": 2,
+      "description": "On a summary step-up over a multi-seller basket, one line per seller, in the order the Trusted Surface states them. The Trusted Surface states the number of sellers first.",
+      "items": {
+        "$ref": "../services/bacp.openapi.yaml#/components/schemas/BasketLine"
+      }
+    },
+    "covers": {
+      "type": "array",
+      "minItems": 1,
+      "description": "On a summary step-up only, the legs the approval covers. Only the shared root's Mandate Manager fetches a render that carries covers[] and posts its result.",
+      "items": {
+        "$ref": "../services/bacp.openapi.yaml#/components/schemas/CoverEntry"
+      }
+    },
+    "catalogue_disclosure": {
+      "type": "array",
+      "minItems": 1,
+      "description": "One entry for each line item of the step-up's session or sessions whose Disclosures.catalogue[] entry is sponsored or undeclared, or carries a prior_price, so that the Trusted Surface repeats what discovery showed before the total. Only on a session step-up of kind confirm or rail_auth, never on a post_order step-up or a negotiation confirm. It is hashed into Presentation.content_hash with the rest of the render.",
+      "items": {
+        "$ref": "../services/bacp.openapi.yaml#/components/schemas/TsCatalogueDisclosure"
+      }
+    },
+    "plan": {
+      "type": "object",
+      "description": "On a session step-up (confirm or rail_auth) over a payment plan, the whole plan the principal approves, so that the Trusted Surface shows every tender and its amount, never one tender alone. It is hashed into Presentation.content_hash with the rest of the render, and the approval event carries Presentation.plan_hash equal to plan.plan_hash.",
+      "required": [
+        "plan_hash",
+        "tenders"
+      ],
+      "properties": {
+        "plan_hash": {
+          "$ref": "common.json#/$defs/Hash",
+          "pattern": "^sha-256:"
+        },
+        "tenders": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "tender_id",
+              "handler",
+              "amount",
+              "sequence"
+            ],
+            "properties": {
+              "tender_id": {
+                "type": "string"
+              },
+              "handler": {
+                "$ref": "common.json#/$defs/HandlerRef"
+              },
+              "amount": {
+                "$ref": "common.json#/$defs/PositiveAmount"
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "offer_hash": {
+      "$ref": "common.json#/$defs/Hash",
+      "description": "On a negotiation confirm step-up, the offer_hash of the offer the principal is asked to approve."
+    },
+    "acceptance_revocation": {
+      "enum": [
+        "waived",
+        "allowed_until_receipt"
+      ],
+      "description": "On a negotiation confirm step-up about a firm offer, the offer's acceptance_revocation value, copied unchanged. The Trusted Surface never shows the token; it shows the fixed consequence sentence for the value, followed by the offer's cancellation terms. In this version only waived occurs. Present only together with offer_hash."
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "render_required": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "Names of render fields that the Trusted Surface MUST show the principal, for example catalogue_disclosure, items or acceptance_revocation. A Trusted Surface that does not understand a name listed here renders nothing and posts nothing. A Trusted Surface ignores an unknown field that is not listed. The gateway refuses a step_up.approved whose presentation.renders omits a listed name with 400 invalid_request."
+    }
+  },
+  "dependentRequired": {
+    "acceptance_revocation": [
+      "offer_hash"
+    ]
+  },
+  "not": {
+    "required": [
+      "checkout_hash",
+      "offer_hash"
+    ]
+  },
+  "allOf": [
+    {
+      "if": {
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "GRN",
+              "CRAC",
+              "MSMED_OBJECTION",
+              "LEDGER_ACK"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "subject_hash",
+          "subject_ref"
+        ],
+        "properties": {
+          "kind": {
+            "const": "post_order"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "not": {
+              "enum": [
+                "GRN",
+                "CRAC",
+                "MSMED_OBJECTION",
+                "LEDGER_ACK",
+                "RESOLUTION_ACCEPTED",
+                "RESOLUTION_REJECTED"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "not": {
+          "required": [
+            "subject_hash"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "const": "LEDGER_ACK"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "subject_ref": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "ledger_entry",
+                  "ledger_statement"
+                ]
+              }
+            }
+          }
+        },
+        "not": {
+          "required": [
+            "order_id"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "GRN",
+              "CRAC",
+              "MSMED_OBJECTION"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "order_id"
+        ],
+        "properties": {
+          "subject_ref": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "order",
+                  "document"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "plan"
+        ]
+      },
+      "then": {
+        "required": [
+          "checkout_hash"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "confirm",
+              "rail_auth"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "catalogue_disclosure"
+        ]
+      },
+      "then": {
+        "required": [
+          "checkout_hash"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "confirm",
+              "rail_auth"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "catalogue_disclosure",
+          "covers"
+        ]
+      },
+      "then": {
+        "properties": {
+          "catalogue_disclosure": {
+            "items": {
+              "required": [
+                "cover_index"
+              ]
+            }
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "catalogue_disclosure": {
+            "items": {
+              "not": {
+                "required": [
+                  "cover_index"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "order_id"
+        ]
+      },
+      "then": {
+        "required": [
+          "payer_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "const": "RETURN"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "items",
+          "reason_code"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "const": "CANCEL"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "reason_code"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind"
+        ],
+        "properties": {
+          "kind": {
+            "const": "post_order"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "action"
+        ],
+        "not": {
+          "required": [
+            "session_id"
+          ]
+        }
+      },
+      "else": {
+        "allOf": [
+          {
+            "anyOf": [
+              {
+                "required": [
+                  "checkout_hash"
+                ]
+              },
+              {
+                "required": [
+                  "offer_hash"
+                ]
+              }
+            ]
+          },
+          {
+            "if": {
+              "required": [
+                "checkout_hash"
+              ]
+            },
+            "then": {
+              "required": [
+                "session_id"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "kind",
+          "action"
+        ],
+        "properties": {
+          "kind": {
+            "const": "post_order"
+          },
+          "action": {
+            "not": {
+              "const": "LEDGER_ACK"
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "order_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "covers"
+        ]
+      },
+      "then": {
+        "required": [
+          "basket"
+        ],
+        "not": {
+          "required": [
+            "seller_name"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "INFO_PROVIDED",
+              "RESOLUTION_ACCEPTED",
+              "RESOLUTION_REJECTED",
+              "ESCALATED",
+              "CLOSED"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "issue_id"
+        ]
+      }
+    }
+  ]
+}

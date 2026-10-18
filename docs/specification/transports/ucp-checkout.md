@@ -97,7 +97,9 @@ then may the projection advertise the extension. A `complete` that carries `ap2.
 ## Escalation and links {#continue-url}
 
 UCP requires a `continue_url` on `requires_escalation`, set by the business. The projection sets it only when the
-session has a `step_up`, and then it is exactly `step_up.trusted_surface_url`; with no step-up it is absent. A seller's
+session has a `step_up` with a `trusted_surface_url`, and then it is exactly that URL, which the gateway mints only on an origin of the step-up's signer
+([Origins and delivery](../human-participants.md#ts-origins)); with no step-up it is absent. A step-up with `delivery: app_push` has no
+link, so the projection sets no `continue_url` for it and the detail is in `bacp.status`. A seller's
 URL, even one a quote carries in its tags, never becomes a `continue_url` (UCPF-04). `links[]` carries only typed policy
 links (`terms_of_service`, `refund_policy`, `privacy_policy`, ...) whose `title` comes from the gateway's own
 templates, never from the seller.

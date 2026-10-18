@@ -1,0 +1,10 @@
+{
+  "type": "upstream_error",
+  "code": "bpp_nack",
+  "message": "The seller app NACKed the Beckn request",
+  "resolution": "recoverable",
+  "seller_reason": {
+    "code": "item_unavailable",
+    "beckn_code": "40002"
+  }
+}

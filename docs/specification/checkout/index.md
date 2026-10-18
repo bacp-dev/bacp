@@ -297,6 +297,14 @@ It is the anchor that binds every later artefact to one basket and one price:
 `checkout_hash` is the hash of the quote, **not** of an accepted negotiation offer. Nothing in
 BACP asserts that `checkout_hash` equals an `offer_hash`.
 
+### Seller refusals and substitution {#substitution}
+
+When a seller NACKs, `Error.seller_reason` carries the reason that its BPP-signed NACK states. A retry of the same item at a total no higher
+than the one the principal was shown is `recoverable`. A substitute item or seller at a higher total than the last BPP-signed quote of the
+session needs a new `confirm` step-up, in human-present and in human-not-present sessions alike
+([Seller refusals and substitution](../transports/beckn.md#seller-reasons)). A BPP-signed `seller_confirmation` tag raises a `confirm` step-up
+with reason `seller_confirmation`, at most one per `checkout_hash`.
+
 ### Fees on the payer's screen {#fee-lines}
 
 BACP makes normative what the principal pays and to whom. It leaves informative how sellers, payment aggregators and
@@ -526,7 +534,8 @@ BACP uses two channels:
   `param` is an RFC 9535 JSONPath into the request.
 - **Business outcomes** return 200 or 201 with the **full session state** plus `messages[]`. Each
   message has `type` (`error`, `warning`, `info`, `disclosure`), `code`, `content` (a
-  multilingual map keyed by BCP 47 tag), an optional `param`, and `resolution`.
+  multilingual map keyed by BCP 47 tag), an optional `param`, and `resolution`. A message that carries `args[]` **MUST**
+  also carry `origin` (`gateway` or `counterparty`); without `args[]`, an absent `origin` means `gateway`.
 
 `resolution` tells the agent what it may do:
 
@@ -580,11 +589,13 @@ the network as `context.bacp.ai_disclosure: true`, which is REQUIRED and is mirr
   approval without applying it. A session in another state keeps its status and records `handoff`.
 - A human support operator accepts with `{"action": "accept"}`, signed with a registry key of role
   `support_operator` under tag `bacp-handoff`. Only that sets `handoff.accepted_by` and
-  `handoff.accepted_at`; any other signer leaves the handoff requested.
+  `handoff.accepted_at`. A key whose role is not `support_operator` gets `401 signature_invalid`, a `support_operator` key of another agent
+  operator than the session's gets `404 not_found`, and an `accept` while `accepted_by` is set gets `409 session_state_conflict` at
+  `$.handoff.accepted_by`; none of them changes the handoff.
 - `{"action": "release"}` ends the handoff. The gateway accepts it from the `accepted_by` key under
   `bacp-handoff`, or from the agent under `bacp-browse` only while `accepted_by` is absent. The
-  session returns to `incomplete` and `handoff.ended_at` is set; a release by any other key changes
-  nothing.
+  session returns to `incomplete` and `handoff.ended_at` is set. A release by any other key changes nothing: `401`, `404` or, for a key of the same
+  agent operator that is not `accepted_by` and for an agent release after acceptance, `409 session_state_conflict` at `$.handoff.accepted_by`.
 - `accept` and `release` are each one compare-and-set on `handoff.accepted_by` and
   `handoff.ended_at`: an agent's release applies only while `accepted_by` is still absent, and an
   `accept` after `ended_at` is set gets `409 session_state_conflict`. A race between them ends
@@ -724,12 +735,12 @@ When the evaluation calls for a step-up the gateway returns `200` with
   ],
   "totals": [{"type": "total", "amount": {"value": 135000, "currency": "INR"}}],
   "step_up": {
-    "step_up_id": "stp_01HZXA",
+    "step_up_id": "stp_01HZXAq8W3nK5vRt7YcLm2",
     "kind": "confirm",
     "reason": "above_step_up_threshold",
     "summary": {"hi-IN": "₹1,350 का ऑर्डर आपकी ₹1,200 की सीमा से ज़्यादा है। कृपया UPI ऐप में पुष्टि करें।",
                 "en-IN": "The ₹1,350 order is above your ₹1,200 limit. Please confirm in your UPI app."},
-    "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXA",
+    "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXAq8W3nK5vRt7YcLm2",
     "expires_at": "2026-10-22T18:40:00+05:30"
   },
   "messages": [
@@ -887,7 +898,8 @@ several instances.
 ## Webhooks
 
 The gateway sends `session.updated` (full session snapshot), `payment.receipt`,
-`pre_debit.notice` and `mandate.status_changed` to the agent's `webhook_url`. Webhooks are signed
+`pre_debit.notice`, `mandate.status_changed` and `step_up.updated` (the state of a step-up that the agent's request caused, with its
+`ts_event_hash` once approved) to the agent's `webhook_url`. Webhooks are signed
 by the gateway (RFC 9421) with Standard Webhooks headers and retried with backoff. A webhook body
 **MUST NOT** embed a signed Receipt: it carries a `ReceiptRef` (`receipt_id`, `receipt_hash`,
 `receipt_type`, `result`, and where present `amount`, `refund_state` and `rail`). The agent fetches
@@ -902,12 +914,12 @@ before relying on it ([Evidence: Receipts](../evidence.md#receipts)).
 | 401 | `signature_invalid`, `replay_detected`, `agent_unregistered`, `agent_credential_revoked` |
 | 403 | mandate errors ([Mandates](../mandates.md#error-codes)), `rail_limit_exceeded`, `collector_not_authorised`, `log_chain_invalid` |
 | 404 | `not_found` |
-| 409 | `idempotency_in_flight`, `session_state_conflict` (also any agent `PUT` or `complete` while `human_handoff`, and a handoff `accept` after the handoff ended) |
+| 409 | `idempotency_in_flight`, `session_state_conflict` (also any agent `PUT` or `complete` while `human_handoff`, a handoff `accept` after the handoff ended, the handoff operator-binding cases at `$.handoff.accepted_by`, a step-up inside the decline cool-off and a replacement past the re-prompt cap, [Limits on step-ups](../human-participants.md#step-up-limits)) |
 | 413 | `request_too_large` (body above 256 KiB) |
 | 422 | `idempotency_conflict` |
 | 429 | `quota_exceeded` |
 | 502 | `bpp_nack` |
-| 503 | `idempotency_store_unavailable` |
+| 503 | `idempotency_store_unavailable`, `trusted_surface_unavailable` |
 | 504 | `bpp_timeout` |
 
 See [Errors](../errors.md) for the full registry.

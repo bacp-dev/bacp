@@ -1,7 +1,8 @@
 {
-  "step_up_id": "stp_01HZYP",
+  "step_up_id": "stp_01HZYPq8W3nK5vRt7YcLm2",
   "kind": "confirm",
   "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "action": "LEDGER_ACK",
   "language": "hi-IN",
   "total": {

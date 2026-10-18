@@ -1,0 +1,16 @@
+{
+  "type": "warning",
+  "code": "preticked_addon_removed",
+  "content": {
+    "en-IN": "Removed a pre-selected add-on that is not in the mandate ({addon})"
+  },
+  "args": [
+    {
+      "name": "addon",
+      "origin": "counterparty",
+      "text": "Delivery insurance ₹15"
+    }
+  ],
+  "param": "$.line_items[3]",
+  "resolution": "recoverable"
+}

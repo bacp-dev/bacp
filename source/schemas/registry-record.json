@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/schemas/registry-record.json",
+  "title": "RegistryRecord",
+  "description": "The part of a network registry record that BACP reads about one subscriber: its id, its BACP role, its signing keys and their validity, and, for a Mandate Manager or a PSP, the Trusted Surface origins, the notify endpoint, the numbers it calls from, the languages and the modalities it serves. For a human support operator it names the operator and the person. A registry may carry more fields, and a reader ignores any field it does not know. Whether a given registry, such as the ONDC network registry, can carry these fields is not settled.",
+  "type": "object",
+  "required": [
+    "subscriber_id",
+    "bacp_role",
+    "keys",
+    "valid_from",
+    "status"
+  ],
+  "properties": {
+    "subscriber_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The registry subscriber id of the participant. For a Mandate Manager or a PSP it is the value that Presentation.surface carries."
+    },
+    "bacp_role": {
+      "$ref": "common.json#/$defs/Signature/properties/role",
+      "description": "The BACP role of the keys in this record: the registry role that Signature.role carries."
+    },
+    "keys": {
+      "type": "array",
+      "minItems": 1,
+      "description": "The subscriber's public keys, each resolvable by its kid.",
+      "items": {
+        "type": "object",
+        "required": [
+          "kid",
+          "jwk"
+        ],
+        "properties": {
+          "kid": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Registry-resolvable key id, for example 'psp.example.in|ukid-7|ed25519'."
+          },
+          "jwk": {
+            "$ref": "common.json#/$defs/Jwk"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the record becomes valid."
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the record stops being valid. A reader MUST NOT use the record after it."
+    },
+    "status": {
+      "enum": [
+        "active",
+        "revoked"
+      ],
+      "description": "active while the record may be relied on, revoked once the registry has withdrawn it. A revocation takes effect at the next registry refresh, as for any other key."
+    },
+    "operator_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "The agent operator that the keys serve. REQUIRED when bacp_role is support_operator."
+    },
+    "person_ref": {
+      "type": "string",
+      "minLength": 1,
+      "description": "A pairwise pseudonymous reference to the one person who holds the key of a support operator, never an Aadhaar number. REQUIRED when bacp_role is support_operator, and every support operator key belongs to one person: there are no shared desk keys."
+    },
+    "ts_origins": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "For a Mandate Manager or a PSP: the web origins from which its Trusted Surface serves a step-up, as https origins only (scheme, host and optional port, no path, as in RFC 6454). The gateway mints trusted_surface_url, and accepts a Mandate Manager's mandate-approval link, only on an origin of the step-up's signer. A tel: number is never an origin.",
+      "items": {
+        "type": "string",
+        "pattern": "^https://[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]{1,5})?$"
+      }
+    },
+    "ts_notify_url": {
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https://[^\\s]+$",
+      "description": "For a Mandate Manager or a PSP: the https endpoint to which the gateway sends a content-free push, a gateway-signed POST of {step_up_id, expires_at}, when no origin of the signer conforms. The Trusted Surface then fetches the render by step_up_id."
+    },
+    "ts_call_numbers": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "For a Mandate Manager or a PSP: E.164 numbers from which its Trusted Surface places calls. They are informative, a hint that an agent may speak and never an authenticator, and always carry the sentence that the bank never asks for a PIN on a call it makes.",
+      "items": {
+        "type": "string",
+        "pattern": "^\\+[1-9][0-9]{6,14}$"
+      }
+    },
+    "ts_languages": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "For a Mandate Manager or a PSP: the languages in which its Trusted Surface renders a step-up. Absence of a language means that the Trusted Surface does not claim it.",
+      "items": {
+        "$ref": "common.json#/$defs/LanguageTag"
+      }
+    },
+    "ts_modalities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "For a Mandate Manager or a PSP: the modalities in which its Trusted Surface presents a step-up.",
+      "items": {
+        "enum": [
+          "visual",
+          "audio",
+          "both"
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "bacp_role": {
+            "const": "support_operator"
+          }
+        },
+        "required": [
+          "bacp_role"
+        ]
+      },
+      "then": {
+        "required": [
+          "operator_id",
+          "person_ref"
+        ],
+        "properties": {
+          "keys": {
+            "maxItems": 1
+          }
+        }
+      }
+    }
+  ]
+}

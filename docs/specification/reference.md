@@ -38,13 +38,15 @@ The human-participant types in `common.json` (`LanguageTag`, `Participant`, `Par
 | [`offer.json`](https://bacp.dev/latest/schemas/offer.json) | Negotiation messages (Offer, CounterOffer, Accept, Reject, Withdraw, Terminate, RequestExtension, AcceptRevoke, BidCommit, BidReveal, BidRetract) | Structured, signed and expiring negotiation messages. Only these are binding. Discriminated by type. |
 | [`payment-plan.json`](https://bacp.dev/latest/schemas/payment-plan.json) | PaymentPlan (split and multi-tender) | How one accepted all_in_total is paid: several tenders now (gift card + UPI) and/or tranches over time (token advance + loan + balance). One closed payment mandate and one Receipt per tender. Step-up and AFA are evaluated on the plan total, never per tender. |
 | [`receipt.json`](https://bacp.dev/latest/schemas/receipt.json) | Receipt (rail-anchored) | Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family handler (upi.*, in.upi.*, in.cod.upi, in.pos.tap, in.pos.dynamic_qr) MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists utr. Any other successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence. |
+| [`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json) | RegistryRecord | The part of a network registry record that BACP reads about one subscriber: its id, BACP role, keys and validity, the Trusted Surface origins, notify endpoint, call numbers, languages and modalities of a Mandate Manager or PSP, and the operator and person of a support operator. |
 | [`termsheet.json`](https://bacp.dev/latest/schemas/termsheet.json) | TermSheet | Multi-issue term sheet carried in every binding Offer. Every issue carries {value, negotiable, status}. Reservation values never appear here. Issues not listed are fixed. |
+| [`ts-render.json`](https://bacp.dev/latest/schemas/ts-render.json) | TsRender | The payload of a ts_render, the compact JWS that the gateway signs once per step-up over the JCS form of this object and serves to the step-up's Mandate Manager or payer PSP. The fields are defined on the Human participants page. |
 
 ## OpenAPI document {#openapi}
 
 | Document | Format | Contents |
 |---|---|---|
-| [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) | OpenAPI 3.1.0 | The REST binding: 36 operations, 7 webhooks, 66 component schemas. See [REST](transports/rest.md). |
+| [`bacp.openapi.yaml`](https://bacp.dev/latest/services/bacp.openapi.yaml) | OpenAPI 3.1.0 | The REST binding: 49 operations, 9 webhooks, 110 component schemas. See [REST](transports/rest.md). |
 
 ## Payment-handler registry {#handler-registry}
 

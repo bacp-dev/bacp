@@ -96,7 +96,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-61](#q-61) | Gateway-to-MM mandate events | BACP WG | Open |
 | [Q-62](#q-62) | Who certifies assisted operators | ONDC | Open |
 | [Q-63](#q-63) | PSP rendering of a third-party `ts_render`; IVR callbacks | NPCI | Open |
-| [Q-64](#q-64) | Registry enrolment and revocation of `support_operator` keys | BACP WG | Open |
+| [Q-64](#q-64) | Registry enrolment and revocation of `support_operator` keys | BACP WG | Settled |
 | [Q-65](#q-65) | Agent-initiated draw on a Reserve Pay block as a customer action | NPCI, Legal counsel | Open |
 | [Q-66](#q-66) | Whether agent operators and gateways are e-commerce entities for sponsored-listing and prior-price duties | Legal counsel | Open |
 | [Q-67](#q-67) | Ranking parameters that a party can buy | BACP WG, Legal counsel | Open |
@@ -118,6 +118,9 @@ are involved, the owner is the one that must give the answer.
 | [Q-83](#q-83) | Counsel flags from the plan, ledger and trade-act bindings | Legal counsel | Open, fail-safe default |
 | [Q-84](#q-84) | Whether the Legal Metrology (Indian Standard Time) Rules reach machine timestamps | Legal counsel, ONDC | Open |
 | [Q-85](#q-85) | Counsel flags from the negotiation timing rules | Legal counsel | Open, fail-safe default |
+| [Q-86](#q-86) | Counsel flags from the Trusted Surface and human-participant rules | Legal counsel | Open, fail-safe default |
+| [Q-87](#q-87) | Registry carriage of the Trusted Surface and support-operator fields, and the ONDC refusal codes | ONDC | Open, fail-safe default |
+| [Q-88](#q-88) | RBI treatment of a Reserve Pay block debit and an OTM execution under the AFA directions | RBI | Open |
 
 ## Questions {#questions}
 
@@ -255,8 +258,18 @@ before the confirmation. See [Mandates and Consent](mandates.md#consent) and
 **Question.** Is voice consent valid for mandate setup or for human-present confirmations?<br>
 **Owner.** Legal counsel.
 
+!!! success "Settled for money"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T6) for money. The gateway refuses
+    `voice_confirm_plus_device` on a `rail_auth` step-up and on any `confirm` step-up whose approval releases a debit
+    (`403 presence_not_proven`), on the strength of RBI/2025-26/79 paras 5(a) and 6(b) and UPI Consolidated Circular v1.0
+    para 19.2.2. In human-not-present the debit rests on the mandate's authentication model, so there the refusal is BACP
+    policy implementing this question, not an RBI requirement. A PIN entered over a UPI 123PAY IVR stays `upi_pin`. See
+    [Voice confirmation](human-participants.md#voice). Whether a voice or operator-relayed "yes" is valid consent for a
+    non-money confirmation stays with counsel.
+
 **Working position.** Voice is used only for human-present confirmations that move no money. Money always needs a
-PIN on the Trusted Surface.
+PIN on the Trusted Surface. A voice confirmation needs a challenge that the Trusted Surface draws and the agent never
+sees ([Voice confirmation](human-participants.md#voice)).
 
 ### Q-14 GST TCS for agent platforms {#q-14}
 
@@ -794,10 +807,12 @@ treats the siblings as revoked at once and keeps each block as exposure until it
 expires ([Revocation](mandates.md#revocation)). The same gap covers the status of a gateway's conformance attestation: the MM
 reads the attestation's status list itself ([Q-60](#q-60)), and a gateway-to-MM event for it is part of this question.
 
-**Notice route (18-10-2026).** BACP defines no gateway-to-Trusted-Surface notice channel either: `StepUp.delivery:
-app_push` is a push from the gateway to the principal with no defined endpoint. The negotiation mandate therefore carries
-`process.notice_route` (`mm_event`, `tel` or `sms`), and `autonomous` takes effect only with a usable one. If this
-question defines a gateway-to-Mandate-Manager event, it becomes an allowed `mm_event` value.
+**Notice route (18-10-2026).** BACP defines no gateway-to-Trusted-Surface notice event either. `StepUp.delivery:
+app_push` is a content-free push from the gateway to the signer's `ts_notify_url`, with only a `step_up_id` and an expiry
+([Origins and delivery](human-participants.md#ts-origins)); it carries no notice text, so it is not a `notice_route`. The
+negotiation mandate therefore carries `process.notice_route` (`mm_event`, `tel` or `sms`), and `autonomous` takes effect
+only with a usable one. If this question defines a gateway-to-Mandate-Manager event for a notice, it becomes an allowed
+`mm_event` value.
 
 ### Q-62 Certification of assisted operators {#q-62}
 
@@ -809,7 +824,11 @@ identifier does that body issue, so that `Participant.ref` of an `assisted_opera
 **Working position.** An `assisted_operator` entry is REQUIRED on every assisted session and every Trusted Surface
 approval names it (`Presentation.assisted_by`), but its `ref` is asserted by the agent operator and not verified
 against a registry. The principal approves with the principal's own factor, never the operator's tap (BACP policy).
-See [Human participants](human-participants.md#assisted).
+Since 18-10-2026 the `ref` is namespaced `scheme:id` (`csc_vle`, `bank_bc`, `ondc_np_agent` or `other`) and the gateway
+sets `Participant.ref_verification`, which is `asserted` until a registry exists that the gateway can name and which an
+agent can never set to `verified`. `assisted_by` and `Participant.ref` are attribution, never authentication, and the
+Trusted Surface announces the operator before the factor without reading "unverified" aloud. See
+[Human participants](human-participants.md#assisted).
 
 ### Q-63 Third-party render input on PSP surfaces {#q-63}
 
@@ -819,21 +838,12 @@ gateway-signed `ts_render`? Can an IVR or UPI 123PAY flow carry a confirm-only c
 
 **Working position.** The Trusted Surface renders only from `ts_render` and its own templates (TS-1).
 `StepUp.delivery: ivr_callback` is **Proposed** until this question is answered; a gateway offers it only where its
-PSP confirms the flow. See [Human participants](human-participants.md#ts-render).
-
-### Q-64 Support-operator keys in the registry {#q-64}
-
-**Question.** How does a registry enrol and revoke keys of role `support_operator`, the keys with which a human
-support operator of an agent operator accepts and releases a handoff under tag `bacp-handoff`? What does the registry
-record hold (the agent operator the person works for, one key per person), who vets the person, and how fast does a
-revocation reach gateways?<br>
-**Owner.** BACP WG.
-
-**Working position.** `2026-10-17` defines the role value (`Signature.role: support_operator`) and the tag rule, but
-no registry record schema, enrolment, vetting or revocation rule for such keys. A gateway sets `handoff.accepted_by`
-only from a key its registry resolves with that role, and only that key may release the handoff. Until this question
-is settled, `accepted_by` proves which registry key accepted, not that a vetted human holds it. See
-[Human participants](human-participants.md#handoff).
+PSP confirms the flow. The question also asks whether a UPI 123PAY or IVR flow can read and capture a challenge that the
+Trusted Surface draws (the [voice challenge](human-participants.md#voice)), whether a PSP may publish the numbers it calls from
+(`ts_call_numbers[]`), and whether PSP apps already refuse to render or debit a link whose payer is not the logged-in
+VPA (which would make `payer_ref` a restatement). If the challenge cannot be captured, voice approvals are unavailable and
+feature-phone principals lose voice for non-money confirmations, while money is unaffected because voice never releases it.
+See [Human participants](human-participants.md#ts-render).
 
 ### Q-65 Agent-initiated draw on a Reserve Pay block {#q-65}
 
@@ -899,7 +909,10 @@ phrases](human-participants.md#disclosure-phrases)) in the Eighth Schedule langu
 
 **Working position.** `en-IN` and `hi-IN` are defined, and are draft wording until the human-experience review seat and
 the owner sign them off. For any other language, an operator uses its own fixed, reviewed translation of the same
-sentence, never a translation made at run time.
+sentence, never a translation made at run time. The same route is needed for the Trusted Surface's fixed sentences that
+[Human participants](human-participants.md#ts-requirements) adds: the TS-6 refusal, the assisted announcement, "a matching
+code does not make a link safe", "your bank never asks for your PIN on a call it makes", the no-PIN-basis notice and the
+`seller_confirmation` and re-prompt sentences.
 
 ### Q-69 ONDC catalogue tags for sponsored listings and prior price {#q-69}
 
@@ -1130,6 +1143,50 @@ only the base rule applies. (2) An `agri` seller gateway treats `accept_confirma
 own acceptance. (3) `accept_confirmation` is never preselected and an absent key is `ask`. (4) The operator's role is
 recorded and no allocation is made by BACP. (5) A consumer marker always wins. (6) The text says that the bidder's tick
 message is legally a bid and that the award completes the sale.
+
+### Q-86 Counsel flags from the Trusted Surface and human-participant rules {#q-86}
+
+**Question.** Points for legal counsel, none of which blocks the rules:
+
+1. Whether a voice or operator-relayed "yes" satisfies Rule 4(9) of the E-Commerce Rules for a non-money confirmation.
+2. Whether an assisted operator's act can be attributed to the principal under IT Act s.11(b), and what proves "authority".
+3. Whether a gateway or agent operator is a "platform" under para 3 of the Dark Patterns Guidelines.
+4. Whether `device_signature` is an electronic authentication technique under IT Act s.3A.
+5. Whether a UPI debit that the account holder authenticates with her own PIN, but that a third party's BACP step-up link induced, is an
+   unauthorised electronic transaction for issuer liability under RBI/2025-26/79 para 9(b).
+6. Whether a gateway that reads `support_operator` registry records is a fiduciary or a processor of the employees' personal data.
+
+**Owner.** Legal counsel.
+
+**Working position (fail-safe default).** (1) Voice confirms only what moves no money, and the question stays open for that. (2) `Participant.ref` is
+attribution, never authentication, and the principal's own factor is always required. (3) The Trusted Surface rules apply to the gateway and the
+operator whichever way it is answered. (4) `device_signature` is never called an electronic signature, and no verifier relies on it unless the mandate
+lists `principal.device_jkt[]`. (5) TS-6 is a MUST, so that the induced debit does not arise. (6) The record holds only a pairwise `person_ref` and the
+key, never Aadhaar.
+
+### Q-87 Registry carriage of the Trusted Surface and support-operator fields, and the ONDC refusal codes {#q-87}
+
+**Question.** Can the ONDC network registry carry `bacp_role`, `operator_id`, `person_ref`, `ts_origins` and `ts_notify_url`
+([`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json))? Which ONDC error code maps to each
+`seller_reason.code` (the code 40002 is unlabelled in the ONDC build file)? Is there a seller code for "agent orders not accepted"? Who is the certifier
+of assisted operators ([Q-62](#q-62))?<br>
+**Owner.** ONDC.
+
+**Working position (fail-safe default).** Beckn's `Subscriber.type` is BAP, BPP or BG only. Until ONDC answers, a gateway that cannot read a
+signer's `ts_origins` from the registry mints no `trusted_surface_url` for it and answers `503 trusted_surface_unavailable`, and a side registry would be a
+second trust root that this version does not define. An unmapped refusal code gives `seller_reason.code: other`. Principals of an
+unregistered signer lose link-based step-ups until it registers.
+
+### Q-88 RBI treatment of a Reserve Pay block debit and an OTM execution {#q-88}
+
+**Question.** Does RBI treat a debit under a single-block-multiple-debits (Reserve Pay) block, or an execution of a UPI one-time mandate, as
+exempt from two-factor authentication under the AFA Directions (RBI/2025-26/79), or as already authenticated when the block or mandate was created?<br>
+**Owner.** RBI.
+
+**Working position.** Neither appears in Annexure-1 of RBI/2025-26/79, so the registry sets no `afa.rbi_annex1_item` for `in.upi.reservepay`, `in.upi.otm` or
+`in.upi.circle`, and the schema forbids it for a handler that relies on authentication at block creation or registration. The basis of such a debit is
+cited to NPCI OC 200 item 3, para (d) (Reserve Pay) and to UPI Consolidated Circular v1.0 paras 15.2 and 15.4 (OTM). The answer decides whether a
+future `rbi_annex1_item` is ever set on these handlers.
 
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
@@ -1451,6 +1508,29 @@ covers only the session's own sellers, uses a closed reason enum with no amounts
 seller and is never authority (`complete` re-evaluates). A gateway that does not list the capability keeps the
 `negotiation_id` requirement. See [Handler intersection](payments/index.md#handler-intersection-and-preference).
 
+### Q-64 Support-operator keys in the registry {#q-64}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T6).
+
+**Question.** How does a registry enrol and revoke keys of role `support_operator`, the keys with which a human
+support operator of an agent operator accepts and releases a handoff under tag `bacp-handoff`? What does the registry
+record hold (the agent operator the person works for, one key per person), who vets the person, and how fast does a
+revocation reach gateways?<br>
+**Owner.** BACP WG.
+
+**Answer.** The registry record of a `support_operator` key is [`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json)
+with `bacp_role: support_operator`, `operator_id` (the agent operator the person works for), `person_ref` (a pairwise
+reference to one person, never an Aadhaar number), `keys` (exactly one key), `valid_from`, `valid_until` and `status`.
+There is one key per person and no shared desk keys. A revocation takes effect at the next registry refresh, as for
+other keys. A key of another agent operator has no standing and gets `404 not_found`; a key whose role is not
+`support_operator` gets `401 signature_invalid`; and a key of the same agent operator that is not `accepted_by` gets
+`409 session_state_conflict` ([Human handoff](human-participants.md#handoff)). Support staff without a per-person key cannot accept
+a handoff, so a principal who asks for a human waits until the operator enrols them. Who vets the person is the agent
+operator's duty under its own HR process; counsel's question on whether a gateway that reads these records is a fiduciary
+or a processor of the employees' personal data is open with counsel ([Q-86](#q-86)). Whether the ONDC network registry
+can carry `operator_id` and `person_ref` is a question for ONDC.
+
 ### Other settled points {#settled-other}
 
 | Question | Answer |
@@ -1465,4 +1545,6 @@ seller and is never authority (`complete` re-evaluates). A gateway that does not
 | Does BACP carry fee allocation (MDR, aggregator commission, finder fee, `settlement_eta`)? | No (18-10-2026). BACP makes normative what the principal pays and to whom, and keeps the seller's own costs informative ([Who pays](payments/economics.md)). |
 | Is a seller or agent `human_confirmation_required` field adopted? | No (18-10-2026). Sellers already refuse unattended payment through `accepted_handlers` and COD refusal. The guarded alternative is the seller `requires_principal_confirmation` profile, which MUST NOT change a price or a handler ([Discovery](discovery.md#principal-confirmation)). |
 | Is BACP wire-compatible with UCP checkout? | No (18-10-2026). Its checkout lifecycle and status names follow UCP's (BACP spells `cancelled` and adds `human_handoff`), but paths, totals and the sign of discounts, the `ucp` envelope, the `complete` payload and payment authority, and the MCP argument shape differ. The earlier claim of wire compatibility is retracted, and the differences are listed in [BACP and other protocols](https://bacp.dev/latest/documentation/other-protocols/#ucp). |
+| Is a match code (`ts_match_code`) shown on the Trusted Surface? | A MAY, guarded (18-10-2026). It is derived from the render's `content_hash`, shown on app or web only, never read on IVR or UPI 123PAY, never a voice challenge, never a control and never evidence, and it is a MAY because a phishing page simply shows no code ([Human participants](human-participants.md#ts-render)). |
+| Is a Trusted Surface page allowed to take a UPI PIN? | No (18-10-2026), as BACP policy: a PIN is taken only in the PSP's own app or on a call that the principal places to the PSP's published number, never on a web page and never on a call that the Trusted Surface places. That NPCI rules already say so is not verified as of 18-10-2026 ([PIN rule](human-participants.md#ts-pin-rule)). |
 | Is per-mandate evaluation atomic? | Yes, within one gateway, keyed on the root open checkout mandate ([Security and Privacy](security-and-privacy.md#atomic-reservation)); across gateways see [Q-36](#q-36). |

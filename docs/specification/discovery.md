@@ -47,6 +47,7 @@ A BACP gateway MUST publish a profile document at the path
 | `keys` | REQUIRED | A JWK Set (`{"keys": [...]}`) with the gateway's public keys. The gateway signs webhooks with these keys. |
 | `message_id_namespace` | REQUIRED | The UUID namespace the gateway uses to derive Beckn `message_id`s (see [Beckn / ONDC Binding](transports/beckn.md)). Agents need it to compute the `nonce` of a key-binding JWT for a seller. |
 | `negotiation` | OPTIONAL | The gateway's negotiation capability advert (see [Negotiation capability](#negotiation-capability)). REQUIRED when the gateway supports negotiation. |
+| `step_up_limits` | OPTIONAL | The limits that the gateway applies to step-ups, each a `{count, window}` or, for the decline cool-off, a `{window}`: `post_order_per_principal`, `post_order_per_order`, `reprompt_per_issue`, `decline_cooloff`, `render_fetch_per_key` and `render_fetch_per_step_up`. BACP sets no number. They are the gateway's own design values, never presented as external limits, and a gateway that declares none is tested against the conformance fixture's limit ([Limits on step-ups](human-participants.md#step-up-limits)). |
 | `payment_handlers_registry` | OPTIONAL | URI of the gateway's `GET /payment-handlers` endpoint. |
 | `profiles` | OPTIONAL | [Trade profiles](trade-profiles.md) the gateway supports. |
 | `limits.max_body_bytes` | RECOMMENDED | The largest request body the gateway accepts. It MUST NOT exceed 256 KiB. |
@@ -238,6 +239,8 @@ to:
 | BPP subscriber keys | Verifying the network signatures on `on_*` callbacks, quotes and negotiation messages |
 | BPP subscriber keys (agent) | An agent verifying the `on_search` sources of presented discovery results ([Verifying discovery results](#verifying-results)) |
 | Mandate Manager and PSP keys | Verifying mandates, rail-binding attestations, receipts and Trusted Surface events |
+| Trusted Surface origins, notify endpoint and languages of a Mandate Manager or PSP | Minting `trusted_surface_url` only on an origin of the step-up's signer, sending the content-free `app_push`, and refusing to offer a language the signer does not claim ([Origins and delivery](human-participants.md#ts-origins)) |
+| `support_operator` keys | Accepting a handoff only from a key whose record names its agent operator and one person ([Human handoff](human-participants.md#handoff)) |
 | Payment-aggregator authorisation (`pa_authorisation`) | Checking, before money moves, that the party in `collected_by` is an RBI-authorised payment aggregator or a bank |
 | Conformance attestations | Checking which [conformance levels](conformance.md) a counterparty has passed |
 
@@ -258,6 +261,15 @@ Rules:
    BAP. An agent operator that also operates, or shares an operator with, the gateway's BAP MUST use the network
    registry's own endpoint. The agent MUST NOT use a key, a registry record or a lookup response that the gateway
    supplies. The agent records the lookup source in the `discover` InstructionLog entry.
+
+**Registry record.** The part of a registry record that BACP reads is the schema
+[`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json): `subscriber_id`, `bacp_role` (the
+`Signature.role` value), `keys[]`, `valid_from`, `valid_until` and `status`; for a Mandate Manager or a PSP, `ts_origins[]`,
+`ts_notify_url`, `ts_call_numbers[]`, `ts_languages[]` and `ts_modalities[]`; and for a `support_operator`, `operator_id` and
+`person_ref`, with exactly one key. A registry may carry more fields, and a reader ignores any it does not know. Whether the
+ONDC network registry can carry `bacp_role`, `operator_id`, `person_ref` and the Trusted Surface fields is not settled
+(a question for ONDC). Where it cannot, BACP needs a side registry, which is a second trust root that this version does
+not define.
 
 Which body anchors agent identity and issues AgentCredentials (an NPCI agent
 registry, the ONDC registry, or decentralised identifiers) is open
@@ -338,7 +350,9 @@ and absent for the other reasons. On Beckn the declaration travels in the `bacp.
   specification sets on step-ups.
 - The declaration MUST NOT change a price or a handler. It is a prompt to the human, not a pricing lever.
 - A confirmation that the seller asks for at `on_init` without having declared it is treated like drip pricing: the same
-  `confirm` step-up, reason `constraint_unresolved`.
+  `confirm` step-up, reason `constraint_unresolved`. A seller that asks through the BPP-signed tag `seller_confirmation` in `on_select`
+  or `on_init` gets a `confirm` step-up with reason `seller_confirmation` and a template sentence for the value
+  ([Seller refusals and substitution](transports/beckn.md#seller-reasons)).
 - The gateway logs, for each seller, how often a declared or an undeclared confirmation is raised.
 
 The response's `transaction_id` is the Beckn transaction id; the agent passes

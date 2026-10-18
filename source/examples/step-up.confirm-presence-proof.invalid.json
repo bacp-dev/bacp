@@ -1,0 +1,14 @@
+{
+  "step_up_id": "stp_01HZYPq8W3nK5vRt7YcLm2",
+  "kind": "confirm",
+  "reason": "presence_proof",
+  "summary": {
+    "hi-IN": "नंदिनी डेयरी स्टोर का ₹450 का ऑर्डर रद्द करें?",
+    "en-IN": "Cancel the ₹450 order from Nandini Dairy Store?"
+  },
+  "trusted_surface_url": "https://psp.example.in/approve/stp_01HZYPq8W3nK5vRt7YcLm2",
+  "surface": "psp.example.in",
+  "ts_render": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImJhY3AtdHMtcmVuZGVyK2p3cyJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpZUHE4VzNuSzV2UnQ3WWNMbTIifQ.c2ln",
+  "delivery": "deep_link",
+  "expires_at": "2026-10-22T19:05:00+05:30"
+}

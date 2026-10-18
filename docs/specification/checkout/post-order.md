@@ -132,7 +132,7 @@ principal's protective write.
   "reason_code": "001",
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
   "presence": "HP",
-  "hp_proof": {"ts_event_hash": "sha-256:Rk3mW8qZ1tY5vB9nC2xL6pD0sH4jF7gA3eU8iO1kM5w", "step_up_id": "stp_01HZPOCAN01"},
+  "hp_proof": {"ts_event_hash": "sha-256:Rk3mW8qZ1tY5vB9nC2xL6pD0sH4jF7gA3eU8iO1kM5w", "step_up_id": "stp_01HZPOCAN01q8W3nK5vRt7YcLm2"},
   "note": {"hi-IN": "गलती से ऑर्डर हो गया", "en-IN": "Ordered by mistake"},
   "bpp_id": "bpp.kirana.example.in"
 }
@@ -162,7 +162,7 @@ principal's protective write.
   "reason_code": "002",
   "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
   "presence": "HP",
-  "hp_proof": {"ts_event_hash": "sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU", "step_up_id": "stp_01HZPORET01"},
+  "hp_proof": {"ts_event_hash": "sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU", "step_up_id": "stp_01HZPORET01q8W3nK5vRt7YcLm2"},
   "evidence": [
     {"type": "image",
      "hash": "sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A",
@@ -221,6 +221,11 @@ The return refund **MUST** be issued **exactly once**, on the first of `Liquidat
 `Return_Delivered`. `refund.status` then moves `PENDING` → `INITIATED` → `SUCCESS` (with the refund
 receipt) or `FAILED`. A rejected return sets `refund.status: FAILED`. Each change appends a
 `return` adjustment and sends `return.updated`.
+
+A rejected return also carries the message `return_refused`, and a seller's unsolicited `on_cancel` of an order carries `seller_cancelled`
+on the order. Each has `resolution: requires_buyer_review` and names the operator's `grievance_contact` in `args[]`. Neither ends the principal's
+route: a seller's refusal to take back goods that the principal reports as defective is not lawful (Consumer Protection (E-Commerce) Rules,
+2020, r.6(3)), and cancellation charges are to be symmetric (r.4(8)), so the principal can raise an issue ([Errors](../errors.md#registry-session)).
 
 ## Refunds to the original method {#refunds}
 
