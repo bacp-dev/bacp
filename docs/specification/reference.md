@@ -10,7 +10,7 @@ generated from the `source/` directory of the specification repository.
 !!! note "Versioned URLs"
     Schema `$id`s have the form `https://bacp.dev/schemas/<name>.json`. In a published release they are served at
     `https://bacp.dev/<version>/schemas/<name>.json`, where `<version>` is `draft`, `latest` or a date, and every
-    `$ref` inside them points to the same release. Tools MUST resolve `$ref`s by `$id`, not by file path.
+    `$ref` inside them points to the same release. Tools MUST resolve `$ref`s by `$id`, not by file path. `ts-render.json` refers to components of `bacp.openapi.yaml`; a validator loads that document as a resource under its published URL (`https://bacp.dev/<version>/services/bacp.openapi.yaml`).
 
 ## JSON Schemas {#schemas}
 
@@ -23,7 +23,7 @@ The human-participant types in `common.json` (`LanguageTag`, `Participant`, `Par
 |---|---|---|
 | [`agent-credential.json`](https://bacp.dev/latest/schemas/agent-credential.json) | AgentCredential | Claims of an SD-JWT VC (vct in.bacp.agent.1) issued by a registry-accredited issuer to an agent operated by a registered legal entity and bound to a BAP subscriber. |
 | [`beckn-context-bacp.json`](https://bacp.dev/latest/schemas/beckn-context-bacp.json) | Beckn context extension: context.bacp | Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp] where a network validator rejects unknown context keys. |
-| [`common.json`](https://bacp.dev/latest/schemas/common.json) | BACP common types | Shared definitions: `Amount`, `PositiveAmount`, `Hash`, `Jws`, `Jwk`, `Signature`, `Presence`, `LangText`, `LanguageTag`, `RailType`, `Channel`, `Handler`, `Duration`, `IssueStatus`, `IssueMeta`, `HandlerId`, `HandlerRef`, `RailTypeV1`, `UdyamCategory`, `Party`, `DocumentRef`, `Citation`, `ParticipantRole`, `Participant`, `HandoffRoute`, `Presentation`, `HpProof`, `Actor`, `ConformanceLevel`, `EntityId`, `QuantityUnit` |
+| [`common.json`](https://bacp.dev/latest/schemas/common.json) | BACP common types | Shared definitions: `Amount`, `PositiveAmount`, `Hash`, `Jws`, `Jwk`, `Signature`, `Presence`, `LangText`, `LanguageTag`, `RailType`, `Channel`, `Handler`, `Duration`, `IssueStatus`, `IssueMeta`, `HandlerId`, `HandlerRef`, `RailTypeV1`, `UdyamCategory`, `Party`, `DocumentRef`, `Citation`, `ParticipantRole`, `Participant`, `HandoffRoute`, `Presentation`, `HpProof`, `Actor`, `ConformanceLevel`, `EntityId`, `QuantityUnit`, `ChargeRecipient`, `MandatePrimitiveType`, `OperatorCompensation`, `ProtocolVersion` |
 | [`conformance-attestation.json`](https://bacp.dev/latest/schemas/conformance-attestation.json) | Conformance attestation payload | The payload of a BACP conformance attestation: a compact JWS with the JOSE header typ bacp-conformance+jwt, signed by a key in the public conformance-authority list. It records that the subject passed BACP protocol tests. It is not approval, certification or onboarding by NPCI, RBI, ONDC or any public body. |
 | [`conformance-authority-list.json`](https://bacp.dev/latest/schemas/conformance-authority-list.json) | Conformance-authority list | The public, dated list of conformance authorities: the only way to admit a signer of conformance attestations, published as source/registry/conformance-authorities.json. It ships empty. |
 | [`consent-receipt.json`](https://bacp.dev/latest/schemas/consent-receipt.json) | ConsentReceipt (DPDP) | One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or for) a DPDP Consent Manager. A receipt with consent_kind marketing (Proposed) is standalone, names one seller and carries marketing purposes and channels. |
@@ -125,8 +125,12 @@ Each example is named `<schema>.<case>.json` and is checked against `<schema>.js
 `<component>` names no schema file is checked against the OpenAPI component schema of that name in PascalCase, for
 example `mandate-request.*` against `#/components/schemas/MandateRequest` and `ts-render.*` against `TsRender` in
 `bacp.openapi.yaml`. Files ending in `.invalid.json`
-are negative vectors: a conforming validator MUST reject them. The repository checks every vector, the registry and the
+are negative vectors: a conforming validator MUST reject them. The file [`examples/index.json`](https://bacp.dev/latest/examples/index.json) is the
+normative map from each example to the schema or schemas it is checked against, and a validator MUST assert `format`
+([Conformance](conformance.md#how-conformance-is-tested)). The repository checks every vector, the index, the registry and the
 OpenAPI document with `uv run python scripts/validate.py`.
+
+The table lists a selection; [`examples/index.json`](https://bacp.dev/latest/examples/index.json) lists every example.
 
 | Example | Schema | Expected |
 |---|---|---|

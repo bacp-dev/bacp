@@ -78,6 +78,8 @@ are involved, the owner is the one that must give the answer.
 | [Q-41](#q-41) | Interoperable encoding for closing open mandates | BACP WG | Settled |
 | [Q-42](#q-42) | Mandatory signature algorithm | BACP WG | Settled |
 | [Q-43](#q-43) | Signing profile on the Beckn leg | ONDC | Settled |
+| [Q-44](#q-44) | Binding for plans, ledgers and documents | BACP WG | Settled |
+| [Q-45](#q-45) | Intersection for plain sessions | BACP WG | Settled |
 | [Q-46](#q-46) | Exposure accounting for credit-ledger deals | BACP WG | Settled |
 | [Q-47](#q-47) | Governance of purpose codes and bounds | BACP WG | Settled |
 | [Q-48](#q-48) | Agent signature on negotiation message bodies | BACP WG | Open |
@@ -136,6 +138,8 @@ are involved, the owner is the one that must give the answer.
 | [Q-101](#q-101) | Counsel flags from the UCP capability parity rules | Legal counsel | Open, fail-safe default |
 | [Q-102](#q-102) | ONDC and NPCI points of the UCP capability parity rules | ONDC, NPCI | Open, fail-safe default |
 | [Q-103](#q-103) | Annexure-1 treatment of a FASTag top-up and an NCMC top-up | RBI, NPCI | Open, fail-safe default |
+| [Q-104](#q-104) | Wire form of the carried-exposure increment that a Mandate Manager sends after a port | BACP WG | Open, fail-safe default |
+| [Q-105](#q-105) | Payload schema of the notice render of an autonomous negotiation act | BACP WG | Open, fail-safe default |
 
 ## Questions {#questions}
 
@@ -1266,6 +1270,31 @@ transactions in the NETC system; neither names a top-up. The registry keeps `rbi
 No row names an NCMC top-up, so `in.ppi.ncmc_topup` carries no exemption and no `rbi_annex1_item`, and authentication applies under para 6(a)
 (`afa.model: per_txn_2fa`). The pre-debit notice exemption for both handlers is a separate rule from the e-mandate framework.
 
+### Q-104 Wire form of the carried-exposure increment after a port {#q-104}
+
+**Question.** When a `use` of a superseded root reaches the Mandate Manager after it has signed the successor, the Mandate Manager sends the
+successor's gateway a signed carried-exposure increment ([Porting](mandates.md#port)). Which event, endpoint or `TrustedSurfaceEvent` value carries it,
+and what does it contain (`period`, `window_start`, `amount` and the `seq` of the `use` it comes from)?<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** BACP defines no wire form in this version. The rule is stated: the increment counts against the successor,
+and the gateway applies it inside the root's atomic section. Until a form is defined, the Mandate Manager does not sign the successor before it holds
+a `closed` event and every event up to its `last_seq`, or 60 seconds have passed without one. In that second case every window is `incomplete` and is
+pre-filled at `max`, so the carried exposure is treated as at the old `max`. The successor's gateway never receives the superseded root's events, so the
+rule binds the Mandate Manager and not that gateway. A `use` that arrives after signing makes the Mandate Manager revoke the successor and ask the
+principal to port again.
+
+### Q-105 Payload schema of the notice render {#q-105}
+
+**Question.** What is the payload of the gateway-signed notice render of an `agreed_by_agent` or `purchase_offered_by_agent` act
+([Human participants](human-participants.md))? No schema defines it, so the bytes that go into `notice_renders[]` cannot be tested with a valid and an
+invalid example. The members that the text names are `code`, `offer_hash`, `language`, `total`, `revoke_route`, `grievance_contact` and `expires_at`.<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** BACP defines no notice payload schema in this version. A notice is a gateway-signed compact JWS that is not a
+`TsRender` and not a step-up, and the specification names its content in prose. A verifier checks that each entry of `notice_renders[]` is a compact JWS
+signed by the gateway's registry key and does not parse its payload.
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
@@ -1361,7 +1390,7 @@ detached-JWS `cnf` closing?<br>
 payload is the Mandate JSON, including an inner signature with `role: agent` made by the open mandate's `cnf` key,
 and whose header `kid` is the `cnf` key id. The optional `kb_jwt` on `complete` keeps its current rules. An SD-JWT /
 KB-JWT selective-disclosure encoding is not part of this version; a later release may add it as a new mandate
-`vct` without changing this one. The release's conformance suite carries test vectors for the attached-JWS form. See
+`vct` without changing this one. The conformance suite will carry test vectors for the attached-JWS form. See
 [Mandates and Consent](mandates.md#closing).
 
 ### Q-42 Mandatory signature algorithm {#q-42}
@@ -1376,8 +1405,8 @@ required?<br>
 
 **Answer.** Both are mandatory to verify. Every verifier of a BACP signature (RFC 9421 requests and webhooks, JWS
 mandates, receipts, ConsentReceipts, attestations and InstructionLog entries) MUST support ES256 (ECDSA P-256) and
-EdDSA with Ed25519. Every signer MUST use one of the two; no other algorithm is allowed. The release's conformance
-suite carries test vectors for both. See [Identity and Request Signing](identity-and-signing.md#signature-algorithms).
+EdDSA with Ed25519. Every signer MUST use one of the two; no other algorithm is allowed. The conformance
+suite will carry test vectors for both. See [Identity and Request Signing](identity-and-signing.md#signature-algorithms).
 
 ### Q-43 Network-leg signing {#q-43}
 
@@ -1447,8 +1476,8 @@ dated 13-11-2025. Together they set three dates:
 | 13-11-2026 | Rule 4 (Consent Managers) | s.6(9) and s.27(1)(d) |
 | 13-05-2027 | Rules 3, 5–16, 22 and 23 | ss.3–5, 6(1)–(8) and 6(10), 7–17, 27 (except 27(1)(d)), the penalty provisions ss.28–34, 36, 37 and 44(2) |
 
-The corrigendum G.S.R. 892(E) (10-12-2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E),
-05-10-2026) change wording only and move no date. The reported consultation to shorten the eighteen-month period
+The corrigendum G.S.R. 892(E) (10-12-2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E), Order dated
+05-10-2026, Gazette issue 06-10-2026) change wording only and move no date. The reported consultation to shorten the eighteen-month period
 and the reported corrigendum G.S.R. 113(E) appear only in secondary sources; no amending notification had been found
 as of 17-10-2026. See [Security and Privacy](security-and-privacy.md#commencement).
 

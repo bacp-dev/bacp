@@ -306,7 +306,7 @@ more than she was quoted unless she heard "up to ₹X" and a hold exists:
 2. A line MAY carry `adjustment_band{max_up, max_down}`. It is not a mandate constraint, so it adds no new family of bounds,
    and it is hashed into `checkout_hash` ([below](#checkout-hash)). The gateway accepts a `max_up` only when (a) the
    Trusted Surface reads it as "up to ₹X" and the principal confirms, (b) the quote total plus the sum of `max_up` over all
-   lines is within the approved amount and the mandate's caps, (c) `max_up` is at most one `increment` of the line's measure,
+   lines is within the approved amount and the mandate's caps, (c) `max_up` is at most the quoted price of one `increment` of the line's measure,
    and (d) the rail holds the amount at payment, the extra is collected only from that hold, and there is no second debit and
    no cash-on-delivery top-up. Where the rail has no such hold, the band is absent and an adjustment can only reduce the
    amount. A session whose total plus the sum of `max_up` is above the mandate cap escalates with `confirm`, and the Trusted
@@ -345,7 +345,10 @@ a line that an assisted-channel operator adds is `assisted_operator`.
 - The agent MAY send `principal_requested: true` on an `ItemRef`. The claim decides only how the Trusted Surface reads
   the line: the Trusted Surface reads in full every `agent`, `seller` and `assisted_operator` line that the agent has not
   marked `principal_requested` (`ts_render.unrequested_lines[]`, named in `render_required[]` whenever it is not
-  empty), and counts the rest ("and 11 items you asked for"). The claim never changes `added_by`.
+  empty), and counts the rest ("and 11 items you asked for"). The claim never changes `added_by`. `added_by` is fixed
+  when the line first appears in the session and does not change when the agent re-sends the line. `principal_requested`
+  has effect only on a line whose `added_by` is `agent`; on a `seller` or `assisted_operator` line it is ignored, and the
+  line is always in `unrequested_lines[]`.
 - A zero-price line that a seller scheme adds is read out and does not block. A paid line that a seller added needs a new
   quote, so a new `checkout_hash`.
 - An `ItemRef` MAY carry its own `transaction_id` and `source_digest`, so that a re-quote from an old list still runs the
@@ -369,7 +372,7 @@ base `totals`, and it is never a mandate constraint. Until an extension-registry
 `checkout_hash` is `sha-256` over the JCS form of the **BPP-signed quote** returned in `on_init`. When the session also
 carries a chosen `fulfilment.option_id`, an `adjustment_band` or a `substitution` policy on a line, which are choices of the
 principal and not part of the seller's quote, the hash is `sha-256(JCS({"quote": <the quote>, "selection": {"fulfilment_option_id":
-..., "lines": [{"id": ..., "adjustment_band": ..., "substitution": ...}]}}))`, naming only the members that are present.
+..., "lines": [{"id": ..., "adjustment_band": ..., "substitution": ...}]}}))`, naming only the members that are present. `lines` holds only the lines that carry at least one of these members, sorted by `id` in ascending order of UTF-16 code units (as RFC 8785 sorts keys).
 With none of them the hash is the one above, so every hash computed before this release stays valid. It is the anchor that
 binds every later artefact to one basket and one price:
 
@@ -837,6 +840,7 @@ When the evaluation calls for a step-up the gateway returns `200` with
     "summary": {"hi-IN": "₹1,350 का ऑर्डर आपकी ₹1,200 की सीमा से ज़्यादा है। कृपया UPI ऐप में पुष्टि करें।",
                 "en-IN": "The ₹1,350 order is above your ₹1,200 limit. Please confirm in your UPI app."},
     "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXAq8W3nK5vRt7YcLm2",
+    "surface": "psp.example.in",
     "expires_at": "2026-10-22T18:40:00+05:30"
   },
   "messages": [
@@ -881,8 +885,8 @@ If the debit succeeds but `on_confirm` does not arrive, the gateway re-sends the
 - the session **MUST** stay `complete_in_progress` with `payment.status: reversal_pending`,
   `reversal_deadline` set to the debit time plus 5 days, and message `debited_not_confirmed`
   (`warning`, `recoverable`);
-- the gateway **MUST** start a refund to source immediately, citing the original rail reference
-  (`original_rrn` for UPI). Issuing the refund Receipt does not by itself end the session;
+- for `refund_route: gateway_collector` the gateway **MUST** start a refund to source immediately, citing the original rail reference
+  (`original_rrn` for UPI); for `seller_collector` it **MUST** request that refund from the seller's collector through IGM at once. Issuing the refund Receipt does not by itself end the session;
 - when the PSP reports the refund credit as settled, `payment.status` **MUST** become `reversed`
   and the session **MUST** become `cancelled`;
 - `payment.reversal_basis` and `payment.refund_route` **MUST** be set. `reversal_basis` is `rbi_tat` when the payer PSP

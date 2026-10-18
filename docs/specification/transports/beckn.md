@@ -137,8 +137,14 @@ No other keys are allowed (`additionalProperties: false`).
 ### Message ids {#message-ids}
 
 The gateway MUST derive the Beckn `message_id` as `UUIDv5(ns, agent_id | idempotency_key | action)`, so that a retried
-agent call re-sends an identical message. The gateway MUST publish the namespace `ns` in its profile as
+agent call re-sends an identical message. The name that UUIDv5 hashes is the UTF-8 bytes of the string `agent_id + "|" + idempotency_key + "|" + action`,
+joined by the literal character `|` with no spaces. `agent_id` is the `sub` of the AgentCredential that signed the request, `idempotency_key` is the value of
+the `Idempotency-Key` header exactly as sent, and `action` is the Beckn `context.action` of the message (for example `search` or `confirm`). The gateway MUST publish the namespace `ns` in its profile as
 `message_id_namespace`, so that a BACP-aware BPP can check the key-binding JWT's `nonce`.
+
+Worked example: for the namespace `55884fda-3b41-58be-87a9-2be7b3b43b7f`, `agent_id` `did:web:agents.vaani.example.in:sakhi`, `Idempotency-Key`
+`idem_7Q2W9X4K1M3` and action `search`, the name is `did:web:agents.vaani.example.in:sakhi|idem_7Q2W9X4K1M3|search` and the `message_id` is
+`7d225f10-d430-5b7b-9826-0c7621e7fdd5`.
 
 ### Mirroring into tags {#mirroring}
 
@@ -353,7 +359,7 @@ verified as of 18-10-2026 against ONDC's registry specification (a question for 
 | `type` of `BAP` or `BPP` | `bacp_role` of `bap` or `bpp`. A Beckn `type` has no value for a Mandate Manager, a PSP, a support operator or a conformance authority. |
 | `status` of `SUBSCRIBED` | `status: active` |
 | `status` of `UNSUBSCRIBED` or `INVALID_SSL` | `status: revoked` |
-| `status` of `EXPIRED` | no `status` value: the record is past its `valid_until`, and a reader MUST NOT use it |
+| `status` of `EXPIRED` | no BACP record: the reader produces none, because the Beckn record is past its `valid_until`, and MUST NOT use it |
 
 The legal `operator`, `regulatory_status[]` and `data_residency` have no Beckn field. Whether the ONDC network registry
 can carry them is not settled. Where it cannot, an operator is unknown, which fails every separation check closed, and a
@@ -374,8 +380,7 @@ The signing profile on the Beckn leg is settled in [Q-43](../open-questions.md#q
 - BACP does not require Beckn 2.0 signed ACKs. Where the counterparty supports Beckn 2.0, the gateway SHOULD use
   signed ACKs and the `request-signature` binding of callbacks.
 - Negotiation timing uses the receiver's CounterSignature timestamp as the time of receipt. The CounterSignature is
-  a BACP artefact, a JWS by the receiver's registry key carried in the negotiation message's `counter_signature`
-  inside the `bacp` TagGroups, so it does not depend on the Beckn version.
+  a BACP artefact, a JWS by the receiver's registry key carried on a Beckn leg in a `bacp.receipt` TagGroup in the synchronous `Ack` of the same exchange (see "Receipts on a Beckn leg" above) and recorded on the message as `counter_signature`, so it does not depend on the Beckn version.
 - A counterparty that does not return valid CounterSignatures is treated as not supporting firm negotiation: the
   gateway MUST send it only non-firm offers (`firm: false`).
 

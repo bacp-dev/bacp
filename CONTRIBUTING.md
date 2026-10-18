@@ -46,7 +46,7 @@ feat(mandates)!: rename constraints.budget.period to constraints.budget.window
 The files under `source/` are normative. Changes to them follow these rules:
 
 1. **Keep `$id` stable.** Every schema's `$id` MUST be `https://bacp.dev/schemas/<file name>`. The build rewrites it per version. Do not hard-code a version in `$id` or `$ref`.
-2. **Prefer additive changes.** Add optional fields rather than changing existing ones. Readers MUST ignore unknown fields, so additive changes are not breaking. Unknown mandate constraints MUST fail closed, so a new mandate constraint is breaking for verifiers. Mark it with `!`.
+2. **Prefer additive changes.** Add optional fields rather than changing existing ones. Readers MUST ignore unknown fields, so additive changes are not breaking, except a request member of a capability that the receiver defines but does not list, which it refuses with `400 capability_unsupported` ([Extensibility](https://bacp.dev/latest/specification/overview/#extensibility) rule 1). Unknown mandate constraints MUST fail closed, so a new mandate constraint is breaking for verifiers. Mark it with `!`.
 3. **Amounts are integer paise.** Use the shared `Amount` definition in `common.json`. Do not introduce floating-point money.
 4. **Add examples.** Every new or changed schema needs at least one valid example in `source/examples/<schema>.<case>.json`. Add `<schema>.<case>.invalid.json` examples for each rule the schema is meant to reject.
 5. **Keep the OpenAPI binding in step.** If a schema change affects the REST binding, update `source/services/bacp.openapi.yaml` in the same pull request.

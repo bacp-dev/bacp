@@ -137,7 +137,8 @@
           "description": "Signature algorithm. Every verifier of a BACP signature MUST support both ES256 (ECDSA P-256 with SHA-256) and EdDSA (Ed25519); every signer MUST use one of the two, and a signature with any other algorithm MUST be rejected (settled in Q-42)."
         },
         "value": {
-          "$ref": "#/$defs/Jws"
+          "$ref": "#/$defs/Jws",
+          "description": "A detached JWS (RFC 7515 Appendix F): the compact form with an empty payload segment, signed over the JCS form of the artefact minus the members that its own hash leaves out, with the protected header {alg, kid} (and typ where the specification requires one). The header kid equals this object's kid, and a verifier recomputes the payload and never reads one from the value."
         }
       },
       "additionalProperties": false
@@ -916,7 +917,7 @@
         },
         "checkout_hash": {
           "$ref": "#/$defs/Hash",
-          "description": "checkout_hash of the quote the content showed: the session's quote, or for a post_order step-up the order's. REQUIRED on a step_up.approved event (the gateway refuses one without it with 400 invalid_request); never present with offer_hash. The gateway applies an approval only while the session's checkout_hash equals it."
+          "description": "checkout_hash of the quote the content showed: the session's quote, or for a post_order step-up the order's. REQUIRED on a step_up.approved event (the gateway refuses one without it with 400 invalid_request), except on the approval of a post_order step-up for an order-less ledger act (LEDGER_ACK with no order_id), which carries none; never present with offer_hash. The gateway applies an approval only while the session's checkout_hash equals it."
         },
         "offer_hash": {
           "$ref": "#/$defs/Hash",

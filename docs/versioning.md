@@ -32,8 +32,7 @@ dates elsewhere in the documentation are shown as DD-MM-YYYY.
 The first dated release is `2026-10-17`. `draft` remains the working
 version built from `main`, where changes for later releases are made.
 
-A verifier chooses the rules to apply to a mandate by the dated release that the mandate names (`rail_binding.registry_version`
-and the release of the artefacts it was issued under), never by its `vct`. The `vct` names a mandate type, such as
+A verifier chooses the rules to apply to a mandate by the dated release that the mandate names (for a Payment Mandate, the `rail_binding.registry_version` of the open Payment Mandate it is or narrows; a Checkout Mandate names none, and the verifier applies the release in force at its `iat`), never by its `vct`. The `vct` names a mandate type, such as
 `in.bacp.mandate.payment.open.1`, and does not change when a release adds a field or a rule.
 
 A participant states the version it speaks in its gateway profile

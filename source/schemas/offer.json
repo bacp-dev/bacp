@@ -1908,7 +1908,7 @@
         },
         "hash": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "sha-256 of the published protocol-terms text of that version."
+          "description": "sha-256: followed by the unpadded base64url SHA-256 of the exact bytes of the published protocol-terms file of that version (protocol-terms/<version>.txt, UTF-8, LF line ends, no byte order mark), with no canonicalisation."
         }
       },
       "required": [
@@ -1941,7 +1941,7 @@
         },
         "log_entry_hash": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The hash of the receiver's chain entry at log_seq."
+          "description": "The hash of the receiver's chain entry at log_seq: sha-256 over the JCS form of {msg_hash, negotiation_id, received_at, log_seq, prev_entry_hash}, that is of this object without log_entry_hash. The chain is the receiver's own chain for the negotiation_id, separate from any InstructionLog, with log_seq from 1 and the sha-256 of the negotiation_id as genesis."
         },
         "prev_entry_hash": {
           "$ref": "common.json#/$defs/Hash",

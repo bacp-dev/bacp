@@ -151,7 +151,7 @@ The signature MUST cover:
 | `@path` | Always |
 | `@query` | Whenever the target URI has a query component, for example `GET /orders/ORD-KIR-88231?bpp_id=bpp.kirana.example.in` |
 | `content-digest` | Always (see [Content-Digest](#content-digest)) |
-| `bacp-agent` | Always: the AgentCredential header. Exception: a request under tag `bacp-ts` or `bacp-handoff` is signed with a registry key, carries no `BACP-Agent` header and does not cover `bacp-agent` |
+| `bacp-agent` | Always: the AgentCredential header. Exception: a request under tag `bacp-ts`, `bacp-handoff` or `bacp-mm-event` is signed with a registry key, carries no `BACP-Agent` header and does not cover `bacp-agent` |
 | `idempotency-key` | On every request other than `GET` and `HEAD` |
 | `bacp-version` | Whenever the request carries a `BACP-Version` header. The header is REQUIRED when the gateway's profile lists more than one version ([Version negotiation](discovery.md#request-version)). A header that is present and not covered is refused with `401 signature_invalid` |
 | `content-type` | SHOULD be covered whenever the request has a body |
@@ -188,7 +188,7 @@ SHA-256) and EdDSA with Ed25519.
   entries) MUST support both.
 - Every signer MUST use one of the two. A signature with any other algorithm
   MUST be rejected (`401 signature_invalid` on a request).
-- The conformance suite of `2026-10-17` carries test vectors for both.
+- The conformance suite will carry test vectors for both. The signature values in the published examples are placeholders: they are well-formed and do not verify. Real vectors come from implementations of the specification and are offered back to it after release.
 
 This settles [Q-42](open-questions.md#q-42). The Beckn network leg keeps the
 network's own Ed25519 signing (see [Network leg signing](#network-leg-signing)).
@@ -360,6 +360,49 @@ Rules:
 6. **Unregistered codes.** A client that receives a `4xx` with a code it does
    not know MUST NOT retry with a new key.
 
+## Artefact signatures {#artefact-signatures}
+
+A BACP artefact that carries a `Signature` object (`kid`, `alg`, `value`) is signed over a payload that this section fixes, in
+the form that this section fixes. The two statements below are the interoperable rule: two independent implementations that
+follow them verify each other's artefacts.
+
+**Form: a detached JWS.** `Signature.value` is a detached JWS in the sense of RFC 7515 Appendix F, in its compact serialisation
+with the payload segment omitted: `BASE64URL(protected header) || ".." || BASE64URL(signature)`. The `b64` header parameter
+(RFC 7797) is not used, so the signing input is `BASE64URL(protected header) || "." || BASE64URL(payload)` with the payload
+below.
+
+- **Protected header.** `{alg, kid}`, and also `typ` where the specification requires one for the artefact. `alg` is `ES256` or `EdDSA` and equals
+  `Signature.alg`. The header `kid` **MUST** equal `Signature.kid`. A value whose header `alg` or `kid` differs from the
+  `Signature` object that carries it does not verify.
+- **No embedded payload.** A signer omits the payload segment. A verifier recomputes the payload as below, never trusts a
+  payload that the value carries, and refuses a value whose payload segment is not empty.
+- **Which artefacts.** This form applies to a `Signature` object. An artefact that is defined as a compact JWS that carries its
+  payload keeps that form: the attached JWS that closes a mandate (whose payload still holds the mandate's own `signatures[]`), the
+  operator's wrapper of a mandate in an evidence bundle, a CounterSignature, a `ts_render` (whose header carries `typ: bacp-ts-render+jws`,
+  [Typed JWS](human-participants.md#ts-render)) and a gateway-signed notice.
+
+**Payload: the JCS form of the artefact minus the members it excludes from its hash.** The signed bytes are the RFC 8785
+(JCS) form of the artefact without the members listed here, which are the members that the artefact's own hash also leaves
+out, so one canonical form serves both.
+
+| Artefact | Signature member | Members left out of the signed bytes |
+|---|---|---|
+| Mandate, open or closed | `signatures[]` | `status`, `usage`, `signatures`, and in a closed Payment Mandate record that the gateway stores, `auth_binding.afa_ref` (the bytes whose `sha-256` is the mandate hash) |
+| InstructionLog entry | `signature` | `signature` (the `entry_hash` is signed) |
+| Receipt | `signature` | `signature` (the `receipt_hash` is over the signed receipt, `signature` included) |
+| ConsentReceipt | `signature` | `signature` |
+| Negotiation message | `signatures[]` | `signatures`, `counter_signature`, `received_at` (the bytes whose `sha-256` is the `msg_hash`) |
+| Trusted Surface event (`TrustedSurfaceEvent`) | `signature` | `signature` |
+| Evidence bundle | `bundle_signature` | `bundle_signature` |
+
+Where an artefact carries several signatures (a mandate has the principal's and the Mandate Manager's, a negotiation message
+the network participant's and the agent's), **each signature covers the same payload independently**. The Mandate Manager's
+countersignature does not cover the principal's signature, the signatures can be verified in any order, and removing one
+leaves the others valid. A `StandingAccept` and the signed objects of an auction are signed over their JCS form without
+`signature`, as their own descriptions say.
+
+`Signature.role` is outside the signed bytes, so a label proves nothing. A verifier takes a signature's role from the resolution of its `kid` (a registry key's role, or for `principal` the device key that the Mandate Manager attested), never from `Signature.role`. A signature whose `role` differs from that resolution does not count, and two entries with the same `kid` are invalid. A verifier that finds an artefact with two entries of the same `kid` counts the role that the label claims as missing and refuses the artefact with `evidence_unverifiable` (or `mandate_invalid` for a mandate).
+
 ## Network leg signing
 
 The gateway, acting as the BAP, signs its Beckn/ONDC messages with the BAP's
@@ -381,7 +424,7 @@ Rules for the network leg:
 
 1. **Deterministic message ids.** The gateway MUST derive each Beckn
    `message_id` as a UUIDv5 under its published `message_id_namespace` over
-   `agent_id | idempotency_key | action`, so a retried call re-sends an
+   `agent_id | idempotency_key | action` (the exact name is in [Message ids](transports/beckn.md#message-ids)), so a retried call re-sends an
    identical message.
 2. **Duplicate rejection.** A BACP-aware receiver MUST reject a duplicate
    `message_id` within the message's `ttl` with a NACK. The gateway treats that

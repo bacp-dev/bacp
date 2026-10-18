@@ -21,7 +21,7 @@ this page and the OpenAPI document differ, this page is authoritative.
 - Requests and responses are `application/json` encoded in UTF-8.
 - Amounts are integer paise (`{"value": 30200, "currency": "INR"}` is ₹302.00). Times are RFC 3339 date-times;
   examples use the IST offset `+05:30`.
-- Readers MUST ignore unknown fields. Unknown **mandate constraints** MUST fail closed.
+- Readers MUST ignore unknown fields, except a request member of a capability that the receiver defines but does not list, which it refuses with `400 capability_unsupported` ([Extensibility](../overview/index.md#extensibility) rule 1). Unknown **mandate constraints** MUST fail closed.
 - Business outcomes return 200, 201 or 202 with full state and `messages[]`; failures return 4xx or 5xx with the flat
   `Error` object (see [Errors](../errors.md)).
 
@@ -205,6 +205,8 @@ endpoint requires. This table is generated from `source/services/bacp.openapi.ya
 | POST | `/auctions` | auction | `bacp-negotiate` | required | Host a reverse (L1) or sealed auction through a neutral auctioneer, or register to join one |
 | GET | `/auctions/{auction_id}` | auction | `bacp-browse` | — | Bidder view (current price only, own rank, never identities or sealed bids) |
 | POST | `/auctions/{auction_id}/bids` | auction | `bacp-negotiate` | required | Place a bid, bid_commit, bid_reveal or bid_retract (signed, bacp-negotiate) |
+| POST | `/auctions/{auction_id}/standing-accepts` | auction | `bacp-negotiate` | required | Lodge a standing accept for a Dutch auction (signed, bacp-negotiate) |
+| POST | `/auctions/{auction_id}/standing-accepts/{standing_accept_id}/withdraw` | auction | `bacp-negotiate` | required | Withdraw a lodged standing accept (signed, bacp-negotiate) |
 | POST | `/auctions/{auction_id}/award` | auction | `bacp-negotiate` | required | Buyer or auctioneer award of the winning bid hash (reverse_l1), or seller acceptance of the highest bid (english) |
 | GET | `/payment-handlers` | payment-handlers | `none (public)` | — | The handler registry (HandlerDescriptor[]). Public, cacheable. |
 | GET | `/payment-handlers/{handler_id}` | payment-handlers | `none (public)` | — | One handler descriptor, by canonical id or legacy alias |

@@ -4,6 +4,7 @@
   "reason": "presence_proof",
   "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "action": "CANCEL",
+  "reason_code": "buyer_cancelled",
   "order_id": "ord_01HZY4",
   "language": "hi-IN",
   "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",

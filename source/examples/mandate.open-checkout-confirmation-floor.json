@@ -1,7 +1,7 @@
 {
   "vct": "in.bacp.mandate.checkout.open.1",
-  "ap2_vct": "mandate.payment.open.1",
-  "mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "ap2_vct": "mandate.checkout.open.1",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
   "parent_mandate_id": null,
   "kind": "checkout",
   "form": "open",
@@ -88,10 +88,10 @@
     "data_retention": "P1Y"
   },
   "revocation": {
-    "status_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/status",
+    "status_uri": "https://mm.psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/status",
     "notify_sla_seconds": 60
   },
-  "audit_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/audit",
+  "audit_uri": "https://mm.psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/audit",
   "cnf": {
     "jwk": {
       "kty": "EC",

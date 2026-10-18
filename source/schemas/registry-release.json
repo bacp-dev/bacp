@@ -47,7 +47,7 @@
           },
           "digest": {
             "$ref": "common.json#/$defs/Hash",
-            "pattern": "^sha-256:",
+            "pattern": "^sha-256:[A-Za-z0-9_-]{43}$",
             "description": "sha-256 over the RFC 8785 (JCS) form of the parsed JSON file, as 'sha-256:' and the unpadded base64url digest. It is not a hash of the file's bytes, because the site build re-serialises each JSON file."
           }
         }

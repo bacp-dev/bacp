@@ -637,7 +637,7 @@
           "n_a"
         ]
       },
-      "description": "OPTIONAL. Every source of funds that a payer can bring to this handler, when it is more than the primary funding. It MUST contain funding. For example, a UPI Reserve Pay block can sit on a savings, current or overdraft account (debit) or on a RuPay credit card or a pre-sanctioned credit line (credit), so in.upi.reservepay lists debit and credit. The source that a given mandate actually uses is the one the payer PSP attests, never the one listed here."
+      "description": "OPTIONAL. Every source of funds that a payer can bring to this handler, when it is more than the primary funding. It MUST contain funding. For example, a UPI Reserve Pay block can sit on a savings or current account (debit) or on an overdraft account, a RuPay credit card or a pre-sanctioned credit line (credit), so in.upi.reservepay lists debit and credit. The source that a given mandate actually uses is the one the payer PSP attests, never the one listed here."
     },
     "credit_disclosure_required": {
       "type": "boolean"

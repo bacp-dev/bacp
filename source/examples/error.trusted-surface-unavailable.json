@@ -1,0 +1,7 @@
+{
+  "type": "service_unavailable",
+  "code": "trusted_surface_unavailable",
+  "message": "The signer has no registered Trusted Surface origin that the gateway may use and no notify endpoint, so nothing was sent to the principal",
+  "reason": "no_conforming_origin",
+  "resolution": "requires_buyer_input"
+}

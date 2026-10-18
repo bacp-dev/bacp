@@ -200,7 +200,7 @@ Used for perishables and end-of-day clearance.
     --8<-- "source/examples/auction-state.tick-close-no-log-head.invalid.json"
     ```
 
-**Standing accept (optional).** An auctioneer MAY set `AuctionSpec.standing_accepts_enabled: true`. A principal then lodges, before the auction opens, a principal-signed `standing_accept{max_price, qty, mandate_ref, signature}`. At the first tick whose price is at or below `max_price` the auctioneer runs standing accepts ahead of live accepts at that tick, in the chain order in which they were placed. A slow human bidder, for example one on IVR, then competes on price and not on reflexes, with no randomness. Absent the flag, only the base rule applies and slow bidders lose speed contests to agents. Whether a standing accept is the principal's own acceptance under ICA s.7 is open ([Q-85](../open-questions.md#q-85)).
+**Standing accept (optional).** An auctioneer MAY set `AuctionSpec.standing_accepts_enabled: true`. A principal then lodges, before the auction opens, a principal-signed `standing_accept{standing_accept_id, auction_id, lot_hash, valid_until, max_price, qty, mandate_ref, sender_log_seq, sender_log_prev, protocol_terms, signature}`; every member is REQUIRED. A standing accept is lodged through the principal's gateway as a firm bid under tag `bacp-negotiate`, by `POST /auctions/{auction_id}/standing-accepts`, and withdrawn, while the auctioneer has not used it, by `POST /auctions/{auction_id}/standing-accepts/{standing_accept_id}/withdraw` (`409` once it is used). The guard evaluates it at `max_price × qty` and holds that exposure reservation until the auction closes or the accept is used or withdrawn, and keys that reservation on `standing_accept_id`. An auctioneer **MUST** refuse a standing accept whose `auction_id` or `lot_hash` is not this auction's, or whose `valid_until` has passed, and uses each `standing_accept_id` at most once. The principal's gateway **MUST** refuse, with `NEG_AWARD_RULE`, and record no `AGREED` for, an award that cites a standing accept it did not lodge for that `auction_id` and `lot_hash`, whose `valid_until` has passed, or whose `standing_accept_id` it has already seen used or released; it makes no new exposure reservation for it. `lot_hash` is the `sha-256` of the JCS form of the AuctionSpec `lots[]` entry that the standing accept is for, and `valid_until` MUST NOT be later than the auction's `closes_at`. A standing accept run in another auction is `NEG_AWARD_RULE`. At the first tick whose price is at or below `max_price` the auctioneer runs standing accepts ahead of live accepts at that tick, in the chain order in which they were placed. A slow human bidder, for example one on IVR, then competes on price and not on reflexes, with no randomness. Absent the flag, only the base rule applies and slow bidders lose speed contests to agents. Whether a standing accept is the principal's own acceptance under ICA s.7 is open ([Q-85](../open-questions.md#q-85)).
 
 ```json title="standing-accept.json"
 --8<-- "source/examples/standing-accept.json"
@@ -209,6 +209,11 @@ Used for perishables and end-of-day clearance.
 ??? failure "Invalid: standing accept without `max_price` (`standing-accept.no-max-price.invalid.json`)"
     ```json
     --8<-- "source/examples/standing-accept.no-max-price.invalid.json"
+    ```
+
+??? failure "Invalid: standing accept without `auction_id` (`standing-accept.no-auction-id.invalid.json`)"
+    ```json
+    --8<-- "source/examples/standing-accept.no-auction-id.invalid.json"
     ```
 
 ### Sealed-bid auctions

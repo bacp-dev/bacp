@@ -924,7 +924,7 @@ paths:
 
         step_up.approved, mandate.activated, loan.accepted and payment.afa_completed MUST carry `presentation`; without it the event is refused
         with 400 invalid_request and nothing changes. On step_up.approved, `presentation.checkout_hash` is REQUIRED (the session''s quote, or for
-        a `post_order` step-up the order''s) and `presentation.user_action` is never decline (a decline is posted as step_up.declined); otherwise
+        a `post_order` step-up the order''s), except on the approval of a `post_order` step-up for an order-less ledger act (`LEDGER_ACK` with no `order_id`), which carries none, and `presentation.user_action` is never decline (a decline is posted as step_up.declined); otherwise
         the event is refused with 400 invalid_request and nothing changes. On step_up.approved the gateway refuses the event with 403 ts_render_mismatch, and changes
         nothing, when `presentation.content_hash` is not the sha-256 of the step-up''s `ts_render`; with 403 presence_not_proven when the session
         is assisted (channel assisted, or an AgentCredential of class assisted) and `presentation.user_action` is not the principal''s own factor
@@ -1350,6 +1350,7 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - name: bpp_id
         in: query
         required: false
@@ -1435,6 +1436,8 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_issue_status
       x-bacp-idempotent: false
+      parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       x-bacp-capability: in.bacp.issue
       summary: 'Issue status: the gateway''s snapshot, kept current from IGM 2.0 on_issue callbacks (IGM 2.0 has no issue_status)'
       responses:
@@ -1546,6 +1549,8 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_evidence_get
       x-bacp-idempotent: false
+      parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       x-bacp-capability: in.bacp.issue
       summary: Evidence bundle for a transaction (mandates, receipts, instruction-log chain). Access-controlled to principal, counterparties of
         record, GRO/ODR.
@@ -1586,6 +1591,7 @@ paths:
 
         '
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - name: language
         in: query
         required: true
@@ -1684,6 +1690,8 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_negotiation_get
       x-bacp-idempotent: false
+      parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       summary: Authoritative full state, offer states, transcript hashes and guard verdicts (constraint IDs only)
       responses:
         '200':
@@ -1706,6 +1714,8 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_negotiation_messages
       x-bacp-idempotent: false
+      parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       summary: Signed negotiation messages in this session (transcript), oldest first
       responses:
         '200':
@@ -1955,6 +1965,8 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_rfq_get
       x-bacp-idempotent: false
+      parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       summary: RFQ state. Before close, shows only commit counts. After reveal, the landed-cost comparison set.
       responses:
         '200':
@@ -2085,6 +2097,8 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_auction_get
       x-bacp-idempotent: false
+      parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       summary: Bidder view (current price only, own rank, never identities or sealed bids)
       responses:
         '200':
@@ -2145,6 +2159,108 @@ paths:
           $ref: '#/components/responses/StaleOffer'
         '413':
           $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /auctions/{auction_id}/standing-accepts:
+    parameters:
+    - $ref: '#/components/parameters/AuctionId'
+    post:
+      tags:
+      - auction
+      operationId: lodgeStandingAccept
+      x-bacp-signature-tag: bacp-negotiate
+      x-bacp-mcp-tool: bacp_standing_accept_lodge
+      x-bacp-idempotent: true
+      summary: Lodge a standing accept for a Dutch auction (signed, bacp-negotiate)
+      description: 'Lodges a principal-signed standing accept with the auctioneer through the principal''s gateway, before the auction opens and
+        only where the AuctionSpec sets standing_accepts_enabled. The gateway evaluates it at max_price times qty against the negotiation
+        mandate (total_max, exposure), holds that exposure reservation keyed on standing_accept_id, and records the auction_id, lot_hash and
+        valid_until it lodged it for. The reservation is released when the auction closes, when the standing accept is used, or when it is withdrawn.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StandingAccept'
+      responses:
+        '200':
+          description: The standing accept is lodged and its exposure reservation is held.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandingAccept'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/RequestTooLarge'
+        '422':
+          $ref: '#/components/responses/IdempotencyConflict'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+  /auctions/{auction_id}/standing-accepts/{standing_accept_id}/withdraw:
+    parameters:
+    - $ref: '#/components/parameters/AuctionId'
+    - name: standing_accept_id
+      in: path
+      required: true
+      description: The standing_accept_id of a standing accept that the principal's gateway lodged for this auction.
+      schema:
+        type: string
+        pattern: ^sa_[A-Za-z0-9]{8,40}$
+    post:
+      tags:
+      - auction
+      operationId: withdrawStandingAccept
+      x-bacp-signature-tag: bacp-negotiate
+      x-bacp-mcp-tool: bacp_standing_accept_withdraw
+      x-bacp-idempotent: true
+      summary: Withdraw a lodged standing accept (signed, bacp-negotiate)
+      description: 'Withdraws a standing accept that the principal''s gateway lodged and that the auctioneer has not yet used. The gateway releases
+        the exposure reservation keyed on standing_accept_id, at most once. A standing accept that has been used cannot be withdrawn (409), and one
+        that the gateway did not lodge for this auction gets 404 not_found.
+
+        '
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      responses:
+        '200':
+          description: The standing accept is withdrawn and its exposure reservation is released.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandingAcceptWithdrawn'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/MandateRejected'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/StaleOffer'
         '422':
           $ref: '#/components/responses/IdempotencyConflict'
         '429':
@@ -2346,6 +2462,7 @@ paths:
 
         '
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
@@ -2914,7 +3031,8 @@ webhooks:
     post:
       summary: A mandate event that the gateway reports to the audit_uri of the mandate, which is the endpoint of the Mandate Manager that issued it.
       description: Sent by the gateway to the audit_uri of the open Payment Mandate (and of its root) for a use of the mandate, a relinquishment
-        at the gateway and a change to the set of gateway-originated pause reasons. It is signed under RFC 9421 with the registry key of the gateway's
+        at the gateway, a change to the set of gateway-originated pause reasons and, within 60 s of the revocation of a root, one closed event
+        carrying last_seq. It is signed under RFC 9421 with the registry key of the gateway's
         BAP, under the tag bacp-mm-event, never an agent tag and never an agent key; the Mandate Manager refuses an event whose signer's BAP is not the
         mandate's agent.bap_id and records nothing. Delivery is due within 60 s of the change and is retried with the same event_id, which the Mandate
         Manager de-duplicates. seq counts the events of one mandate_id from 0 with no gap, and prev_hash chains them, so that the Mandate Manager records
@@ -4289,7 +4407,7 @@ components:
             provider_id:
               type: string
               minLength: 1
-              description: "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e) and 13(f)). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
+              description: "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (a BACP rule whose basis is RBI Master Direction on Payment Aggregators 2025 para 13(f), under which a PA ensures that a marketplace takes no payment for a seller not onboarded on it, and para 13(e), a merchant ID per merchant; the block-payee match itself is BACP policy). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
         rail_binding:
           type: object
           required:
@@ -4579,190 +4697,7 @@ components:
               - required:
                 - max_executions
     ConsentReceipt:
-      title: ConsentReceipt (DPDP)
-      description: One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or
-        for) a DPDP Consent Manager.
-      type: object
-      required:
-      - receipt_id
-      - iss
-      - issued_at
-      - principal_ref
-      - mandate_ref
-      - recipient
-      - data_items
-      - purpose
-      - legal_basis
-      - notice
-      - captured_via
-      - withdrawal
-      - grievance
-      - retention
-      - signature
-      properties:
-        receipt_id:
-          type: string
-          pattern: ^cr_[A-Za-z0-9]{12,40}$
-        iss:
-          type: string
-        cm_registration_no:
-          type:
-          - string
-          - 'null'
-          description: "DPDP Board registration number of the Consent Manager (DPDP Rules 2025, Rule 4). On receipts issued on or after 13-11-2026 it MUST be the Board registration number when the Mandate Manager acts as a registered Consent Manager, and MUST be null otherwise (fail-safe default until Q-16 is settled)."
-        issued_at:
-          type: string
-          format: date-time
-        principal_ref:
-          type: string
-        mandate_ref:
-          type: string
-        recipient:
-          type: object
-          required:
-          - fiduciary_name
-          - bpp_id
-          properties:
-            fiduciary_name:
-              type: string
-            bpp_id:
-              type: string
-              description: "The recipient seller's bpp_id. \"*\" marks a class receipt, scoped to the mandate's categories, which only pre-authorises: the MM MUST mint a per-seller ConsentReceipt, whose recipient.bpp_id is that seller, at init and before any personal data reaches the seller; no data is ever released on the strength of a class receipt alone (settled in Q-12)."
-            provider_id:
-              type: string
-            dpo_contact:
-              type: string
-        data_items:
-          type: array
-          minItems: 1
-          items:
-            type: object
-            required:
-            - field
-            - form
-            properties:
-              field:
-                enum:
-                - NAME
-                - PHONE
-                - DELIVERY_ADDRESS
-                - EMAIL
-                - AGE_OVER_18
-                - GSTIN
-              form:
-                enum:
-                - plain
-                - masked
-                - selective_disclosure_vc
-                - token
-        purpose:
-          type: object
-          required:
-          - code
-          - text
-          properties:
-            code:
-              type: string
-            text:
-              $ref: '#/components/schemas/LangText'
-            goods_or_services:
-              type: string
-        legal_basis:
-          enum:
-          - consent_s6
-          - legitimate_use_s7a
-        notice:
-          type: object
-          required:
-          - language
-          - hash
-          - operator_compensation
-          properties:
-            language:
-              type: string
-              description: English or an Eighth Schedule language (BCP 47)
-            hash:
-              $ref: '#/components/schemas/Hash'
-            uri:
-              type: string
-              format: uri
-            translation_model:
-              type: string
-            operator_compensation:
-              $ref: ../schemas/common.json#/$defs/OperatorCompensation
-              description: 'The operator compensation the principal saw in the notice. REQUIRED: a Mandate Manager MUST NOT activate a mandate whose notice did not state it.'
-        captured_via:
-          type: object
-          required:
-          - surface
-          - user_action
-          - device_signature
-          properties:
-            surface:
-              type: string
-              description: Trusted Surface id (PSP app or Mandate Manager app), never the agent
-            user_action:
-              enum:
-              - tap_confirm
-              - upi_pin
-              - biometric
-              - passkey
-              - voice_confirm_plus_device
-            device_signature:
-              $ref: '#/components/schemas/Jws'
-            voice_evidence:
-              type: object
-              properties:
-                audio_hash:
-                  $ref: '#/components/schemas/Hash'
-                transcript_hash:
-                  $ref: '#/components/schemas/Hash'
-                translation_model:
-                  type: string
-            presentation:
-              $ref: '#/components/schemas/Presentation'
-              description: What the Trusted Surface presented and how. OPTIONAL. When present, its user_action equals captured_via.user_action and
-                its language equals notice.language.
-        withdrawal:
-          type: object
-          required:
-          - uri
-          properties:
-            uri:
-              type: string
-              format: uri
-            erasure_signal:
-              const: true
-        grievance:
-          type: object
-          required:
-          - contact
-          properties:
-            contact:
-              type: string
-            board_complaint_uri:
-              type: string
-              format: uri
-        retention:
-          type: object
-          required:
-          - recipient_max
-          properties:
-            recipient_max:
-              type: string
-              description: ISO 8601 duration
-            legal_minimum:
-              type: string
-              default: P1Y
-              description: DPDP Rule 8(3)
-        status:
-          readOnly: true
-          enum:
-          - ACTIVE
-          - WITHDRAWN
-          - EXPIRED
-        signature:
-          $ref: '#/components/schemas/Signature'
+      $ref: ../schemas/consent-receipt.json
     Receipt:
       title: Receipt (rail-anchored)
       description: Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family
@@ -5383,6 +5318,19 @@ components:
           not:
             required:
             - supported_versions
+      - if:
+          properties:
+            code:
+              const: trusted_surface_unavailable
+          required:
+          - code
+        then:
+          required:
+          - reason
+        else:
+          not:
+            required:
+            - reason
     Message:
       type: object
       description: ACP messages[] entry. resolution tells the agent whether it may self-fix, must ask the user, or must get user review.
@@ -5674,6 +5622,10 @@ components:
             post_order_per_order:
               $ref: '#/components/schemas/StepUpLimit'
               description: The most post_order step-ups the gateway creates per order_id in the window.
+            session_per_principal:
+              $ref: '#/components/schemas/StepUpLimit'
+              description: The most session step-ups (`confirm` or `rail_auth`, raised on a checkout session) the gateway creates per
+                (agent, principal) in the window, whatever session they are raised on, so that opening a new session does not restart the count.
             reprompt_per_issue:
               $ref: '#/components/schemas/StepUpLimit'
               description: The most replacement step-ups, caused by a counterparty's revision of an issue's resolution, that the gateway creates per
@@ -5687,8 +5639,8 @@ components:
                 window:
                   $ref: ../schemas/common.json#/$defs/Duration
               additionalProperties: false
-              description: How long after an explicit step_up.declined the gateway refuses a new step-up for the same (order_id, action, issue_id) or
-                (session_id, kind) with 409 session_state_conflict and a Retry-After equal to the time left. Expiry does not start it.
+              description: How long after an explicit step_up.declined the gateway refuses a new step-up for the same (order_id, action, issue_id) or, for a
+                session step-up, (root open Checkout Mandate or, without one, principal, bpp_id, kind) with 409 session_state_conflict and a Retry-After equal to the time left. Expiry does not start it.
             render_fetch_per_key:
               $ref: '#/components/schemas/StepUpLimit'
               description: The most ts_render fetches per caller key in the window, counted before the step-up is looked up.
@@ -5708,7 +5660,8 @@ components:
           type: string
           format: uuid
           description: UUIDv5 namespace from which the gateway derives each Beckn message_id as UUIDv5(ns, agent_id | idempotency_key | action),
-            so that a BACP-aware BPP can check a key-binding JWT nonce.
+            so that a BACP-aware BPP can check a key-binding JWT nonce. The name is the UTF-8 bytes of agent_id + "|" + idempotency_key + "|" + action with a
+            literal | and no spaces, where agent_id is the sub of the signing AgentCredential.
     DiscoverRequest:
       type: object
       required:
@@ -6313,7 +6266,8 @@ components:
         principal_requested:
           type: boolean
           description: The agent's claim that the principal asked for this line. It decides only how the Trusted Surface reads the line (counted, not read
-            in full), never its added_by, which the gateway assigns. Absent means false.
+            in full), never its added_by, which the gateway assigns. It has effect only on a line whose added_by is agent. On a line that the seller
+            added (or an assisted operator) it is ignored and the line is always read in full. Absent means false.
         transaction_id:
           type: string
           description: The transaction_id of the discovery search or earlier session in which the item and its price were shown. With source_digest it lets
@@ -6330,7 +6284,7 @@ components:
       description: 'For a line sold by weight or measure, how far a post-order adjustment may move the line from the quoted amount. It sits inside
         checkout_hash and is not a mandate constraint. max_down is the most the amount may fall (always allowed as a refund). max_up is the most it may
         rise, and the gateway accepts it only when all four hold: (a) the Trusted Surface reads it as "up to ₹X" and the principal confirms; (b) the quote
-        total plus the sum of max_up over all lines is within the approved amount and the mandate''s caps; (c) max_up is at most one increment of the
+        total plus the sum of max_up over all lines is within the approved amount and the mandate''s caps; (c) max_up is at most the quoted price of one increment of the
         line''s measure; (d) the rail holds the amount at payment, the extra is collected only from that hold, and there is no second debit and no cash-on-delivery
         top-up. Where the rail has no such hold the band is absent and an adjustment can only reduce the amount.'
       properties:
@@ -6513,7 +6467,8 @@ components:
           - assisted_operator
           description: Who added the line, assigned by the gateway from the signer and the source and never taken from the request. principal only for a
             line that the principal confirmed on a Trusted Surface or by a human-present render. agent for a line that arrived in the agent's request, seller
-            for a line that the seller's quote added, assisted_operator for a line that an assisted-channel operator added.
+            for a line that the seller's quote added, assisted_operator for a line that an assisted-channel operator added. It is fixed when the line
+            first appears in the session and does not change when the agent re-sends the line.
         principal_requested:
           type: boolean
           description: The agent's claim, echoed from ItemRef. It changes only how the Trusted Surface reads the line.
@@ -6908,7 +6863,7 @@ components:
         provider_id:
           type: string
           minLength: 1
-          description: "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e) and 13(f)). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
+          description: "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (a BACP rule whose basis is RBI Master Direction on Payment Aggregators 2025 para 13(f), under which a PA ensures that a marketplace takes no payment for a seller not onboarded on it, and para 13(e), a merchant ID per merchant; the block-payee match itself is BACP policy). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
     CoverEntry:
       type: object
       description: One leg covered by a summary step-up approval.
@@ -7305,9 +7260,12 @@ components:
               const: app_push
         then:
           not:
-            required:
-            - trusted_surface_url
-          description: With delivery app_push the principal is reached by the content-free push to the signer's ts_notify_url, and the step-up carries no link.
+            anyOf:
+            - required:
+              - trusted_surface_url
+            - required:
+              - surface
+          description: With delivery app_push the principal is reached by the content-free push to the signer's ts_notify_url, and the step-up carries neither a link nor a surface.
         else:
           required:
           - trusted_surface_url
@@ -7627,10 +7585,23 @@ components:
         proposed_constraints:
           $ref: '#/components/schemas/Mandate/properties/constraints'
           description: The constraints that the agent proposes. confirmation_floor is never proposed by an agent. The principal sets it only on the Trusted
-            Surface, so that an agent cannot lower it, and a request that carries it is refused.
+            Surface, so that an agent cannot lower it, and a request that carries it is refused. A negotiation process notice_route is never proposed
+            by an agent either. The Mandate Manager writes it from a number or reference it has verified as the principal's own, and a request whose
+            proposed constraints carry it is refused with 400 invalid_request at $.proposed_constraints.negotiation.process.notice_route.
           not:
-            required:
-            - confirmation_floor
+            anyOf:
+            - required:
+              - confirmation_floor
+            - required:
+              - negotiation
+              properties:
+                negotiation:
+                  required:
+                  - process
+                  properties:
+                    process:
+                      required:
+                      - notice_route
         data_scopes:
           type: array
           items:
@@ -7781,7 +7752,7 @@ components:
           $ref: '#/components/schemas/Presentation'
           description: What the Trusted Surface presented and what the principal did. REQUIRED on step_up.approved, negotiation.step_up.approved,
             negotiation.agreed.declined, negotiation.purchase_offer.withdrawn, mandate.activated, loan.accepted and payment.afa_completed. On
-            step_up.approved it MUST carry checkout_hash; on negotiation.step_up.approved, negotiation.agreed.declined and
+            step_up.approved it MUST carry checkout_hash (except on the approval of a post_order step-up for an order-less ledger act, LEDGER_ACK with no order_id, which carries none); on negotiation.step_up.approved, negotiation.agreed.declined and
             negotiation.purchase_offer.withdrawn it MUST carry offer_hash; never both. On any of these its user_action is never decline; on
             negotiation.agreed.declined and negotiation.purchase_offer.withdrawn the principal confirms the decline or the withdrawal with a factor,
             and the signed event with its Presentation is the proof of presence for that act (no agent carries an hp_proof for it).
@@ -8439,7 +8410,7 @@ components:
           type: array
           description: The gateway-signed ts_render (compact JWS) of every step-up that a step_up.approved, step_up.declined,
             negotiation.step_up.approved or negotiation.step_up.declined event in trusted_surface_events names, byte-identical to what the Trusted Surface fetched. Verification step 6 checks each against its event's
-            content_hash and against the seller-signed quote.
+            content_hash and, except for a negotiation step-up (checked against the offer_hash of the signed offer in the negotiation transcript), against the seller-signed quote.
           items:
             $ref: '#/components/schemas/Jws'
         notice_renders:
@@ -8533,7 +8504,7 @@ components:
           enum:
           - added
           - removed
-          description: Whether the reason names a pause reason that this event added or removed. REQUIRED with reason on a PAUSED event, and
+          description: Whether the reason names a pause reason that this event added or removed. REQUIRED with reason on a PAUSED event and on the ACTIVE event that removes the last pause reason;
             absent otherwise.
         pause_reasons:
           type: array
@@ -8616,8 +8587,10 @@ components:
           - use
           - relinquished
           - pause_changed
+          - closed
           description: use, a use of the mandate at step 13 of evaluation. relinquished, the agent gave up the mandate (or the root) at the
-            gateway. pause_changed, a gateway-originated pause reason was added or removed.
+            gateway. pause_changed, a gateway-originated pause reason was added or removed. closed, the gateway's last event for a mandate whose
+            root was revoked, carrying last_seq, so that a Mandate Manager can tell a lost trailing event from a mandate with no more events.
         mandate_id:
           type: string
           pattern: ^mdt_[A-Za-z0-9]{12,40}$
@@ -8692,6 +8665,19 @@ components:
               type: string
               description: For a pause or lift caused by a conformance attestation, the jti of the attestation concerned.
           additionalProperties: false
+        closed:
+          type: object
+          description: Present when type is closed.
+          required:
+          - last_seq
+          properties:
+            last_seq:
+              type: integer
+              minimum: 0
+              description: The seq of the last event, before this one, that the gateway sent for this mandate_id. The closed event itself carries
+                the next seq. Until the Mandate Manager holds every event up to last_seq, every window that contains the time since the last event
+                it received is incomplete.
+          additionalProperties: false
       allOf:
       - if:
           properties:
@@ -8703,8 +8689,11 @@ components:
           required:
           - use
           not:
-            required:
-            - pause
+            anyOf:
+            - required:
+              - pause
+            - required:
+              - closed
       - if:
           properties:
             type:
@@ -8715,8 +8704,11 @@ components:
           required:
           - pause
           not:
-            required:
-            - use
+            anyOf:
+            - required:
+              - use
+            - required:
+              - closed
       - if:
           properties:
             type:
@@ -8724,6 +8716,23 @@ components:
           required:
           - type
         then:
+          not:
+            anyOf:
+            - required:
+              - use
+            - required:
+              - pause
+            - required:
+              - closed
+      - if:
+          properties:
+            type:
+              const: closed
+          required:
+          - type
+        then:
+          required:
+          - closed
           not:
             anyOf:
             - required:
@@ -8948,6 +8957,24 @@ components:
       $ref: ../schemas/negotiation-session.json#/$defs/AuctionState
     StandingAccept:
       $ref: ../schemas/negotiation-session.json#/$defs/StandingAccept
+    StandingAcceptWithdrawn:
+      type: object
+      description: The result of withdrawing a standing accept. The exposure reservation that the principal's gateway held for it, keyed on
+        standing_accept_id, is released.
+      required:
+      - standing_accept_id
+      - status
+      - withdrawn_at
+      properties:
+        standing_accept_id:
+          type: string
+          pattern: ^sa_[A-Za-z0-9]{8,40}$
+        status:
+          const: withdrawn
+        withdrawn_at:
+          type: string
+          format: date-time
+      additionalProperties: false
     NoticeRender:
       type: object
       description: A gateway-signed notice (agreed_by_agent or purchase_offered_by_agent) about an autonomous negotiation act, built from the
@@ -9648,7 +9675,7 @@ components:
         continue_url:
           type: string
           format: uri
-          description: Present only on requires_escalation with a step_up, and then exactly the step_up.trusted_surface_url; otherwise absent.
+          description: Present only on requires_escalation with a step_up that carries a trusted_surface_url, and then exactly that URL; otherwise absent (a step-up with delivery app_push has none).
         bacp:
           $ref: '#/components/schemas/UcpBacp'
       additionalProperties: true

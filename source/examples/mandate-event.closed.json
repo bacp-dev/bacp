@@ -1,0 +1,13 @@
+{
+  "event_id": "evt_01HZXWn4",
+  "type": "closed",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "root_mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "gateway": "bap.vaani.example.in",
+  "created_at": "2026-12-16T10:05:41+05:30",
+  "seq": 8,
+  "prev_hash": "sha-256:9fQ1b7mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM",
+  "closed": {
+    "last_seq": 7
+  }
+}

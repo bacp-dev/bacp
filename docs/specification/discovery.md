@@ -49,7 +49,7 @@ A BACP gateway MUST publish a profile document at the path
 | `keys` | REQUIRED | A JWK Set (`{"keys": [...]}`) with the gateway's public keys. The gateway signs webhooks with these keys. |
 | `message_id_namespace` | REQUIRED | The UUID namespace the gateway uses to derive Beckn `message_id`s (see [Beckn / ONDC Binding](transports/beckn.md)). Agents need it to compute the `nonce` of a key-binding JWT for a seller. |
 | `negotiation` | OPTIONAL | The gateway's negotiation capability advert (see [Negotiation capability](#negotiation-capability)). REQUIRED when the gateway supports negotiation. |
-| `step_up_limits` | OPTIONAL | The limits that the gateway applies to step-ups, each a `{count, window}` or, for the decline cool-off, a `{window}`: `post_order_per_principal`, `post_order_per_order`, `reprompt_per_issue`, `decline_cooloff`, `render_fetch_per_key` and `render_fetch_per_step_up`. BACP sets no number. They are the gateway's own design values, never presented as external limits, and a gateway that declares none is tested against the conformance fixture's limit ([Limits on step-ups](human-participants.md#step-up-limits)). |
+| `step_up_limits` | OPTIONAL | The limits that the gateway applies to step-ups, each a `{count, window}` or, for the decline cool-off, a `{window}`: `post_order_per_principal`, `post_order_per_order`, `session_per_principal`, `reprompt_per_issue`, `decline_cooloff`, `render_fetch_per_key` and `render_fetch_per_step_up`. BACP sets no number. They are the gateway's own design values, never presented as external limits, and a gateway that declares none is tested against the conformance fixture's limit ([Limits on step-ups](human-participants.md#step-up-limits)). |
 | `payment_handlers_registry` | OPTIONAL | URI of the gateway's `GET /payment-handlers` endpoint. |
 | `profiles` | OPTIONAL | [Trade profiles](trade-profiles.md) the gateway supports. |
 | `limits.max_body_bytes` | RECOMMENDED | The largest request body the gateway accepts. It MUST NOT exceed 256 KiB. |
@@ -131,7 +131,8 @@ version needs no choice.
 1. **When it is required.** `BACP-Version` is REQUIRED on every agent request when the gateway's profile lists more than
    one version in `bacp.version` and `bacp.supported_versions`. A request without it gets `400 invalid_request` at
    `$.headers.BACP-Version`, on the pattern of `idempotency_key_required`. A gateway that lists one version accepts a
-   request with no header as that version, and a request that names another version gets `400 version_unsupported`.
+   request with no header as that version, and a request that names another version gets `400 version_unsupported`. A Trusted
+   Surface request (`bacp-ts`) carries the version of the session it acts on and needs no header.
 2. **It is signed.** `bacp-version` is a covered component of the request signature whenever the header is present
    ([Covered components](identity-and-signing.md#covered-components)). A header that is present and not covered gets
    `401 signature_invalid`, so that a party on the path cannot change the version of a signed request.
@@ -148,9 +149,10 @@ version needs no choice.
    a session on MCP is the version of the endpoint that created it.
 7. **A2A.** The A2A extension URI carries the version, `https://bacp.dev/<version>/a2a`, and the Agent Card declares it
    with `required: true` ([Agent card](transports/mcp-a2a.md#a2a-card)).
-8. **The protective floor.** A request that is `bacp-pay` or `bacp-post-order` runs the protective checks of the newest
-   version that the gateway lists, whichever version the request names, so that naming an older version cannot switch a
-   protective check off. A version that lacks a check never lowers the floor.
+8. **The protective floor.** A request that is `bacp-pay`, `bacp-post-order` or `bacp-negotiate` runs the protective checks of
+   the newest version that the gateway lists, whichever version the request names, so that naming an older version cannot
+   switch a protective check off. A protective check is any rule of that version that refuses, escalates or raises a
+   step-up. A version that lacks a check never lowers the floor.
 9. **Never from a fetched document.** A gateway and an agent MUST NOT take a version from a document that was fetched
    from a URL, such as a UCP profile or a seller's page. The version of a request is the signed header or the endpoint,
    and nothing else.

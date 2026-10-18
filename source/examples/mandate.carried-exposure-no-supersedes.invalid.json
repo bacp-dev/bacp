@@ -103,10 +103,10 @@
     "data_retention": "P1Y"
   },
   "revocation": {
-    "status_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/status",
+    "status_uri": "https://mm.psp.example.in/mandates/mdt_SUCC7Q2W9X4K1M3/status",
     "notify_sla_seconds": 60
   },
-  "audit_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/audit",
+  "audit_uri": "https://mm.psp.example.in/mandates/mdt_SUCC7Q2W9X4K1M3/audit",
   "cnf": {
     "jwk": {
       "kty": "EC",

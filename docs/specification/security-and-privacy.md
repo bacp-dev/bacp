@@ -167,7 +167,7 @@ ledger.
    ([Deterministic evaluation](mandates.md#evaluation), step 4).
 9. **Split-order scope.** Split-order detection is per (root open checkout mandate, seller) within 10 minutes and MUST
    count completed and in-flight orders. The seller is identified by the tax id in the BPP-signed terms, else by the payee
-   VPA, else by the pair `bpp_id` and `provider_id`, and the `covers[]` legs of a summary-approved basket are exempt.
+   VPA, else by the pair `bpp_id` and `provider_id`; two orders are the same seller when any of these identifiers match. The `covers[]` legs of a summary-approved basket are exempt.
    Cross-seller velocity is bounded only by the budgets ([Q-50](open-questions.md#q-50), settled).
 10. **Pre-checks.** The `PUT /sessions/{id}` pre-check is advisory and MUST NOT create reservations. A step-up or a
    rejection MUST NOT create a reservation.
@@ -293,7 +293,7 @@ needs to show compliance; it does not replace their own notices and policies.
     A MeitY consultation in January 2026 reportedly proposed shortening some of the eighteen-month periods to
     twelve months; reports differ on whether it covers all the duties or only Rule 13. It is reported in secondary
     sources only, and no amending notification had been found as of 17-10-2026. A corrigendum to the Rules
-    (G.S.R. 892(E), 10-12-2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E), 05-10-2026) change wording only and move no date. A further corrigendum, G.S.R. 113(E), is listed by a secondary
+    (G.S.R. 892(E), 10-12-2025) and the DPDP (Removal of Difficulties) Order, 2026 (S.O. 5458(E), Order dated 05-10-2026, Gazette issue 06-10-2026) change wording only and move no date. A further corrigendum, G.S.R. 113(E), is listed by a secondary
     source (reported, not verified as of 17-10-2026). See [Q-53](open-questions.md#q-53).
 
 ### Notice and consent {#notice-and-consent}

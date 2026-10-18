@@ -18,18 +18,28 @@ Checks
      Idempotency-Key) and, where it is an MCP tool, x-bacp-mcp-tool; the tool table of docs/specification/transports/mcp-a2a.md
      matches those tools (name, method, path and signature tags); and no request-body property of an operation shares a name
      with one of its path parameters (MCP tools take path parameters as top-level arguments beside the body's properties);
-  8. source/ucp holds unmodified copies of the UCP JSON Schemas at the pinned commit (source/ucp/PINNED.txt), and the examples
+  8. source/ucp holds unmodified copies of the UCP JSON Schemas at the pinned release (source/ucp/PINNED.txt), and the examples
      named ucp-checkout.*.json (a projected UCP checkout) and ucp-complete-request.*.json (the body of a projected
      complete_checkout) validate against those schemas as well as against the OpenAPI components UcpCheckout and
-     UcpCompleteRequest; files named *.invalid.json MUST fail;
+     UcpCompleteRequest; files named *.invalid.json MUST fail; every dev.bacp.<handler id> entry of a projected checkout has
+     id equal to that handler id, names a handler of the registry and takes the schema https://bacp.dev/schemas/ucp/<handler id>.json;
   9. x-bacp-capability: every value in the OpenAPI document is a capability id of the table in docs/specification/discovery.md
      (or a list of such ids), every operation of a path that the table lists for a capability carries the tag with exactly
      the capabilities that list it, and the capability-owned request members named in CAPABILITY_MEMBERS carry it too.
+  11. source/examples/index.json, the normative map from each example to the schema or schemas that it is checked against (the rules of
+     check 3, written out so that an implementation need not copy them), equals the map that this script derives;
+     `uv run python scripts/validate.py --write-index` regenerates it.
+  10. every protocol_terms object of an example carries the hash of source/protocol-terms/<version>.txt, which is sha-256: and the
+     unpadded base64url SHA-256 of the exact bytes of that file; every schemas/ucp/<handler id>.json carries name
+     dev.bacp.<handler id> and version equal to the BACP release id (registry_version of handlers/release.json); and every
+     operation whose signature tags are not only bacp-ts or none references the BacpVersion header parameter.
 Exit status is the number of failures.
 """
 
 from __future__ import annotations
 
+import base64
+import hashlib
 import json
 import re
 import sys
@@ -72,6 +82,86 @@ failures: list[str] = []
 def fail(msg: str) -> None:
     failures.append(msg)
     print("FAIL", msg)
+
+
+def protocol_terms_errors(node: object, where: str = "$") -> list[str]:
+    """Every protocol_terms object in an example must carry the digest of the published text of its version."""
+    out: list[str] = []
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k == "protocol_terms" and isinstance(v, dict) and isinstance(v.get("version"), str) and isinstance(v.get("hash"), str):
+                if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v["version"]):
+                    text = SRC / "protocol-terms" / f"{v['version']}.txt"
+                    if not text.is_file():
+                        out.append(f"{where}.protocol_terms: source/protocol-terms/{v['version']}.txt does not exist")
+                    else:
+                        want = "sha-256:" + base64.urlsafe_b64encode(hashlib.sha256(text.read_bytes()).digest()).decode().rstrip("=")
+                        if v["hash"] != want:
+                            out.append(f"{where}.protocol_terms.hash is {v['hash']}; the digest of {text.name} is {want}")
+            else:
+                out += protocol_terms_errors(v, f"{where}.{k}")
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            out += protocol_terms_errors(v, f"{where}[{i}]")
+    return out
+
+
+class SimpleError:
+    """A failure that carries a message and no JSON path, so that it can sit beside jsonschema errors."""
+
+    def __init__(self, message: str, json_path: str = "$") -> None:
+        self.message = message
+        self.json_path = json_path
+
+
+def alias_binding_errors(inst: object, handler_ids: set[str]) -> list[str]:
+    """Every dev.bacp.<h> entry of a projected checkout names handler h of the registry, with id h and the alias schema of h."""
+    out: list[str] = []
+    handlers = inst.get("ucp", {}).get("payment_handlers", {}) if isinstance(inst, dict) else {}
+    if not isinstance(handlers, dict):
+        return out
+    for key, entries in handlers.items():
+        if not key.startswith("dev.bacp.") or not isinstance(entries, list):
+            continue
+        h = key[len("dev.bacp."):]
+        for e in entries:
+            if not isinstance(e, dict):
+                continue
+            if h not in handler_ids:
+                out.append(f"$.ucp.payment_handlers.{key}: {h!r} is not a handler of the registry")
+            if e.get("id") != h:
+                out.append(f"$.ucp.payment_handlers.{key}: id {e.get('id')!r} is not {h!r}")
+            if e.get("schema") != f"https://bacp.dev/schemas/ucp/{h}.json":
+                out.append(f"$.ucp.payment_handlers.{key}: schema {e.get('schema')!r} is not https://bacp.dev/schemas/ucp/{h}.json")
+    return out
+
+
+def jcs_bytes(value: object) -> bytes:
+    """RFC 8785 form of a value that holds strings, integers, booleans, null, arrays and objects."""
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
+
+
+def sha256_ref(data: bytes) -> str:
+    return "sha-256:" + base64.urlsafe_b64encode(hashlib.sha256(data).digest()).decode().rstrip("=")
+
+
+def check_negotiation_chain_examples() -> None:
+    """The computed example of the negotiation chain: log_entry_hash, msg_hash and the genesis hash recompute."""
+    ex = SRC / "examples"
+    for name in ("counter-signature-payload.json", "counter-signature-payload.genesis.json"):
+        rec = json.loads((ex / name).read_text())
+        entry = {k: rec[k] for k in ("msg_hash", "negotiation_id", "received_at", "log_seq", "prev_entry_hash")}
+        if rec["log_entry_hash"] != sha256_ref(jcs_bytes(entry)):
+            fail(f"{name}: log_entry_hash is not the sha-256 of the JCS form of the entry without log_entry_hash")
+    genesis = json.loads((ex / "counter-signature-payload.genesis.json").read_text())
+    msg = json.loads((ex / "offer.accept-genesis.json").read_text())
+    for k in ("signatures", "counter_signature", "received_at"):
+        msg.pop(k, None)
+    if genesis["msg_hash"] != sha256_ref(jcs_bytes(msg)):
+        fail("counter-signature-payload.genesis.json: msg_hash is not the sha-256 of the JCS form of offer.accept-genesis.json minus signatures, counter_signature and received_at")
+    if genesis["prev_entry_hash"] != sha256_ref(genesis["negotiation_id"].encode("utf-8")):
+        fail("counter-signature-payload.genesis.json: prev_entry_hash is not the sha-256 of the negotiation_id")
+    print("PASS", "negotiation chain examples recompute")
 
 
 def load_schemas() -> dict[str, dict]:
@@ -133,16 +223,30 @@ def main() -> int:
             fail(f"source/ucp/{p.relative_to(SRC / 'ucp')}: $id is not under https://ucp.dev/schemas/")
         ucp_resources.append((d["$id"], Resource.from_contents(d)))
     ucp_registry = Registry().with_resources(ucp_resources)
+    reg_doc = json.loads((SRC / "handlers" / "registry.json").read_text())
+    ids_for_alias = [e.get("handler_id") for e in (reg_doc.get("handlers", reg_doc) if isinstance(reg_doc, dict) else reg_doc)]
+    index_entries: list[dict] = []
     for p in sorted((SRC / "examples").glob("*.json")):
+        if p.name == "index.json":
+            continue
         stem = p.name.split(".")[0]
         invalid = p.name.endswith(".invalid.json")
         if stem in ("ucp-checkout", "ucp-complete-request"):
             inst = json.loads(p.read_text())
             component = "".join(part.capitalize() for part in stem.split("-"))
+            entry = {"file": p.name, "valid": not invalid, "schemas": [
+                {"schema": f"services/bacp.openapi.yaml#/components/schemas/{component}"},
+                {"schema": UCP_CHECKOUT} if stem == "ucp-checkout" else {"schema": UCP_PAYMENT, "instance": "/payment"}]}
+            index_entries.append(entry)
             errs = list(Draft202012Validator({"$ref": f"{api_uri}#/components/schemas/{component}"}, registry=registry,
                                              format_checker=FormatChecker()).iter_errors(inst))
             pinned_ref, pinned_inst = (UCP_CHECKOUT, inst) if stem == "ucp-checkout" else (UCP_PAYMENT, inst.get("payment", {}))
             errs += list(Draft202012Validator({"$ref": pinned_ref}, registry=ucp_registry, format_checker=FormatChecker()).iter_errors(pinned_inst))
+            if stem == "ucp-checkout":
+                alias_errs = alias_binding_errors(inst, set(ids_for_alias))
+                if invalid and not errs and alias_errs:
+                    entry["fails_by"] = "alias_binding"
+                errs += [SimpleError(m) for m in alias_errs]
             if invalid and not errs:
                 fail(f"{p.name}: expected INVALID but validates")
             elif not invalid and errs:
@@ -160,9 +264,13 @@ def main() -> int:
                 continue
             v = Draft202012Validator({"$ref": f"{api_uri}#/components/schemas/{component}"}, registry=registry,
                                      format_checker=FormatChecker())
+            target = f"services/bacp.openapi.yaml#/components/schemas/{component}"
+        else:
+            target = f"schemas/{name}.json"
         inst = json.loads(p.read_text())
         if name == "negotiation-session" and stem in ("rfq", "auction"):
             sub = {"rfq": "Rfq", "auction": "AuctionSpec"}[stem]
+            target = f"schemas/negotiation-session.json#/$defs/{sub}"
             v = Draft202012Validator({"$ref": f"https://bacp.dev/schemas/negotiation-session.json#/$defs/{sub}"}, registry=registry,
                                      format_checker=FormatChecker())
         if name == "common":
@@ -174,13 +282,33 @@ def main() -> int:
                 continue
             v = Draft202012Validator({"$ref": f"https://bacp.dev/schemas/common.json#/$defs/{sub}"}, registry=registry,
                                      format_checker=FormatChecker())
+            target = f"schemas/common.json#/$defs/{sub}"
+        entry = {"file": p.name, "valid": not invalid, "schemas": [{"schema": target}]}
+        index_entries.append(entry)
         errs = list(v.iter_errors(inst))
-        if invalid and not errs:
+        digest_errs = protocol_terms_errors(inst)
+        if invalid and not errs and digest_errs:
+            entry["fails_by"] = "protocol_terms_digest"
+        if invalid and not errs and not digest_errs:
             fail(f"{p.name}: expected INVALID but validates")
-        elif not invalid and errs:
-            fail(f"{p.name}: {errs[0].message} at {errs[0].json_path}")
+        elif not invalid and (errs or digest_errs):
+            fail(f"{p.name}: {errs[0].message + ' at ' + errs[0].json_path if errs else digest_errs[0]}")
         else:
-            print("PASS", p.name, f"(expected invalid, {len(errs)} errors)" if invalid else "")
+            print("PASS", p.name, f"(expected invalid, {len(errs) + len(digest_errs)} errors)" if invalid else "")
+
+    # 11. the example index
+    index_path = SRC / "examples" / "index.json"
+    index_doc = {
+        "description": "The normative map from each example in this directory to the schema or schemas it is checked against. A file whose name ends in .invalid.json MUST fail validation against at least one of them, and every other file MUST pass all of them. A schema is a path below source/ (with an optional JSON Pointer fragment) or an absolute URL, and instance, when present, is a JSON Pointer to the member that the schema applies to. fails_by, when present on an invalid example, names the repository check that rejects an example that every listed schema accepts: protocol_terms_digest (protocol_terms.hash is not the sha-256 of the published file of its version) or alias_binding (a dev.bacp key, an entry id and an alias schema that do not name one handler). Validators MUST assert format. Generated by scripts/validate.py --write-index.",
+        "examples": sorted(index_entries, key=lambda e: e["file"]),
+    }
+    index_text = json.dumps(index_doc, indent=2, ensure_ascii=False) + "\n"
+    if "--write-index" in sys.argv:
+        index_path.write_text(index_text, encoding="utf-8")
+    if not index_path.is_file() or index_path.read_text(encoding="utf-8") != index_text:
+        fail("examples/index.json is missing or stale; run uv run python scripts/validate.py --write-index")
+    else:
+        print("PASS", f"examples/index.json ({len(index_entries)} examples)")
 
     # 4. handler registry
     reg = json.loads((SRC / "handlers" / "registry.json").read_text())
@@ -212,6 +340,13 @@ def main() -> int:
             Draft202012Validator.check_schema(sch)
         except Exception as e:  # noqa: BLE001
             fail(f"schemas/ucp/{name}: not a valid 2020-12 schema: {e}")
+        # self-describing, as UCP asks: name is the alias key, version is the BACP release id
+        release_id = json.loads((SRC / "handlers" / "release.json").read_text())["registry_version"]
+        want_name = f"dev.bacp.{name[:-5]}"
+        if sch.get("name") != want_name:
+            fail(f"schemas/ucp/{name}: name {sch.get('name')!r} is not {want_name!r}")
+        if sch.get("version") != release_id:
+            fail(f"schemas/ucp/{name}: version {sch.get('version')!r} is not the BACP release id {release_id!r}")
     print("PASS", f"UCP alias schemas ({len(alias_files & want_files)} of {len(want_files)} handlers)")
     # a binding.open_primitives entry is a primitive of the descriptor that a rail or an issuer enforces
     for e in entries:
@@ -256,6 +391,9 @@ def main() -> int:
 
     # 9. capability tags
     check_capabilities(api_doc)
+
+    # 10. computed examples
+    check_negotiation_chain_examples()
 
     print(f"FAILURES: {len(failures)}")
     return len(failures)
@@ -322,6 +460,8 @@ def check_transport(api_doc: dict, schemas: dict) -> None:
                 fail(f"{label}: no x-bacp-idempotent")
             elif bool(op["x-bacp-idempotent"]) != takes_key:
                 fail(f"{label}: x-bacp-idempotent is {op['x-bacp-idempotent']} but Idempotency-Key is {'' if takes_key else 'not '}a parameter")
+            if tag_set - {"bacp-ts", "none"} and not any(p.get("$ref", "").endswith("/BacpVersion") for p in op_params + item.get("parameters", [])):
+                fail(f"{label}: signed by {sorted(tag_set)} but does not reference the BacpVersion header parameter")
             tool = op.get("x-bacp-mcp-tool")
             if tool:
                 if tool in tools:

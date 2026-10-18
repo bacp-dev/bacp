@@ -123,6 +123,8 @@ this page:
 | `bacp_auction_create` | `POST /auctions` | `bacp-negotiate` |
 | `bacp_auction_get` | `GET /auctions/{auction_id}` | `bacp-browse` |
 | `bacp_auction_bid` | `POST /auctions/{auction_id}/bids` | `bacp-negotiate` |
+| `bacp_standing_accept_lodge` | `POST /auctions/{auction_id}/standing-accepts` | `bacp-negotiate` |
+| `bacp_standing_accept_withdraw` | `POST /auctions/{auction_id}/standing-accepts/{standing_accept_id}/withdraw` | `bacp-negotiate` |
 | `bacp_auction_award` | `POST /auctions/{auction_id}/award` | `bacp-negotiate` |
 | `bacp_payment_handlers_list` | `GET /payment-handlers` | none (public) |
 | `bacp_payment_handlers_get` | `GET /payment-handlers/{handler_id}` | none (public) |
@@ -160,7 +162,7 @@ is signed by a human support operator under tag `bacp-handoff` and is never a to
   `resolution`. A text rendering MAY accompany it, but the agent MUST act on `structuredContent`.
 - A step-up returns the resource in `requires_escalation` with its `step_up` object. How the MCP server signals it
   depends on the client's declared capabilities:
-    - If the client declared support for URL-mode elicitation, the server MUST send a URL-mode elicitation whose URL
+    - If the client declared support for URL-mode elicitation and the step-up carries a `trusted_surface_url`, the server MUST send a URL-mode elicitation whose URL
       is the step-up's `trusted_surface_url` (under
       [MCP 2025-11-25](https://modelcontextprotocol.io/specification/2025-11-25/client/elicitation), the
       `URLElicitationRequiredError`, code `-32042`; under
@@ -169,8 +171,9 @@ is signed by a human support operator under tag `bacp-handoff` and is never a to
       `insufficient_scope`, and records `mcp_signal: url_elicitation`. The client opens the URL so that neither it nor
       the model can inspect it.
     - Otherwise the server signals `insufficient_scope` and records `mcp_signal: insufficient_scope`.
+    - A step-up with `delivery: app_push` has no URL: the server signals `insufficient_scope` and records `mcp_signal: insufficient_scope`, and the principal is reached by the push.
     - A `post_order` step-up has no session. On `403 presence_not_proven` with `Error.step_up`, the server binds it the
-      same way: for a client that declared URL-mode elicitation, `-32042` with one URL elicitation whose `url` is the
+      same way: for a client that declared URL-mode elicitation and a step-up that carries a `trusted_surface_url`, `-32042` with one URL elicitation whose `url` is the
       `trusted_surface_url` and whose `elicitationId` is the `step_up_id`; otherwise a tool error result whose
       `structuredContent` is the `Error` including `step_up`, with `mcp_signal: insufficient_scope`. When the step-up is
       approved the server MAY send `notifications/elicitation/complete` with that `elicitationId`. The notification
@@ -279,7 +282,7 @@ signed step-up result to the gateway. A `post_order` step-up, raised by a write 
 issue task in `TASK_STATE_AUTH_REQUIRED` with the `Error.step_up` in its status message, and the client agent reads
 `bacp.step_up_status` (Proposed name; the A2A form of `GET /step-ups/{step_up_id}`, with the same access rule) until the state is `approved`.
 
-**Negotiation notices and declines over A2A.** A2A has no state for "notice only". The `ask` confirmation (`accept_confirmation`), a contested crossing and the decline of an `AGREED` or `BOUND` deal map to `TASK_STATE_AUTH_REQUIRED` or `TASK_STATE_INPUT_REQUIRED` as the table shows (`ESCALATED`; a counter to answer). The `agreed_by_agent` and `purchase_offered_by_agent` notices are `info` messages that change no task state: the gateway delivers the notice to the principal by the mandate's `notice_route`, and a client agent MUST NOT forward, summarise or answer it. Every negotiation tool response and task DataPart carries the synchronous `counter_signature` for the message just sent, and a client agent that sees `crossing_contested` stops and does not resend.
+**Negotiation notices and declines over A2A.** A2A has no state for "notice only". The `ask` confirmation (`accept_confirmation`) and a contested crossing map to `TASK_STATE_AUTH_REQUIRED` (`ESCALATED`) as the table shows. The principal's decline of an `AGREED` or `BOUND` deal (`principal_declined`) moves the task to `TASK_STATE_CANCELED` (`CANCELLED`). The `agreed_by_agent` and `purchase_offered_by_agent` notices are `info` messages that change no task state: the gateway delivers the notice to the principal by the mandate's `notice_route`, and a client agent MUST NOT forward, summarise or answer it. The response to every negotiation message sent carries the counterparty's `counter_signature` for it when one was returned and verified; when it is absent, a crossing that depends on that message is contested. A client agent that sees `crossing_contested` stops and does not resend.
 
 ### How mandates travel {#a2a-mandates}
 

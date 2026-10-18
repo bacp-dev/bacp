@@ -481,7 +481,7 @@
         "provider_id": {
           "type": "string",
           "minLength": 1,
-          "description": "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e) and 13(f)). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
+          "description": "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (a BACP rule whose basis is RBI Master Direction on Payment Aggregators 2025 para 13(f), under which a PA ensures that a marketplace takes no payment for a seller not onboarded on it, and para 13(e), a merchant ID per merchant; the block-payee match itself is BACP policy). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
         }
       }
     },
@@ -637,7 +637,7 @@
             "registry_version"
           ],
           "additionalProperties": false,
-          "description": "Set only by the gateway, in the closed Payment Mandate record that it stores and in the evidence bundle, never in the mandate that the agent signs: a reference, not a copy, to the registry descriptor whose authentication model the debit relies on. The principal's post-debit notice and the evidence summary render the basis from the descriptor at that registry_version through a fixed template. A closed Payment Mandate that an agent sends with it, or an agent request that supplies it, gets 400 invalid_request, and it is in no tool input schema. The basis records which rule the debit relies on. It does not make the debit lawful: the issuer remains liable for a non-compliant debit.",
+          "description": "Set only by the gateway, in the closed Payment Mandate record that it stores and in the evidence bundle, never in the mandate that the agent signs: a reference, not a copy, to the registry descriptor whose authentication model the debit relies on. The principal's post-debit notice and the evidence summary render the basis from the descriptor at that registry_version through a fixed template. A closed Payment Mandate that an agent sends with it, or an agent request that supplies it, gets 400 invalid_request, and it is in no tool input schema. The basis records which rule the debit relies on. It does not make the debit lawful: the issuer remains liable for a non-compliant debit. A verifier removes it before it computes the mandate hash or verifies signatures[].",
           "properties": {
             "handler": {
               "$ref": "common.json#/$defs/HandlerRef",

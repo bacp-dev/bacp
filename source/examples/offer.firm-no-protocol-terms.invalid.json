@@ -21,7 +21,7 @@
     {
       "role": "bpp",
       "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
-      "alg": "ES256",
+      "alg": "EdDSA",
       "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
     },
     {

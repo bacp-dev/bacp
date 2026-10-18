@@ -32,6 +32,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+import posixpath
 import re
 import shutil
 from pathlib import Path
@@ -130,7 +131,10 @@ def _rewrite(node, version: str):
             if k in ("$id", "$ref") and isinstance(v, str) and v.startswith(SCHEMA_PREFIX):
                 node[k] = v.replace(SCHEMA_PREFIX, versioned, 1)
             elif k == "$ref" and isinstance(v, str) and not v.startswith(("#", "http")):
-                node[k] = versioned + v.removeprefix("./")
+                # Resolve against the versioned schemas/ directory and remove dot segments (RFC 3986 section 5.2.2), so that
+                # "../services/bacp.openapi.yaml#/x" becomes https://bacp.dev/<version>/services/bacp.openapi.yaml#/x.
+                path, hash_, frag = v.partition("#")
+                node[k] = f"{BACP_ORIGIN}/{version}/" + posixpath.normpath(posixpath.join("schemas", path)) + hash_ + frag
             else:
                 _rewrite(v, version)
     elif isinstance(node, list):

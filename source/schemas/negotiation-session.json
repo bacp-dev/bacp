@@ -1273,8 +1273,27 @@
     },
     "StandingAccept": {
       "type": "object",
-      "description": "A principal-signed standing acceptance lodged with the auctioneer before a Dutch auction opens, so that a bidder who cannot react in seconds (an IVR or feature-phone principal, for example) competes on price and not on reflexes. At the first tick whose price is at or below max_price the auctioneer runs standing accepts ahead of live accepts at that tick, in the chain order in which they were placed. Allowed only where the AuctionSpec sets standing_accepts_enabled.",
+      "description": "A principal-signed standing acceptance lodged with the auctioneer before a Dutch auction opens, so that a bidder who cannot react in seconds (an IVR or feature-phone principal, for example) competes on price and not on reflexes. It is bound to one auction and one lot, expires, and is used at most once. It is lodged through the principal's gateway as a firm bid under the bacp-negotiate tag, so the guard evaluates it at max_price times qty and holds that exposure until the auction closes or the accept is used or withdrawn. At the first tick whose price is at or below max_price the auctioneer runs standing accepts ahead of live accepts at that tick, in the chain order in which they were placed. Allowed only where the AuctionSpec sets standing_accepts_enabled. An auctioneer refuses one whose auction_id or lot_hash is not this auction's, or whose valid_until has passed, with NEG_AWARD_RULE. The principal's gateway refuses with NEG_AWARD_RULE, and records no AGREED for, an award that cites a standing accept it did not lodge for that auction and lot, that has expired, or that was already used or released.",
       "properties": {
+        "standing_accept_id": {
+          "type": "string",
+          "pattern": "^sa_[A-Za-z0-9]{8,40}$",
+          "description": "Identifies this standing accept. An auctioneer uses each standing_accept_id at most once."
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^auc_[A-Za-z0-9]{8,40}$",
+          "description": "The auction this standing accept is for. A standing accept run in any other auction is refused with NEG_AWARD_RULE."
+        },
+        "lot_hash": {
+          "$ref": "common.json#/$defs/Hash",
+          "description": "sha-256 of the JCS form of the AuctionSpec lots[] entry this standing accept is for."
+        },
+        "valid_until": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The last instant at which the auctioneer may run this standing accept. It MUST NOT be later than the auction's closes_at."
+        },
         "max_price": {
           "$ref": "common.json#/$defs/Amount",
           "description": "The highest tick price at which the principal accepts."
@@ -1289,15 +1308,31 @@
           "pattern": "^mdt_[A-Za-z0-9]{12,40}$",
           "description": "The negotiation mandate under which the principal signed the standing accept."
         },
+        "sender_log_seq": {
+          "$ref": "offer.json#/$defs/Offer/properties/sender_log_seq"
+        },
+        "sender_log_prev": {
+          "$ref": "offer.json#/$defs/Offer/properties/sender_log_prev"
+        },
+        "protocol_terms": {
+          "$ref": "offer.json#/$defs/ProtocolTerms"
+        },
         "signature": {
           "$ref": "common.json#/$defs/Signature",
           "description": "The principal's signature over the JCS form of the object without signature."
         }
       },
       "required": [
+        "standing_accept_id",
+        "auction_id",
+        "lot_hash",
+        "valid_until",
         "max_price",
         "qty",
         "mandate_ref",
+        "sender_log_seq",
+        "sender_log_prev",
+        "protocol_terms",
         "signature"
       ],
       "additionalProperties": false

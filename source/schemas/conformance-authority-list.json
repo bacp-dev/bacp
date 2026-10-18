@@ -53,6 +53,11 @@
               "type": "string",
               "minLength": 1,
               "description": "The entity's registration identifier, for example a CIN. A Mandate Manager compares this operator with the operators of the attested subject, of the payer PSP and of itself, to check separation."
+            },
+            "group_id": {
+              "type": "string",
+              "minLength": 1,
+              "description": "OPTIONAL. The registry-assigned group id of the operator, compared as in registry-record.json."
             }
           },
           "additionalProperties": false,

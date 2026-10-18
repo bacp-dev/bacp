@@ -927,6 +927,18 @@ file name ends in `.invalid.json` MUST fail validation against its schema, and
 every other example MUST pass. The vectors are listed on
 [Reference](reference.md).
 
+- **The example map is normative.** [`examples/index.json`](https://bacp.dev/latest/examples/index.json) lists, for each example file, whether it
+  is valid and the schema or schemas that it is checked against (a path below `source/` with an optional JSON Pointer fragment, or an absolute URL,
+  and an `instance` pointer where a schema applies to one member). A runner takes the mapping from that file and does not infer it from file names.
+  `scripts/validate.py` derives the map and fails when the file is stale (`--write-index` regenerates it). Where an invalid example is accepted by every
+  listed schema, the entry names the repository check that rejects it in `fails_by` (`protocol_terms_digest` or `alias_binding`).
+- **`format` is asserted.** A validator MUST assert the JSON Schema `format` keyword (`date-time`, `date`, `uri`, `uuid` and the others that the schemas
+  use), because some negative vectors fail on `format` alone (`catalog-item.prior-price-bad-date.invalid.json` and `catalog-offer.bad-until.invalid.json`).
+  A validator also applies each `pattern` as an ECMA-262 regular expression.
+- **No cryptographic vectors yet.** The signature values in the examples are placeholders and the hashes that are not stated as computed do not
+  digest anything. The suite will carry cryptographic test vectors (JCS, JWS, RFC 9421, the chains and a golden evidence bundle) that implementations
+  of the specification produce and offer back to it after release.
+
 ## Handler-binding and budget cases {#handler-binding-cases}
 
 The cases below cover the [handler binding](mandates.md#handler-binding) of
@@ -6856,9 +6868,9 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     - request: {method: POST, path: /checkout-sessions, tag: bacp-browse, idempotency_key: fresh, body: {line_items: 1, cart_id: present}}
   expect:
     responses:
-      - {status: 400, code: capability_unsupported, param: $.buyer.consent, count: 1}
-      - {status: 400, code: capability_unsupported, param: $.loyalty, count: 1}
-      - {status: 400, code: capability_unsupported, param: $.cart_id, count: 1}
+      - {status: 400, code: capability_unsupported, param: $.buyer.consent, capability: dev.ucp.shopping.buyer_consent, count: 1}
+      - {status: 400, code: capability_unsupported, param: $.loyalty, capability: dev.ucp.common.loyalty, count: 1}
+      - {status: 400, code: capability_unsupported, param: $.cart_id, capability: dev.ucp.shopping.cart, count: 1}
     sessions: {created: 0}
     beckn: []
 
@@ -8903,11 +8915,11 @@ integer paise. Levels: gateway cases `bacp.pay.all.1` unless stated; schema case
       - {status: 400, code: rail_binding_not_open_eligible, count: 1}
 
 - case_id: T7-35
-  title: A mandate.status_changed payload with ACTIVE and a pause reason is invalid
+  title: A mandate.status_changed payload with PAUSED and no pause reason is invalid
   level: bacp.core.1
   system_under_test: schema
   steps:
-    - validate: {schema: bacp.openapi.yaml#/components/schemas/MandateStatusChangedData, vector: mandate-status-changed-data.active-with-reasons.invalid.json}
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/MandateStatusChangedData, vector: mandate-status-changed-data.paused-no-reasons.invalid.json}
   expect:
     verdict: {code: schema_invalid, path: $.pause_reasons}
 
@@ -9555,7 +9567,7 @@ Case T8-CAP-05 is [BND-UCPF-06](#binding-cases).
     webhook_signature: {covers: [webhook-id, webhook-timestamp]}
 
 - case_id: T8-SCH-01
-  title: The new schema members reject each of the published invalid vectors
+  title: The new schema members reject the listed invalid vectors
   level: bacp.core.1
   system_under_test: schema
   steps:
@@ -9686,4 +9698,399 @@ The cases below cover the residual decisions of the second review round. They us
   expect:
     messages: [{code: capabilities_incompatible, reason: profile_not_supported}]
     state: {live_offer: none}
+```
+
+## Phase-7 review cases {#r2-review-cases}
+
+The cases below cover the findings of the final review of the second round. They use the manifest form above, their ids use the prefix `RT7E-`, and amounts are integer paise.
+
+```yaml
+- case_id: RT7E-01
+  title: A standing accept lodged for one auction and run in another is refused, and its exposure reservation is released at the first auction's close
+  level: bacp.auction.1
+  fixture:
+    principal: P
+    auctions: [{id: X1, state: CLOSED, standing_accepts_enabled: true}, {id: X2, type: dutch, state: OPEN, standing_accepts_enabled: true}]
+    standing_accepts: [{id: SA, auction_id: X1, max_price: {value: 180000, currency: INR}, qty: 10, used: false}]
+  steps:
+    - auctioneer_runs: {standing_accept: SA, auction: X2}
+  expect:
+    verdict: {code: NEG_AWARD_RULE}
+    state: {principal_gateway_agreed: none}
+    exposure: {reservation_for: SA, released_at: X1_close, count: 1}
+
+- case_id: RT7E-02
+  title: A mandate request whose proposed negotiation process carries notice_route is refused and nothing reaches the Trusted Surface
+  level: bacp.core.1
+  system_under_test: gateway
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-pay, vector: mandate-request.notice-route.invalid.json}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.proposed_constraints.negotiation.process.notice_route, count: 1}
+    ts_prompts: 0
+
+- case_id: RT7E-03
+  title: A collector-PSP refund receipt alone moves the session to reversed and keeps the hold on human-not-present debits to that seller
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+    payment: {status: reversal_pending, seller: seller-s, refund_route: seller_collector}
+    sessions: {count: 1, state: ready_for_complete, sellers: [seller-s], presence: [HNP]}
+  steps:
+    - receipt: {signer: collector_psp, type: refund, cites: original_rrn, amount: full}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: 1}
+  expect:
+    state: {payment.status: reversed}
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, reasons: [seller_reversal_unresolved], count: 1}
+    rail: {settled_debits: unchanged}
+
+- case_id: RT7E-04
+  title: A closed event whose last_seq is undelivered leaves the successor's current window incomplete, and the late use is carried into the successor
+  level: bacp.pay.all.1
+  fixture:
+    root: {gateway: A, events_delivered: [0, 1, 2, 3, 4, 5, 6], undelivered: [7]}
+  steps:
+    - principal_ports: {successor_gateway: B}
+    - event: {gateway: A, type: closed, last_seq: 7, seq: 8}
+    - event: {gateway: A, type: use, seq: 7, amount: {value: 1500000, currency: INR}}
+  expect:
+    carried_exposure: {window: P1M, source: incomplete}
+    exposure: {gateway: B, raised_by: {value: 1500000, currency: INR}, count: 1}
+
+- case_id: RT7E-05
+  title: A seller-added line keeps added_by seller when the agent re-sends it as principal_requested, and stays in unrequested_lines
+  level: bacp.ts.1
+  fixture:
+    session: {quote_adds_line: {line: L, added_by: seller}}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-pay, body: {items: [{line: L, principal_requested: true}]}}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay}
+  expect:
+    state: {line_L.added_by: seller}
+    ts_render: {unrequested_lines: [{line: L, added_by: seller}]}
+
+- case_id: RT7E-06
+  title: A new session for a seller whose step-up the principal declined inside the window is refused with Retry-After and raises no step-up
+  level: bacp.ts.1
+  fixture:
+    limits: {decline_cooloff: {window: PT1H}}
+    sessions: [{id: S1, seller: B, step_up: {kind: confirm, status: declined}}]
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-pay, seller: B}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: S2}
+  expect:
+    responses:
+      - {status: 409, code: session_state_conflict, headers: {Retry-After: present}, count: 1}
+    step_ups_created: 0
+    ts_prompts: 0
+
+- case_id: RT7E-07
+  title: A negotiation pinned to an older version runs the step-up of the newest listed version
+  level: bacp.neg.1
+  fixture:
+    profile: {supported_versions: [A, B]}
+    versions: {B: {step_up: accept_confirmation}}
+    negotiation: {pinned_version: A, state: NEGOTIATING, live_offer: {guard: acceptable}}
+  steps:
+    - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, headers: {BACP-Version: A}, body: {offer_hash: "{offer_hash}"}}
+  expect:
+    step_up: {raised: true, reason: accept_confirmation}
+    seller_messages: 0
+
+- case_id: RT7E-08
+  title: Two orders that share any seller identifier are one seller for split-order detection
+  level: bacp.core.1
+  fixture:
+    mandate: {step_up: {above_amount: {value: 1000000, currency: INR}}}
+    orders: [{gstin: G, vpa: V1, amount: {value: 900000, currency: INR}, at: T0}, {gstin: absent, vpa: V1, amount: {value: 900000, currency: INR}, at: T0_plus_10m_minus_1s}]
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: 2}
+  expect:
+    step_up: {raised: true, reason_code: above_step_up_threshold}
+    messages: [split_order_suspected]
+
+- case_id: RT7E-09
+  title: A protocol_terms hash that is not the sha-256 of the published protocol-terms file of its version is refused
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    vector: offer.protocol-terms-hash-stale.invalid.json
+    published_file: protocol-terms/2026-10-17.txt
+  steps:
+    - verify_protocol_terms: {}
+  expect:
+    verdict: {code: capabilities_incompatible, param: $.protocol_terms}
+    checks: {hash: "sha-256: and unpadded base64url SHA-256 of the exact bytes of the published file"}
+
+- case_id: RT7E-10
+  title: A projected envelope whose dev.bacp key, entry id and schema file name differ is rejected
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/UcpCheckout, vector: ucp-checkout.alias-id-mismatch.invalid.json, check: alias_binding}
+  expect:
+    verdict: {code: schema_invalid, count: 1, path: $.ucp.payment_handlers}
+
+- case_id: RT7E-11
+  title: Every UCP alias schema carries name dev.bacp.<handler id> and a version equal to the BACP release id
+  level: bacp.core.1
+  system_under_test: registry
+  steps:
+    - read_files: {path: schemas/ucp/}
+  expect:
+    verdict: {name_equals: "dev.bacp.<handler id>", version_equals: release_id}
+
+- case_id: RT7E-12
+  title: Every operation that an agent signs references the BacpVersion header parameter, and a Trusted Surface operation needs none
+  level: bacp.core.1
+  system_under_test: registry
+  steps:
+    - read_files: {path: services/bacp.openapi.yaml}
+  expect:
+    verdict: {signed_operations_reference: BacpVersion, exempt_tags: [bacp-ts, none]}
+
+- case_id: RT7E-13
+  title: The example index equals the map derived from the schemas, and every example is checked against the schema that the index names
+  level: bacp.core.1
+  system_under_test: registry
+  steps:
+    - read_files: {path: examples/index.json}
+  expect:
+    verdict: {index_equals_derived_map: true, every_example_listed_once: true, invalid_fail_by_schema_or_fails_by: true}
+
+- case_id: RT7E-14
+  title: A validator that does not assert format accepts two invalid examples, and a conforming validator rejects them
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/CatalogItem, vector: catalog-item.prior-price-bad-date.invalid.json}
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/CatalogOffer, vector: catalog-offer.bad-until.invalid.json}
+  expect:
+    verdict: {code: schema_invalid, count: 2}
+    checks: {format_asserted: true}
+
+- case_id: RT7E-15
+  title: A Signature.value is a detached JWS whose header carries alg and kid equal to the Signature object, and a value with an embedded payload or a different kid does not verify
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    artefact: {type: receipt, signature: {kid: K1, alg: ES256}}
+    variants: [header_kid_differs, header_alg_differs, payload_segment_present]
+  steps:
+    - verify_signature: {}
+  expect:
+    verdict: {ok: true, variants_ok: false}
+
+- case_id: RT7E-16
+  title: The two signatures of an open mandate cover the same bytes, the JCS form of the mandate minus status, usage and signatures, and either verifies without the other
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    artefact: {type: mandate, form: open, signatures: [principal, mandate_manager]}
+  steps:
+    - verify_signature: {only: principal}
+    - verify_signature: {only: mandate_manager}
+  expect:
+    verdict: {ok: true, payload: "JCS(mandate minus status, usage, signatures)", count: 2}
+
+- case_id: RT7E-17
+  title: The log_entry_hash of a negotiation chain entry is the sha-256 of the JCS form of its five members, and the first entry has log_seq 1 and the genesis of the negotiation_id
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    vector: {message: offer.accept-genesis.json, receipt: counter-signature-payload.genesis.json}
+  steps:
+    - verify_chain: {}
+  expect:
+    verdict: {ok: true}
+    checks: {log_entry_hash: "sha-256 over JCS of {msg_hash, negotiation_id, received_at, log_seq, prev_entry_hash}", log_seq_first: 1, chain_separate_from_instruction_log: true}
+
+- case_id: RT7E-18
+  title: The Beckn message_id is the UUIDv5 of the namespace and the UTF-8 bytes of agent_id|idempotency_key|action
+  level: bacp.core.1
+  system_under_test: gateway
+  fixture:
+    message_id_namespace: "55884fda-3b41-58be-87a9-2be7b3b43b7f"
+    agent: {sub: "did:web:agents.vaani.example.in:sakhi"}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: "idem_7Q2W9X4K1M3"}
+  expect:
+    beckn: [{action: search, context.message_id: "7d225f10-d430-5b7b-9826-0c7621e7fdd5", count: 1}]
+- case_id: RT7E-20
+  title: The approval of a post_order step-up for an order-less ledger act is accepted without checkout_hash, and any other step_up.approved without it is refused
+  level: bacp.core.1
+  system_under_test: gateway
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {entries: [{type: opening_balance, status: pending_ack}]}
+    step_up: {kind: post_order, action: LEDGER_ACK, order_id: absent}
+  steps:
+    - post_event: {type: step_up.approved, presentation: {checkout_hash: absent}}
+    - post_event: {type: step_up.approved, step_up: session_confirm, presentation: {checkout_hash: absent}}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+      - {status: 400, code: invalid_request, param: $.presentation.checkout_hash, count: 1}
+- case_id: RT7E-21
+  title: A step-up with delivery app_push that carries a surface or a trusted_surface_url is rejected
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/StepUp, vector: [step-up.app-push.json, step-up.app-push-with-url.invalid.json, step-up.app-push-surface.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 2}
+
+- case_id: RT7E-22
+  title: An Error with code trusted_surface_unavailable carries reason, and an Error without that code carries none
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Error, vector: [error.trusted-surface-unavailable.json, error.ts-unavailable-no-reason.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 1, path: $.reason}
+
+- case_id: RT7E-23
+  title: A conformance-authority entry may name a non-empty group_id on its operator, and an empty one is rejected
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: conformance-authority-list.json, vector: [conformance-authority-list.operator-group-id.json, conformance-authority-list.group-id-empty.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 1, path: $[0].operator.group_id}
+
+- case_id: RT7E-24
+  title: A registry release digest is sha-256 and 43 characters of unpadded base64url, and a 64-character hexadecimal digest is rejected
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: registry-release.json, vector: [registry-release.2026-12-15.json, registry-release.digest-hex-sha-256.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 1}
+
+- case_id: RT7E-25
+  title: Two parties hash the same basket to one checkout_hash because selection.lines holds only lines with a choice, sorted by id
+  level: bacp.core.1
+  system_under_test: gateway
+  fixture:
+    session: {lines: [{id: l2, adjustment_band: {max_down: 0, max_up: 5000}}, {id: l1, substitution: allow}, {id: l3}]}
+  steps:
+    - compute: {value: checkout_hash}
+  expect:
+    verdict: {selection_lines_ids: [l1, l2], order: utf16_code_units_ascending, lines_without_choice: omitted}
+
+- case_id: RT7E-26
+  title: A Checkout Mandate is evaluated against the registry release in force at its iat
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    mandate: {kind: checkout, iat: before_release_B}
+    releases: [A, B]
+  steps:
+    - verify_mandate: {at: after_release_B}
+  expect:
+    verdict: {release_applied: A}
+
+- case_id: RT7E-27
+  title: Under seller_collector the gateway requests the refund through IGM and does not start it, and under gateway_collector it starts it
+  level: bacp.core.1
+  system_under_test: gateway
+  fixture:
+    payment: {status: debited_not_confirmed, refund_route: [seller_collector, gateway_collector]}
+  steps:
+    - reconcile: {after: confirm_resent}
+  expect:
+    refunds: [{route: seller_collector, igm_request: 1, rail_refund_started_by_gateway: 0}, {route: gateway_collector, rail_refund_started_by_gateway: 1}]
+
+- case_id: RT7E-28
+  title: An MCP server that has a step-up with delivery app_push and no URL signals insufficient_scope even when the client declared URL-mode elicitation
+  level: bacp.core.1
+  system_under_test: gateway
+  fixture:
+    client: {url_elicitation: true}
+    step_up: {delivery: app_push}
+  steps:
+    - call: {tool: bacp_complete}
+  expect:
+    mcp_signal: insufficient_scope
+    url_elicitation: {count: 0}
+- case_id: RT7E-29
+  title: The principal's decline of an AGREED or BOUND deal moves the A2A task to TASK_STATE_CANCELED, and an ask confirmation or a contested crossing moves it to TASK_STATE_AUTH_REQUIRED
+  level: bacp.neg.1
+  system_under_test: gateway
+  requires_capability: in.bacp.negotiate
+  fixture:
+    transport: a2a
+    deals: [{state: AGREED, event: principal_declined}, {state: ESCALATED, cause: accept_confirmation}]
+  steps:
+    - read_task: {deal: all}
+  expect:
+    task_states: [TASK_STATE_CANCELED, TASK_STATE_AUTH_REQUIRED]
+
+- case_id: RT7E-30
+  title: Every example signature whose kid names an Ed25519 key carries alg EdDSA, and one whose kid names an ES256 key carries ES256
+  level: bacp.core.1
+  system_under_test: registry
+  steps:
+    - read_files: {path: examples/}
+  expect:
+    verdict: {alg_matches_kid_suffix: true, ed25519: EdDSA, es256: ES256}
+- case_id: RT7E-01b
+  title: The principal's gateway refuses an award that cites a standing accept lodged for another auction, and makes no reservation for it
+  level: bacp.neg.1
+  system_under_test: gateway
+  requires_capability: in.bacp.negotiate
+  fixture:
+    auctions: [{id: X1, state: CLOSED, standing_accepts_enabled: true}, {id: X2, type: dutch, state: OPEN, standing_accepts_enabled: true}]
+    standing_accepts: [{id: sa_A, auction_id: X1, lot_hash: h1, valid_until: X1.closes_at, max_price: {value: 180000, currency: INR}, qty: 10, used: false}]
+  steps:
+    - receive_award: {auction: X2, cites: sa_A}
+  expect:
+    responses:
+      - {status: 403, code: NEG_AWARD_RULE, param: $.standing_accept_id, count: 1}
+    principal_gateway_agreed: none
+    exposure_reservations: {count: 0}
+
+- case_id: RT7E-01c
+  title: A lodged standing accept is withdrawn once, its reservation is released by standing_accept_id, and a used one cannot be withdrawn
+  level: bacp.neg.1
+  system_under_test: gateway
+  requires_capability: in.bacp.negotiate
+  fixture:
+    auctions: [{id: X1, type: dutch, state: OPEN, standing_accepts_enabled: true}]
+    standing_accepts: [{id: sa_A, auction_id: X1, used: false}, {id: sa_B, auction_id: X1, used: true}]
+  steps:
+    - request: {method: POST, path: "/auctions/X1/standing-accepts/sa_A/withdraw", tag: bacp-negotiate, idempotency_key: fresh}
+    - request: {method: POST, path: "/auctions/X1/standing-accepts/sa_A/withdraw", tag: bacp-negotiate, idempotency_key: fresh}
+    - request: {method: POST, path: "/auctions/X1/standing-accepts/sa_B/withdraw", tag: bacp-negotiate, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+      - {status: 404, code: not_found, count: 1}
+      - {status: 409, count: 1}
+    exposure_reservations: {released_for: [sa_A], count: 1}
+
+- case_id: RT7E-04b
+  title: A use of the superseded root that arrives after the successor was signed makes the Mandate Manager revoke the successor and raise a port step-up
+  level: bacp.core.1
+  system_under_test: mandate_manager
+  fixture:
+    port: {successor_signed: true, closed_event_held: false, window: P1M, principal_lowered_prefill: true}
+  steps:
+    - receive_event: {root: superseded, type: use, seq: 7}
+  expect:
+    successor: {revoked: 1}
+    port_approval_requested: {count: 1}
+
+- case_id: RT7E-19
+  title: A signature is counted for the role that its kid resolves to, and an entry that carries another entry's kid under the label principal does not count
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    artefact: {type: mandate, form: open, signatures: [{kid: mm_kid, role: principal}, {kid: mm_kid, role: mandate_manager}]}
+  steps:
+    - verify_signature: {}
+  expect:
+    verdict: {code: mandate_invalid, principal_signature: missing, duplicate_kid: invalid}
 ```

@@ -365,8 +365,8 @@ whose budgets cap the total ([Multi-seller basket](checkout/index.md#multi-selle
 - **Payee.** An open Payment Mandate whose `rail_binding.primitive` is `sbmd_block` **MUST** carry
   `payee{vpa, bpp_id}` and, when the seller's BPP-signed terms name a provider, `payee.provider_id`, which **MUST** equal
   `message.order.provider.id` of those terms at every leg. A leg whose provider differs is refused with
-  `403 reservepay_block_wrong_payee` and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e)
-  and 13(f)); one seller app can serve several shops from one collection VPA, which is why the VPA alone is not enough
+  `403 reservepay_block_wrong_payee` and nothing is debited (a BACP rule whose basis is RBI Master Direction on Payment Aggregators 2025 para
+  13(f), under which a PA ensures that a marketplace takes no payment for a seller not onboarded on it, and para 13(e), a merchant ID per merchant; the block-payee match itself is BACP policy); one seller app can serve several shops from one collection VPA, which is why the VPA alone is not enough
   (whether ONDC seller apps share one VPA is not verified as of 18-10-2026). A request without it is refused with `403 mandate_scope_mismatch` at
   `$.payee`. `payee.vpa` **MUST** equal the VPA in the seller's BPP-signed payment terms (Beckn
   `payments[].params.virtual_payment_address` of `on_init`), and the attested payee **MUST** equal
@@ -446,7 +446,16 @@ A principal who changes buyer app or gateway does not move an open mandate: the 
   silent. For a window in which the MM's record has a gap, `source` is `incomplete`: the Trusted Surface says so in the
   principal's language and pre-fills that window at the superseded root's `max`. The principal may change any pre-filled
   figure before approving, because the cap is the principal's own, and the change is accepted only with the principal's
-  own factor.
+  own factor. On revocation of the superseded root its gateway **MUST** send, within 60 seconds, a `MandateEvent` of
+  type `closed` with `last_seq`. Until the Mandate Manager holds every event up to `last_seq`, every window that
+  contains the time since the last event received is `incomplete`. A `use` of the superseded root that the Mandate
+  Manager receives after it has signed the successor counts against the successor: the Mandate Manager sends the
+  successor's gateway a signed carried-exposure increment, which that gateway applies inside the root's atomic section
+  ([Q-104](open-questions.md#q-104) records that the wire form of the increment is not yet defined). Until it is defined,
+  the Mandate Manager does not sign the successor before it holds a `closed` event and every event up to its `last_seq`, or
+  60 seconds have passed without one. In that second case every window is `incomplete` and is pre-filled at `max`, so the
+  carried exposure is treated as at the old `max`. A `use` that arrives after signing makes the Mandate Manager revoke the
+  successor and ask the principal to port again.
 - **Reserve Pay blocks.** A successor MAY re-bind a block of its predecessor when the payer PSP signs a fresh
   attestation for the same block. A re-bound block is not revoked with the predecessor, its exposure moves to the
   successor inside the root's atomic section, and it never counts on both roots. Where the payer PSP does not re-attest,
@@ -649,7 +658,7 @@ signed by the `cnf` key with `aud` set to the seller's `bpp_id` and `nonce` set 
 
 !!! note "Encoding"
     The attached-JWS closing above is the only interoperable encoding of a closed mandate in BACP
-    `2026-10-17`, and the conformance suite carries test vectors for it. An SD-JWT / KB-JWT
+    `2026-10-17`, and the conformance suite will carry test vectors for it. An SD-JWT / KB-JWT
     selective-disclosure encoding is not part of this version; a later release may add one as a
     new mandate `vct` (settled in [Q-41](open-questions.md#q-41)). Verifiers **MUST** support both
     ES256 and EdDSA (Ed25519) signatures (settled in [Q-42](open-questions.md#q-42); see
@@ -950,10 +959,10 @@ local and rail reason.
    step-up's gets `404 not_found`. `step_up.approved` **MUST** carry a
    [`Presentation`](human-participants.md#presentation) whose `content_hash` is the sha-256 of the
    `ts_render` and whose `checkout_hash` is REQUIRED and is the quote's (for a `post_order`
-   step-up, the `checkout_hash` of the order's closed Checkout Mandate); its `user_action` is never `decline`; its `device_signature`, where
+   step-up, the `checkout_hash` of the order's closed Checkout Mandate), except on the approval of a `post_order` step-up for an order-less ledger act (`LEDGER_ACK` with no `order_id`), which carries none; its `user_action` is never `decline`; its `device_signature`, where
    present, is a signature by a device key of the Trusted Surface over the JCS form of
    `{step_up_id, content_hash, acted_at}`, which MUST verify against `principal.device_jkt[]` where the mandate lists it.
-   The gateway refuses an approval without `presentation`, without `presentation.checkout_hash` or
+   The gateway refuses an approval without `presentation`, without `presentation.checkout_hash` (where it is required) or
    with `user_action: decline` with `400 invalid_request`, one whose
    `content_hash` does not match with `403 ts_render_mismatch`, and one acted on after `expires_at`
    as expired, each without changing the session. While the session is in `human_handoff`, an
@@ -1000,7 +1009,7 @@ stay under `step_up.above_amount`, the gateway **MUST** escalate (`confirm`,
 under the same root open Checkout Mandate **to the same seller**, completed or in flight within the previous 10
 minutes, plus this order, exceed `above_amount`. The seller is identified by the tax id (the GSTIN) in the BPP-signed
 terms, else by the payee VPA, else by the pair `bpp_id` and `provider_id`, so that one shop that signs on through two
-seller apps is one seller. The `covers[]` legs of a summary-approved basket are exempt, because the principal has approved each of
+seller apps is one seller. Two orders are the same seller when any of these identifiers match. The `covers[]` legs of a summary-approved basket are exempt, because the principal has approved each of
 them. The check runs inside the atomic section
 ([Usage ledger](#usage-ledger)) and before rail caps. Velocity across different sellers is bounded
 only by the budgets ([Q-50](open-questions.md#q-50), settled).
@@ -1080,7 +1089,7 @@ Every amount in steps 0, 4, 5, 7 and 8 is the BPP-signed quote total **after** d
 
 Steps 9 and 10 are checked when the session is updated and re-checked before `complete`. A gateway
 MAY run steps 9 to 12 before it enters the atomic section, since they do not depend on the ledger.
-Steps 5 to 8 and 13 **MUST** run inside it.
+Steps 5 to 8 and 13, and the `checkout_hash` check of step 4, **MUST** run inside it.
 
 ## Usage ledger, reservations and concurrency {#usage-ledger}
 
@@ -1105,7 +1114,7 @@ is a read-only view of it.
   gateway writes it into the ledger of the root open Checkout Mandate, so that exposure inside the root's atomic section
   counts it. A `complete` of the negotiated deal converts that reservation into the reservation of the closed Payment
   Mandate, in one step inside the same section, and never counts both.
-- **Atomic section.** For `complete`, steps 5 to 8 and 13 of
+- **Atomic section.** For `complete`, steps 5 to 8 and 13, and the `checkout_hash` check of step 4, of
   [Deterministic evaluation](#evaluation) **MUST** run as one atomic, linearisable operation keyed
   on the **root open Checkout Mandate**: the open Checkout Mandate named by the open Payment
   Mandate's `checkout_mandate_ref`, followed through `parent_mandate_id` to the top of any
@@ -1208,7 +1217,7 @@ partial refund, a refund to anything but the source (for example into `in.store_
 release nothing. While such a reversal is unresolved, that is while the session is `reversal_pending`, the gateway
 refuses every further human-not-present debit to that seller under the root with `403 mandate_scope_mismatch` and
 `reasons: [seller_reversal_unresolved]`. A human-present payment to the seller, and any payment to another seller, is
-unaffected, and the hold ends when the session reaches `reversed`. A late `on_confirm` after a reversal has begun is
+unaffected, and the hold ends only when the debit's release holds under path (a) or (b) above, or when the principal lifts it on the Trusted Surface. A receipt of the collector's PSP alone moves `payment.status` to `reversed` but keeps the hold. A late `on_confirm` after a reversal has begun is
 answered with a Beckn `cancel`, logged, and never debited again; whether a late `on_confirm` forms a contract is for
 counsel ([Q-52](open-questions.md#q-52)). Whether the hold is a ranking parameter that a gateway that is an e-commerce
 entity must disclose from 01-01-2027 is for counsel ([Q-66](open-questions.md#q-66)).
@@ -1227,8 +1236,9 @@ sequenceDiagram
     participant S as Seller (BPP)
     A->>A: Close open mandates with cnf key for checkout_hash and exact amount
     A->>G: POST complete with closed Checkout and Payment Mandates (tag bacp-pay)
-    G->>G: Steps 0 to 4 and 9 to 12
+    G->>G: Steps 0 to 4 (except the checkout_hash check) and 9 to 12
     G->>L: Lock the root open Checkout Mandate id
+    G->>L: No reservation or debit for checkout_hash
     L-->>G: Exposure (settled spend plus reservations)
     G->>G: Constraints, split order, rail caps, step-up thresholds
     G->>L: Consume closed Payment Mandate and reserve the amount
@@ -1250,8 +1260,10 @@ Mandate Manager's API: the `audit_uri` is the one the mandate already carries
 (component `MandateEvent` and webhook `mandate.event` of the [OpenAPI document](https://bacp.dev/latest/services/bacp.openapi.yaml)).
 
 - **Types.** `use` (a closed Payment Mandate was consumed, with its `amount`), `relinquished` (the agent gave up the
-  mandate or its root at the gateway) and `pause_changed` (a gateway-originated pause reason was added or removed, with
-  `change`, `reason`, `registry_version`, `registry_serial` and, for an attestation, `jti`).
+  mandate or its root at the gateway), `pause_changed` (a gateway-originated pause reason was added or removed, with
+  `change`, `reason`, `registry_version`, `registry_serial` and, for an attestation, `jti`) and `closed` (the gateway's
+  last event for a mandate whose root was revoked, with `last_seq`, the `seq` of the last event before it; the `closed`
+  event itself carries the next `seq`).
 - **Fields.** `event_id`, `mandate_id`, `root_mandate_id`, `gateway` (the BAP subscriber id), `created_at` (IST,
   `+05:30`), `seq` and `prev_hash`. The events of one `mandate_id` are numbered from 0 with no gap, and `prev_hash` is
   the `sha-256` over the JCS form of the previous event of that mandate (for `seq` 0, over the `mandate_id` as UTF-8
@@ -1264,7 +1276,7 @@ Mandate Manager's API: the `audit_uri` is the one the mandate already carries
 - **Delivery.** Within 60 seconds of the change, the bound that `revocation.notify_sla_seconds` already sets. A failed
   delivery is retried with the same `event_id`, and the Mandate Manager de-duplicates on it. A delivery failure **MUST
   NOT** block a refund, a reversal, a status check or a post-order write, and no payment depends on an event.
-- **Gaps.** When the Mandate Manager receives a `seq` after a missing one, it records `event_gap` for the mandate and the
+- **Gaps.** When the Mandate Manager receives a `seq` after a missing one, or holds fewer events than a `closed` event's `last_seq` names, it records `event_gap` for the mandate and the
   Trusted Surface shows the mandate as "unreconciled". An unreconciled mandate loses only the explanation of why
   payments paused. A window of spend that the Mandate Manager cannot reconstruct from its events is `incomplete`.
 - **Log.** The Mandate Manager's event store is the mandate-scoped log, kept for the mandate's retention period. The

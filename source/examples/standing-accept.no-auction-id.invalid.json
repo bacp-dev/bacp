@@ -1,0 +1,23 @@
+{
+  "standing_accept_id": "sa_7Q2W9X4K1M3A",
+  "lot_hash": "sha-256:aczc63syVCnPJJk7hJwumxiaSO5XJH7wEWzqNq3-jSk",
+  "valid_until": "2026-10-20T10:30:00+05:30",
+  "max_price": {
+    "value": 180000,
+    "currency": "INR"
+  },
+  "qty": 10,
+  "mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+  "sender_log_seq": 1,
+  "sender_log_prev": "sha-256:PxunWwaQxblJEEjL5g2IISXT5n5FWxXE2_Bfo2SjpH0",
+  "protocol_terms": {
+    "version": "2026-10-17",
+    "hash": "sha-256:NThGZh28949PHMVDsyaqFyV0IFGBT2FgBVyCelLj2AA"
+  },
+  "signature": {
+    "role": "mandate_manager",
+    "kid": "mm.psp.example.in|k3",
+    "alg": "ES256",
+    "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+  }
+}

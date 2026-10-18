@@ -1,6 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/ucp/in.netbanking.json",
+  "name": "dev.bacp.in.netbanking",
+  "version": "2026-10-17",
   "title": "UCP payment handler dev.bacp.in.netbanking",
   "description": "The schema of the UCP payment handler dev.bacp.in.netbanking, the UCP alias of the BACP payment handler in.netbanking. The BACP projection of UCP checkout declares the handler under this key. Its entry carries the BACP handler id as id and carries no config, because the limits, authentication model and rules of the handler are data in the BACP handler registry (the descriptor with handler_id in.netbanking) and not UCP handler configuration. A config member, when present, is an empty object.",
   "type": "object",

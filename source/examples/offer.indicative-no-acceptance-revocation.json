@@ -9,7 +9,7 @@
   "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz0",
   "protocol_terms": {
     "version": "2026-10-17",
-    "hash": "sha-256:9uJbQ1xqk3mQ0yP7Zf2c8nT5vRwLhA6sDeXoGiUy4Nc"
+    "hash": "sha-256:NThGZh28949PHMVDsyaqFyV0IFGBT2FgBVyCelLj2AA"
   },
   "from": {
     "role": "seller",
@@ -25,7 +25,7 @@
     {
       "role": "bpp",
       "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
-      "alg": "ES256",
+      "alg": "EdDSA",
       "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
     },
     {

@@ -657,7 +657,7 @@
    "closed_auth": [
     "upi.pin"
    ],
-   "open_requires": "One block at a time per merchant per mobile number. An open mandate names the block's payee seller (payee.vpa and payee.bpp_id); a block payable to the buyer app does not back human-not-present payment. The authentication of a Reserve Pay block is validated at block creation (OC 200 item 3); each later debit is made without a fresh factor."
+   "open_requires": "One block at a time per merchant per mobile number. An open mandate names the block's payee seller (payee.vpa and payee.bpp_id); a block payable to the buyer app does not back human-not-present payment. NPCI OC 200 item 3 and para (d) put all necessary validation at block creation; OC 228 acquirer item 5(c) adds the issuer's responsibility to validate every debit. Neither text says whether a fresh authentication factor is taken at each debit (reading, as of 18-10-2026; Q-88)."
   },
   "mandate_primitives": [
    {

@@ -32,7 +32,7 @@ look right.
 | UCPF-03 | An instrument whose credential is not of type `in.bacp.closed_payment_mandate` is refused with `400 invalid_request` at `$.payment.instruments[i].credential`, with no rail call. | BND-UCPF-03 |
 | UCPF-04 | `continue_url` is only `step_up.trusted_surface_url` and otherwise absent, and `links[]` carries only typed policy links with titles from the gateway's own templates. | BND-UCPF-04 |
 | UCPF-05 | A `complete` that carries `ap2.checkout_mandate` is refused with `400 invalid_request` at `$.ap2.checkout_mandate`, with no rail call. | BND-UCPF-05 |
-| UCPF-06 | A request that carries a UCP member of a capability that BACP does not define is refused with `400 capability_unsupported` at that member and no session is created or changed: a buyer-consent member (`$.buyer.consent`, UCP `dev.ucp.shopping.buyer_consent`), a loyalty member (`$.loyalty`, UCP `dev.ucp.common.loyalty`) or a cart reference (`$.cart_id`, UCP `dev.ucp.shopping.cart`). The paths are those of the pinned UCP schemas. The projection never declares these capabilities in its `ucp` envelope. | BND-UCPF-06 |
+| UCPF-06 | A request that carries a UCP member of a capability that BACP does not define is refused with `400 capability_unsupported` at that member, with `capability` set to the UCP capability id named (`dev.ucp.shopping.buyer_consent`, `dev.ucp.common.loyalty` or `dev.ucp.shopping.cart`), and no session is created or changed: a buyer-consent member (`$.buyer.consent`, UCP `dev.ucp.shopping.buyer_consent`), a loyalty member (`$.loyalty`, UCP `dev.ucp.common.loyalty`) or a cart reference (`$.cart_id`, UCP `dev.ucp.shopping.cart`). The paths are those of the pinned UCP schemas. The projection never declares these capabilities in its `ucp` envelope. | BND-UCPF-06 |
 | Shape | A projected checkout validates against the pinned UCP `shopping/checkout.json`, and a discount line is a negative integer. | BND-UCP-01, BND-UCP-02 |
 
 ## Operations {#operations}
@@ -61,7 +61,8 @@ checks and the same state machine; only the request and response shape differ. T
   `step_up`, `plan_options` and `payment_plan`. A UCP client ignores it.
 - The `ucp` envelope declares `dev.ucp.shopping.checkout` at version `2026-08-25` (the UCP version of the pinned
   release) and the session's BACP handlers as `payment_handlers`, each keyed by its UCP alias `dev.bacp.<handler id>`
-  and carrying the BACP handler id as `id` ([Namespaces and the handler keys](#namespaces)). It never
+  and carrying the BACP handler id as `id` and the BACP release id (for example `2026-10-17`) as `version`, not the UCP version
+  ([Namespaces and the handler keys](#namespaces)). It never
   declares `dev.ucp.common.payment.ap2_mandate` ([No AP2](#no-ap2)).
 
 <a id="namespaces"></a>**Namespaces and the handler keys.** The projection never declares an `in.*` id together with a `schema` in the profile
@@ -74,11 +75,15 @@ reverse-DNS authority is `dev.bacp`. The projection therefore applies UCP's own 
 
 - **Handler keys.** The key of each entry of `ucp.payment_handlers` is `dev.bacp.<handler id>`, where `<handler id>` is the
   canonical id of the [registry](../payments/handler-registry.md) descriptor (`dev.bacp.in.upi.circle`,
-  `dev.bacp.bacp.credit_ledger`). UCP treats the labels after the authority as opaque, and the full handler id keeps the
-  mapping one to one. The entry carries the BACP handler id as `id` and a `schema` of
+  `dev.bacp.bacp.credit_ledger`). The doubled label in `dev.bacp.bacp.<name>` is intended: the alias is the authority `dev.bacp`
+  followed by the unchanged handler id, so a reader recovers the handler id by removing the prefix `dev.bacp.`. UCP treats the
+  labels after the authority as opaque, and the full handler id keeps the mapping one to one. The entry carries the BACP handler id as `id` and a `schema` of
   `https://bacp.dev/schemas/ucp/<handler id>.json`, whose host reversed (`dev.bacp`) is a label-aligned prefix of the key. Each
   schema is published in the specification repository under `source/schemas/ucp/`, with an unversioned `$id` that the build rewrites per version
-  like every BACP schema. It describes a handler entry with no `config`: the limits and rules of the handler are
+  like every BACP schema. Each schema is self-describing as UCP asks (UCP `schema-authoring`, release `v2026-08-25`): it carries a
+  top-level `name`, `dev.bacp.<handler id>`, and a `version`, the BACP release id, and an entry in the envelope carries that
+  `version`. The key suffix after `dev.bacp.`, the entry's `id` and the schema file name MUST be equal, otherwise the envelope
+  is invalid; a `complete` that names a key which is not in the session's envelope is `400 invalid_request`. A schema describes a handler entry with no `config`: the limits and rules of the handler are
   registry data, not UCP handler configuration (loss-table row 7).
 - **Extension keys.** The projection declares no extension today (its `ucp.capabilities` holds `dev.ucp.shopping.checkout`
   only). A key that BACP adds later is `dev.bacp.<service>.<capability>`, the shape of UCP's naming convention for capabilities, with its
