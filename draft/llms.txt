@@ -1,0 +1,37 @@
+# Bharat Agentic Commerce Protocol (BACP)
+
+> BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.
+
+BACP (Bharat Agentic Commerce Protocol) is an open protocol for AI agents to transact in Indian commerce on ONDC/Beckn, UPI and other Indian payment rails, with mandate-bound authority, DPDP-compliant consent, signed requests and verifiable evidence.
+
+## Specification
+
+- [Overview](https://spec.bacp.dev/draft/specification/overview/index.md)
+- [Conformance](https://spec.bacp.dev/draft/specification/conformance/index.md)
+- [Discovery and Profiles](https://spec.bacp.dev/draft/specification/discovery/index.md)
+- [Errors](https://spec.bacp.dev/draft/specification/errors/index.md)
+- [Evidence and Instruction Log](https://spec.bacp.dev/draft/specification/evidence/index.md)
+- [Getting Started](https://spec.bacp.dev/draft/specification/getting-started/index.md)
+- [Glossary](https://spec.bacp.dev/draft/specification/glossary/index.md)
+- [Human Participants and the Trusted Surface](https://spec.bacp.dev/draft/specification/human-participants/index.md)
+- [Identity and Request Signing](https://spec.bacp.dev/draft/specification/identity-and-signing/index.md)
+- [Mandates and Consent](https://spec.bacp.dev/draft/specification/mandates/index.md)
+- [Open Questions](https://spec.bacp.dev/draft/specification/open-questions/index.md)
+- [Reference](https://spec.bacp.dev/draft/specification/reference/index.md)
+- [Regulatory Mapping](https://spec.bacp.dev/draft/specification/regulatory-mapping/index.md)
+- [Security and Privacy](https://spec.bacp.dev/draft/specification/security-and-privacy/index.md)
+- [Trade Profiles](https://spec.bacp.dev/draft/specification/trade-profiles/index.md)
+- [Sessions and Checkout](https://spec.bacp.dev/draft/specification/checkout/index.md)
+- [Orders and Post-order](https://spec.bacp.dev/draft/specification/checkout/post-order/index.md)
+- [Overview](https://spec.bacp.dev/draft/specification/negotiation/index.md)
+- [RFQ and Auctions](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/index.md)
+- [Overview](https://spec.bacp.dev/draft/specification/payments/index.md)
+- [Credit and Split Tender](https://spec.bacp.dev/draft/specification/payments/credit-and-split-tender/index.md)
+- [Who Pays](https://spec.bacp.dev/draft/specification/payments/economics/index.md)
+- [Handler Registry](https://spec.bacp.dev/draft/specification/payments/handler-registry/index.md)
+- [Rail Bindings](https://spec.bacp.dev/draft/specification/payments/rails/index.md)
+- [Beckn / ONDC Binding](https://spec.bacp.dev/draft/specification/transports/beckn/index.md)
+- [MCP and A2A](https://spec.bacp.dev/draft/specification/transports/mcp-a2a/index.md)
+- [REST](https://spec.bacp.dev/draft/specification/transports/rest/index.md)
+- [UCP checkout projection](https://spec.bacp.dev/draft/specification/transports/ucp-checkout/index.md)
+

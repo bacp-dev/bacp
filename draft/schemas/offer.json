@@ -1,0 +1,1962 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/draft/schemas/offer.json",
+  "title": "Negotiation messages (Offer, CounterOffer, Accept, Reject, Withdraw, Terminate, RequestExtension, AcceptRevoke, BidCommit, BidReveal, BidRetract)",
+  "description": "Structured, signed and expiring negotiation messages. Only these are binding. Discriminated by type. Every firm message states its place in the sender's own hash chain (sender_log_seq, sender_log_prev) and the protocol_terms that govern it; the receiver answers with a CounterSignaturePayload.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Offer"
+    },
+    {
+      "$ref": "#/$defs/Accept"
+    },
+    {
+      "$ref": "#/$defs/Reject"
+    },
+    {
+      "$ref": "#/$defs/Withdraw"
+    },
+    {
+      "$ref": "#/$defs/Terminate"
+    },
+    {
+      "$ref": "#/$defs/RequestExtension"
+    },
+    {
+      "$ref": "#/$defs/AcceptRevoke"
+    },
+    {
+      "$ref": "#/$defs/BidCommit"
+    },
+    {
+      "$ref": "#/$defs/BidReveal"
+    },
+    {
+      "$ref": "#/$defs/BidRetract"
+    }
+  ],
+  "$defs": {
+    "Offer": {
+      "type": "object",
+      "description": "Offer, counter-offer or auction bid. A counter-offer is a rejection of the prior offer plus a new offer (ICA s.7).",
+      "properties": {
+        "type": {
+          "enum": [
+            "offer",
+            "counter_offer",
+            "bid"
+          ]
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "in_reply_to": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "offer_hash of the live offer this counters. Required for counter_offer."
+        },
+        "mode": {
+          "$ref": "https://bacp.dev/draft/schemas/negotiation-session.json#/$defs/Mode"
+        },
+        "firm": {
+          "type": "boolean",
+          "description": "true = binding if accepted before expires_at. false = indicative quote, an invitation to treat."
+        },
+        "subject_to_principal_approval": {
+          "type": "boolean",
+          "description": "Required true when the emitting agent's guard returned escalate. Forces firm=false."
+        },
+        "term_sheet": {
+          "$ref": "https://bacp.dev/draft/schemas/termsheet.json"
+        },
+        "all_in_total": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount",
+          "description": "MUST equal term_sheet.all_in_total."
+        },
+        "valid_from": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expires_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Absolute expiry (not a relative ttl). expires_at - valid_from >= min_offer_validity."
+        },
+        "inventory_hold_until": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "acceptance_manner": {
+          "const": "bacp.neg.accept",
+          "description": "ICA s.7(2): the offer prescribes the manner of acceptance. Any other form (chat, voice, payment, on_init without accept) is non-conforming and MUST be rejected promptly with NEG_ACCEPT_NONCONFORMING."
+        },
+        "acceptance_revocation": {
+          "enum": [
+            "waived",
+            "allowed_until_receipt"
+          ],
+          "description": "REQUIRED when firm is true. There is no default, and a gateway MUST NOT insert or normalise the value before hashing. Indian Contract Act, 1872 s.5 lets an acceptor revoke an acceptance until its communication is complete as against the acceptor, which under s.4 is when it comes to the knowledge of the proposer. allowed_until_receipt = an accept_revoke that the proposer receives before the acceptance it names is honoured. waived = the offer excludes that right; permitted only with waiver_basis and only outside consumer trade profiles. Neither value restricts cancellation after the contract is formed, which follows cancellation.terms. In this version every receiver refuses an offer that sets allowed_until_receipt with capabilities_incompatible, on every binding; the offer never becomes LIVE."
+        },
+        "waiver_basis": {
+          "description": "The signed agreement under which this offer sets acceptance_revocation = waived: a contract between the parties (doc_type contract) or the buyer's own RFQ (doc_type rfq). REQUIRED when acceptance_revocation is waived, and hash is REQUIRED. Inside offer_hash it is a commitment to that document, not proof of it: the acceptor's gateway MUST NOT accept a waived offer without the principal unless it holds the document that hashes to it, obtained from its own principal before the offer arrived, naming the offer's counterparty (its np_id or GSTIN) and marked by the principal as a waiver basis.",
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/DocumentRef"
+            },
+            {
+              "properties": {
+                "doc_type": {
+                  "enum": [
+                    "contract",
+                    "rfq"
+                  ]
+                }
+              },
+              "required": [
+                "hash"
+              ]
+            }
+          ]
+        },
+        "extends": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "offer_hash of an earlier offer by the same offeror that this one re-issues with a later expires_at (answer to request_extension). Terms MUST be identical."
+        },
+        "rfq_parent_id": {
+          "type": "string",
+          "pattern": "^rfq_[A-Za-z0-9]{8,40}$",
+          "description": "Parent RFQ for exposure counting across sessions."
+        },
+        "bid_deposit_ref": {
+          "type": "string",
+          "description": "Deposit or EMD reference required for sealed bids. Forfeited if the bid is not revealed."
+        },
+        "agreed_issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "JSON Pointers of issues in Agree. Narrows, does not bind."
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^auc_[A-Za-z0-9]{8,40}$"
+        },
+        "jurisdictional": {
+          "type": "object",
+          "properties": {
+            "mrp_checked": {
+              "type": "boolean"
+            },
+            "msme_seller": {
+              "type": "boolean"
+            },
+            "msmed_due_days_cap": {
+              "type": "integer"
+            },
+            "cash_limit_checked": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "mode",
+        "firm",
+        "term_sheet",
+        "all_in_total",
+        "valid_from",
+        "expires_at",
+        "acceptance_manner"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "counter_offer"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "in_reply_to"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "subject_to_principal_approval": {
+                "const": true
+              }
+            },
+            "required": [
+              "subject_to_principal_approval"
+            ]
+          },
+          "then": {
+            "properties": {
+              "firm": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "bid"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "auction_id"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "firm": {
+                "const": true
+              }
+            },
+            "required": [
+              "firm"
+            ]
+          },
+          "then": {
+            "required": [
+              "acceptance_revocation"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "acceptance_revocation": {
+                "const": "waived"
+              }
+            },
+            "required": [
+              "acceptance_revocation"
+            ]
+          },
+          "then": {
+            "required": [
+              "waiver_basis"
+            ]
+          }
+        },
+        {
+          "if": {
+            "anyOf": [
+              {
+                "properties": {
+                  "firm": {
+                    "const": true
+                  }
+                },
+                "required": [
+                  "firm"
+                ]
+              },
+              {
+                "properties": {
+                  "type": {
+                    "const": "bid"
+                  }
+                },
+                "required": [
+                  "type"
+                ]
+              }
+            ]
+          },
+          "then": {
+            "required": [
+              "sender_log_seq",
+              "sender_log_prev",
+              "protocol_terms"
+            ]
+          }
+        }
+      ]
+    },
+    "Accept": {
+      "type": "object",
+      "description": "Absolute, unqualified acceptance of exactly one live offer. Carries no terms, and no step-up id or other field that reveals that the deal needed the principal's approval.",
+      "properties": {
+        "type": {
+          "const": "accept"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "sha-256 over JCS of the offer minus signatures, counter_signature and received_at, so the hash does not change on receipt. Acceptance must mirror it exactly (ICA s.7)."
+        },
+        "negotiation_mandate_ref": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            }
+          },
+          "required": [
+            "id",
+            "hash"
+          ],
+          "description": "The separate BACP negotiation mandate. Its contents are never disclosed to the counterparty.",
+          "additionalProperties": false
+        },
+        "legal_effect": {
+          "enum": [
+            "acceptance",
+            "purchase_offer"
+          ],
+          "description": "acceptance when the accepted offer was firm. purchase_offer when it was non-firm (an invitation to treat): the ACCEPT is then legally an offer and the seller's on_init/on_confirm is the acceptance."
+        },
+        "bound_attestation": {
+          "$ref": "#/$defs/BoundAttestation"
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "sender_log_seq",
+        "sender_log_prev",
+        "protocol_terms",
+        "from",
+        "signatures",
+        "offer_hash",
+        "negotiation_mandate_ref",
+        "legal_effect",
+        "bound_attestation"
+      ],
+      "additionalProperties": false,
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "term_sheet"
+            ]
+          },
+          {
+            "required": [
+              "in_reply_to"
+            ]
+          }
+        ]
+      }
+    },
+    "Reject": {
+      "type": "object",
+      "description": "Rejection of the live offer.",
+      "properties": {
+        "type": {
+          "const": "reject"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+        },
+        "reason_code": {
+          "enum": [
+            "price",
+            "delivery",
+            "payment_terms",
+            "quality",
+            "not_negotiable",
+            "mrp_exceeded",
+            "msmed_credit_cap",
+            "terms_drift",
+            "out_of_mandate",
+            "incoterm_not_supported",
+            "other"
+          ],
+          "description": "Typed reasons. Never carries the reservation value."
+        },
+        "ondc_error_code": {
+          "type": "string",
+          "description": "e.g. 50005 Incoterm not supported."
+        },
+        "final": {
+          "type": "boolean",
+          "description": "true ends the negotiation (REJECTED). false leaves room for a new offer."
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "offer_hash",
+        "reason_code",
+        "final"
+      ],
+      "additionalProperties": false
+    },
+    "Withdraw": {
+      "type": "object",
+      "description": "Revocation by the offeror before acceptance is complete as against it (ICA s.5).",
+      "properties": {
+        "type": {
+          "const": "withdraw"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+        },
+        "reason": {
+          "enum": [
+            "offeror_choice",
+            "mandate_revoked",
+            "stock_change",
+            "price_error",
+            "other"
+          ]
+        },
+        "accept_msg_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "Present only when a buyer withdraws a purchase offer (ICA s.5): the msg_hash of the buyer's own accept whose legal_effect is purchase_offer. It is allowed only until the seller's on_init receipt. A withdraw that names an accept with legal_effect acceptance is refused with accept_revoke_not_allowed. A crossing with the seller's on_init is decided by the committed-order rule."
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "sender_log_seq",
+        "sender_log_prev",
+        "protocol_terms",
+        "from",
+        "signatures",
+        "offer_hash",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "Terminate": {
+      "type": "object",
+      "description": "Ends the negotiation for both sides.",
+      "properties": {
+        "type": {
+          "const": "terminate"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "reason": {
+          "enum": [
+            "max_rounds",
+            "deadline",
+            "principal_instruction",
+            "mandate_revoked",
+            "no_agreement",
+            "auction_closed_no_award",
+            "rfq_not_awarded"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "RequestExtension": {
+      "type": "object",
+      "description": "Asks the offeror to extend expiry. Silence means no extension.",
+      "properties": {
+        "type": {
+          "const": "request_extension"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "offer_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+        },
+        "requested_expires_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "offer_hash",
+        "requested_expires_at"
+      ],
+      "additionalProperties": false
+    },
+    "AcceptRevoke": {
+      "type": "object",
+      "description": "Revocation of an ACCEPT before the acceptance reaches the proposer (Indian Contract Act, 1872 s.5). In this version every accept_revoke is countersigned, logged and refused (accept_revoke_not_allowed); the rules below apply only under the sunset text for allowed_until_receipt. Honoured only if the offer sets acceptance_revocation = allowed_until_receipt and the proposer receives this message before the accept it names, receipt order being the order of the proposer's hash-chained log, committed by the CounterSignature the proposer returns in its synchronous response to each message; a revoke received first is appended to that log and held for that accept until 5 seconds after the revoke's own dispatched_at, and is discarded, logged, if the accept does not arrive. Its dispatched_at MUST NOT be earlier than the dispatched_at of the accept it names; otherwise it is void. Under waived it is countersigned, logged and refused (accept_revoke_not_allowed). Sent under signature tag bacp-negotiate. It never governs bid_retract.",
+      "properties": {
+        "type": {
+          "const": "accept_revoke"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "accept_msg_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "msg_hash of the accept this message revokes."
+        },
+        "offer_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "offer_hash of the offer whose acceptance this message revokes. MUST equal the offer_hash of the accept named in accept_msg_hash."
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "sender_log_seq",
+        "sender_log_prev",
+        "protocol_terms",
+        "from",
+        "signatures",
+        "accept_msg_hash",
+        "offer_hash"
+      ],
+      "additionalProperties": false
+    },
+    "BidCommit": {
+      "type": "object",
+      "description": "Sealed-bid commitment.",
+      "properties": {
+        "type": {
+          "const": "bid_commit"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^(auc|rfq)_[A-Za-z0-9]{8,40}$"
+        },
+        "commit_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "sha-256(JCS(bid) || salt). Sealed until close."
+        },
+        "bid_deposit_ref": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "sender_log_seq",
+        "sender_log_prev",
+        "protocol_terms",
+        "from",
+        "signatures",
+        "auction_id",
+        "commit_hash",
+        "bid_deposit_ref"
+      ],
+      "additionalProperties": false
+    },
+    "BidReveal": {
+      "type": "object",
+      "description": "Reveal after close. Hash must match the commit.",
+      "properties": {
+        "type": {
+          "const": "bid_reveal"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^(auc|rfq)_[A-Za-z0-9]{8,40}$"
+        },
+        "bid": {
+          "$ref": "#/$defs/Offer"
+        },
+        "salt": {
+          "type": "string",
+          "minLength": 22
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "sender_log_seq",
+        "sender_log_prev",
+        "protocol_terms",
+        "from",
+        "signatures",
+        "auction_id",
+        "bid",
+        "salt"
+      ],
+      "additionalProperties": false
+    },
+    "BidRetract": {
+      "type": "object",
+      "description": "Retraction of an open-outcry bid before close and outside the anti-sniping window. The previous best bid does not revive.",
+      "properties": {
+        "type": {
+          "const": "bid_retract"
+        },
+        "msg_id": {
+          "type": "string",
+          "pattern": "^nmsg_[A-Za-z0-9]{8,40}$"
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "transaction_id": {
+          "type": "string",
+          "description": "Beckn context.transaction_id."
+        },
+        "round": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "dispatched_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 dispatch time = the created parameter of the sending participant's RFC 9421 signature, so it has whole seconds and no fraction. Evidence only: it is checked against the receiver's clock as a freshness bound (5 s, a BACP choice) and never decides contract formation. Express it with +05:30.",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "sender_log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of this message in the sender's own hash chain for this negotiation_id, taken when the sender logs the message and before it dispatches it. Inside the signed bytes. Together with the receiver's CounterSignature log_seq it decides a crossing without comparing two clocks."
+        },
+        "sender_log_prev": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
+        },
+        "protocol_terms": {
+          "$ref": "#/$defs/ProtocolTerms"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ICA s.4 receipt time = received_at inside the receiver's CounterSignature payload. Filled by the receiver. Recorded as evidence; it never decides who won a crossing, which transcript positions decide. A decrease along a chain MUST carry clock_step_observed in the transcript entry."
+        },
+        "from": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            },
+            "agent_id": {
+              "type": "string"
+            },
+            "offeror_kind": {
+              "enum": [
+                "agent",
+                "human"
+              ]
+            }
+          },
+          "required": [
+            "role",
+            "np_id",
+            "offeror_kind"
+          ],
+          "additionalProperties": false
+        },
+        "to": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "enum": [
+                "buyer",
+                "seller",
+                "auctioneer",
+                "bidders"
+              ]
+            },
+            "np_id": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "role"
+          ],
+          "additionalProperties": false
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          },
+          "description": "Detached JWS over JCS of the message minus signatures, counter_signature and received_at. MUST include the sending network participant's registry signature (role bap or bpp). An agent signature entry MAY also appear, made by the agent itself: the gateway never holds or uses an agent key. The agent's own act is evidenced by its RFC 9421 request signature under tag bacp-negotiate."
+        },
+        "counter_signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Jws",
+          "description": "BACP CounterSignature: a compact JWS by the receiving participant's registry key whose payload is a CounterSignaturePayload (msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash, all REQUIRED). It is returned in the synchronous response to the exchange that carried the message and proves communication (ICA s.4); it is not a Beckn signed ACK, so it does not depend on the Beckn version (settled in Q-43). On Beckn it travels in a bacp.receipt TagGroup of the Ack."
+        },
+        "advisory": {
+          "type": "object",
+          "properties": {
+            "binding": {
+              "const": false
+            },
+            "text_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            },
+            "chat_ref": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "binding"
+          ],
+          "description": "Free text is advisory, logged, never binding.",
+          "additionalProperties": false
+        },
+        "auction_id": {
+          "type": "string",
+          "pattern": "^auc_[A-Za-z0-9]{8,40}$"
+        },
+        "bid_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+        },
+        "reason": {
+          "enum": [
+            "obvious_error",
+            "bidder_choice"
+          ]
+        }
+      },
+      "required": [
+        "type",
+        "msg_id",
+        "negotiation_id",
+        "transaction_id",
+        "round",
+        "dispatched_at",
+        "from",
+        "signatures",
+        "auction_id",
+        "bid_hash",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "BoundAttestation": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "bacp.neg.bound_attestation"
+        },
+        "mandate_ref": {
+          "type": "string"
+        },
+        "offer_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+        },
+        "result": {
+          "const": true
+        },
+        "iss": {
+          "type": "string",
+          "description": "Buyer wallet, Mandate Manager or credential provider"
+        },
+        "iat": {
+          "type": "integer"
+        },
+        "signature": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+        }
+      },
+      "required": [
+        "type",
+        "mandate_ref",
+        "offer_hash",
+        "result",
+        "iss",
+        "iat",
+        "signature"
+      ],
+      "description": "within_bounds attestation from the buyer credential provider, which itself re-verifies the closed mandate against the open and negotiation mandates. The seller BPP verifies ONLY this attestation and never sees the reservation price.",
+      "additionalProperties": false
+    },
+    "ProtocolTerms": {
+      "type": "object",
+      "description": "The published, versioned protocol-terms text that governs a negotiation, named inside the signed bytes of every firm message so that the ordering rule, the receipt window and the contested outcome are terms the parties agreed. The text states the committed-order rule for a withdrawal that crosses an acceptance, the receipt window, the contested outcome, that expires_at is a receipt deadline at the offeror, and that an electronic record is deemed never sent unless an acknowledgement is received (Information Technology Act, 2000 s.12(2)). The gateway fills this object; a model never supplies it.",
+      "properties": {
+        "version": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "The dated BACP version whose protocol-terms text applies, for example 2026-10-18."
+        },
+        "hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "sha-256: followed by the unpadded base64url SHA-256 of the exact bytes of the published protocol-terms file of that version (protocol-terms/<version>.txt, UTF-8, LF line ends, no byte order mark), with no canonicalisation."
+        }
+      },
+      "required": [
+        "version",
+        "hash"
+      ],
+      "additionalProperties": false
+    },
+    "CounterSignaturePayload": {
+      "type": "object",
+      "description": "The payload of a CounterSignature: the receiver's signed admission that it received a message, and where it logged it. Every field is REQUIRED for a receipt to count as an order proof. The receiver returns it in the synchronous response to the exchange that carried the message, within 5 seconds of the sender's dispatch on the sender's own monotonic clock. A receiver that has already countersigned a msg_hash returns the byte-identical CounterSignature on re-delivery; a second, different CounterSignature for one msg_hash, or two receipts at one log_seq for different entries, is equivocation.",
+      "properties": {
+        "msg_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The msg_hash of the message received."
+        },
+        "negotiation_id": {
+          "type": "string",
+          "pattern": "^neg_[A-Za-z0-9]{8,40}$"
+        },
+        "received_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The receiver's clock reading when it received the message. Evidence only: it never decides who won a crossing. Express it with +05:30 where the receiver can."
+        },
+        "log_seq": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The position of the receipt entry in the receiver's own hash chain for this negotiation_id. A crossing is decided by comparing positions inside one party's own chain."
+        },
+        "log_entry_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The hash of the receiver's chain entry at log_seq: sha-256 over the JCS form of {msg_hash, negotiation_id, received_at, log_seq, prev_entry_hash}, that is of this object without log_entry_hash. The chain is the receiver's own chain for the negotiation_id, separate from any InstructionLog, with log_seq from 1 and the sha-256 of the negotiation_id as genesis."
+        },
+        "prev_entry_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+          "description": "The log_entry_hash of the receiver's chain entry at log_seq - 1 (for log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes), so that a fork is provable from two receipts alone."
+        }
+      },
+      "required": [
+        "msg_hash",
+        "negotiation_id",
+        "received_at",
+        "log_seq",
+        "log_entry_hash",
+        "prev_entry_hash"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

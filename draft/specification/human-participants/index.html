@@ -1,0 +1,3439 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/human-participants/">
+      
+      
+        <link rel="prev" href="../mandates/">
+      
+      
+        <link rel="next" href="../checkout/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Human Participants and the Trusted Surface - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#human-participants-and-the-trusted-surface" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Human Participants and the Trusted Surface
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trusted-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Trusted Surface is a role
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Trusted Surface is a role">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ts-signers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step-up signers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-origins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Origins and delivery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements TS-1 to TS-6
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Requirements TS-1 to TS-6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ts-language-failsafe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Language fail-safe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-pin-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PIN rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Render input: ts_render
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-negotiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negotiation on the Trusted Surface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-catalogue-disclosure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catalogue disclosure on the Trusted Surface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presentation record
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#voice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Voice confirmation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-seller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-seller basket on the Trusted Surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assisted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assisted channel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disclosure-phrases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disclosure phrases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-disclosure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI disclosure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Human handoff
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hp-proof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presence proof
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Presence proof">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-up-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limits on step-ups
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trade-acts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seller-side and trade acts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legal time bands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fail-safe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail-safe defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence summary profile (informative)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trusted-surface" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Trusted Surface is a role
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The Trusted Surface is a role">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ts-signers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step-up signers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-origins" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Origins and delivery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-requirements" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements TS-1 to TS-6
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Requirements TS-1 to TS-6">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ts-language-failsafe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Language fail-safe
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-pin-rule" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PIN rule
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Render input: ts_render
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-negotiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negotiation on the Trusted Surface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ts-catalogue-disclosure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Catalogue disclosure on the Trusted Surface
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#presentation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presentation record
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#voice" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Voice confirmation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#multi-seller" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Multi-seller basket on the Trusted Surface
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assisted" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assisted channel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#disclosure-phrases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disclosure phrases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ai-disclosure" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AI disclosure
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handoff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Human handoff
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hp-proof" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presence proof
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Presence proof">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#step-up-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Limits on step-ups
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trade-acts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Seller-side and trade acts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#time-bands" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Legal time bands
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fail-safe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fail-safe defaults
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#evidence-summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence summary profile (informative)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#open-questions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open questions
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="human-participants-and-the-trusted-surface">Human Participants and the Trusted Surface<a class="headerlink" href="#human-participants-and-the-trusted-surface" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>Every BACP guarantee that a human agreed to something ends at the <strong>Trusted Surface</strong>: mandates are approved there,
+step-ups are confirmed there, and every fail-safe default escalates there. This page says who the human participants
+are, what the Trusted Surface MUST do, how what it showed is bound to what the principal approved, and how a principal
+reaches a human. It also records which of these rules are BACP policy and which rest on a law in force.</p>
+<h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">&para;</a></h2>
+<p>An agent acts for a <strong>principal</strong>. Other humans, and other agents, may take part in the same session. Each is listed
+in <code>Session.participants[]</code> as a <code>Participant</code> (<code>participant_id</code>, <code>role</code>, <code>ref</code>) from
+<a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> (<code>$defs/Participant</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Role (<code>ParticipantRole</code>)</th>
+<th>Who</th>
+<th>How the role shows in the evidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>principal</code></td>
+<td>The person or business the agent acts for. Referred to by a pairwise pseudonymous reference, never by an Aadhaar number.</td>
+<td>Approves on the Trusted Surface; log <code>actor: user</code></td>
+</tr>
+<tr>
+<td><code>assisted_operator</code></td>
+<td>A human who completes the session for the principal at a physical touchpoint, such as a village-level entrepreneur, a business correspondent or a kirana operator (<code>channel: assisted</code>).</td>
+<td><code>Presentation.assisted_by</code>; log <code>actor: assisted_operator</code> with <code>actor_ref</code></td>
+</tr>
+<tr>
+<td><code>seller_operator</code></td>
+<td>A human acting for the seller: a kirana owner, a munim, a sales officer.</td>
+<td>Log <code>actor: seller_operator</code>; typed <code>actor</code> on ledger acknowledgements and trade acts</td>
+</tr>
+<tr>
+<td><code>sub_agent</code></td>
+<td>An agent acting under a mandate delegated by the session's agent (<code>parent_mandate_id</code>, which only narrows).</td>
+<td>Log <code>actor: sub_agent</code> with <code>actor_ref</code></td>
+</tr>
+</tbody>
+</table>
+<p>Two kinds of human act outside a session:</p>
+<ul>
+<li><strong>Seller staff and support staff</strong> act through the seller app (BPP) and IGM. They are not session participants and
+  not InstructionLog actors. Whether IGM gets an actor type for an AI agent, or for seller staff, is open
+  (<a href="../open-questions/#q-11">Q-11</a>).</li>
+<li>A <strong>human support operator</strong> of the agent operator accepts and releases a <a href="#handoff">handoff</a>. The operator's key
+  is a registry key of role <code>support_operator</code>, and it signs only under the non-agent tag <code>bacp-handoff</code>
+  (<a href="../identity-and-signing/#signature-tags">Signature tags</a>). Its registry record names the agent operator and one
+  person, with one key per person and no shared desk keys (<a href="../discovery/#registry-lookup">Registry lookup</a>;
+  <a href="../open-questions/#q-64">Q-64</a>, settled).</li>
+</ul>
+<p>Accessibility needs travel only as <code>Presentation.modality</code>. A participant record <strong>MUST NOT</strong> carry disability data.</p>
+<h2 id="trusted-surface">The Trusted Surface is a role<a class="headerlink" href="#trusted-surface" title="Permanent link">&para;</a></h2>
+<p>The Trusted Surface is a <strong>role</strong>, not an app. A payer PSP's app, a Mandate Manager's app, a PSP's IVR callback or an
+assisted counter run by a PSP or Mandate Manager is a Trusted Surface if it meets TS-1 to TS-6 below. In every case:</p>
+<ul>
+<li>it is non-agentic: no agent drives it, reads the factor the principal enters, or posts its events;</li>
+<li>its events reach the gateway only at <code>POST /trusted-surface/events</code>, signed under tag <code>bacp-ts</code> with the registry
+  key of the step-up's Mandate Manager or payer PSP (<a href="#ts-signers">Step-up signers</a>;
+  <a href="../identity-and-signing/#signature-tags">Signature tags</a>);</li>
+<li>it takes the content of a step-up only from the gateway, by <code>step_up_id</code>, never from the agent
+  (<a href="#ts-render">Render input</a>).</li>
+</ul>
+<h3 id="ts-signers">Step-up signers<a class="headerlink" href="#ts-signers" title="Permanent link">&para;</a></h3>
+<p>Only two registry keys may fetch a step-up's render and post its result: those of the step-up's <strong>Mandate Manager</strong>
+and of its <strong>payer PSP</strong> (for a summary step-up, the Mandate Manager's only). The gateway determines them from signed mandates, never from the request:</p>
+<table>
+<thead>
+<tr>
+<th>Step-up</th>
+<th>Mandate Manager</th>
+<th>Payer PSP</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>A session step-up (<code>confirm</code>, <code>rail_auth</code>)</td>
+<td>The issuer of the session's mandate (the open Checkout Mandate)</td>
+<td>The PSP named in <code>rail_binding.psp_id</code> of any of the leg's planned open Payment Mandates: those under the session's root that the gateway planned to pay this session with, more than one under split tender (<a href="../mandates/#per-leg-rule">Per-leg rule</a>). Each names the Checkout Mandate in its <code>checkout_mandate_ref</code></td>
+</tr>
+<tr>
+<td>A summary step-up over a <a href="#multi-seller">multi-seller basket</a> (<code>covers[]</code> present)</td>
+<td>The issuer of the shared root open Checkout Mandate</td>
+<td>None: no payer PSP fetches or answers a summary, so that no PSP learns the rest of the basket</td>
+</tr>
+<tr>
+<td>A <code>post_order</code> step-up</td>
+<td>The issuer of the mandate the order was placed under</td>
+<td>The PSP named in <code>auth_binding.psp_id</code> of the order's closed Payment Mandate; under split tender, of any of the order's closed Payment Mandates</td>
+</tr>
+<tr>
+<td>A negotiation <code>confirm</code> step-up</td>
+<td>The issuer of the negotiation mandate named in the negotiation's <code>mandate_ref.id</code></td>
+<td>None: the approval releases no payment</td>
+</tr>
+<tr>
+<td>A <code>post_order</code> step-up for an order-less ledger act (<code>LEDGER_ACK</code> of a <code>ledger_ref</code> or a <code>ledger_range</code>)</td>
+<td>The issuer of the mandate named in <code>actor.mandate_ref</code> of the request, which a request for such an act MUST carry; the gateway checks that the mandate's principal is the counterparty of the poster of every entry before it raises the step-up (<a href="../payments/credit-and-split-tender/#ledger-wire">On the wire: <code>in.bacp.ledger</code></a>)</td>
+<td>None: there is no closed Payment Mandate</td>
+</tr>
+</tbody>
+</table>
+<p>A Checkout Mandate carries no PSP binding, and a closed Payment Mandate exists only from <code>complete</code>, so the payer
+PSP of a session step-up is never taken from an <code>auth_binding</code>. On a human-present session there is no open Payment
+Mandate, so a session step-up has no payer PSP: only its Mandate Manager fetches the render and posts the result. The
+<code>payment.afa_completed</code> event, which is not a step-up result, is signed by the PSP named in <code>auth_binding.psp_id</code> of
+the session's closed Payment Mandate (under split tender, of any of the session's closed Payment Mandates) under tag
+<code>bacp-ts</code>. Any other registry key gets <code>404 not_found</code>, never <code>403</code>, and nothing changes.</p>
+<h3 id="ts-origins">Origins and delivery<a class="headerlink" href="#ts-origins" title="Permanent link">&para;</a></h3>
+<p>The registry record of every Mandate Manager and payer PSP (<a href="https://bacp.dev/latest/schemas/registry-record.json"><code>registry-record.json</code></a>)
+carries the places where its Trusted Surface can be reached. The fields are optional unless stated, and a registry that
+cannot carry them is open (<a href="../discovery/#registry-lookup">Registry lookup</a>):</p>
+<ul>
+<li><strong><code>ts_origins[]</code></strong>: <code>https</code> origins only (scheme, host and optional port, no path; RFC 6454). A <code>tel:</code> number is never an
+  origin.</li>
+<li><strong><code>ts_notify_url</code></strong>: an <code>https</code> endpoint for a content-free push.</li>
+<li><strong><code>ts_call_numbers[]</code></strong>: E.164 numbers from which the Trusted Surface calls. They are informative.</li>
+<li><strong><code>ts_languages[]</code></strong> and <strong><code>ts_modalities[]</code></strong>: the languages and modalities that the Trusted Surface claims, so that the
+  <a href="#ts-language-failsafe">language fail-safe</a> can be tested.</li>
+</ul>
+<p>The gateway delivers a step-up by these rules:</p>
+<ol>
+<li><strong>Origin.</strong> The gateway mints <code>trusted_surface_url</code> only on an origin in <code>ts_origins[]</code> of the step-up's signer
+   (<a href="#ts-signers">Step-up signers</a>), and sets <code>StepUp.surface</code> to that signer's subscriber id so that a client can
+   show the host to the principal and check it against the subscriber. It accepts a Mandate Manager's mandate-approval
+   link only if it is an <code>https</code> URL on an origin of that Mandate Manager, or a rail deep link whose scheme the rail
+   defines, which opens the PSP's own app.</li>
+<li><strong>Content-free push.</strong> If no origin of the signer conforms and the signer has a <code>ts_notify_url</code>, the gateway sets
+   <code>delivery: app_push</code> and sends a gateway-signed <code>POST</code> of <code>{step_up_id, expires_at}</code> to that URL, signed under RFC 9421
+   with a key in its profile's <code>keys</code>, as it signs a webhook (<a href="../identity-and-signing/#request-signatures">Request signatures</a>).
+   The push carries no content, no link and no text. The Trusted Surface fetches the render by <code>step_up_id</code> as for any
+   step-up (<a href="#ts-render">Render input</a>). The step-up carries no <code>trusted_surface_url</code> and <code>session.updated</code> carries no
+   link. The agent is not a party to the push.</li>
+<li><strong>Otherwise</strong> the gateway answers <code>503 trusted_surface_unavailable</code>, <code>reason: no_conforming_origin</code>, with resolution
+   <code>requires_buyer_input</code>. The code is never <code>recoverable</code>, because a model reads a bare <code>503</code> as "retry"
+   (<a href="../errors/#registry-transport">Errors</a>). With <code>reason: language_unavailable</code> or <code>reason: channel_not_allowed</code> the
+   error carries the session's <code>handoff_routes[]</code>.</li>
+</ol>
+<p><code>ts_call_numbers[]</code> is a hint that an agent may speak ("this bank calls from these numbers"). It is never an
+authenticator, because caller identity can be spoofed. An agent that speaks it labels it "calls from" and always adds
+that the bank never asks for the PIN on a call it makes. Whether a PSP may publish the numbers it calls from is open
+(<a href="../open-questions/#q-63">Q-63</a>).</p>
+<p>An agent SHOULD check, before it shows the principal a <code>trusted_surface_url</code>, that the host of the URL is an origin of the
+subscriber in <code>StepUp.surface</code>, and an MCP client that does URL-mode elicitation shows that host as the MCP specification
+requires (<a href="../transports/mcp-a2a/#mcp-results">MCP and A2A</a>).</p>
+<h3 id="ts-requirements">Requirements TS-1 to TS-6<a class="headerlink" href="#ts-requirements" title="Permanent link">&para;</a></h3>
+<p>A Trusted Surface <strong>MUST</strong> meet all six:</p>
+<ul>
+<li><strong>TS-1. Signed and templated content only.</strong> It renders a step-up only from the gateway-signed <code>ts_render</code> and its
+  own templates. Text from a seller or other counterparty appears only in the labelled <code>counterparty_text</code> slot of
+  <code>ts_render</code>, rendered as visibly labelled seller text (in quote marks or after a label such as "Seller's text:"),
+  never interpolated into a template sentence and never as the Trusted Surface's own words.</li>
+<li><strong>TS-2. Decline is as easy as approve.</strong> Declining takes no more steps than approving; no option is preselected;
+  and expiry means decline. The decline control carries a neutral label (for example "Decline" or "No"), with no fear,
+  guilt or shame wording, and the Trusted Surface never asks the principal to confirm a decline ("Are you sure?"). A
+  PIN is entered only as the <a href="#ts-pin-rule">PIN rule</a> allows.</li>
+<li><strong>TS-3. The principal's language and modality.</strong> It renders in the principal's language (English or a language
+  of the Eighth Schedule) and modality (<code>visual</code>, <code>audio</code> or <code>both</code>). Audio is read in full before the principal
+  enters the factor. On every modality, before the factor, from its own templates and never from seller text, it
+  presents a step-up that pays for an order in this order: (1) the total; (2) each fee line one at a time, with its
+  recipient where <code>charge_lines[]</code> states one; (3) everything else (goods, delivery, packing and tax) as one figure. Fee
+  lines are the codes <code>convenience</code>, <code>platform</code>, <code>payment_handling</code>, <code>handling</code> and <code>cod_fee</code>, every line of type
+  <code>other_charge</code>, and every operator charge, whoever receives them. The remainder is goods, delivery, packing and tax
+  only. The gateway builds <code>charge_lines[]</code> from the lines of the quote bound by <code>checkout_hash</code> and from
+  <code>operator_charges[]</code>, and the remainder never contains a fee line. An order with no fee line adds no audio. It does not read a per-handler comparison on an IVR
+  or audio-only surface. It never reads <code>intermediary_compensation[]</code> per order.</li>
+<li><strong>TS-4. No urgency.</strong> It shows no urgency or countdown text. It computes any timing it shows from <code>expires_at</code>
+  itself.</li>
+<li><strong>TS-5. Record a Presentation.</strong> It records a <a href="#presentation"><code>Presentation</code></a> for every approval and decline, and
+  sends it inside its signed event.</li>
+<li><strong>TS-6. Render a step-up only to the principal or payer it names.</strong> A Trusted Surface renders a step-up only to the
+  principal (Mandate Manager) or payer (payer PSP) that the render names. Otherwise it shows nothing of the
+  content, and it posts nothing. A Mandate Manager's surface checks that <code>ts_render.mandate_id</code> names a mandate of
+  the principal who is logged in. A payer PSP's surface checks that <code>ts_render.payer_ref</code> equals the sha-256 over the
+  JCS form of <code>{step_up_id, payer_vpa}</code> that it computes for the payer who is logged in. Each signer binds what it can
+  check: the Mandate Manager knows the mandate, and the payer PSP knows only the payer. On a mismatch the Trusted
+  Surface shows only the fixed sentence below, in <code>ts_render.language</code> (or, if it cannot render that language, in
+  the principal's language), enters no factor and records a conformance failure for rule TS-6. On IVR the sentence
+  is read and the call ends without a factor being taken.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Language</th>
+<th>Sentence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>en-IN</code></td>
+<td>"This request is for a different account. Do not enter anything here."</td>
+</tr>
+<tr>
+<td><code>hi-IN</code></td>
+<td>"यह अनुरोध किसी दूसरे खाते के लिए है। यहाँ कुछ भी न डालें।"</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>hi-IN</code> sentence says, in English: "This request is for a different account. Do not enter anything here." A Trusted
+Surface in another language uses a fixed translation of the same sentence from its own templates. TS-6 closes the
+case in which a forwarded link opens on a surface that is logged in as someone else: TS-1 to TS-5 bind a surface to
+a signed render, never to the person. A principal who enters her own PIN on another person's request makes a
+two-factor-compliant debit, which is why the rule is a MUST.</p>
+<h4 id="ts-language-failsafe">Language fail-safe<a class="headerlink" href="#ts-language-failsafe" title="Permanent link">&para;</a></h4>
+<p>A Trusted Surface that cannot render <code>ts_render.language</code> MUST NOT render another language
+unless the principal chooses it on the Trusted Surface (the approval then carries <code>Presentation.language_choice:
+principal_selected</code>). Otherwise it posts nothing, and the gateway answers <code>503 trusted_surface_unavailable</code> with
+<code>reason: language_unavailable</code> and the session's <code>HandoffRoute[]</code>. The gateway sets <code>ts_render.language</code> from the
+mandate, never from an agent's request. The DPDP Act, 2023, s.6(3) (the option of English or an Eighth Schedule
+language, from 13-05-2027) is cited as alignment, not as the source of the rule. A principal whose language no Trusted
+Surface serves gets a human route, not self-service.</p>
+<h4 id="ts-pin-rule">PIN rule<a class="headerlink" href="#ts-pin-rule" title="Permanent link">&para;</a></h4>
+<p>A UPI PIN is taken only on a PSP-operated surface: the PSP's app, or a call that the
+principal places to the PSP's published IVR number. It is never taken on a web page, and never on a call that the
+Trusted Surface places. This is BACP policy. That NPCI rules already say so is not verified as of 18-10-2026. A
+Trusted Surface that places a call can still confirm a non-money step-up by <a href="#presentation">voice</a>, and tells the
+principal in its own words to call the PSP's own number to enter a PIN.</p>
+<h3 id="ts-render">Render input: <code>ts_render</code><a class="headerlink" href="#ts-render" title="Permanent link">&para;</a></h3>
+<p>For every step-up the gateway creates a <strong><code>ts_render</code></strong>: a compact JWS, signed with the gateway's BAP registry key,
+over the JCS form of the payload below. The gateway signs it once, when it creates the step-up, and serves it
+byte-identical on every fetch: a <code>ts_render</code> never changes for a <code>step_up_id</code>. A gateway that re-signed a different
+render for the same <code>step_up_id</code> would fail its own hash check on the approval (<code>403 ts_render_mismatch</code>).</p>
+<p>The session's <code>step_up</code> object carries it, and the Trusted Surface fetches it with
+<code>GET /trusted-surface/step-ups/{step_up_id}</code>, signed under tag <code>bacp-ts</code>:</p>
+<ul>
+<li>The gateway <strong>MUST</strong> serve the render only to the step-up's Mandate Manager or payer PSP
+  (<a href="#ts-signers">Step-up signers</a>).</li>
+<li>Any other Mandate Manager or PSP registry key gets <code>404 not_found</code>, never <code>403</code>, so that the endpoint does not reveal
+  which step-ups exist. An agent gets <code>403 trusted_surface_only</code>.</li>
+<li>The gateway rate-limits the fetch and answers an excess with <code>429</code>. It counts the limit per caller key, before it
+  looks up the <code>step_up_id</code>, so that a <code>429</code> never depends on whether the step-up exists.</li>
+</ul>
+<p>The <code>trusted_surface_url</code> that the agent delivers carries only a reference to the step-up, never the content to show.
+The payload is defined by <a href="https://bacp.dev/latest/schemas/ts-render.json"><code>ts-render.json</code></a>, and the OpenAPI component <code>TsRender</code> refers to it.</p>
+<ul>
+<li><strong>Typed JWS.</strong> The JWS protected header of a <code>ts_render</code> MUST carry <code>typ: bacp-ts-render+jws</code> (RFC 8725 §3.11), and a
+  Trusted Surface MUST NOT render a JWS with any other <code>typ</code> or none. The name follows the <code>bacp-&lt;name&gt;+&lt;suffix&gt;</code>
+  convention of <code>bacp-conformance+jwt</code>. There is no <code>v</code> field: <code>typ</code> and the versioned schema identify the version.</li>
+<li><strong>Per-kind rules.</strong> The schema makes these rules testable: a <code>post_order</code> render carries <code>action</code> and <code>order_id</code> (an
+  order-less <code>LEDGER_ACK</code> has none) and no <code>session_id</code>; a session render carries <code>session_id</code> with its <code>checkout_hash</code>,
+  and a negotiation render carries <code>offer_hash</code>, never both hashes; a render with <code>covers[]</code> carries <code>basket[]</code> and no
+  <code>seller_name</code>; a <code>RETURN</code> carries <code>items[]</code>; and an issue action carries <code>issue_id</code>. <code>step_up_id</code> is at least 128 bits from a
+  cryptographically secure random source (<code>^stp_[A-Za-z0-9_-]{22,64}$</code>), opaque and never read aloud to or typed by a person.</li>
+<li><strong>Must-understand is scoped.</strong> A render MAY carry <code>render_required[]</code>, naming the fields that the principal must be
+  shown, for example <code>catalogue_disclosure</code>, <code>items</code>, <code>unrequested_lines</code> or <code>acceptance_revocation</code>. A Trusted Surface that does not understand a
+  name listed there renders nothing and posts nothing. It ignores an unknown field that is not listed, so that adding a
+  render field does not break every deployed Trusted Surface. The gateway refuses an approval whose
+  <code>presentation.renders</code> omits a listed name with <code>400 invalid_request</code> (<a href="#presentation">Presentation record</a>).
+  <code>Presentation.renders</code> is the only extension point of <code>Presentation</code>.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Payload field</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>step_up_id</code>, <code>session_id</code></td>
+<td>The step-up and its session. <code>session_id</code> is absent for <code>kind: post_order</code>, which has no session.</td>
+</tr>
+<tr>
+<td><code>kind</code>, <code>reason</code></td>
+<td>As in the <code>step_up</code> object (<a href="../mandates/#step-up">Step-up</a>).</td>
+</tr>
+<tr>
+<td><code>mandate_id</code></td>
+<td>REQUIRED. The mandate the step-up concerns: the session's open Checkout Mandate, or for <code>post_order</code> the mandate the order was placed under (for an order-less <code>LEDGER_ACK</code>, the mandate named in <code>actor.mandate_ref</code>). A Mandate Manager's surface renders the step-up only if the mandate belongs to the principal who is logged in (<a href="#ts-requirements">TS-6</a>).</td>
+</tr>
+<tr>
+<td><code>payer_ref</code></td>
+<td>REQUIRED exactly when <a href="#ts-signers">Step-up signers</a> gives the step-up a payer PSP (an HNP session step-up with a planned open Payment Mandate, or a <code>post_order</code> step-up of an order with a closed Payment Mandate), and absent otherwise. The sha-256 over the JCS form of <code>{step_up_id, payer_vpa}</code>, where <code>payer_vpa</code> is taken from the Payment Mandate that makes the PSP a signer. A payer PSP's surface renders the step-up only if the hash equals the one it computes for the payer who is logged in (<a href="#ts-requirements">TS-6</a>).</td>
+</tr>
+<tr>
+<td><code>action</code>, <code>order_id</code>, <code>issue_id</code></td>
+<td>For <code>kind: post_order</code> only: the write the principal confirms, the order (absent for an order-less <code>LEDGER_ACK</code>), and for an issue action the issue (<a href="#hp-proof">Presence proof</a>). <code>action</code> is exactly one of: <code>CANCEL</code>, <code>RETURN</code>, <code>RAISE_ISSUE</code>; for an issue action, the issue action's own <code>action</code> value from <code>POST /issues/{issue_id}/actions</code> (<code>INFO_PROVIDED</code>, <code>RESOLUTION_ACCEPTED</code>, <code>RESOLUTION_REJECTED</code>, <code>ESCALATED</code> or <code>CLOSED</code>); or a trade act <code>GRN</code>, <code>CRAC</code>, <code>MSMED_OBJECTION</code> or <code>LEDGER_ACK</code>. No other value is valid.</td>
+</tr>
+<tr>
+<td><code>items[]</code>, <code>reason_code</code></td>
+<td>For <code>kind: post_order</code> only. On a <code>RETURN</code>, <code>items[]</code> (each <code>{id, quantity}</code>, at least one) and <code>reason_code</code> are REQUIRED. On a <code>CANCEL</code>, <code>reason_code</code> is REQUIRED and <code>items[]</code> is present only for a partial cancel. The gateway matches the write against them field by field (<a href="#hp-proof">Presence proof</a>). The <code>summary</code> names each item and quantity from the gateway's templates, and an item name appears only in <code>counterparty_text[]</code>.</td>
+</tr>
+<tr>
+<td><code>subject_hash</code></td>
+<td>REQUIRED for the trade acts <code>GRN</code>, <code>CRAC</code>, <code>MSMED_OBJECTION</code> and <code>LEDGER_ACK</code>: the sha-256 of exactly what the principal is shown. For a document, the JCS hash of the exact body; for a ledger entry, its <code>entry_hash</code>; for a ledger statement, the <code>head_hash</code> at <code>through_seq</code>. For the issue actions <code>RESOLUTION_ACCEPTED</code> and <code>RESOLUTION_REJECTED</code>: the sha-256 over the JCS form of the issue's <code>resolution</code> as the gateway showed it in <code>summary</code>, absent when the issue has no <code>resolution</code>. Absent for every other action, including <code>ESCALATED</code>, <code>INFO_PROVIDED</code> and <code>CLOSED</code>. A trade-act render without <code>subject_hash</code> is invalid. The Trusted Surface shows how many times the <code>resolution</code> has been revised since the first step-up for this write. For <code>ESCALATED</code>, <code>INFO_PROVIDED</code> and <code>CLOSED</code> the Trusted Surface does not present a <code>resolution</code> as the thing confirmed; for <code>CLOSED</code> it states that closing does not accept a pending <code>resolution</code>.</td>
+</tr>
+<tr>
+<td><code>subject_ref</code></td>
+<td>REQUIRED for a trade act: <code>{kind, id, through_seq?, payee?}</code>. <code>kind</code> is <code>order</code> or <code>document</code> for a <code>GRN</code>, <code>CRAC</code> or <code>MSMED_OBJECTION</code> (with <code>order_id</code>), and <code>ledger_entry</code> (<code>id</code> is the entry id; <code>payee</code> REQUIRED for a <code>payment</code> entry in <code>pending_ack</code> with <code>settlement_payee_unmatched</code>) or <code>ledger_statement</code> (<code>id</code> is the ledger id, <code>through_seq</code> REQUIRED) for a <code>LEDGER_ACK</code>, which has no <code>order_id</code>. For a GRN the Trusted Surface shows the delivery date and the accepted and rejected quantities with their enum reasons; for an MSMED objection, the objection text labelled as counterparty text; for a ledger entry, its amount, type and due date and, for a <code>payment</code> entry in <code>pending_ack</code> with <code>settlement_payee_unmatched</code>, the payee of the cited receipt, labelled as not one of the creditor's settlement accounts; for a statement, the count, the closing balance, the oldest unpaid date and every entry above <code>itemise_above</code>, counting only the entries the other party posted.</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td>The principal's language, as a BCP 47 tag (<code>LanguageTag</code>).</td>
+</tr>
+<tr>
+<td><code>checkout_hash</code></td>
+<td>The <code>checkout_hash</code> of the quote the step-up is about. For <code>post_order</code> it is the <code>checkout_hash</code> of the order's closed Checkout Mandate (the hash of the BPP-signed quote the order was placed under, also on the order's <code>Receipt</code>); an <code>Order</code> carries no <code>checkout_hash</code> of its own.</td>
+</tr>
+<tr>
+<td><code>total</code></td>
+<td>The total the principal pays, as a single figure (<code>Amount</code>, integer paise): the quote total plus the sum of the session's <code>operator_charges[]</code>. On a summary step-up, the sum of <code>basket[].amount</code>.</td>
+</tr>
+<tr>
+<td><code>charge_lines[]</code></td>
+<td>Optional. On a step-up that pays for an order, one entry <code>{code, amount, recipient?}</code> for each fee line, then one <code>remainder</code> entry for everything else. The amounts add up to <code>total</code>. Absent when the order has no fee line. The Trusted Surface reads them by <a href="#ts-requirements">TS-3</a> from its own templates.</td>
+</tr>
+<tr>
+<td><code>price_breakup_hash</code></td>
+<td>The hash of the BPP-signed price breakup and disclosures (<code>disclosures.hash</code>).</td>
+</tr>
+<tr>
+<td><code>seller_name</code></td>
+<td>The payee seller, from the BPP-signed quote. Absent on a summary step-up, whose sellers are in <code>basket[]</code>.</td>
+</tr>
+<tr>
+<td><code>assisted_operators[]</code></td>
+<td>On an assisted session only: the <code>participant_id</code> and <code>ref</code> of each <code>assisted_operator</code> in the session's <code>participants[]</code>.</td>
+</tr>
+<tr>
+<td><code>summary</code></td>
+<td>Gateway-written text (<code>LangText</code>) from the gateway's own templates, with no counterparty text in it.</td>
+</tr>
+<tr>
+<td><code>counterparty_text[]</code></td>
+<td>Optional. Each entry is <code>{label, text}</code>: a seller-supplied string (an item name, a fee label), labelled by the gateway.</td>
+</tr>
+<tr>
+<td><code>basket[]</code></td>
+<td>On a summary step-up over a <a href="#multi-seller">multi-seller basket</a> only: one line per seller, <code>{bpp_id, payee_name, amount, handler, needs_pin, funds_locked, expires_at, funding}</code>. <code>payee_name</code> is the name the payer's bank returns for the payee VPA. <code>funds_locked</code> and <code>expires_at</code> are the amount a block reserves and when it is released. <code>funding</code> is <code>deposit</code> (the principal's own money) or <code>credit</code>.</td>
+</tr>
+<tr>
+<td><code>covers[]</code></td>
+<td>On a summary step-up only: the legs the approval covers, each <code>{session_id, checkout_hash, payee, amount}</code> (<a href="../mandates/#step-up">Step-up</a>). A summary's <code>session_id</code> and <code>checkout_hash</code> are those of the session whose <code>complete</code> raised it.</td>
+</tr>
+<tr>
+<td><code>catalogue_disclosure[]</code></td>
+<td>Optional. On a session step-up (<code>confirm</code> or <code>rail_auth</code>, including a summary step-up) only: one entry for each line item whose <code>Disclosures.catalogue[]</code> entry is <code>sponsored</code> or <code>undeclared</code>, or carries a <code>prior_price</code>. Each entry is <code>{index, sponsorship, name_ref}</code> and, for a prior price, <code>prior_price</code> and <code>unit_price</code> (the discovered unit price shown with it). <code>index</code> is the position of the entry in that session's <code>Disclosures.catalogue[]</code>; on a summary step-up each entry also carries <code>cover_index</code>, the position in <code>covers[]</code> of the leg whose session it is. A <code>cover_index</code> that is not a position in <code>covers[]</code>, or an <code>index</code> that is not a position in that leg's <code>Disclosures.catalogue[]</code>, makes the render invalid (<code>evidence_unverifiable</code>). <code>name_ref</code> is the position of the item's name in <code>counterparty_text[]</code>. An entry for an item that is <code>not_sponsored</code> and has no <code>prior_price</code> is invalid. Never present on a <code>post_order</code> step-up or a negotiation <code>confirm</code>. It is hashed into <code>Presentation.content_hash</code> with the rest of the render (<a href="#ts-catalogue-disclosure">Catalogue disclosure on the Trusted Surface</a>).</td>
+</tr>
+<tr>
+<td><code>unrequested_lines[]</code></td>
+<td>On a session step-up (<code>confirm</code> or <code>rail_auth</code>) only: one entry <code>{index, added_by, name_ref}</code> for each line of the session whose <code>added_by</code> is <code>seller</code> or <code>assisted_operator</code>, and for each line whose <code>added_by</code> is <code>agent</code> that the agent has not marked <code>principal_requested</code>. <code>index</code> is the position of the line in the session's <code>line_items[]</code>, and <code>name_ref</code> is the position of its name in <code>counterparty_text[]</code>. It is present only when it has an entry, and then it is also named in <code>render_required[]</code>, so that a Trusted Surface that does not understand it renders nothing. The Trusted Surface reads every entry in full, before the total (<a href="../checkout/#line-provenance">Line provenance</a>).</td>
+</tr>
+<tr>
+<td><code>requested_line_count</code></td>
+<td>Optional, on a session step-up. The number of lines that the agent marked <code>principal_requested</code> and that are not in <code>unrequested_lines[]</code>. The Trusted Surface counts them aloud ("and 11 items you asked for") and does not read them one by one unless the principal asks.</td>
+</tr>
+<tr>
+<td><code>plan</code></td>
+<td>On a session step-up (<code>confirm</code> or <code>rail_auth</code>) over a <a href="../payments/credit-and-split-tender/#plan-wire">payment plan</a> only: <code>{plan_hash, tenders[]}</code>, each tender <code>{tender_id, handler, amount, sequence}</code>. The Trusted Surface shows the whole plan, every tender and its amount, never one tender alone, and reads the plan's total as one figure with its tenders beside it. When the session has operator charges, the render reads the plan total and then each operator charge, and <code>total</code> is their sum. Requires <code>checkout_hash</code>. It is hashed into <code>Presentation.content_hash</code> with the rest of the render.</td>
+</tr>
+<tr>
+<td><code>offer_hash</code></td>
+<td>On a negotiation <code>kind: confirm</code> step-up only: the <code>offer_hash</code> of the offer the principal is asked to approve (<a href="../negotiation/#step-up-to-the-trusted-surface">Step-up to the Trusted Surface</a>). Never present with <code>checkout_hash</code>.</td>
+</tr>
+<tr>
+<td><code>acceptance_revocation</code></td>
+<td>On a negotiation <code>kind: confirm</code> step-up about a firm offer only: the offer's <a href="../negotiation/#acceptance-revocation"><code>acceptance_revocation</code></a> value, copied unchanged; in this version only <code>waived</code> occurs, because receivers refuse <code>allowed_until_receipt</code>. Present only with <code>offer_hash</code>. It is hashed into <code>Presentation.content_hash</code> with the rest of the render.</td>
+</tr>
+<tr>
+<td><code>revoke_route</code></td>
+<td>Where the principal revokes the mandate or cancels, as a URI.</td>
+</tr>
+<tr>
+<td><code>grievance_contact</code></td>
+<td>The agent operator's grievance officer contact.</td>
+</tr>
+<tr>
+<td><code>expires_at</code></td>
+<td>As in the <code>step_up</code> object.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Match code (<code>ts_match_code</code>).</strong> A Trusted Surface and an agent MAY show a 4-digit code that both derive from the <code>content_hash</code> of the
+render: the first 4 bytes of the digest, as an unsigned big-endian integer, modulo 10000, written as 4 digits. The code is a derived display
+value, not a field of the render and not transmitted, and it is subject to these rules:</p>
+<ul>
+<li>It is shown on an app or web delivery only. On IVR and <code>upi123pay</code> it is not read, so that the principal hears one number only, the voice
+  challenge (<a href="#voice">Voice confirmation</a>).</li>
+<li>It is never a voice challenge, never a control and never evidence. No gateway or verifier relies on it.</li>
+<li>The text beside it says "A matching code does not make a link safe; only your bank's own app is safe" (<code>hi-IN</code>: "कोड मेल खाने से लिंक सुरक्षित नहीं हो जाता; सिर्फ़ आपके बैंक का अपना ऐप सुरक्षित है।", which says the same in English). The wording is a draft, under review.</li>
+<li>It is a MAY and not a SHOULD. A phishing page shows no code, so comparing two displays does not stop a phisher, and "the codes match, so it is safe"
+  is a compromised agent's best phishing line. It helps against a look-alike page that an honest agent relays and against a mix-up between concurrent
+  step-ups, and it adds nothing to the wire.</li>
+</ul>
+<p>Content rules for <code>ts_render</code> and every Trusted Surface template:</p>
+<ol>
+<li>The total is one figure, with the breakup reachable through its hash. Its fee lines are read separately
+   (<a href="#ts-requirements">TS-3</a>), and their amounts, with the <code>remainder</code>, add up to it.</li>
+<li>A revoke or cancel route and a grievance contact are always present. BACP requires the grievance contact in every
+   case. From 13-05-2027 the DPDP Act, 2023, s.6(3) requires a request for consent to give the contact details of the
+   Data Protection Officer or another person authorised to answer the Data Principal, and the DPDP Rules, 2025,
+   r.3(c) and r.9 require the notice to describe how to exercise rights and complain, and the business contact
+   information of that person to be published and given in every response (<a href="#time-bands">Legal time bands</a>).</li>
+<li>No add-on is preselected, and no text creates urgency.</li>
+<li>Seller free text appears only in <code>counterparty_text[]</code>.</li>
+<li>On a negotiation step-up that carries <code>acceptance_revocation</code>, the Trusted Surface shows the value only as the
+   fixed consequence sentence below, in the principal's language, followed by the offer's cancellation terms, which
+   the gateway states in <code>summary</code>. It never shows the token, and it never says or implies that the order cannot be
+   cancelled: cancelling after the contract is formed follows the cancellation terms.</li>
+<li>On a step-up whose render carries <code>catalogue_disclosure[]</code>, the Trusted Surface repeats what discovery showed, before
+   the total, as <a href="#ts-catalogue-disclosure">below</a>.
+   On a step-up whose render carries <code>unrequested_lines[]</code>, the Trusted Surface first reads, with the <code>added_not_by_you</code>
+   sentence of <a href="#disclosure-phrases">Disclosure phrases</a>, each line that the principal did not add, in the order of the list
+   and with the item name as a labelled seller value from <code>counterparty_text[]</code>, then counts the lines the principal asked
+   for (<code>requested_line_count</code>), and only then reads the total. A zero-price line that a seller scheme adds is read out and
+   does not block. A paid line that a seller added needs a new quote. <code>unrequested_lines[]</code> is a list in the render, not a
+   style, so that a screen reader announces it as a list with a count.</li>
+<li>On an assisted session (<code>assisted_operators[]</code> present), before the factor, the Trusted Surface states from its
+   own templates that an assisted operator is present and that only the principal enters the factor (<code>hi-IN</code>:
+   "आपकी मदद के लिए एक व्यक्ति आपके साथ है। PIN सिर्फ़ आप डालें, किसी को न बताएँ।", in English: "Someone is helping you.
+   Only you enter the PIN; tell it to no one."). The Trusted Surface does not read "unverified" aloud: the
+   <a href="#evidence-summary">evidence summary</a> and the evidence bundle flag an operator reference as asserted, never
+   verified (<a href="#assisted">Assisted channel</a>).</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th><code>en-IN</code></th>
+<th><code>hi-IN</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>waived</code></td>
+<td>"Final once sent; it cannot be taken back. Cancelling afterwards follows the terms below."</td>
+<td>"भेजते ही सौदा पक्का, वापस नहीं होगा; रद्द करना नीचे की शर्तों से होगा।"</td>
+</tr>
+<tr>
+<td><code>allowed_until_receipt</code> (sunset only)</td>
+<td>"Final once the other party receives it; cancelling afterwards follows the cancellation terms below."</td>
+<td>"सामने वाले पक्ष तक पहुँचते ही सौदा पक्का; उसके बाद रद्द करना नीचे की शर्तों से होगा।" (draft wording, under review)</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>hi-IN</code> sentences say, in English: "The deal is final as soon as it is sent and will not be reversed; cancelling
+follows the terms below" (<code>waived</code>), and "The deal is final as soon as it reaches the other party; after that,
+cancelling follows the terms below" (<code>allowed_until_receipt</code>). A Trusted Surface in another language uses a fixed
+translation of the same sentence from its own templates.</p>
+<div class="highlight"><span class="filename">ts-render.negotiation-confirm.json (payload of a negotiation confirm step-up)</span><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"step_up_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stp_01HZYNq8W3nK5vRt7YcLm2"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"confirm"</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"negotiation_between_reservation_and_max"</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"mandate_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_CHK7Q2W9X4K1M3"</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"hi-IN"</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"offer_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:WKKmq8K0e3cRnS6iOO5kEBXsGKuGOw9FdzlnlmLsPgA"</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">"acceptance_revocation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"waived"</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">"total"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">216000</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">    </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="nt">"seller_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bunkar Handlooms"</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">    </span><span class="nt">"hi-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"बनारसी साड़ी, कुल ₹2,160। भेजते ही सौदा पक्का, वापस नहीं होगा; रद्द करना नीचे की शर्तों से होगा। रद्द करने की शर्तें: पैक होने से पहले कोई शुल्क नहीं; पैक होने के बाद ₹216।"</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">    </span><span class="nt">"en-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Banarasi saree, ₹2,160 in all. Final once sent; it cannot be taken back. Cancelling afterwards follows the terms below. Cancellation terms: no charge before packing; ₹216 after packing."</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span><span class="nt">"revoke_route"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://mm.example.in/mandates/mdt_NEG7Q2W9X4K1M3/revoke"</span><span class="p">,</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">  </span><span class="nt">"grievance_contact"</span><span class="p">:</span><span class="w"> </span><span class="s2">"grievance@vaani.example.in"</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">  </span><span class="nt">"expires_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-13T11:17:00+05:30"</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="ts-negotiation">Negotiation on the Trusted Surface<a class="headerlink" href="#ts-negotiation" title="Permanent link">&para;</a></h3>
+<p>These rules apply to the negotiation renders and notices of <a href="../negotiation/">Negotiation</a>.</p>
+<ul>
+<li><strong>The acceptance choice.</strong> At mandate set-up the Trusted Surface presents the two values of <code>process.accept_confirmation</code>, <code>ask</code> and <code>autonomous</code>, with equal weight, and preselects neither (TS-2). A mandate-setup <code>Presentation</code> that shows either value preselected is refused with <code>403 ts_render_mismatch</code>. The set-up also captures <code>process.notice_route</code>, the route by which the gateway tells the principal about each autonomous act through a channel the agent does not control. In a consumer session this is the explicit and affirmative action that Rule 4(9) of the Consumer Protection (E-Commerce) Rules, 2020 asks for.</li>
+<li><strong>Notice of an autonomous act (a notice render: a gateway-signed compact JWS, not a <code>TsRender</code> and not a step-up; its payload schema is open, <a href="../open-questions/#q-105">Q-105</a>).</strong> The gateway builds the notice of <code>agreed_by_agent</code> and <code>purchase_offered_by_agent</code> from its own templates, in the principal's language, and signs it as a render. It is not a step-up: the principal approves nothing. It states the seller or buyer name, <code>offeror_kind</code>, the all-in total (₹ with Indian digit grouping, spoken in words on a voice surface), the quantity and unit, the current-stage cancellation charge, the stop route available in that state, <code>revoke_route</code>, <code>grievance_contact</code> and its <code>content_hash</code>. It carries no URI other than those routes and no urgency text (TS-4), and never reaches the principal through the agent's output, where counterparty text could imitate it. The render and the receipt of its delivery go into the bundle as <code>notice_renders[]</code>.</li>
+<li><strong>Decline of an <code>AGREED</code> or <code>BOUND</code> deal.</strong> The render shows the current-stage charge under the agreed <code>cancellation.terms</code> before the factor is taken, and the principal's confirmation is posted as the distinct event <code>negotiation.agreed.declined</code>, never <code>negotiation.step_up.declined</code>: one verb with two consequences cannot be told apart on a voice channel. The signed event with its <code>Presentation</code> is the proof of presence for the decline; no agent carries an <code>hp_proof</code> for it (<a href="#hp-proof">Presence proof</a>).</li>
+<li><strong>Offer that ran out.</strong> When an offer lapses during approval, or the acceptor's gateway refuses to dispatch within 5 seconds of <code>expires_at</code>, the Trusted Surface says that the offer ran out while the principal was approving, never that the principal declined. The <code>hi-IN</code> sentence says, in English, "The offer ran out while you were approving": "आपकी मंज़ूरी पूरी होने से पहले ही ऑफ़र का समय ख़त्म हो गया।" (<code>offer_expired_during_approval</code>).</li>
+<li><strong>IST.</strong> Every time that the Trusted Surface shows or tells a person is in IST, in the person's language. This is a MUST. It is separate from the machine values in signed bytes, which SHOULD carry <code>+05:30</code>.</li>
+<li><strong>Contested crossing.</strong> Each principal is asked on their own surface in one plain question, whether to proceed with the deal, with the same weight for each answer and neither preselected. Declining and silence have the same effect.</li>
+</ul>
+<h3 id="ts-catalogue-disclosure">Catalogue disclosure on the Trusted Surface<a class="headerlink" href="#ts-catalogue-disclosure" title="Permanent link">&para;</a></h3>
+<p>An agent tells the principal about sponsored results and prior prices when it presents them
+(<a href="#disclosure-phrases">Disclosure phrases</a>). The Trusted Surface says it again before the principal confirms, in words
+the agent does not control. For each entry of <code>catalogue_disclosure[]</code>, in order, the Trusted Surface:</p>
+<ol>
+<li>shows or speaks the item's name as labelled seller text, taken from <code>counterparty_text[name_ref]</code> (TS-1);</li>
+<li>gives the sponsorship sentence for the entry: <code>ts_sponsored</code> for <code>sponsored</code>, <code>ts_undeclared</code> for <code>undeclared</code>, and no
+   sentence for <code>not_sponsored</code>;</li>
+<li>if <code>prior_price</code> is present, gives the <code>ts_prior_price</code> sentence.</li>
+</ol>
+<p>All of this comes <strong>before the total</strong>, and under TS-3 audio is read in full before the principal enters the factor.
+When more than three entries are <code>undeclared</code> and carry no <code>prior_price</code>, the Trusted Surface MAY give one
+<code>ts_undeclared_n</code> sentence for them instead of their per-item sentences. It never paraphrases. A Trusted Surface in
+another language uses a fixed translation of the same sentence from its own templates. The wording is a draft, under
+review with the <a href="#disclosure-phrases">disclosure phrases</a>, and its vocabulary is theirs, so that the principal hears the
+same words twice.</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th><code>en-IN</code></th>
+<th><code>hi-IN</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ts_sponsored</code></td>
+<td>"Sponsored: {party} was paid to show this item."</td>
+<td>"प्रायोजित: इस सामान को दिखाने के लिए {party} को पैसे मिले थे।"</td>
+</tr>
+<tr>
+<td><code>ts_undeclared</code></td>
+<td>"It was not stated whether this item was sponsored."</td>
+<td>"यह सामान प्रायोजित था या नहीं, यह नहीं बताया गया।"</td>
+</tr>
+<tr>
+<td><code>ts_undeclared_n</code></td>
+<td>"For {n} items in this order, it was not stated whether they were sponsored."</td>
+<td>"इस ऑर्डर के {n} सामानों के बारे में नहीं बताया गया कि वे प्रायोजित थे या नहीं।"</td>
+</tr>
+<tr>
+<td><code>ts_prior_price</code></td>
+<td>"Now ₹{price}. The seller's lowest price in the 30 days before this offer: ₹{prior}."</td>
+<td>"अब ₹{price}। इस छूट से पहले के 30 दिनों में विक्रेता की सबसे कम कीमत: ₹{prior}।"</td>
+</tr>
+</tbody>
+</table>
+<p><code>{party}</code> uses the party phrases of <a href="#disclosure-phrases">Disclosure phrases</a>, joined by the Trusted Surface's fixed
+"and" or "और". The <code>hi-IN</code> sentences say, in English: "Sponsored: {party} was paid to show this item"; "Whether this
+item was sponsored was not stated"; "For {n} items of this order it was not stated whether they were sponsored"; and the
+price pair as in the agent's phrase. Amounts use Indian digit grouping.</p>
+<p>Rules:</p>
+<ul>
+<li>The gateway MUST include <code>catalogue_disclosure[]</code> on every session step-up of kind <code>confirm</code> or <code>rail_auth</code>, and on a
+  summary step-up (with entries for every leg), whenever any qualifying item exists. It MUST NOT include it on a
+  <code>post_order</code> step-up or on a negotiation <code>confirm</code>, which carries <code>offer_hash</code> and not <code>checkout_hash</code>.</li>
+<li>The <code>ts_render</code> stays gateway-signed with the BAP registry key. The gateway MUST copy <code>sponsorship</code>, <code>prior_price</code> and
+  <code>unit_price</code> unaltered from the session's <code>Disclosures.catalogue[]</code> entry (<code>unit_price</code> is its <code>discovered_unit_price</code>).</li>
+<li>The Trusted Surface takes <code>catalogue_disclosure[]</code> only from the render, never from the agent. It does not verify
+  seller signatures, so the repeat is only as trustworthy as the gateway's signature on it; a rogue gateway is caught on
+  dispute (<a href="../evidence/#ap2-verification">Evidence</a>, step 6), and the agent checks it at run time (rule below).</li>
+<li>An agent that receives a session <code>step_up</code> carrying a <code>ts_render</code> SHOULD check, before it hands the principal the
+  <code>trusted_surface_url</code>, that <code>catalogue_disclosure[]</code> matches the session's <code>Disclosures.catalogue[]</code> by the evidence
+  step 6 rule. On a mismatch it MUST NOT hand the link over, and it records <code>discovery_source_mismatch</code>.</li>
+<li>A Trusted Surface on an earlier version ignores a field it does not know and would ask for the factor without the
+  repeat. The gateway therefore MUST refuse a <code>step_up.approved</code> for a render that carries <code>catalogue_disclosure[]</code> when
+  <code>presentation.renders</code> does not contain <code>catalogue_disclosure</code> (<code>400 invalid_request</code>, nothing changes).</li>
+<li>A step-up exists only when a threshold, a new seller or another trigger applies. A session that never needs one never
+  reaches a Trusted Surface, so the repeat is absent from it by construction, and the agent's own sentences and the
+  <code>type: disclosure</code> messages (<a href="../errors/#message-object">Message object</a>) are then the only disclosure.</li>
+<li>The item names and positions in <code>catalogue_disclosure[]</code> tell a payer PSP, on a <code>rail_auth</code> render, what was bought, beyond the
+  base render. Whether the names of items should reach the payer PSP at all is open (<a href="../open-questions/#q-73">Q-73</a>).</li>
+</ul>
+<h3 id="presentation">Presentation record<a class="headerlink" href="#presentation" title="Permanent link">&para;</a></h3>
+<p><code>Presentation</code> (<a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>$defs/Presentation</code>) records what the
+Trusted Surface showed, how, and what the principal did:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>surface</code></td>
+<td>yes</td>
+<td>The subscriber id of the PSP or Mandate Manager whose surface presented it, equal to the subscriber id of the registry key that signed the event. Never the agent. The gateway refuses an event whose <code>surface</code> is not the signer's subscriber id with <code>404 not_found</code>, and nothing changes.</td>
+</tr>
+<tr>
+<td><code>channel</code></td>
+<td>yes</td>
+<td><code>Channel</code> (<code>app</code>, <code>ivr</code>, <code>upi123pay</code>, <code>assisted</code>, …).</td>
+</tr>
+<tr>
+<td><code>language</code></td>
+<td>yes</td>
+<td><code>LanguageTag</code>, for example <code>hi-IN</code>. A language name such as <code>"Hindi"</code> is invalid.</td>
+</tr>
+<tr>
+<td><code>modality</code></td>
+<td>yes</td>
+<td><code>visual</code>, <code>audio</code> or <code>both</code>.</td>
+</tr>
+<tr>
+<td><code>content_hash</code></td>
+<td>yes</td>
+<td>For a step-up, the sha-256 of the compact JWS <code>ts_render</code>. Otherwise the hash of the content the Trusted Surface rendered from its templates (for a mandate approval, the notice whose hash the ConsentReceipt carries in <code>notice.hash</code>).</td>
+</tr>
+<tr>
+<td><code>content_ref</code></td>
+<td>yes</td>
+<td>Where a party entitled to the evidence fetches that content to recompute the hash. For a step-up, it is an RFC 3986 fragment that holds an RFC 6901 JSON Pointer into the evidence bundle, <code>#/ts_renders/&lt;index&gt;</code>, where <code>&lt;index&gt;</code> is the zero-based position of the render in the bundle's <code>ts_renders[]</code>, written without leading zeros. The bundle is signed and immutable, so the index is stable. It never points at the Mandate Manager and PSP only <code>GET /trusted-surface/step-ups/{step_up_id}</code>. For any other content it is an absolute URI.</td>
+</tr>
+<tr>
+<td><code>user_action</code></td>
+<td>yes</td>
+<td><code>tap_confirm</code>, <code>upi_pin</code>, <code>biometric</code>, <code>passkey</code>, <code>voice_confirm_plus_device</code> or <code>decline</code>. <code>biometric</code> is the principal's own biometric enrolled for the principal on the Trusted Surface device, never an operator's.</td>
+</tr>
+<tr>
+<td><code>shown_at</code>, <code>acted_at</code></td>
+<td>yes</td>
+<td>When it was shown and when the principal acted.</td>
+</tr>
+<tr>
+<td><code>template_id</code></td>
+<td>no</td>
+<td>The Trusted Surface template and its version.</td>
+</tr>
+<tr>
+<td><code>renders</code></td>
+<td>on <code>step_up.approved</code> when the render carries <code>catalogue_disclosure[]</code> or <code>plan</code>, and on any step-up approval whose render lists a name in <code>render_required[]</code></td>
+<td>The render fields beyond this version's base set that the Trusted Surface presented: <code>catalogue_disclosure</code>, <code>plan</code>, <code>items</code>, <code>unrequested_lines</code> or <code>acceptance_revocation</code>, for example <code>["catalogue_disclosure", "plan"]</code>. It is the only extension point of <code>Presentation</code>.</td>
+</tr>
+<tr>
+<td><code>checkout_hash</code></td>
+<td>on <code>step_up.approved</code></td>
+<td>The quote the content showed: the session's quote, or for a <code>post_order</code> step-up the <code>checkout_hash</code> of the order's closed Checkout Mandate. Never present with <code>offer_hash</code>. A <code>post_order</code> step-up for an order-less ledger act has no quote, and its approval carries none.</td>
+</tr>
+<tr>
+<td><code>offer_hash</code></td>
+<td>on <code>negotiation.step_up.approved</code></td>
+<td>The offer a negotiation <code>confirm</code> step-up showed. Never present with <code>checkout_hash</code>.</td>
+</tr>
+<tr>
+<td><code>plan_hash</code></td>
+<td>on <code>step_up.approved</code> when the render carries <code>plan</code></td>
+<td>The <code>plan.plan_hash</code> of the payment plan the content showed.</td>
+</tr>
+<tr>
+<td><code>device_signature</code></td>
+<td>no</td>
+<td>A JWS by a device key of the Trusted Surface over the JCS form of <code>{step_up_id, content_hash, acted_at}</code> (for a step-up) or <code>{content_hash, acted_at}</code>; its protected header carries the public key as <code>jwk</code>. Where the mandate lists <code>principal.device_jkt[]</code>, it MUST verify against a key whose RFC 7638 thumbprint is listed, or the gateway answers <code>403 presence_not_proven</code>. Where the mandate lists none, no verifier relies on it. It is never called an electronic signature under the Information Technology Act, 2000: whether it is an authentication technique under s.3A is not verified as of 18-10-2026 (<a href="../open-questions/#q-86">Q-86</a>).</td>
+</tr>
+<tr>
+<td><code>voice_evidence</code></td>
+<td>no</td>
+<td>Audio and transcript hashes and the translation model, for a voice confirmation.</td>
+</tr>
+<tr>
+<td><code>assisted_by</code></td>
+<td>on <code>assisted</code></td>
+<td>The <code>participant_id</code> of the assisted operator, taken by the Trusted Surface from <code>ts_render.assisted_operators[]</code>, never from the agent.</td>
+</tr>
+</tbody>
+</table>
+<p>A <code>TrustedSurfaceEvent</code> of type <code>step_up.approved</code>, <code>negotiation.step_up.approved</code>, <code>mandate.activated</code>,
+<code>loan.accepted</code> or <code>payment.afa_completed</code> <strong>MUST</strong> carry <code>presentation</code>. Without it the gateway refuses the event with
+<code>400 invalid_request</code> and nothing changes. On <code>step_up.approved</code> the <code>presentation</code> <strong>MUST</strong> carry <code>checkout_hash</code>, except on the approval of a <code>post_order</code> step-up for an order-less ledger act (<code>LEDGER_ACK</code> with no <code>order_id</code>), which carries none; on
+<code>negotiation.step_up.approved</code>, the approval of a negotiation <code>confirm</code> step-up, it <strong>MUST</strong> carry <code>offer_hash</code>; it
+never carries both. On either approval its <code>user_action</code> <strong>MUST NOT</strong> be <code>decline</code>. The gateway refuses an event that
+breaks one of these rules with <code>400 invalid_request</code> and nothing changes; this includes a <code>step_up.approved</code> posted
+for a negotiation step-up. A decline is posted only
+as <code>step_up.declined</code>, which <strong>SHOULD</strong> carry a <code>Presentation</code> with <code>user_action: decline</code>. A ConsentReceipt <strong>MAY</strong>
+carry the same record in <code>captured_via.presentation</code>.</p>
+<p>When the gateway receives a <code>step_up.approved</code> or <code>negotiation.step_up.approved</code> event it <strong>MUST</strong> check, before any
+state change:</p>
+<ul>
+<li>that the event is signed by the step-up's Mandate Manager or payer PSP (<a href="#ts-signers">Step-up signers</a>); any other
+  registry key gets <code>404 not_found</code>, never <code>403</code>, and nothing changes;</li>
+<li>that <code>presentation.surface</code> is the subscriber id of the signing key, or refuse the event with <code>404 not_found</code>
+  (nothing changes);</li>
+<li>that <code>presentation.content_hash</code> is the sha-256 of that step-up's <code>ts_render</code>, or refuse the event with
+  <code>403 ts_render_mismatch</code>;</li>
+<li>on <code>step_up.approved</code>, that <code>presentation.checkout_hash</code> equals the session's current <code>checkout_hash</code> (for a
+  <code>post_order</code> step-up, the <code>checkout_hash</code> of the order's closed Checkout Mandate; none for an order-less ledger act); an approval for an earlier quote approves nothing
+  (<a href="../mandates/#evaluation">Deterministic evaluation</a>, step 8);</li>
+<li>on <code>negotiation.step_up.approved</code>, that <code>presentation.offer_hash</code> equals the <code>ts_render</code>'s <code>offer_hash</code> and the
+  hash of the offer the step-up names, and, for a firm offer, that the <code>ts_render</code>'s <code>acceptance_revocation</code> equals
+  that offer's value; otherwise it refuses the event with <code>403 ts_render_mismatch</code>, and nothing is sent;</li>
+<li>on <code>step_up.approved</code> for a <code>ts_render</code> that carries <code>catalogue_disclosure[]</code>, that <code>presentation.renders</code> contains
+  <code>catalogue_disclosure</code>; otherwise it refuses the event with <code>400 invalid_request</code> and nothing changes;</li>
+<li>on a step-up approval for a <code>ts_render</code> that carries <code>render_required[]</code>, that <code>presentation.renders</code> contains every name
+  listed there; otherwise it refuses the event with <code>400 invalid_request</code> and nothing changes;</li>
+<li>on <code>step_up.approved</code> for a <code>ts_render</code> that carries <code>plan</code>, that <code>presentation.renders</code> contains <code>plan</code>
+  (otherwise <code>400 invalid_request</code>, nothing changes) and that <code>presentation.plan_hash</code> equals the render's <code>plan.plan_hash</code>
+  (otherwise <code>403 ts_render_mismatch</code>);</li>
+<li>where the mandate carries a <a href="../mandates/#confirmation-floor"><code>confirmation_floor</code></a>, that <code>presentation.user_action</code> is not below its <code>min_user_action</code>
+  and <code>presentation.channel</code> is in its <code>channels_allow</code>; otherwise it refuses the event with <code>403 presence_not_proven</code> at <code>$.presentation.user_action</code> or
+  <code>$.presentation.channel</code> and nothing changes;</li>
+<li>where the mandate lists <code>principal.device_jkt[]</code>, that <code>presentation.device_signature</code> verifies against a key whose thumbprint is
+  listed; otherwise it refuses the event with <code>403 presence_not_proven</code> and nothing changes;</li>
+<li>that <code>presentation.acted_at</code> is not after the step-up's <code>expires_at</code>, or treat the step-up as expired
+  (<code>step_up_expired</code>, no money moves);</li>
+<li>on an assisted session, the <a href="#assisted">assisted channel</a> rules.</li>
+</ul>
+<p>While the session is in <code>human_handoff</code> the gateway holds a <code>step_up.approved</code> event that passes these checks and does
+not apply it. After the handoff is released it applies a held approval only if the step-up has not expired and its
+<code>checkout_hash</code> still equals the session's (<a href="#handoff">Human handoff</a>). For a summary step-up the re-check is per leg:
+a held approval applies to a released session only if that session's <code>covers[]</code> entry still equals its current
+<code>checkout_hash</code>, payee and amount.</p>
+<h3 id="voice">Voice confirmation<a class="headerlink" href="#voice" title="Permanent link">&para;</a></h3>
+<p><code>user_action: voice_confirm_plus_device</code> is a confirmation by voice or keypad on a call. Here "device" means the number or
+call leg that the Trusted Surface holds for the principal or payer, not a device key. The rules:</p>
+<ul>
+<li><strong>The Trusted Surface draws the challenge.</strong> It draws a challenge of at least 4 digits from its own random source,
+  on its own call leg, single-use, for one step-up. The challenge is never in <code>ts_render</code>, <code>StepUp</code>, <code>StepUpStatus</code> or
+  anything else that an agent sees, because an agent that bridges the call would know it. No field of the render derives it.</li>
+<li><strong>The answer is bound in the event.</strong> <code>voice_evidence.challenge_hash</code> is the sha-256 over the JCS form of
+  <code>{step_up_id, content_hash, challenge}</code>, and is REQUIRED with this <code>user_action</code>. The gateway cannot recompute it:
+  it is evidence, and the Trusted Surface's draw of an unpredictable value is a Trusted Surface conformance case, not a
+  gateway check. A challenge that is guessed after the call from the hash is harmless, because it is single-use and
+  ends with the call.</li>
+<li><strong>Keypad equals speech.</strong> The principal may answer by DTMF or by speech, with the same steps and the same weight, so that
+  a feature phone keeps its path. No rule depends on speech recognition of the challenge.</li>
+<li><strong>Which calls count.</strong> Voice counts only on a call that the Trusted Surface placed to the number it holds for the
+  principal or payer. It also counts when the principal dialled the Trusted Surface's published number from that
+  number, but only together with the Trusted Surface's own challenge, because caller identity can be spoofed. The number
+  is held by the Trusted Surface and is never in the mandate or the render.</li>
+<li><strong>Never money.</strong> The gateway refuses <code>voice_confirm_plus_device</code> on a <code>rail_auth</code> step-up, and on any <code>confirm</code>
+  step-up whose approval releases a debit, with <code>403 presence_not_proven</code> at <code>$.presentation.user_action</code>. Voice
+  confirms only what moves no money (a cancel, an issue acceptance). RBI/2025-26/79 paras 5(a) and 6(b) and UPI Consolidated
+  Circular v1.0 para 19.2.2 settle this for money (<a href="../open-questions/#q-13">Q-13</a>). In human-not-present (HNP) the debit rests on the mandate's authentication
+  model, so the refusal there is BACP policy implementing Q-13, not an RBI requirement. A PIN entered over a UPI 123PAY
+  IVR stays <code>upi_pin</code>.</li>
+<li><strong>No PIN on a Trusted Surface call.</strong> A call that the Trusted Surface places never takes a UPI PIN (<a href="#ts-pin-rule">PIN rule</a>).</li>
+<li><strong>Agent side.</strong> An agent's own voice channel MUST NOT stay on, conference or bridge the call leg of the Trusted Surface.
+  This is an agent conformance disclosure check and cannot be observed on the wire.</li>
+</ul>
+<h2 id="multi-seller">Multi-seller basket on the Trusted Surface<a class="headerlink" href="#multi-seller" title="Permanent link">&para;</a></h2>
+<p>A <a href="../checkout/#multi-seller-basket">multi-seller basket</a> reaches the principal as one summary step-up
+(reason <code>rail_fallback</code>) whose <code>ts_render</code> lists every seller in <code>basket[]</code>. The Trusted Surface:</p>
+<ul>
+<li>states the <strong>number of sellers first</strong>, and for a human-present plan the number of payments and of PINs
+  needed (for example "3 sellers, 3 payments, 3 UPI PINs"), before any line;</li>
+<li>then shows or reads each <code>basket[]</code> line: the bank-returned payee name, the amount, whether a PIN is needed,
+  for a block the amount locked and until when, and whether the money is the principal's own (<code>deposit</code>) or
+  <code>credit</code>; under TS-3, audio is read in full before the principal enters any factor;</li>
+<li>for a block whose debits the gateway cannot see, gives the unseen-draw statement that the <code>ts_render</code> carries in
+  <code>summary</code>: that this seller can draw up to the stated amount unseen by BACP and can change the block's amount or
+  validity (<a href="../mandates/#usage-ledger">Usage ledger</a>). The same statement is in the notice when such a block is
+  set up (<a href="../mandates/#issuance">Issuance</a>, step 4);</li>
+<li>for a block whose mandate is paused for <code>unmatched_rail_debit</code>, shows the route to revoke the block in the UPI app
+  (NPCI UPI Consolidated Circular v1.0, para 16.10), because the pause stops BACP payments but not draws at the rail;</li>
+<li>shows the summary as approval of a <strong>plan</strong>, never as a payment: each human-present leg is then a separate
+  step-up with its own <code>ts_render</code>, its own <code>content_hash</code> and the principal's own factor, and a summary
+  <code>Presentation</code> alone authorises no debit.</li>
+</ul>
+<p>A new per-seller block (3b in the <a href="../mandates/#per-leg-rule">per-leg rule</a>) is offered only beside a one-time
+human-present payment to the same seller, with equal weight: the same number of steps, neither option preselected,
+and declining the block no harder than paying once (TS-2). It is never offered after a failed payment, and never on a
+step-up with <code>delivery: ivr_callback</code>. On <code>ivr_callback</code> and UPI 123PAY every leg is a human-present call of its own,
+read in full before its PIN.</p>
+<h2 id="assisted">Assisted channel<a class="headerlink" href="#assisted" title="Permanent link">&para;</a></h2>
+<p>The following is <strong>BACP policy</strong>. No law found requires it; it exists so that an assisted operator is visible in the
+evidence and cannot approve for the principal.</p>
+<ul>
+<li>A session is <strong>assisted</strong> when its <code>channel</code> is <code>assisted</code> <strong>or</strong> the agent's AgentCredential has
+  <code>agent.class: assisted</code>. An assisted agent that declares <code>channel: app</code> is still bound by every rule below.</li>
+<li>An assisted session <strong>MUST</strong> list an <code>assisted_operator</code> in <code>participants[]</code>. Otherwise <code>POST /sessions</code> returns
+  <code>400 invalid_request</code> at <code>$.participants</code>.</li>
+<li>Every Trusted Surface approval on an assisted session <strong>MUST</strong> name the operator in <code>presentation.assisted_by</code>. The
+  Trusted Surface takes it from <code>ts_render.assisted_operators[]</code>, which the gateway builds from the session's
+  <code>participants[]</code>, never from the agent. The gateway refuses an <code>assisted_by</code> that is not an <code>assisted_operator</code> of
+  the session with <code>403 presence_not_proven</code>.</li>
+<li>The principal approves with the principal's own factor: <code>user_action</code> is <code>upi_pin</code> or <code>biometric</code>, never a tap.
+  <code>biometric</code> means the principal's own biometric enrolled for the principal on the Trusted Surface device. The
+  gateway refuses any other approval with <code>403 presence_not_proven</code> (for example a schema-valid
+  <code>presentation.channel: app</code> approval on an assisted session), and the session stays <code>requires_escalation</code>.</li>
+<li>A <code>Presentation</code> that fails its schema (for example <code>channel: assisted</code> with <code>user_action: tap_confirm</code>) is refused
+  with <code>400 invalid_request</code>, as for every schema failure, and nothing changes.</li>
+<li>The operator may read the content aloud (<code>modality: audio</code> or <code>both</code>); the factor is the principal's.</li>
+<li>An assisted operator who reads discovery results aloud uses the same fixed sentences as an agent
+  (<a href="#disclosure-phrases">Disclosure phrases</a>).</li>
+</ul>
+<p><code>assisted_by</code> and <code>Participant.ref</code> are attribution, never authentication. A <code>ref</code> is namespaced <code>scheme:id</code>, where <code>scheme</code> is
+<code>csc_vle</code>, <code>bank_bc</code>, <code>ondc_np_agent</code> or <code>other</code>, and the gateway sets <code>Participant.ref_verification</code> to <code>asserted</code> or <code>verified</code>. The gateway
+writes <code>verified</code> only when it can name the verifying registry, and none exists today (<a href="../open-questions/#q-62">Q-62</a>), so <code>asserted</code>
+is the only value in practice. An agent that supplies <code>verified</code> gets <code>400 invalid_request</code>. The Trusted Surface does not read
+"unverified" aloud (<a href="#ts-render">content rule 7</a>); the evidence summary and the bundle flag the reference as asserted.</p>
+<p>The Information Technology Act, 2000, s.11(b) attributes an electronic record to the originator when it is sent "by a person who had
+the authority to act on behalf of the originator in respect of that electronic record", and s.11(c) when it is sent "by
+an information system programmed by or on behalf of the originator to operate automatically"
+(<a href="https://www.indiacode.nic.in/bitstream/123456789/13116/1/it_act_2000_updated.pdf">India Code text</a>). Whether an
+operator's tap could be attributed to the principal under either is a question for counsel (<a href="../open-questions/#q-86">Q-86</a>), and whether voice, tap or
+operator-relayed confirmation is valid consent is open (<a href="../open-questions/#q-13">Q-13</a>). Who certifies assisted
+operators is open (<a href="../open-questions/#q-62">Q-62</a>).</p>
+<p><code>StepUp.delivery: assisted</code> gives the step-up at least 5 minutes before <code>expires_at</code> (and at most 15). The 5-minute
+floor is a BACP design value, not an external requirement.</p>
+<h2 id="disclosure-phrases">Disclosure phrases<a class="headerlink" href="#disclosure-phrases" title="Permanent link">&para;</a></h2>
+<p>For a buyer on a feature phone, an IVR call or a screen reader, the agent is the display. The sentences below are how an
+agent tells the principal about sponsored results and prior prices (<a href="../discovery/#catalogue-disclosures">Catalogue disclosures</a>),
+about a refused capability, a line the principal did not add, a provisional loyalty benefit and a policy that a seller does not state.
+They are fixed: they bind agents and the scripts of assisted operators, and a paraphrase is non-conformant, because a
+paraphrase by a language model is itself a way to change what the principal understands. Counterparty text never appears
+inside them, except as a labelled value.</p>
+<div class="admonition warning">
+<p class="admonition-title">Draft wording</p>
+<p>The wording in this table is a draft. It is under review by the human-experience review seat and the owner, and it
+changes only through that review before a dated release.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th><code>en-IN</code></th>
+<th><code>hi-IN</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>sponsored</code></td>
+<td>"Sponsored: {party} was paid to show this."</td>
+<td>"प्रायोजित: इसे दिखाने के लिए {party} को पैसे मिले हैं।"</td>
+</tr>
+<tr>
+<td><code>undeclared</code></td>
+<td>"Not stated whether this is sponsored."</td>
+<td>"यह प्रायोजित है या नहीं, यह नहीं बताया गया है।"</td>
+</tr>
+<tr>
+<td><code>prior_price</code></td>
+<td>"Now ₹{price}. The seller's lowest price in the 30 days before this offer: ₹{prior}."</td>
+<td>"अब ₹{price}। इस छूट से पहले के 30 दिनों में विक्रेता की सबसे कम कीमत: ₹{prior}।"</td>
+</tr>
+<tr>
+<td><code>mrp</code></td>
+<td>"MRP ₹{mrp}."</td>
+<td>"एमआरपी (अधिकतम खुदरा मूल्य) ₹{mrp}।"</td>
+</tr>
+<tr>
+<td><code>discount_applied</code></td>
+<td>"Discount{ with code {code}}: ₹{amount} off."</td>
+<td>"छूट{ (कोड {code})}: ₹{amount} कम।"</td>
+</tr>
+<tr>
+<td><code>discount_rejected</code></td>
+<td>"Code {code} was not accepted."</td>
+<td>"कोड {code} स्वीकार नहीं हुआ।"</td>
+</tr>
+<tr>
+<td><code>discount_affiliate</code></td>
+<td>"Your assistant's provider earns if this code is used."</td>
+<td>"यह कोड इस्तेमाल होने पर आपके सहायक की कंपनी को कमाई होती है।"</td>
+</tr>
+<tr>
+<td><code>added_not_by_you</code></td>
+<td>"This item was not added by you: it was added by {party}."</td>
+<td>"यह सामान आपने नहीं जोड़ा; इसे {party} ने जोड़ा है।"</td>
+</tr>
+<tr>
+<td><code>cart_estimate</code></td>
+<td>"This is an estimate, not a price you will pay."</td>
+<td>"यह एक अनुमान है, आपसे लिया जाने वाला दाम नहीं।"</td>
+</tr>
+<tr>
+<td><code>loyalty_provisional</code></td>
+<td>"A loyalty benefit may apply later. It is not in this total."</td>
+<td>"लॉयल्टी का लाभ बाद में लागू हो सकता है। वह इस कुल राशि में शामिल नहीं है।"</td>
+</tr>
+<tr>
+<td><code>policy_not_stated</code></td>
+<td>"The {policy} policy is not stated."</td>
+<td>"{policy} नीति नहीं बताई गई है।"</td>
+</tr>
+<tr>
+<td><code>capability_absent</code></td>
+<td>"This shopping service does not offer that feature, so your request was not applied."</td>
+<td>"यह शॉपिंग सेवा यह सुविधा नहीं देती, इसलिए आपका अनुरोध लागू नहीं हुआ।"</td>
+</tr>
+<tr>
+<td>party <code>bpp</code></td>
+<td>"the seller's app"</td>
+<td>"विक्रेता का ऐप"</td>
+</tr>
+<tr>
+<td>party <code>gateway</code></td>
+<td>"the shopping service"</td>
+<td>"शॉपिंग सेवा"</td>
+</tr>
+<tr>
+<td>party <code>agent</code></td>
+<td>"your assistant's provider"</td>
+<td>"आपके सहायक की कंपनी"</td>
+</tr>
+<tr>
+<td>party <code>assisted_operator</code></td>
+<td>"the assistant helping you"</td>
+<td>"आपकी मदद कर रहा सहायक"</td>
+</tr>
+<tr>
+<td>party unknown</td>
+<td>"a party in the chain"</td>
+<td>"बीच का कोई पक्ष"</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>hi-IN</code> sentences say, in English: "Sponsored: {party} has been paid to show this"; "Whether this is sponsored has
+not been stated"; "Now ₹{price}. Seller's lowest price in the 30 days before this discount: ₹{prior}"; and "MRP
+(maximum retail price) ₹{mrp}". The party phrases say, in English: "the seller's app", "the shopping service", "your
+assistant's company" and "some party in the chain". The discount phrases say, in English: "Discount (code {code}): ₹{amount}
+less"; "Code {code} was not accepted"; "If this code is used, your assistant's company earns"; and "This shopping service does not offer that feature, so your request was not applied" (<code>capability_absent</code>, which has no slot). The new keys say, in English: "This item was not added by you: it was added by {party}" (<code>added_not_by_you</code>; the party is the one that the line's <code>added_by</code> names: <code>seller</code> is spoken as the seller's app); "This is an estimate, not a price you will pay" (<code>cart_estimate</code>, used only if a cart capability is ever added, <a href="../open-questions/#q-95">Q-95</a>); "A loyalty benefit may apply later; it is not in this total" (<code>loyalty_provisional</code>); and "The {policy} policy is not stated" (<code>policy_not_stated</code>, where <code>{policy}</code> is one of three fixed words: return (<code>वापसी की</code>), cancellation (<code>रद्द करने की</code>) or cash on delivery (<code>कैश ऑन डिलीवरी की</code>)). The part in braces and
+brackets of <code>discount_applied</code> is left out for an automatic discount, which has no code.</p>
+<p>Rules:</p>
+<ol>
+<li>The agent says the sentence for each item whose <code>sponsorship.status</code> is <code>sponsored</code> or <code>undeclared</code>, with <code>{party}</code>
+   taken from <code>by[]</code> (several parties are joined with a fixed "and" or "और"; an unknown value uses the unknown-party
+   phrase). There is no sentence for <code>not_sponsored</code>: the agent says nothing.</li>
+<li>On audio the sentence is spoken <strong>before</strong> the item it labels, in the principal's session language.</li>
+<li>Amounts are rendered with Indian digit grouping. The <code>prior_price</code> sentence is the only way to voice a prior price.
+   The <code>mrp</code> sentence is the only way to voice an MRP, and it is never voiced as a "was" price.</li>
+<li>A principal whose language is not <code>en-IN</code> or <code>hi-IN</code> hears the operator's own fixed and reviewed translation of the
+   same sentence, as for the <a href="#ts-render">acceptance-revocation sentences</a>: a Trusted Surface or an agent in another
+   language uses a fixed translation of the same sentence from its own templates, and never a free translation made at
+   run time. Whether a reviewed translation route exists for fixed legal labels in the Eighth Schedule languages is open
+   (<a href="../open-questions/#q-68">Q-68</a>).</li>
+<li><code>{party}</code>, <code>{price}</code>, <code>{prior}</code>, <code>{mrp}</code>, <code>{code}</code>, <code>{amount}</code> and <code>{policy}</code> are the only slots. <code>{code}</code> is filled from the code the agent
+   itself submitted, never from <code>applied[].code</code>, which a seller could fill with text. The <code>title</code> of a discount is seller
+   text, shown only as labelled counterparty text. An item name, if it is spoken, is a separate, labelled seller value
+   and never part of a sentence.</li>
+<li>On a step-up, the Trusted Surface repeats the sentences in its own fixed wording
+   (<a href="#ts-catalogue-disclosure">Catalogue disclosure on the Trusted Surface</a>).</li>
+</ol>
+<h2 id="ai-disclosure">AI disclosure<a class="headerlink" href="#ai-disclosure" title="Permanent link">&para;</a></h2>
+<p>The agent's first message in every session is the AI disclosure, with typed routes to a human
+(<a href="../checkout/#ai-disclosure">Sessions and Checkout</a>):</p>
+<ul>
+<li>Every session carries <code>ai_disclosure{notice, handoff_routes[]}</code>, taken from the AgentCredential's
+  <code>disclosure.ai_notice</code> and <code>disclosure.handoff_routes</code>. <code>ai_disclosure</code> is always present; <code>handoff_routes</code> is
+  absent when the credential lists none. The disclosure message points at it with <code>param: $.ai_disclosure</code>.</li>
+<li>An AgentCredential whose <code>agent.channels</code> includes <code>voice</code>, <code>ivr</code> or <code>upi123pay</code> <strong>MUST</strong> list a <code>tel:</code> route
+  (<a href="https://www.rfc-editor.org/rfc/rfc3966">RFC 3966</a>), optionally with DTMF digits (for example "press 0"), because a
+  feature-phone caller cannot open a web link. A route with DTMF digits is always a <code>tel:</code> route. The schema rejects a
+  credential that lists only <code>https:</code> routes, and a route that pairs DTMF digits with an <code>https:</code> URI.</li>
+<li>An agent <strong>SHOULD NOT</strong> split one intended order into several payments to change the fee that a seller bears. The
+  gateway's suspected-split-order check enforces it (<a href="../mandates/#step-up">Split-order detection</a>); BACP adds no new
+  trigger for it.</li>
+<li>The gateway writes an InstructionLog entry at stage <strong><code>ai_disclosure</code></strong>, <code>actor: agent</code>. It is the first entry whose
+  actor is <code>agent</code>, before <code>intent</code>. The stage <code>disclosure</code> is the seller's quote, not the AI disclosure.</li>
+<li>On the network, <code>context.bacp.ai_disclosure: true</code> is REQUIRED, and the gateway <strong>MUST</strong> mirror it into the <code>bacp</code>
+  tag group, so that a seller learns that an AI agent is ordering even when a validator strips <code>context.bacp</code>
+  (<a href="../transports/beckn/#mirroring">Beckn / ONDC Binding</a>). The gateway <strong>MAY</strong> also send <code>acting_for</code>,
+  <code>operator_name</code> and <code>operator_grievance_contact</code>. It sends <code>acting_for.gstin</code> and <code>acting_for.display_name</code> only
+  when the mandate's <code>data_scopes</code> include <code>ACTING_FOR</code>, and otherwise omits them.</li>
+</ul>
+<p>Example disclosure in Hindi ("You are talking to an AI assistant. Press 0 to talk to a human."):
+<code>"hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए 0 दबाएँ।"</code></p>
+<h2 id="handoff">Human handoff<a class="headerlink" href="#handoff" title="Permanent link">&para;</a></h2>
+<p>A principal can ask for a human at any time, including after the mandate is revoked.</p>
+<ol>
+<li>The agent calls <code>POST /sessions/{session_id}/handoff</code> (tag <code>bacp-browse</code>) with <code>action: request</code> and one of the
+   session's <code>ai_disclosure.handoff_routes</code> (no route when the session lists none). The agent picks a route whose
+   <code>languages</code> include the session's language, where one exists, and otherwise says so to the principal. The gateway <strong>MUST</strong> accept it in
+   every session state and whatever the mandate's status, and returns <code>201</code>.</li>
+<li>An open session moves to status <strong><code>human_handoff</code></strong>. While it is there, the gateway refuses <code>PUT</code> and <code>complete</code>
+   from the agent with <code>409 session_state_conflict</code> at <code>$.status</code>, and holds any <code>step_up.approved</code> event without
+   applying it (<a href="#presentation">Presentation record</a>). A session in any other state keeps its status and records
+   <code>handoff</code>.</li>
+<li>A human support operator accepts with <code>action: accept</code>, signed with a registry key of role <code>support_operator</code> under
+   tag <code>bacp-handoff</code>. Only then does the gateway set <code>handoff.accepted_by</code> (that key's id) and
+   <code>handoff.accepted_at</code>. The gateway reads the key's <a href="../discovery/#registry-lookup">registry record</a>, which names the
+   agent operator (<code>operator_id</code>) and the one person who holds the key, and answers an acceptance as follows, each
+   time without changing the handoff:<ul>
+<li>a key whose registry role is not <code>support_operator</code>, or a signature under any other tag: <code>401 signature_invalid</code>;</li>
+<li>a <code>support_operator</code> key of another agent operator than the session's: <code>404 not_found</code>, so that the key has no
+  standing and the answer is no oracle for which sessions exist;</li>
+<li>an <code>accept</code> while <code>accepted_by</code> is already set: <code>409 session_state_conflict</code> at <code>$.handoff.accepted_by</code>.</li>
+</ul>
+</li>
+<li>The handoff ends with <code>action: release</code>. The gateway accepts a release signed under <code>bacp-handoff</code> by the
+   <code>accepted_by</code> key, or signed by the agent under <code>bacp-browse</code> only while <code>accepted_by</code> is absent (withdrawing an
+   unanswered request). A release leaves the session in <code>human_handoff</code>, changes nothing and is answered as follows:
+   a key whose role is not <code>support_operator</code>: <code>401 signature_invalid</code>; another agent operator's <code>support_operator</code> key:
+   <code>404 not_found</code>; a key of the same agent operator that is not <code>accepted_by</code>, or an agent's release after acceptance:
+   <code>409 session_state_conflict</code> at <code>$.handoff.accepted_by</code>. On release a session in <code>human_handoff</code> returns to <code>incomplete</code>, the gateway sets
+   <code>handoff.ended_at</code>, and then applies a held approval only if its step-up has not expired and its <code>checkout_hash</code>
+   still equals the session's.</li>
+<li>The operator binding in steps 3 and 4 and this restart ship together, because each restart is a fresh chance for
+   a competitor's key to accept first. <code>accept</code> and <code>release</code> are each one <strong>compare-and-set</strong> on <code>handoff.accepted_by</code> and <code>handoff.ended_at</code>, so that
+   they are linearisable on any instances. An <code>accept</code> sets <code>accepted_by</code> only while both are absent. An agent's
+   <code>release</code> sets <code>ended_at</code> only while <code>accepted_by</code> is still absent; if an <code>accept</code> won, the release changes nothing.
+   An <code>accept</code> after <code>ended_at</code> is set gets <code>409 session_state_conflict</code> at <code>$.status</code> and changes nothing. A <code>request</code>
+   that arrives while <code>ended_at</code> is set starts a new handoff in one compare-and-set that applies only while <code>ended_at</code> is still set, in which the gateway clears <code>accepted_by</code>, <code>accepted_at</code> and
+   <code>ended_at</code>, sets <code>requested_at</code> and <code>route</code> from the request, returns <code>201</code>, and the earlier handoff stays in the
+   InstructionLog at stage <code>handoff</code>. An <code>accept</code> is therefore refused only for the handoff that has ended, never for
+   one requested afterwards. A session therefore never ends <code>incomplete</code> with <code>accepted_by</code> set.</li>
+<li>The gateway writes every act to the InstructionLog at stage <strong><code>handoff</code></strong>, an acceptance or a release by a support
+   operator with <code>actor: gateway</code> and the operator's key id in <code>actor_ref</code>.</li>
+</ol>
+<p><code>Session.handoff</code> is <code>{route, requested_at, accepted_by, accepted_at, ended_at}</code>. A handoff is <em>requested</em> while
+<code>accepted_by</code> is absent, <em>connected</em> once it is set, and <em>ended</em> once <code>ended_at</code> is set. A new <code>request</code> after a handoff has ended starts the next handoff of the session
+(<a href="#handoff">Human handoff</a>, step 5). A session in <code>human_handoff</code>
+leaves it by a release (to <code>incomplete</code>) or by cancel, TTL or a stopped mandate (to <code>cancelled</code>). On the network a
+handoff maps to Beckn <code>support</code> → <code>on_support</code>, and the MCP tool is <code>bacp_human_handoff</code>
+(<a href="../transports/mcp-a2a/#mcp-tools">MCP and A2A</a>).</p>
+<h2 id="hp-proof">Presence proof<a class="headerlink" href="#hp-proof" title="Permanent link">&para;</a></h2>
+<p><code>presence: HP</code> on a post-order write (cancel, return, raise issue, issue action) or on a trade act (GRN, CRAC, MSMED objection, ledger acknowledgement) is not only a declaration. The
+principal proves it on the Trusted Surface, through a step-up of kind <code>post_order</code>
+(<a href="../mandates/#presence">Presence</a>, <a href="../checkout/post-order/#post-order-gate">Post-order gate</a>):</p>
+<ol>
+<li>A post-order write with <code>presence: HP</code> and no <code>hp_proof</code> gets <code>403 presence_not_proven</code>. The error carries
+   <code>step_up</code>, a <code>StepUp</code> with <code>kind: post_order</code> and <code>reason: presence_proof</code>, whose <code>ts_render</code> names the write:
+   <code>action</code>, <code>order_id</code> and, for an issue action, <code>issue_id</code> and, for <code>RESOLUTION_ACCEPTED</code> or <code>RESOLUTION_REJECTED</code>,
+   <code>subject_hash</code>; for a trade act, <code>subject_ref</code> and <code>subject_hash</code>; for a <code>RETURN</code>, <code>items</code> and <code>reason_code</code>, and for a
+   <code>CANCEL</code>, <code>reason_code</code>. Nothing is sent to the network. The
+   gateway keeps at most one pending <code>post_order</code> step-up per <code>(subject_ref, action)</code> (for an order write, per <code>(order_id, action, issue_id)</code>): a step-up is pending
+   until it expires, is declined, or its proof is consumed. A repeat of the refused write returns the same
+   <code>step_up_id</code> and <code>ts_render</code>, except that for <code>RESOLUTION_ACCEPTED</code> or <code>RESOLUTION_REJECTED</code> on an issue whose
+   <code>resolution</code> no longer hashes to the pending step-up's <code>subject_hash</code> the gateway voids that step-up and creates a
+   new one. A voided step-up is no longer pending: the gateway refuses every event for it with <code>404 not_found</code> and
+   nothing changes, and serves its <code>ts_render</code> to no one. The creation of <code>post_order</code> step-ups is limited per
+   <code>(agent, principal)</code> and per <code>order_id</code>, a replacement for a step-up voided because the counterparty revised the
+   <code>resolution</code> is limited per <code>(principal, issue_id)</code> instead, and a principal who declined is not asked again at
+   once (<a href="#step-up-limits">Limits on step-ups</a>). A step-up reaches its final state through the status read described
+   in step 3.</li>
+<li>The principal confirms on the Trusted Surface, which posts the usual <code>step_up.approved</code> event with its
+   <code>Presentation</code>. The gateway checks it as for any step-up approval.</li>
+<li>The agent retries the write with <code>hp_proof{ts_event_hash, step_up_id}</code>: the <code>post_order</code> step-up's id and the
+   sha-256 over the JCS form of its signed <code>step_up.approved</code> event. Both fields are REQUIRED. The retry uses a <strong>new</strong>
+   <code>Idempotency-Key</code>: the refused request and the retry differ in body, so the same key gets <code>422 idempotency_conflict</code>,
+   whose <code>resolution</code> is <code>recoverable</code> and whose message names a new key (<a href="../transports/rest/#idempotency">Idempotency</a>).
+   The agent learns the <code>ts_event_hash</code> from the <strong>step-up status</strong>, never from the Trusted Surface: <code>GET /step-ups/{step_up_id}</code>
+   (tag <code>bacp-browse</code>, a different path from the render fetch of the Mandate Manager and PSP) returns <code>StepUpStatus</code>
+   <code>{step_up_id, kind, status, ts_event_hash?}</code>, where <code>status</code> is <code>pending</code>, <code>approved</code>, <code>declined</code>, <code>expired</code>,
+   <code>voided</code> or <code>superseded</code>, and <code>ts_event_hash</code> is present exactly when <code>status</code> is <code>approved</code>. The <code>step_up.updated</code>
+   webhook carries the same object. Only the agent credential whose request created the step-up may read it: any other
+   caller gets <code>404 not_found</code>, including another credential of the same agent operator. A step-up the gateway voided
+   after a counterparty's revision reads <code>voided</code>, and a write that cites it gets <code>403 presence_not_proven</code> with a new
+   <code>Error.step_up</code>.</li>
+<li>The gateway accepts the proof only for the <code>action</code>, <code>order_id</code> and <code>issue_id</code> named in that step-up's <code>ts_render</code>.
+   A proof issued for another order, action or issue gets <code>403 presence_not_proven</code>. For a <code>RETURN</code> it also matches the
+   write field by field against the <code>ts_render</code>: the <code>items</code>, as a multiset of <code>{id, quantity}</code>, and the <code>reason_code</code>
+   (a <code>CANCEL</code> matches its <code>reason_code</code>, and its <code>items</code> where the render carries them). A write that differs gets
+   <code>403 presence_not_proven</code> and sends nothing to the network. No new hash travels on the wire: the render is signed,
+   so <code>content_hash</code> already covers both fields. The gateway's pending key for a <code>RETURN</code> adds a digest of
+   <code>{items sorted by id, reason_code}</code>, so that separate returns of milk and of atta do not collide; the digest is not a wire
+   field. The gateway consumes a <code>RETURN</code> proof only if no other approved <code>RETURN</code> proof of the same order overlaps it in
+   items; a second, overlapping proof gets <code>403 presence_not_proven</code>. While a <code>RETURN</code> step-up of an order is pending, the
+   gateway creates no second <code>RETURN</code> step-up of that order whose items overlap it: the repeat returns the existing one. For <code>RESOLUTION_ACCEPTED</code> and
+   <code>RESOLUTION_REJECTED</code> the gateway also hashes the issue's current <code>resolution</code> when the write arrives and refuses
+   the proof with <code>403 presence_not_proven</code> if that hash is not the <code>ts_render</code>'s <code>subject_hash</code> (or if a <code>resolution</code>
+   exists where none was shown): a remedy the seller revised after the principal confirmed needs a new confirmation.
+   Any other issue action, in particular <code>ESCALATED</code>, is not bound to the <code>resolution</code> and is accepted on a valid
+   proof for its own <code>action</code>. For a trade act the gateway hashes the submitted subject (the exact document body, the
+   entry's <code>entry_hash</code>, or the <code>head_hash</code> at <code>through_seq</code>) and refuses the proof with <code>403 presence_not_proven</code>,
+   without consuming it, if that hash is not the <code>ts_render</code>'s <code>subject_hash</code>: an act that differs from what the principal
+   saw, for example a GRN with an objection added, needs a new confirmation. A statement acknowledgement whose
+   <code>head_hash</code> is no longer the ledger's head is refused with <code>409 ledger_head_mismatch</code>.</li>
+<li>An <code>hp_proof</code> is single-use. The gateway consumes it inside the atomic section keyed on the order's root Checkout
+   Mandate (<a href="../mandates/#usage-ledger">Usage ledger</a>), or, for a trade act that has no order, keyed on the <code>ledger_id</code>,
+   so that of two writes citing one proof, on any instances, exactly one succeeds and the other gets
+   <code>403 presence_not_proven</code>.</li>
+</ol>
+<p>A human-present <code>complete</code> is proven by the principal's signatures on the closed mandates and needs no <code>hp_proof</code>.</p>
+<h3 id="step-up-limits">Limits on step-ups<a class="headerlink" href="#step-up-limits" title="Permanent link">&para;</a></h3>
+<p>The gateway publishes every figure below in its profile (<code>step_up_limits</code> in <a href="../discovery/#profile-document"><code>/.well-known/bacp</code></a>),
+as a count over a window in the style of <code>negotiation.step_up_cap</code>. BACP sets no number: they are the gateway's own design
+values and are never presented as external limits. A gateway that declares none is tested against the limit that the
+conformance fixture sets.</p>
+<ul>
+<li><strong>Creation.</strong> The creation of <code>post_order</code> step-ups is counted per <code>(agent, principal)</code> and per <code>order_id</code>, and the creation of
+  session step-ups is counted per <code>(agent, principal)</code> like <code>post_order</code> step-ups (<code>session_per_principal</code>). A replacement
+  that the gateway creates after a counterparty's revision is not counted here. An excess gets <code>429</code> with <code>Retry-After</code>.
+  One principal's exhausted quota never blocks another principal of the same agent, whose write still gets
+  <code>403 presence_not_proven</code> with a <code>step_up</code>.</li>
+<li><strong>Render fetch.</strong> The <code>ts_render</code> fetch is counted per caller key before the step-up is looked up, as before, and
+  also per <code>(caller key, step_up_id)</code> after the standing check. An excess gets <code>429</code> with <code>Retry-After</code>.</li>
+<li><strong>Decline cool-off.</strong> Only an explicit <code>step_up.declined</code> starts it. Expiry does not, so a principal who was away has a
+  way back (for the step-up itself, expiry still means decline, <a href="#ts-requirements">TS-2</a>). For a <code>post_order</code> step-up the key is <code>(order_id, action, issue_id)</code>, and for a session step-up it is
+  <code>(root open Checkout Mandate or, without one, principal, bpp_id, kind)</code>, so that opening a new session does not escape it. Inside the published window, a new step-up for that key is refused with
+  <code>409 session_state_conflict</code> and <code>Retry-After</code> set to the time left, with no new step-up and no prompt. There is no
+  escape when the subject changes: a changed <code>reason_code</code> or quantity does not reopen the key, because an agent could
+  then flip a field to dodge the cool-off. A principal who declined by mistake waits out the window or uses the
+  grievance route. The Trusted Surface never asks the principal to confirm a decline, and the decline label is neutral
+  (<a href="#ts-requirements">TS-2</a>). The basis is the dark-pattern guideline on "nagging" (Annexure 1, item 10) and, from
+  01-01-2027, Rule 4(15) of the E-Commerce Rules.</li>
+<li><strong>Seller re-prompt cap.</strong> A revision of an issue's <code>resolution</code> voids the pending step-up and would create a
+  replacement. Replacements are counted per <code>(principal, issue_id)</code> under the published limit. Past it, the gateway
+  creates no new step-up, answers the agent <code>409 session_state_conflict</code>, shows the principal no prompt, and the issue goes
+  to the grievance route. Each render of a replacement carries the template sentence "the seller has changed this offer
+  N times" (<code>hi-IN</code>: "विक्रेता ने यह ऑफ़र N बार बदला है।"; draft wording), never seller text. Without the cap a
+  seller could revise again and again until a tired principal accepts a worse remedy. Past the cap a principal can no
+  longer accept a later, better offer in the flow and uses the grievance route.</li>
+</ul>
+<p><code>Retry-After</code> is REQUIRED on each of these <code>429</code> and <code>409</code> responses. The <code>hi-IN</code> sentence says, in English: "The seller has
+changed this offer N times."</p>
+<h2 id="trade-acts">Seller-side and trade acts<a class="headerlink" href="#trade-acts" title="Permanent link">&para;</a></h2>
+<p>Where a money clock starts, the record says whether a human or an agent acted. A credit-ledger acknowledgement, a
+GRN, a CRAC and an MSMED written objection carry a typed <code>actor{kind, role, participant_ref, mandate_ref}</code>
+(<a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>$defs/Actor</code>;
+<a href="../trade-profiles/#document-actors">Trade Profiles</a>). A human acts as <code>principal</code>, <code>assisted_operator</code> or
+<code>seller_operator</code>; an agent acts as <code>agent</code> or <code>sub_agent</code>.</p>
+<p>An agent records such an act only when the principal is present: the act <strong>MUST</strong> carry <code>hp_proof</code> of a <code>post_order</code>
+step-up whose <code>ts_render</code> names it (<code>action</code> <code>GRN</code>, <code>CRAC</code>, <code>MSMED_OBJECTION</code> or <code>LEDGER_ACK</code>, with <code>subject_ref</code> and
+<code>subject_hash</code>). No mandate scope authorises an agent's trade act, and <code>mandate_ref</code> on the actor only records the
+mandate the agent acted under (for an order-less ledger act it also names the Mandate Manager that issues the step-up).</p>
+<p>A gateway that lists <code>in.bacp.trade_document</code> (GRN, CRAC, MSMED objection) or <code>in.bacp.ledger</code> (ledger acknowledgement)
+offers one operation, <code>POST /trade-acts</code> (tag <code>bacp-post-order</code>), and, for documents, <code>GET /orders/{order_id}/documents</code>:</p>
+<ol>
+<li>The agent posts the act with <code>presence: HP</code> and no <code>hp_proof</code>. <code>presence: HNP</code> is refused with <code>403 presence_not_allowed</code>.</li>
+<li>The gateway answers <code>403 presence_not_proven</code> with a <code>post_order</code> step-up whose <code>ts_render</code> carries <code>action</code>,
+   <code>subject_ref</code> and <code>subject_hash</code>. Nothing is sent to the seller and nothing is appended to a ledger.</li>
+<li>The principal approves on the Trusted Surface, which shows exactly the subject, and the agent retries with <code>hp_proof</code>
+   and a new <code>Idempotency-Key</code> (<a href="#hp-proof">Presence proof</a>).</li>
+<li>The response carries, for a GRN, a CRAC or an MSMED objection, <code>delivery: recorded</code> or <code>delivery: sent</code>.</li>
+</ol>
+<p><strong>Recorded, not sent.</strong> Until the carriage of a buyer-issued GRN or CRAC on Beckn is settled (<a href="../open-questions/#q-33">Q-33</a>),
+<code>delivery</code> is <code>recorded</code>: the gateway <strong>MUST NOT</strong> emit a Beckn GRN or CRAC for a recorded act, a recorded act <strong>MUST NOT</strong>
+set or move the MSMED due date in the BACP ledger, and support staff see it as "not sent to seller". A principal who files an
+objection is told on the Trusted Surface that it is recorded but not yet sent to the seller, and that it does not stop the
+15-day clock of the MSMED Act until it is sent in writing (whether an objection sent by an agent is in writing, and whether
+a recorded objection starts or stops the clock, is open: <a href="../open-questions/#q-21">Q-21</a>, <a href="../open-questions/#q-83">Q-83</a>).
+A ledger acknowledgement is BACP-native, takes effect at once and carries no <code>delivery</code>.</p>
+<p>The documents' bodies carry counterparty text (a reason, an objection). The Trusted Surface labels it as counterparty text,
+and an agent <strong>MUST NOT</strong> load a counterparty <code>DocumentRef.uri</code> into model context.</p>
+<h2 id="time-bands">Legal time bands<a class="headerlink" href="#time-bands" title="Permanent link">&para;</a></h2>
+<p>The rules on this page rest partly on law in force and partly on law with a later start date. As of 18-10-2026:</p>
+<table>
+<thead>
+<tr>
+<th>From</th>
+<th>Instrument</th>
+<th>What it requires</th>
+<th>Where BACP answers it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>In force</td>
+<td>Consumer Protection (E-Commerce) Rules, 2020, r.4(9)</td>
+<td>Consent to a purchase by an explicit and affirmative action; no pre-ticked boxes</td>
+<td>TS-2; <code>ts_render</code> content rule 3</td>
+</tr>
+<tr>
+<td>In force</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023</td>
+<td>Apply to platforms, advertisers and sellers; interface interference among the listed patterns</td>
+<td>TS-1, TS-2, TS-4</td>
+</tr>
+<tr>
+<td>In force</td>
+<td>RBI AFA Directions 2025 (authentication mechanisms for digital payment transactions)</td>
+<td>Authentication validates the credentials of the customer who originates the payment instruction</td>
+<td>Principal's own factor; the <a href="#assisted">assisted</a> rule goes further as BACP policy</td>
+</tr>
+<tr>
+<td>In force</td>
+<td>Information Technology Act, 2000, s.11(c) (<a href="https://www.indiacode.nic.in/bitstream/123456789/13116/1/it_act_2000_updated.pdf">India Code</a>)</td>
+<td>A record sent "by an information system programmed by or on behalf of the originator to operate automatically" is attributed to the originator</td>
+<td><code>Presentation</code> and signed Trusted Surface events in the bundle</td>
+</tr>
+<tr>
+<td>In force</td>
+<td>Rights of Persons with Disabilities Act, 2016, s.46 and s.89</td>
+<td>"The service providers whether Government or private shall provide services in accordance with the rules on accessibility formulated by the Central Government under section 40 within a period of two years from the date of notification of such rules" (s.46). A contravention is punishable with a fine up to ₹10,000 for the first and ₹50,000 to ₹5 lakh for a later one (s.89)</td>
+<td>TS-3 (<code>modality</code>); Trusted Surface accessibility beyond <code>modality</code> stays a SHOULD, with a conformance case</td>
+</tr>
+<tr>
+<td>In force</td>
+<td>Rajive Raturi v Union of India, 2024 INSC 858, 08-11-2024</td>
+<td>Rule 15(1) of the RPwD Rules was held ultra vires; the Union was directed to delineate mandatory rules, as s.40 requires, within three months of the judgment. Whether such rules have since been notified is not verified as of 18-10-2026</td>
+<td>The mandatory accessibility standard for Trusted Surfaces is unsettled; TS-3 stays the BACP floor</td>
+</tr>
+<tr>
+<td>In force</td>
+<td>G.S.R. 359(E), 10-05-2023</td>
+<td>Inserted a requirement that websites, apps and ICT-based public facilities and services comply with IS 17802 (Part 1) 2021 and (Part 2) 2022, into the sub-rule that Raturi later held ultra vires. A draft S.O. 3962(E) of 16-07-2026 that is reported to propose IS 17802 is not verified as of 18-10-2026</td>
+<td>Informative only</td>
+</tr>
+<tr>
+<td>13-11-2026</td>
+<td>DPDP Act s.6(9) and DPDP Rules r.4</td>
+<td>Consent Managers registered with the Board; records of consents given, denied or withdrawn</td>
+<td><code>captured_via.presentation</code>; <a href="../open-questions/#q-16">Q-16</a></td>
+</tr>
+<tr>
+<td>01-01-2027</td>
+<td>Consumer Protection (E-Commerce) (Amendment) Rules, 2026, G.S.R. 789(E)</td>
+<td>Complainant gets a copy of the complaint as recorded; compliance with the dark-pattern guidelines and a yearly self-audit</td>
+<td><a href="#evidence-summary">Evidence summary</a>; TS-2, TS-4</td>
+</tr>
+<tr>
+<td>13-05-2027</td>
+<td>DPDP Act s.9(1)</td>
+<td>Verifiable consent of the lawful guardian of "a person with disability who has a lawful guardian"</td>
+<td>A <strong>Proposed</strong> participant role <code>lawful_guardian</code> with no disability data in the participant record and no <code>ACTING_FOR</code> or assisted-operator stand-in for the guardian's consent; no schema in this version</td>
+</tr>
+<tr>
+<td>13-05-2027</td>
+<td>DPDP Act ss.5(3), 6(3), 6(4), 6(10); DPDP Rules, 2025, r.3(c) and r.9</td>
+<td>Notice and consent request with the option of English or an Eighth Schedule language; the consent request gives the contact of the Data Protection Officer or an authorised person; the notice describes how to exercise rights and complain; that person's business contact information is published; withdrawal as easy as consent; the Data Fiduciary proves that notice was given and consent obtained</td>
+<td>TS-3, TS-5; <code>ts_render</code> content rule 2; Trusted Surface events in the <a href="../evidence/#bundle">bundle</a></td>
+</tr>
+</tbody>
+</table>
+<p>The mapping to requirement ids is on <a href="../regulatory-mapping/">Regulatory Mapping</a>.</p>
+<h2 id="fail-safe">Fail-safe defaults<a class="headerlink" href="#fail-safe" title="Permanent link">&para;</a></h2>
+<p>Every open question marked "Open, fail-safe default" on <a href="../open-questions/#summary">Open Questions</a> has a default that
+refuses, escalates to the principal on the Trusted Surface, or keeps a feature off. Such a default is <strong>relaxed only
+in a dated release</strong> of BACP:</p>
+<ul>
+<li>A gateway, Mandate Manager or PSP <strong>MUST NOT</strong> apply a relaxed form of a fail-safe default by configuration, profile
+  field or bilateral agreement while it claims a conformance level of a release that states the default. No profile
+  field signals a relaxed default; the profile is fetched unsigned and could not prove one.</li>
+<li>An escalation to the Trusted Surface under a fail-safe default (<a href="../open-questions/#q-12">Q-12</a>,
+  <a href="../open-questions/#q-52">Q-52</a>) leaves a signed Trusted Surface event with a <code>Presentation</code> in the evidence bundle.</li>
+<li>Conformance cases T1-27 to T1-32 test the six fail-safe defaults of <code>2026-10-18</code>
+  (<a href="../conformance/#human-participant-cases">Human-participant cases</a>).</li>
+</ul>
+<h2 id="evidence-summary">Evidence summary profile (informative)<a class="headerlink" href="#evidence-summary" title="Permanent link">&para;</a></h2>
+<p>Dispute staff, a grievance officer, PSP support or the National Consumer Helpline need to read a bundle, often in the
+complainant's language. The profile <strong><code>in.bacp.evidence.summary.1</code></strong> is an informative, human-readable rendering of an
+<a href="../evidence/#bundle">evidence bundle</a>:</p>
+<ul>
+<li>It is built <strong>only from the signed artefacts</strong> in the bundle (mandates, the BPP-signed quote, receipts, Trusted
+  Surface events), never from operator-written summaries.</li>
+<li>It is deterministic and template-built: the same bundle, language and template version give identical bytes.
+  Amounts are in ₹ with Indian digit grouping, times in IST, and each item carries a flag saying whether its signature
+  verified.</li>
+<li>It carries the <code>bundle_hash</code> (sha-256 over the JCS form of the bundle) that it summarises.</li>
+<li>For a negotiation it states the outcome of a crossing in one sentence, in English and <code>hi-IN</code>, built from signed artefacts alone (four integers: the two <code>sender_log_seq</code> and the two <code>log_seq</code>):<ul>
+<li>withdraw won: "The seller's withdrawal reached the buyer's system before the buyer sent the acceptance, so there is no agreement." / "ख़रीदार के मंज़ूरी भेजने से पहले ही, विक्रेता का ऑफ़र वापस लेने का संदेश ख़रीदार के सिस्टम तक पहुँच गया, इसलिए कोई सौदा नहीं हुआ।"</li>
+<li>accept won: "The buyer's acceptance reached the seller's system before the seller sent the withdrawal, so the agreement stands." / "विक्रेता के ऑफ़र वापस लेने का संदेश भेजने से पहले ही, ख़रीदार की मंज़ूरी विक्रेता के सिस्टम तक पहुँच गई, इसलिए सौदा पक्का है।"</li>
+<li>contested: "The order and the withdrawal crossed: confirm or cancel. No breach is recorded either way." / "ऑर्डर और ऑफ़र वापस लेने का संदेश, दोनों एक-दूसरे के पहुँचने से पहले ही भेजे गए: पुष्टि करें या रद्द करें। आप जो भी चुनें, किसी पर सौदा तोड़ने का मामला दर्ज नहीं होता।"</li>
+<li>impossible: "Both systems show they received the other's message first, so the record cannot be relied on and is treated as contested." / "दोनों सिस्टम दिखाते हैं कि दूसरे का संदेश उन्हें पहले मिला, इसलिए इस रिकॉर्ड पर भरोसा नहीं किया जा सकता और इसे विवादित माना जाता है।"</li>
+</ul>
+</li>
+<li>It is <strong>never evidence</strong>. A reviewer verifies the bundle, not the summary.</li>
+</ul>
+<p><strong>Requesting a summary.</strong> <code>GET /evidence/{transaction_id}/summary?language=</code> (tag <code>bacp-browse</code>; MCP tool
+<code>bacp_evidence_summary_get</code> with the arguments <code>transaction_id</code> and <code>language</code>) returns <code>EvidenceSummary</code>:
+<code>{profile, bundle_hash, language, template_id, text, items[]}</code>, each item <code>{ref, verified}</code>. The callers are the callers
+of the bundle (<a href="../evidence/#bundle-access">Access</a>), each served only the summary of the bundle built for it, so that a
+seller or a payer PSP gets no other seller's lines. The grievance officer named in the operator's <code>grievance_contact</code> may
+also fetch it, acting for the principal: the complainant's copy of the complaint, which G.S.R. 789(E) r.4(5) requires from
+01-01-2027, then reaches a principal who has no API client. Anyone else gets <code>403 evidence_forbidden</code>. A gateway <strong>MAY</strong>
+offer the endpoint; the summary is never evidence.</p>
+<h2 id="open-questions">Open questions<a class="headerlink" href="#open-questions" title="Permanent link">&para;</a></h2>
+<ul>
+<li><a href="../open-questions/#q-11">Q-11</a>: IGM actor types for an AI agent and for seller staff.</li>
+<li><a href="../open-questions/#q-13">Q-13</a>: validity of voice, tap or operator-relayed confirmation.</li>
+<li><a href="../open-questions/#q-21">Q-21</a>: MSMED deemed acceptance and objections sent by an agent.</li>
+<li><a href="../open-questions/#q-62">Q-62</a>: who certifies assisted operators.</li>
+<li><a href="../open-questions/#q-63">Q-63</a>: whether a PSP may render a third-party <code>ts_render</code>, and IVR callbacks.</li>
+<li><a href="../open-questions/#q-64">Q-64</a>: registry enrolment and revocation of <code>support_operator</code> keys.</li>
+<li><a href="../open-questions/#q-65">Q-65</a>: whether an agent-initiated draw on a Reserve Pay block is a customer action.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../mandates/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Mandates and Consent">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Mandates and Consent
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../checkout/" class="md-footer__link md-footer__link--next" aria-label="Next: Sessions and Checkout">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Sessions and Checkout
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

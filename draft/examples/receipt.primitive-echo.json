@@ -1,0 +1,32 @@
+{
+  "receipt_id": "rcpt_7Q2W9X4K1M3A5B",
+  "receipt_type": "payment",
+  "iss": "psp.example.in",
+  "issued_at": "2026-10-14T11:02:31+05:30",
+  "result": "success",
+  "reference": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM",
+  "mandate_ref": "mdt_PAY7Q2W9X4K1M3",
+  "open_mandate_ref": "mdt_PAY7Q2W9X4K1M3",
+  "primitive": "agentic_token_intent",
+  "transaction_id": "7b2f6c1e-3a4d-4e5f-8a9b-0c1d2e3f4a5b",
+  "amount": {
+    "value": 184900,
+    "currency": "INR"
+  },
+  "rail": {
+    "type": "in.card.agentic",
+    "rail_ref": "AGT-INTENT-000123456",
+    "status": "SUCCESS",
+    "evidence": {
+      "arn": "74123456789012345678901",
+      "auth_code": "A1B2C3"
+    }
+  },
+  "signature": {
+    "kid": "psp.example.in|ukid-3|ed25519",
+    "alg": "EdDSA",
+    "value": "eyJhbGciOiJFZERTQSJ9.eyJyZWNlaXB0IjoiciJ9.c2lnbmF0dXJl",
+    "role": "psp"
+  },
+  "checkout_hash": "sha-256:Zm9vYmFyZm9vYmFyZm9vYmFyZm9vYmFyZm9vYmFyZm8"
+}

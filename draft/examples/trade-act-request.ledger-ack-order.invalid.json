@@ -1,0 +1,13 @@
+{
+  "act": "LEDGER_ACK",
+  "presence": "HP",
+  "subject": {
+    "order_id": "ORD-1"
+  },
+  "actor": {
+    "kind": "agent",
+    "role": "agent",
+    "participant_ref": "did:web:agents.vaani.example.in:sakhi",
+    "mandate_ref": "mdt_CHK7Q2W9X4K1M3"
+  }
+}

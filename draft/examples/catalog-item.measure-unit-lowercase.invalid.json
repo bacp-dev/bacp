@@ -1,0 +1,42 @@
+{
+  "id": "I-BISCUIT-10",
+  "name": {
+    "en-IN": "Glucose biscuits 10 rupee pack",
+    "hi-IN": "ग्लूकोज़ बिस्कुट 10 रुपये का पैक"
+  },
+  "unit_price": {
+    "value": 900,
+    "currency": "INR"
+  },
+  "mrp": {
+    "value": 1000,
+    "currency": "INR"
+  },
+  "tax_inclusive": true,
+  "sponsorship": {
+    "status": "not_sponsored"
+  },
+  "hsn": "1905",
+  "gst_rate_bps": 1800,
+  "measure": {
+    "unit": "kg"
+  },
+  "policies": [
+    {
+      "type": "in.bacp.policy.return",
+      "allowed": true,
+      "window": "P7D"
+    },
+    {
+      "type": "in.bacp.policy.cancel",
+      "allowed": true
+    }
+  ],
+  "min_order": {
+    "value": {
+      "value": 20000,
+      "currency": "INR"
+    },
+    "item_qty": 1
+  }
+}

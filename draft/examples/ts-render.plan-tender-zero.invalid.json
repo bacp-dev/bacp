@@ -1,0 +1,45 @@
+{
+  "step_up_id": "stp_01HZXAq8W3nK5vRt7YcLm2",
+  "session_id": "ses_01HZXB",
+  "kind": "confirm",
+  "reason": "above_step_up_threshold",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "price_breakup_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4",
+  "seller_name": "Shree Ganesh Kirana",
+  "summary": {
+    "hi-IN": "₹1,000 गिफ्ट कार्ड से और ₹1,160 UPI से, कुल ₹2,160 का ऑर्डर पक्का करें?",
+    "en-IN": "Confirm the ₹2,160 order: ₹1,000 from gift card and ₹1,160 by UPI?"
+  },
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T18:45:00+05:30",
+  "plan": {
+    "plan_hash": "sha-256:Hq5vYd2m0aB7sKxP3oWc9eTnLuZ1fRiG4jXyVb6QhMA",
+    "tenders": [
+      {
+        "tender_id": "tdr_gift001",
+        "handler": "in.ppi.gift",
+        "amount": {
+          "value": 0,
+          "currency": "INR"
+        },
+        "sequence": 1
+      },
+      {
+        "tender_id": "tdr_upi001",
+        "handler": "in.upi.circle",
+        "amount": {
+          "value": 116000,
+          "currency": "INR"
+        },
+        "sequence": 2
+      }
+    ]
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "line_items": [
+    {
+      "item": {
+        "id": "itm_atta5"
+      },
+      "quantity": 2
+    }
+  ],
+  "buyer": {
+    "consent": {
+      "marketing": {
+        "granted": true,
+        "source": "business",
+        "description": "Marketing messages"
+      }
+    }
+  }
+}

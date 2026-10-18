@@ -1,0 +1,16 @@
+{
+  "bpp_id": "bpp.kirana.example.in",
+  "mode": "alternating",
+  "negotiation_mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+  "presence": "HP",
+  "hp_proof": {
+    "ts_event_hash": "sha-256:Rk3mW8qZ1tY5vB9nC2xL6pD0sH4jF7gA3eU8iO1kM5w",
+    "step_up_id": "stp_01HZPONEG01q8W3nK5vRt7YcLm2"
+  },
+  "items": [
+    {
+      "item_id": "I-1",
+      "quantity": 2
+    }
+  ]
+}

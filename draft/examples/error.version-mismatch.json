@@ -1,0 +1,7 @@
+{
+  "type": "invalid_request",
+  "code": "version_mismatch",
+  "message": "Session ses_01HZXB was created under 2026-11-01; the request names 2026-10-18",
+  "param": "$.headers.BACP-Version",
+  "resolution": "recoverable"
+}

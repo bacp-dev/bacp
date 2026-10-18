@@ -1,0 +1,159 @@
+{
+  "handler_id": "in.ppi.gift",
+  "aliases": [],
+  "name": {
+    "en-IN": "Gift PPI (open or semi-closed gift card)"
+  },
+  "family": "ppi",
+  "kind": "payment",
+  "status": "live",
+  "rail": {
+    "operator": "PPI issuers"
+  },
+  "regulator": [
+    {
+      "body": "RBI",
+      "instrument": "PPI MD 2021 paras 2.6, 10.1, 11.4.3, 15.3(e)"
+    }
+  ],
+  "presence": {
+    "human_presence": "none",
+    "hp": true,
+    "hnp": "rail_enforced",
+    "device_bound": false,
+    "assisted_only": false
+  },
+  "binding": {
+    "class": "O",
+    "open_eligible": true,
+    "open_primitives": [
+      "balance_cap"
+    ],
+    "closed_auth": [
+      "voucher_code"
+    ],
+    "open_requires": "Balance is the cap. No reload, no cash-out. A gift PPI is accepted only by a seller that has a contract with the issuer to accept it (PPI MD para 2.6), and by any merchant only where the issuer offers interoperability, which is its option (PPI MD para 11.4.3), so the seller's acceptance is checked before the rung is ranked. Open only when the PSP attestation states that the gift code vault is on the principal's side (the Trusted Surface or the payer PSP); otherwise the Mandate Manager refuses issuance."
+  },
+  "mandate_primitives": [
+    {
+      "type": "balance_cap",
+      "limits_enforced_by": "issuer",
+      "ref_name": "gift instrument id",
+      "payee_scope": "issuer_contracted",
+      "multi_capture": true
+    }
+  ],
+  "limits": [
+    {
+      "name": "voucher_max",
+      "source": {
+        "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+        "section": "para 10.1",
+        "label": "RBI"
+      },
+      "verification": "verified",
+      "configurable": false,
+      "amount": {
+        "value": 1000000,
+        "currency": "INR"
+      }
+    },
+    {
+      "name": "validity",
+      "source": {
+        "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+        "section": "para 13.1",
+        "label": "RBI"
+      },
+      "verification": "verified",
+      "configurable": false,
+      "duration": "P1Y",
+      "bound": "exact",
+      "applies_to": "minimum validity of one year (PPI MD para 13.1)"
+    }
+  ],
+  "afa": {
+    "model": "exempt",
+    "rbi_annex1_item": 3,
+    "pre_debit_notice": "not_applicable",
+    "source": {
+      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+      "section": "para 15.3(e)",
+      "label": "RBI"
+    },
+    "verification": "verified"
+  },
+  "refund": {
+    "route": "same_ppi",
+    "source": {
+      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+      "section": "para 14.3",
+      "label": "RBI"
+    },
+    "failed_txn_tat": "P1D",
+    "compensation_per_day": {
+      "value": 10000,
+      "currency": "INR"
+    },
+    "notes": "Refunds to a gift PPI go back to the same PPI immediately, even above the limits (PPI MD para 14.3(a)); a payment made with another instrument is never refunded to a PPI (14.3(b)). A transfer back to the source account needs the holder's consent (10.1(c)). A non-bank issuer pays a balance left after expiry to the holder in a bank account on request (13.3). failed_txn_tat of P1D applies on-us; off-us follows the rail. Whether a refund can be credited to a non-reloadable gift PPI is not verified as of 18-10-2026."
+  },
+  "dispute": {
+    "channels": [
+      "issuer (48 h preferred, 30 days max, PPI MD 16.2(e))",
+      "RBI Integrated Ombudsman (RB-IOS 2026)"
+    ]
+  },
+  "settlement": {
+    "mechanism": "non-bank escrow at a scheduled commercial bank",
+    "evidence_refs": [
+      "rrn"
+    ],
+    "escrow": "pa_escrow"
+  },
+  "data_minimisation": {
+    "payment_leg_fields": [
+      "payee",
+      "amount",
+      "mandate_ref",
+      "checkout_hash"
+    ],
+    "never_collect": [
+      "pin",
+      "otp",
+      "card_pan",
+      "cvv",
+      "card_expiry",
+      "netbanking_credentials",
+      "aadhaar_number",
+      "biometric",
+      "basket",
+      "voucher_code_plaintext"
+    ],
+    "basket_blind": true
+  },
+  "funding": "prepaid",
+  "credit_disclosure_required": false,
+  "segments": [
+    "b2c"
+  ],
+  "requirements": [
+    "PAY-122"
+  ],
+  "sources": [
+    {
+      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+      "section": "para 10.1",
+      "label": "RBI"
+    },
+    {
+      "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+      "section": "Annexure-1, item 3",
+      "label": "RBI"
+    },
+    {
+      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+      "section": "paras 2.6, 11.4.3, 13.1, 13.3, 14.3(a) and (b), 15.3(e), 16.2(e)",
+      "label": "RBI"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "type": "tax",
+  "recipient": "government",
+  "amount": {
+    "value": 1800,
+    "currency": "INR"
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "vct": "in.bacp.mandate.negotiation.1",
+  "mandate_id": "mdt_NEG7Q2W9X4K1M3",
+  "kind": "negotiation",
+  "parent_mandate_id": null,
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "iss": "mm.psp.example.in",
+  "iat": 1791763200,
+  "valid_from": "2026-10-12T10:00:00+05:30",
+  "valid_until": "2026-11-11T10:00:00+05:30",
+  "principal": {
+    "ref": "pp_9f2c1e"
+  },
+  "agent": {
+    "id": "did:web:agents.vaani.example.in:sakhi",
+    "credential_hash": "sha-256:q8NQRLTGcDbR5z2oSauD00TbDbbSvZLw41AXtbgrIJY"
+  },
+  "presence_allowed": [
+    "HNP",
+    "HP"
+  ],
+  "constraints": {
+    "negotiation": {
+      "role": "buyer",
+      "modes_allowed": [
+        "fixed",
+        "alternating",
+        "dutch",
+        "scheme"
+      ],
+      "price": {
+        "total_max": {
+          "value": 250000,
+          "currency": "INR"
+        },
+        "reservation": {
+          "sd": true,
+          "value": {
+            "value": 220000,
+            "currency": "INR"
+          },
+          "disclosure": "never",
+          "held_by": "policy_engine"
+        },
+        "max_increase_pct_after_first_quote": 0
+      },
+      "delivery": {
+        "deliver_by_latest": "2026-10-25T20:00:00+05:30"
+      },
+      "payment": {
+        "handlers_allowed": [
+          "in.upi.circle",
+          "in.upi.intent",
+          "in.card.token"
+        ],
+        "max_advance_pct": 100,
+        "emi_allowed": false,
+        "credit_funding_allowed": false,
+        "cod_allowed": false,
+        "cod_max_open_orders": 0
+      },
+      "after_sales": {
+        "min_return_window": "P7D"
+      },
+      "process": {
+        "max_rounds": 10,
+        "deadline": "2026-10-13T20:00:00+05:30",
+        "firm_counter_allowed": true,
+        "accept_confirmation": "hold"
+      },
+      "step_up": {
+        "any_violation": true,
+        "between_reservation_and_max": true,
+        "new_counterparty_above": {
+          "value": 250000,
+          "currency": "INR"
+        },
+        "drip_pct": 0,
+        "agreed_issue_reopened": true
+      }
+    }
+  },
+  "revocation": {
+    "status_uri": "https://mm.psp.example.in/status/mdt_NEG7Q2W9X4K1M3",
+    "notify_sla_seconds": 60,
+    "on_revoke": "withdraw_live_firm_offers"
+  },
+  "cnf": {
+    "jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+      "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+      "kid": "sakhi-2026-10"
+    }
+  },
+  "signatures": [
+    {
+      "role": "principal",
+      "kid": "pp_9f2c1e#dev1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "status": "ACTIVE"
+}

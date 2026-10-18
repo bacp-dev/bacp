@@ -1,0 +1,2552 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/trade-profiles/">
+      
+      
+        <link rel="prev" href="../evidence/">
+      
+      
+        <link rel="next" href="../errors/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Trade Profiles - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#trade-profiles" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Trade Profiles
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-a-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring a profile
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Handler classes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profile-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b2c-retail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B2C retail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kirana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kirana, khata and mol-bhav
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#distributor-schemes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distributor schemes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b2b-procurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B2B procurement: RFQ → PO → net terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enam-and-mandi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eNAM and mandi
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Services
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subscriptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscriptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#social-and-conversational" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Social and conversational
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assisted-rural" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assisted rural
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exports-and-cross-border" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exports and cross-border
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c2c-and-rentals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C2C and rentals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#high-value-purchases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High-value purchases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ticketing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ticketing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#financing-overlays-treds-and-ocen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Financing overlays: TReDS and OCEN
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Financing overlays: TReDS and OCEN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#treds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TReDS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ocen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OCEN
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documents
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Documents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#document-actors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who acted on a trade document
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-a-profile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declaring a profile
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Handler classes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Roles
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#profile-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Profile table
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b2c-retail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B2C retail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#kirana" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Kirana, khata and mol-bhav
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#distributor-schemes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Distributor schemes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#b2b-procurement" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        B2B procurement: RFQ → PO → net terms
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeM
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enam-and-mandi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        eNAM and mandi
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#services" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Services
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#subscriptions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Subscriptions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#social-and-conversational" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Social and conversational
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#assisted-rural" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Assisted rural
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#exports-and-cross-border" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Exports and cross-border
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#c2c-and-rentals" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        C2C and rentals
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#high-value-purchases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        High-value purchases
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ticketing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Ticketing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#financing-overlays-treds-and-ocen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Financing overlays: TReDS and OCEN
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Financing overlays: TReDS and OCEN">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#treds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TReDS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ocen" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OCEN
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Documents
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Documents">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#document-actors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Who acted on a trade document
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="trade-profiles">Trade Profiles<a class="headerlink" href="#trade-profiles" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release. Several thresholds rest on secondary sources; every regulatory number MUST be configurable.</p>
+</div>
+<p>India trades in many ways at once: a quick-commerce order paid by UPI, a kirana's monthly khata, a distributor's "buy 10 get 1" scheme, an RFQ that ends in a net-30 purchase order, a GeM reverse auction, an eNAM lot sold to the highest bidder. A <strong>trade profile</strong> is a named, conformance-testable bundle of defaults over the <a href="../negotiation/">negotiation module</a> and the <a href="../payments/handler-registry/">payment handler registry</a>. It fixes, for one trade model:</p>
+<ul>
+<li>the extra <strong>roles</strong> that take part;</li>
+<li>the allowed <strong>negotiation modes</strong>;</li>
+<li>the eligible <strong>payment handlers</strong>, by presence;</li>
+<li>the <strong>credit terms</strong> and documents that apply;</li>
+<li>the <strong>validators</strong> and human-presence gates that run.</li>
+</ul>
+<h2 id="declaring-a-profile">Declaring a profile<a class="headerlink" href="#declaring-a-profile" title="Permanent link">&para;</a></h2>
+<ul>
+<li>A BAP or BPP declares the profiles it supports in <code>/.well-known/bacp</code> (<code>profiles[]</code>). See <a href="../discovery/">Discovery and Profiles</a>.</li>
+<li>A session declares exactly one profile in <code>context.bacp</code> (<code>profile</code>) and in its negotiation tags. The profile is fixed when the session opens, and a later message that declares another is refused with <code>capabilities_incompatible</code>.</li>
+<li><strong>Who declares it.</strong> The buyer side declares <code>profile</code> and <code>acting_for</code> at session open, in a buyer-signed message, and both are pinned (<code>NegotiationSession.profile</code> and <code>acting_for_kind</code> are read-only). The buyer <strong>gateway</strong> fills them from the mandate. A model-supplied <code>NegotiationCreate.profile</code> that differs from the mandate's is refused with <code>403 mandate_scope_mismatch</code>. A consumer marker always wins.</li>
+<li><strong>Refusing a profile.</strong> Either party MAY refuse with <code>capabilities_incompatible</code>, param <code>$.context.bacp.profile</code>, reason <code>profile_not_supported</code> or <code>profile_misdescribed</code>. Nothing becomes <code>LIVE</code>, and a seller never reclassifies a session. A GSTIN does not end consumer status: the Consumer Protection Act, 2019, s.2(7), Explanation (a) keeps a person who buys goods for commercial purpose that is not within the exclusion a consumer. Whether a sole proprietor's livelihood purchase is a consumer purchase despite a signed declaration of commercial purpose is open (<a href="../open-questions/#q-52">Q-52</a>).</li>
+<li>A profile <strong>narrows</strong>. It never widens a mandate: the principal's <a href="../mandates/">checkout mandate</a> and <a href="../negotiation/#the-negotiation-mandate">negotiation mandate</a> still apply, and the stricter bound wins.</li>
+<li>A participant that claims a profile MUST pass the conformance cases of the levels that profile needs (see <a href="../conformance/">Conformance</a>). No attestation covers an <strong>experimental</strong> profile (<a href="#profile-table">Maturity</a>).</li>
+</ul>
+<h2 id="handler-classes">Handler classes<a class="headerlink" href="#handler-classes" title="Permanent link">&para;</a></h2>
+<p>The handler columns below use the binding classes of the <a href="../payments/handler-registry/">handler registry</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Class</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>O</strong></td>
+<td>Open: a standing authority whose limits the rail, the issuer or both parties enforce. Can back an agent payment with the human not present (HNP).</td>
+</tr>
+<tr>
+<td><strong>C</strong></td>
+<td>Closed: each payment is authorised by the human (UPI PIN, card AFA, net-banking login). Human present (HP) only.</td>
+</tr>
+<tr>
+<td><strong>A</strong></td>
+<td>Assisted: a human operator (VLE, BC agent) completes the payment for the principal</td>
+</tr>
+<tr>
+<td><strong>D</strong></td>
+<td>Cash or UPI on delivery</td>
+</tr>
+<tr>
+<td><strong>N</strong></td>
+<td>Not a payment at checkout: financing, guarantees, deposits and settlement constructs</td>
+</tr>
+</tbody>
+</table>
+<h2 id="roles">Roles<a class="headerlink" href="#roles" title="Permanent link">&para;</a></h2>
+<p>Every term sheet names its parties. One transaction can name a different ordering entity, consignee and paying authority.</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Who in India</th>
+<th>How BACP represents it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>buyer</code>, <code>seller</code></td>
+<td>The principals</td>
+<td><code>parties.buyer</code> / <code>parties.seller</code>; each may act through an agent under a mandate</td>
+</tr>
+<tr>
+<td><code>ordering_entity</code></td>
+<td>GeM buyer organisation, enterprise department</td>
+<td><code>parties.ordering_entity</code></td>
+</tr>
+<tr>
+<td><code>consignee</code></td>
+<td>GeM consignee who issues the CRAC, a receiving warehouse</td>
+<td><code>parties.consignee</code>; issues the GRN or CRAC</td>
+</tr>
+<tr>
+<td><code>paying_authority</code></td>
+<td>PAO / DDO, enterprise accounts payable</td>
+<td><code>parties.paying_authority</code>; the checker in maker–checker</td>
+</tr>
+<tr>
+<td><code>broker</code></td>
+<td>Arhtiya, property broker, customs house agent, salesman</td>
+<td><code>intermediaries[]</code> with <code>acts_for</code>; commission disclosed in <code>commission[]</code>; needs its own scoped mandate</td>
+</tr>
+<tr>
+<td><code>aggregator</code></td>
+<td>Marketplace, B2B app, GeM, eNAM, ONDC apps</td>
+<td>Marketplace or merchant-of-record flag. Collecting money for others requires an authorised payment aggregator's escrow.</td>
+</tr>
+<tr>
+<td><code>financier</code></td>
+<td>Bank, NBFC, BNPL lender, TReDS financier, e-NWR pledgee, LC bank</td>
+<td>Class N or credit handlers; becomes the new payee on the ledger after discounting</td>
+</tr>
+<tr>
+<td><code>logistics</code></td>
+<td>3PL, courier (COD collector), transporter holding the e-way bill</td>
+<td>Fulfilment party; COD remitter</td>
+</tr>
+<tr>
+<td><code>assurer</code></td>
+<td>Assayer, inspector, hallmarking centre, RERA or BIS registry</td>
+<td>Issues assay certificates, inspection reports and HUIDs as document references or verifiable credentials</td>
+</tr>
+<tr>
+<td><code>arbiter</code></td>
+<td>Grievance officer, ODR provider, MSEFC, APMC committee, GeM incident management, consumer commission</td>
+<td>The escalation chain on the IGM issue; MSEFC for MSMED disputes</td>
+</tr>
+<tr>
+<td><code>assisted_operator</code></td>
+<td>CSC VLE, bank BC, kirana operator</td>
+<td>AI agent → human operator → principal chain. Principal consent, operator id and fee are logged, and the receipt goes to the principal. The operator is an <code>assisted_operator</code> entry in <code>Session.participants[]</code>, REQUIRED on <code>channel: assisted</code>, and the principal approves with the principal's own factor (<a href="../human-participants/#assisted">Assisted channel</a>).</td>
+</tr>
+<tr>
+<td><code>reseller</code></td>
+<td>Social-commerce reseller</td>
+<td>Two prices and two parties; the reseller margin settles after the return window</td>
+</tr>
+<tr>
+<td><code>auctioneer</code></td>
+<td>Neutral auction platform</td>
+<td>Runs the clock; never affiliated with a seller (<a href="../negotiation/rfq-and-auctions/#who-may-run-and-award">Auctions</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="profile-table">Profile table<a class="headerlink" href="#profile-table" title="Permanent link">&para;</a></h2>
+<p>| Profile | Maturity | Trade model | Negotiation modes | Handlers: HNP default / HP | Credit terms | Key gates | Waiver permitted |
+|---||---|---|---|---|---|---|---|
+| <a href="#b2c-retail"><code>b2c.ecom</code></a> | <strong>launch</strong> | Organised B2C and quick commerce | <code>fixed</code>, <code>scheme</code>, <code>posted_dynamic</code> | O: Reserve Pay (per seller), Circle, agentic card token, gift PPI / C: UPI intent and collect, card token, card EMI, net banking, BNPL / D: COD, UPI on delivery | EMI and BNPL only, with full credit disclosure | Drip pricing, basket sneaking, personalised pricing, EMI disclosure, COD cap | No (consumer) |
+| <a href="#kirana"><code>kirana.khata</code></a> | <strong>launch</strong> | Kirana, khata, WhatsApp ordering, mol-bhav | <code>fixed</code> (MRP goods), <code>alternating</code> (loose goods), <code>scheme</code> | O: credit ledger (khata), Reserve Pay block for that kirana / C: UPI intent, UPI 123PAY / D: COD, UPI on delivery | Interest-free khata with both-party acknowledgement | MRP on packaged goods, loose goods by weight, injection isolation | No (consumer) |
+| <a href="#distributor-schemes"><code>fmcg.distribution</code></a> | <strong>proposed</strong> | Distributor → wholesaler → retailer | <code>scheme</code>, <code>alternating</code>, <code>fixed</code> (tier price list) | O: credit ledger, NACH debit / C: NEFT, UPI intent, dealer credit line, positive-pay cheque / D: COD | Retailer and distributor credit days; MSMED cap where it applies | MRP even when wholesaling, MSMED cap, IRN and e-way bill, scheme claim lifecycle | Yes, with <code>waiver_basis</code> |
+| <a href="#b2b-procurement"><code>b2b.procurement</code></a> | <strong>proposed</strong> | SME and enterprise RFQ → PO → GRN → net-N | <code>rfq_sealed</code>, <code>rfq_iterated</code>, <code>alternating</code>, <code>reverse_l1</code> | O: credit ledger, NACH debit / C (maker–checker): NEFT, RTGS, IMPS, BBPS B2B invoice / N: TReDS, e-BG | Advance %, net-30/45/60 from GRN, early-pay discount, delay interest | MSMED 45-day cap, three-way match, IRN and e-way bill, TDS display, maker–checker | Yes, with <code>waiver_basis</code> |
+| <a href="#gem"><code>gem</code></a> | <strong>experimental</strong> | Government procurement on GeM | <code>fixed</code> (direct), <code>rfq_sealed</code> (L1 / e-bid), <code>reverse_l1</code>, <code>english</code> (disposal) | N: GeM / PFMS / C: UPI collect for EMD / deposits via e-BG | Fixed by the GTC: payment within 10 days of CRAC | Mode thresholds, CRAC clock, penal interest, MSE preference tie-break | Yes, with <code>waiver_basis</code> |
+| <a href="#enam-and-mandi"><code>agri</code></a> | <strong>experimental</strong> | APMC mandi, eNAM, FPO, e-NWR | <code>english</code> (seller accepts), <code>dutch</code> (perishables), <code>rfq_sealed</code> (FPO tenders) | C: NEFT, RTGS, UPI collect (direct to farmer) / O: credit ledger (arhtiya advance) / N: e-NWR pledge | Arhtiya advances as interlocked credit | Explicit farmer acceptance, weighment-adjusted payout, itemised deductions | Yes, with <code>waiver_basis</code> |
+| <a href="#services"><code>services</code></a> | <strong>proposed</strong> | Home services, healthcare, mobility, education, gig | <code>fixed</code>, <code>alternating</code> on scope, inspect-then-quote, slot negotiation | O: Circle, UPI one-time mandate (capture after job) / C: UPI intent, card token, card EMI | Milestone tranches | Slot hold expiry, change orders, no-show policy, milestone escrow | No (consumer) |
+| <a href="#subscriptions"><code>subscription</code></a> | <strong>launch</strong> | OTT, utilities, milk and newspaper, SaaS | <code>fixed</code>, <code>scheme</code> | O: UPI AutoPay, card e-mandate, NACH debit, BBPS UPMS, NETC and NCMC top-ups, credit ledger (monthly milk khata) / C: BBPS bill pay | Postpaid monthly ledger; SaaS net-30 | Pre-debit notice and opt-out, AFA above ₹15,000, pause / skip / one-step cancel | No (consumer) |
+| <a href="#social-and-conversational"><code>social</code></a> | <strong>proposed</strong> | WhatsApp, Instagram, reseller, live commerce | <code>alternating</code> (DM bargaining), <code>fixed</code> | O: Circle / C: UPI intent and collect / D: COD, UPI on delivery | Partial advance as a tranche | Chat acceptance mapped to a signed acceptance; screenshots are never proof | No (consumer) |
+| <a href="#assisted-rural"><code>assisted.rural</code></a> | <strong>experimental</strong> | CSC / VLE, BC / AePS, feature phones | <code>fixed</code> (only the operator fee is negotiated) | A: AePS, POS dynamic QR / C: UPI 123PAY | None | Operator id, fee and consent logged; channel limits | No (consumer) |
+| <a href="#exports-and-cross-border"><code>crossborder</code></a> | <strong>experimental</strong> | Exports and imports | <code>rfq_sealed</code>, <code>alternating</code> (Incoterm, currency, instrument) | C: PA-CB, account-to-account / N: LC, e-BG, export realisation tracker | Advance TT, LC, D/P, D/A, open account | Incoterm, currency and instrument required; PA-CB cap; FEMA realisation | Yes, with <code>waiver_basis</code> |
+| <a href="#c2c-and-rentals"><code>c2c.rental</code></a> | <strong>experimental</strong> | Classifieds, recommerce, rentals, tenancy | <code>alternating</code> | O: UPI one-time mandate (token with release), UPI AutoPay, NACH debit (rent) / C: UPI intent | Deposits and tokens with release conditions | Itemised deductions, title checks, tenancy deposit caps | No (consumer) |
+| <a href="#high-value-purchases"><code>high_value</code></a> | <strong>experimental</strong> | Cars, property, gold | <code>alternating</code> multi-issue bundles, <code>scheme</code> | <strong>HP only</strong> for commitment. C: UPI intent, card token, RTGS, credit / tranches token + loan + balance | Token, loan, balance tranches | RERA 10% token cap, Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 s.186) cash limit, PAN, HUID | No (consumer) |
+| <a href="#ticketing"><code>ticketing</code></a> | <strong>launch</strong> | Rail, air, bus, events | <code>posted_dynamic</code>, <code>fixed</code> | C: UPI intent, card token / O: Circle for low-value bus or metro | None | Honour the shown price within validity, anti-bot windows, ID binding | No (consumer) |</p>
+<p><strong>Maturity</strong> says how far a profile is settled in BACP <code>2026-10-18</code> and whether a participant can be attested for it (as of 18-10-2026). It labels the profile and changes no rule inside it.</p>
+<table>
+<thead>
+<tr>
+<th>Maturity</th>
+<th>Profiles</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>launch</strong></td>
+<td><code>b2c.ecom</code> (marketplace and quick commerce), <code>kirana.khata</code>, <code>subscription</code>, <code>ticketing</code></td>
+<td>Stable and attestable. The profile's rules are the ones this release launches with.</td>
+</tr>
+<tr>
+<td><strong>proposed</strong></td>
+<td><code>fmcg.distribution</code>, <code>b2b.procurement</code>, <code>services</code>, <code>social</code></td>
+<td>In this release and attestable. The rules MAY change in a later dated release.</td>
+</tr>
+<tr>
+<td><strong>experimental</strong></td>
+<td><code>gem</code>, <code>agri</code>, <code>crossborder</code>, <code>high_value</code>, <code>c2c.rental</code>, <code>assisted.rural</code></td>
+<td>Described for review only. Outside the conformance scope of this release: no conformance attestation covers it, and the profile MAY change or be removed in a later dated release.</td>
+</tr>
+</tbody>
+</table>
+<p>A party MAY refuse an experimental profile with <code>capabilities_incompatible</code>, reason <code>profile_not_supported</code> (<a href="#declaring-a-profile">Declaring a profile</a>). A participant is never required to support a profile, whatever its maturity.</p>
+<p><strong>Waiver permitted</strong> says whether a firm offer in a session of that profile may carry <code>acceptance_revocation: waived</code>, always with a signed <code>waiver_basis</code> (<a href="../negotiation/#acceptance-revocation">Acceptance revocation</a>). "No" marks a consumer profile: its trade has consumer buyers, so <code>waived</code> is refused in it. A session that declares no profile, or whose buyer side acts for an individual (<code>acting_for.kind: individual</code>) or sends no <code>acting_for</code>, is treated the same way whatever profile it declares, and the profile is fixed when the session opens (<a href="../negotiation/#acceptance-revocation">Consumer sessions</a>). In this version no profile permits <code>allowed_until_receipt</code>. In <code>agri</code> the acceptor is the farmer or FPO selling a lot, or a bidder buying one, and the profile describes no consumer buyer, so <code>agri</code> is a business profile; the farmer's explicit acceptance of a bid (<a href="#enam-and-mandi">eNAM and mandi</a>) still applies.</p>
+<p>Credit-backed overlays such as TReDS invoice discounting and OCEN purchase finance are not separate profiles. They attach to the profiles above and are described under <a href="#financing-overlays-treds-and-ocen">Financing overlays</a>.</p>
+<h2 id="b2c-retail">B2C retail<a class="headerlink" href="#b2c-retail" title="Permanent link">&para;</a></h2>
+<p>Profile <code>b2c.ecom</code>: organised B2C e-commerce and quick commerce.</p>
+<ul>
+<li><strong>Negotiation.</strong> There is no bargaining on the base price. The buyer optimises across coupons, bank offers, no-cost EMI, exchange offers, delivery slot and fee, and membership pricing, using <code>scheme</code> mode: the buyer asserts machine-readable schemes with eligibility proofs and the seller agrees or disagrees per scheme. Ticketed or flash prices use <code>posted_dynamic</code>. Conditional cashback never counts toward <code>all_in_total</code>.</li>
+<li><strong>Payment handlers.</strong> HNP orders MAY use Reserve Pay (one block per seller, payable to that seller's collection VPA), UPI Circle, agentic card tokens or a gift PPI. Everything else is HP. COD and UPI on delivery are allowed only if the mandate sets <code>cod_allowed</code>.</li>
+<li><strong>Credit.</strong> Card EMI and BNPL are credit-funded. They require <code>credit_funding_allowed</code> on the governing mandate, full disclosure (lender, APR, KFS, <code>no_cost: false</code> when interest is charged), and a human-present loan acceptance. Whether checkout BNPL fits the digital-lending end-use rules is open (<a href="../open-questions/#q-32">Q-32</a>).</li>
+<li><strong>COD.</strong> A seller MAY accept or refuse COD per order. The mandate's <code>cod_max_open_orders</code> caps open COD orders, and a COD order placed without the principal counts against the placing agent's id. The final payment mode at the door (cash or UPI on delivery) is recorded. Whether an RTO fee may be charged to a consumer is open (<a href="../open-questions/#q-37">Q-37</a>); it is never charged unless disclosed in round 1 and allowed by the mandate.</li>
+<li><strong>Compliance.</strong> The drip-pricing, basket-sneaking, false-urgency and personalised-pricing validators run on every offer (Central Consumer Protection Authority (CCPA) Dark Patterns Guidelines, 2023). An e-way bill is needed above ₹50,000 per consignment; returns produce a credit note and a refund to source.</li>
+</ul>
+<h2 id="kirana">Kirana, khata and mol-bhav<a class="headerlink" href="#kirana" title="Permanent link">&para;</a></h2>
+<p>Profile <code>kirana.khata</code>: the neighbourhood kirana, phone and WhatsApp ordering, and the household khata.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>fixed</code> for packaged MRP goods: an offer MAY discount below MRP and MUST NOT exceed it. <code>alternating</code> (mol-bhav) for loose staples, fruit and vegetables and bulk quantities, priced by weight (<code>unit: kg</code>). <code>scheme</code> for passed-on brand schemes. Voice-note or photographed lists become structured lines; free text from the shop is untrusted data. A loose item MUST carry a <code>measure</code> (<a href="../checkout/#units">Units, quantity and weighed goods</a>), so that "1.5 kg of atta in 250 g steps" is a quantity of 1500 with unit <code>KGM</code>, scale 3 and increment 250, and the Hindi unit label travels as <code>display_text</code> (<code>किलो</code>). A heavier bag cannot raise the bill: after delivery the amount can only fall unless the principal agreed an <code>adjustment_band</code> and a hold exists (<a href="../checkout/post-order/#weight-adjustment">Weighed goods</a>).</li>
+<li><strong>Payment handlers.</strong> The khata is a <strong><code>bacp.credit_ledger</code></strong> shared by buyer and seller. HNP top-ups MAY use a Reserve Pay block payable to <strong>that</strong> kirana. Repeat Reserve Pay debits after the first follow the 24-hour pre-debit notice by default, until the notice question is settled (<a href="../open-questions/#q-03">Q-03</a>). HP payments use UPI intent or UPI 123PAY on feature phones; 123PAY is capped per transaction, and the exact cap is open (<a href="../open-questions/#q-05">Q-05</a>).</li>
+<li><strong>Credit terms.</strong> Interest-free trade credit with a credit limit, due dates and ageing. Every entry MUST be acknowledged by both parties. Whatever the channel (tap, SMS, voice), an acknowledgement MUST end in a counterparty signature, and the channel is recorded as the method. An unacknowledged entry is flagged <code>disputed</code>. A ledger payment entry MUST cite a PSP-signed receipt (RRN or UTR); a screenshot is never proof. Treating interest-free khata as trade credit outside the digital-lending rules is a working position (<a href="../open-questions/#q-27">Q-27</a>).</li>
+<li><strong>Documents.</strong> Parchi or estimate, ledger confirmation; a GST invoice on request where the shop is registered.</li>
+</ul>
+<h2 id="distributor-schemes">Distributor schemes<a class="headerlink" href="#distributor-schemes" title="Permanent link">&para;</a></h2>
+<p>Profile <code>fmcg.distribution</code>: brand → C&amp;F → super-stockist → distributor → wholesaler → retailer.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>scheme</code> for trade schemes: quantity purchase schemes ("buy 10 get 1"), slab discounts, display incentives and target-linked incentives. <code>fixed</code> for tier price lists (retailer, wholesaler, distributor), and <code>alternating</code> for bulk deals. A scheme follows an <strong>accrual → claim → credit note</strong> lifecycle linked to the qualifying invoices; free goods appear as a zero-priced line or an equivalent credit note.</li>
+<li><strong>Payment handlers.</strong> Credit ledger and NACH debit for HNP; NEFT, UPI intent, a dealer credit line from a financier, and positive-pay cheques for HP; COD to the retailer.</li>
+<li><strong>Credit terms.</strong> Credit days per counterparty with days-past-due tracking. Where the selling party is a micro or small manufacturing or services enterprise, the <a href="../negotiation/#credit-terms-and-msmed-limits">MSMED 45-day cap</a> applies.</li>
+<li><strong>Compliance.</strong> The MRP ceiling binds wholesale dealers too, so it runs on retail packs even in B2B. IRN e-invoicing applies when the seller's aggregate turnover exceeded ₹5 crore in any financial year since 2017-18, an e-way bill above ₹50,000, and delivery challans for stock transfers.</li>
+</ul>
+<h2 id="b2b-procurement">B2B procurement: RFQ → PO → net terms<a class="headerlink" href="#b2b-procurement" title="Permanent link">&para;</a></h2>
+<p>Profile <code>b2b.procurement</code>: SME and enterprise purchasing.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>rfq_sealed</code> and <code>rfq_iterated</code> for multi-seller sourcing with landed-cost comparison, <code>alternating</code> for technical and commercial rounds, and <code>reverse_l1</code> where the buyer's policy calls for it. See <a href="../negotiation/rfq-and-auctions/#rfq">RFQ</a>. Negotiable issues include unit price and price-variation clauses, quantity and MOQ, delivery schedule and Incoterm (or <code>FOR_DESTINATION</code>), freight, advance %, credit days, warranty, liquidated damages, PBG and retention.</li>
+<li><strong>Flow.</strong> RFQ → quotation or proforma → negotiation → PO (<code>confirm</code>) → order acknowledgement (<code>on_confirm</code>) → dispatch with tax invoice, e-way bill and challan → GRN and inspection → three-way match (PO, GRN, invoice) → payment on net-N → TDS certificate. The <a href="../negotiation/rfq-and-auctions/#purchase-order">purchase order</a> MUST NOT alter accepted terms.</li>
+<li><strong>Payment handlers.</strong> HNP: credit ledger and NACH debit. HP with <strong>maker–checker</strong>: the agent prepares a NEFT, RTGS or IMPS instruction (or a BBPS B2B invoice payment) and a human checker approves it in corporate banking. N: TReDS and e-BG.</li>
+<li><strong>Credit terms.</strong> Tranches such as "30% advance, 70% net-45 from GRN". The MSMED cap (at most 45 days from acceptance, 15 days with no written agreement) applies to micro and small manufacturing and services suppliers; traders are warned only (<a href="../open-questions/#q-21">Q-21</a>). The clock runs from acceptance, which under the Act is the day of delivery unless the buyer objects in writing within 15 days; a buyer-signed GRN records both. The ledger computes the statutory due date, MSMED interest on late payment, and the income-tax deduction exposure on unpaid MSE dues. Exposure from firm commitments counts against the checkout mandate's budgets as well as <code>total_max</code> (<a href="../open-questions/#q-46">Q-46</a>).</li>
+<li><strong>Compliance.</strong> IRN and signed QR for sellers whose aggregate turnover exceeded ₹5 crore in any financial year since 2017-18, with a 30-day reporting flag where AATO is ₹10 crore or more (GSTN advisory, from 01-04-2025; primary text not verified as of 17-10-2026); e-way bill above ₹50,000; TDS obligations displayed. Companies with turnover above ₹250 crore must be onboarded on TReDS (see <a href="#financing-overlays-treds-and-ocen">Financing overlays</a>). Trade documents and ledgers are service-level interfaces whose REST binding is still open (<a href="../open-questions/#q-44">Q-44</a>).</li>
+</ul>
+<h2 id="gem">GeM<a class="headerlink" href="#gem" title="Permanent link">&para;</a></h2>
+<p>Profile <code>gem</code>: government procurement on the Government e-Marketplace.</p>
+<ul>
+<li><strong>Roles.</strong> Ordering entity, consignee and paying authority are separate parties; GeM is the auctioneer and its incident management is an arbiter.</li>
+<li><strong>Negotiation.</strong> <code>fixed</code> for direct purchase, <code>rfq_sealed</code> for L1 purchase and e-bids, <code>reverse_l1</code> for reverse auctions after technical evaluation, and <code>english</code> for forward (disposal) auctions. Price is negotiated only through the reverse auction. Quantity MAY vary under the ± option clause (<code>option_clause_pct</code>). Ties MAY use <code>msme_preference</code> or <code>make_in_india_preference</code>. On GeM itself these preferences are wider than a tie-break: under the Public Procurement Policy for MSEs, an MSE quoting within L1 + 15% may match the L1 price and supply at least 25% of the tendered value when L1 is not an MSE, and the Make in India order gives a 20% purchase-preference margin to Class-I local suppliers. A BACP tie-break does not model these bands; the buying platform applies them.</li>
+<li><strong>Mode thresholds.</strong> The buying organisation chooses the mode by value and records <code>procurement_mode_reason</code>. The default thresholds under GFR Rule 149 as amended in July 2024 are listed in <a href="../negotiation/rfq-and-auctions/#reverse-l1-gem-style">Reverse L1</a>: direct purchase up to ₹50,000; L1 purchase above ₹50,000 up to ₹10 lakh among sellers of at least three different manufacturers; above ₹10 lakh, bids are mandatory, through online bidding or reverse auction. They MUST be configurable.</li>
+<li><strong>Payment handlers.</strong> Payment runs through the GeM handler (PFMS and the GeM pool account), which the agent does not trigger directly. EMD MAY be paid by UPI collect or furnished as an e-BG; performance security as an ePBG. The UPI limit for GeM payments, including EMD, was raised to ₹5 lakh per transaction from 15-09-2025, as reported by the public broadcaster (reported, not verified against the NPCI circular or a GeM page as of 17-10-2026).</li>
+<li><strong>Credit terms.</strong> Payment terms are fixed by the GeM general terms and conditions and are <strong>not negotiable</strong>. The buyer MUST pay within <strong>10 days of the CRAC</strong> (including auto-generated CRACs). Late payment attracts penal interest of 1% per month, pro-rated, which is deposited in an account maintained by GeM rather than paid to the seller; MSMED interest is additional. The ledger tracks this clock.</li>
+<li><strong>Compliance.</strong> Every agent action produces an audit trail fit for CAG and CVC review: who acted, under which mandate, and the comparison set. Suspended sellers are excluded from new bids.</li>
+</ul>
+<h2 id="enam-and-mandi">eNAM and mandi<a class="headerlink" href="#enam-and-mandi" title="Permanent link">&para;</a></h2>
+<p>Profile <code>agri</code>: APMC mandis, eNAM, FPOs and warehouse receipts.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>english</code> for open auctions and eNAM e-auctions, <code>dutch</code> for perishables, <code>rfq_sealed</code> for FPO tenders. Lots carry assay attributes (moisture, grade, foreign matter) as document references.</li>
+<li><strong>Seller acceptance.</strong> The highest bid is sent to the farmer, who accepts or rejects it. Only the farmer's or FPO's <strong>explicit acceptance</strong> awards the lot. eNAM states that once the auction is completed, the farmer "can either choose to accept it or reject it". BACP lets a rejected lot be re-auctioned; whether eNAM re-auctions a rejected lot is not confirmed in an official source, and state APMC rules vary (<a href="../negotiation/rfq-and-auctions/#english-forward-auctions">English auctions</a>).</li>
+<li><strong>Payment handlers.</strong> NEFT, RTGS or UPI collect direct to the farmer's account (HP); the arhtiya's advance on the credit ledger; e-NWR pledge finance as class N.</li>
+<li><strong>Credit and deductions.</strong> Payout = accepted bid × weighed quantity − farmer-borne charges. Commission, market fee and loading are itemised lines, each tagged with the party that bears it. An arhtiya's pre-season loan is <strong>interlocked credit</strong>: its repayment is a separate line deducted at sale (<code>commission[].deducted_at_source</code>), shown to the farmer. The seller agent can compare selling now with storing against an e-NWR and a pledge loan.</li>
+<li><strong>Documents.</strong> Gate entry, assay certificate, auction slip, weighment slip, sale bill (state-specific form), e-NWR.</li>
+</ul>
+<h2 id="services">Services<a class="headerlink" href="#services" title="Permanent link">&para;</a></h2>
+<p>Profile <code>services</code>: home services, healthcare over UHI, mobility, education, gig work.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>fixed</code> fares and fees; <code>alternating</code> on scope; <strong>two-phase inspect-then-quote</strong> (<code>scope.inspection_then_quote</code>, <code>inspection_fee</code>); slot negotiation with <code>slot.hold_until</code>. A slot hold expires at its time and releases capacity. A change of scope after acceptance requires a new offer (<code>change_order_policy: new_offer_required</code>). A no-show policy is a term-sheet issue.</li>
+<li><strong>Payment handlers.</strong> HNP: UPI Circle, or a UPI one-time mandate captured after the job. HP: UPI intent, card token, card EMI. Milestones are <code>schedule[]</code> tranches; milestone escrow uses an authorised payment aggregator's escrow.</li>
+<li><strong>Compliance.</strong> Health data travels only under an ABDM consent artefact.</li>
+</ul>
+<h2 id="subscriptions">Subscriptions<a class="headerlink" href="#subscriptions" title="Permanent link">&para;</a></h2>
+<p>Profile <code>subscription</code>: OTT and digital plans, utility bills via BBPS, daily milk and newspaper delivery, SaaS.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>fixed</code> plans and <code>scheme</code> bundles. No price bargaining.</li>
+<li><strong>Payment handlers.</strong> Recurring debits are mandates: UPI AutoPay, card e-mandates, NACH debit, BBPS UPMS, NETC and NCMC top-ups, and a credit ledger for a monthly milk khata. One-off bills use BBPS fetch-then-pay.</li>
+<li><strong>Rules.</strong> A pre-debit notice at least 24 hours before each debit, with opt-out; additional authentication for a debit above ₹15,000 (₹1 lakh for the categories the RBI lists). Subscriptions MUST support pause, skip, resume, quantity change per cycle and one-step cancellation with proof, which revokes the mandate. For eNACH caps see <a href="../open-questions/#q-29">Q-29</a>.</li>
+</ul>
+<h2 id="social-and-conversational">Social and conversational<a class="headerlink" href="#social-and-conversational" title="Permanent link">&para;</a></h2>
+<p>Profile <code>social</code>: WhatsApp and Instagram sellers, resellers, live commerce.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>alternating</code> for DM bargaining, <code>fixed</code> for catalogue prices. Chat stays advisory: an acceptance typed in chat MUST be mapped to a signed <code>accept</code> linked to the chat thread, because acceptance must follow the prescribed manner (<a href="../negotiation/#acceptance">Acceptance</a>).</li>
+<li><strong>Payment handlers.</strong> HNP: Circle. HP: UPI intent or collect. COD and UPI on delivery. A partial advance for custom orders is a tranche.</li>
+<li><strong>Rules.</strong> Payment is confirmed only by a PSP or bank callback or a signed rail reference, <strong>never by a screenshot</strong>. The payee name comes from the bank's records, not from the chat. A reseller's margin is recorded separately from the end-buyer price and settles after the return window.</li>
+</ul>
+<h2 id="assisted-rural">Assisted rural<a class="headerlink" href="#assisted-rural" title="Permanent link">&para;</a></h2>
+<p>Profile <code>assisted.rural</code>: CSC village-level entrepreneurs, bank BC agents, AePS operators, feature-phone users.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>fixed</code>. The operator's service fee is the only negotiated item.</li>
+<li><strong>Payment handlers.</strong> Assisted handlers (AePS, POS dynamic QR) and UPI 123PAY (IVR) for HP. Channel limits are enforced: UPI 123PAY (<a href="../open-questions/#q-05">Q-05</a>) and UPI Lite (₹1,000 per transaction).</li>
+<li><strong>Rules.</strong> The principal's consent (biometric or OTP), the operator's id and the fee are logged, and the receipt goes to the principal's phone in their language.</li>
+</ul>
+<h2 id="exports-and-cross-border">Exports and cross-border<a class="headerlink" href="#exports-and-cross-border" title="Permanent link">&para;</a></h2>
+<p>Profile <code>crossborder</code>: MSME exports and imports.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>rfq_sealed</code> and <code>alternating</code> over Incoterm, currency and payment instrument. Every cross-border offer MUST carry an Incoterm, a currency, a payment instrument (advance TT, LC at sight or usance, D/P, D/A, open account with ECGC cover) and the required document set. A foreign-currency price is shown through the <code>fx</code> disclosure view; every settlement amount stays in INR.</li>
+<li><strong>Payment handlers.</strong> C: PA-CB (capped at ₹25 lakh per transaction) and account-to-account transfers. N: LC, e-BG and <code>bacp.trade.export_realisation</code>, which tracks the realisation deadline. Outbound cross-border card-not-present payments need AFA when the acquirer asks.</li>
+<li><strong>FEMA realisation.</strong> The export-realisation tracker records the due date for each export and alerts before it: <strong>9 months</strong> from shipment (goods) or invoice (services), and 12 months for exports invoiced or settled in INR, under the FEM (Export and Import of Goods and Services) Regulations 2026, Reg 5(1), as amended with effect from 01-10-2026. The periods have changed several times since 2025 and the AD bank can extend them, so they MUST be configurable. Proceeds unrealised for more than one year past the due date restrict future exports to full advance or an irrevocable LC (Reg 13). See <a href="../payments/credit-and-split-tender/#fx-disclosure-for-cross-border-payments">Credit and Split Tender</a>.</li>
+<li><strong>Compliance.</strong> Courier exports have had no value cap since 31-03-2026: CBIC Circular 17/2026-Customs removed the earlier ₹10 lakh limit for commercial export consignments through courier mode. BACP does not redirect a consignment to cargo on value alone.</li>
+</ul>
+<h2 id="c2c-and-rentals">C2C and rentals<a class="headerlink" href="#c2c-and-rentals" title="Permanent link">&para;</a></h2>
+<p>Profile <code>c2c.rental</code>: classifieds, recommerce, equipment and furniture rental, tenancy.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>alternating</code>, with heavy mol-bhav and inspection-based quotes.</li>
+<li><strong>Payment handlers.</strong> A token advance on a UPI one-time mandate with release conditions; rent by UPI AutoPay or NACH debit; HP by UPI intent.</li>
+<li><strong>Rules.</strong> Tokens and deposits carry release conditions and an itemised deduction policy; a deduction is released with its reason. Title checks (IMEI, vehicle RC) and inspection reports are document references. Where a state has adopted the Model Tenancy Act, 2021, deposits are capped at two months' rent (residential) and six months' (non-residential).</li>
+</ul>
+<h2 id="high-value-purchases">High-value purchases<a class="headerlink" href="#high-value-purchases" title="Permanent link">&para;</a></h2>
+<p>Profile <code>high_value</code>: cars, property and gold.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>alternating</code> over multi-issue bundles (price, accessories, finance, delivery; price per sq ft, floor rise, payment plan, possession date; making charges, wastage, old-gold exchange), plus <code>scheme</code>.</li>
+<li><strong>Payment handlers.</strong> <strong>Every commitment is human-present.</strong> UPI intent, card token, RTGS and credit handlers; tranches for token, loan and balance.</li>
+<li><strong>Rules.</strong> For property sold by a RERA-registered promoter (an apartment, plot or building), a token or booking amount above 10% of cost needs a linked registered agreement for sale (RERA s.13; <code>NEG_RERA_TOKEN_CAP</code>). A cash receipt of ₹2 lakh or more is refused (Income-tax Act, 1961 s.269ST; Income-tax Act, 2025 s.186 equivalent; <code>NEG_CASH_LIMIT</code>), and PAN is required above the statutory threshold, which secondary sources give as a purchase of any goods above ₹2 lakh per transaction. A "hallmarked" claim requires an HUID.</li>
+</ul>
+<h2 id="ticketing">Ticketing<a class="headerlink" href="#ticketing" title="Permanent link">&para;</a></h2>
+<p>Profile <code>ticketing</code>: rail, air, bus and events.</p>
+<ul>
+<li><strong>Negotiation.</strong> <code>posted_dynamic</code> and <code>fixed</code>. A posted price carries its validity and quota or class. A booking MUST honour the price shown within its validity or reject explicitly; a later price is a new offer, never a silent charge.</li>
+<li><strong>Payment handlers.</strong> HP: UPI intent and card token. HNP: Circle for low-value bus or metro tickets.</li>
+<li><strong>Rules.</strong> Booking windows are respected without anti-bot evasion, tickets are bound to the traveller's id, and the agent refuses unauthorised resellers.</li>
+</ul>
+<h2 id="financing-overlays-treds-and-ocen">Financing overlays: TReDS and OCEN<a class="headerlink" href="#financing-overlays-treds-and-ocen" title="Permanent link">&para;</a></h2>
+<p>Financing attaches to a profile's credit terms rather than forming a profile of its own.</p>
+<h3 id="treds">TReDS<a class="headerlink" href="#treds" title="Permanent link">&para;</a></h3>
+<p>TReDS platforms discount an MSME seller's invoices that the buyer has accepted. Handler <code>in.fin.treds</code> (class N).</p>
+<ul>
+<li>The seller uploads the accepted invoice as a factoring unit, bound to its GST IRN and the buyer's acceptance; financiers bid; the seller accepts a bid and is funded without recourse.</li>
+<li>After discounting, the ledger records the <strong>financier as the new payee</strong>, and the buyer pays the financier on the due date, typically by NACH debit.</li>
+<li>A buyer-side agent can accept invoices within an approval policy and keep them inside the MSMED 45-day window. A seller-side agent can upload invoices and accept bids within a rate floor. Both act within the corporate's platform entitlements with human signatory approval.</li>
+<li>Companies with turnover above ₹250 crore, and all CPSEs, are required to onboard on TReDS (Ministry of MSME notification of 07-11-2024, as reported by PIB). Since 30-06-2026, operating CPSEs must also settle MSME invoices through a TReDS platform. See <a href="../payments/credit-and-split-tender/#treds">Credit and Split Tender</a> for sources.</li>
+<li>Applies to: <code>b2b.procurement</code>, <code>fmcg.distribution</code>, <code>gem</code> sellers.</li>
+</ul>
+<h3 id="ocen">OCEN<a class="headerlink" href="#ocen" title="Permanent link">&para;</a></h3>
+<p>OCEN offers credit at the point of purchase through a regulated lender or loan service provider. Handler <code>in.fin.ocen</code> (with <code>in.fin.dealer_line</code> for dealer credit). OCEN is an industry protocol stewarded by iSPIRT (current version OCEN 4.0) and is in production, for example on GeM Sahay. It has no RBI recognition of its own, so every OCEN loan falls under the lender's own RBI directions, including the Digital Lending Directions. The <code>in.fin.ocen</code> handler binding is at registry status <code>pilot</code>.</p>
+<ul>
+<li>An agent MAY present OCEN loan offers only through a regulated lender or LSP arrangement.</li>
+<li>Every offer MUST carry the lender, APR, tenure, EMI, penal charges, the KFS reference, a cooling-off period of at least one day and the repayment payee. Offers are shown unbiased, never pre-selected.</li>
+<li><strong>Loan acceptance is always human-present</strong> (<code>credit_acceptance_requires_hp</code> for an agent attempt). Repayments go to the lender only.</li>
+<li>Applies to: <code>fmcg.distribution</code>, <code>b2b.procurement</code>, and credit-funded checkouts in <code>b2c.ecom</code> and <code>high_value</code> where the mandate sets <code>credit_funding_allowed</code>.</li>
+</ul>
+<p>See <a href="../payments/credit-and-split-tender/">Credit and Split Tender</a> for the loan-offer schema and the credit ledger.</p>
+<h2 id="documents">Documents<a class="headerlink" href="#documents" title="Permanent link">&para;</a></h2>
+<p>Profiles differ mostly in which documents they need. Documents are typed references (<code>doc_type</code>, <code>id</code>, <code>parent_ids[]</code>, <code>issuer</code>, <code>issued_at</code>, <code>hash</code>, and <code>irn</code> or <code>ewb_no</code> where relevant) that link into a graph:</p>
+<pre class="mermaid"><code>flowchart LR
+    RFQ[RFQ] --&gt; Q[Quotation or proforma]
+    Q --&gt; PO[PO is Beckn confirm]
+    PO --&gt; ACK[Order ack is on_confirm]
+    PO --&gt; INV[Tax invoice with IRN]
+    INV --&gt; EWB[e-way bill above ₹50,000]
+    INV --&gt; DC[Delivery challan]
+    DC --&gt; GRN[GRN or CRAC or weighment slip]
+    PO --&gt; GRN
+    GRN --&gt; M3{Three-way match}
+    INV --&gt; M3
+    M3 --&gt; PAY[Payment advice and receipt]
+    INV --&gt; CN[Credit or debit note]
+    PAY --&gt; TDS[TDS certificate]
+    GRN --&gt; LED[Ledger due date and MSMED clock]</code></pre>
+<p>A GRN, CRAC or weighment slip records delivery and acceptance, which start the MSMED clock, or starts the GeM 10-day clock (CRAC). How a buyer-issued GRN or CRAC travels on Beckn is open (<a href="../open-questions/#q-33">Q-33</a>). Domain credentials (e-NWR, HUID, RERA registration, assay certificate, inspection report, ABDM consent artefact, e-ticket) are document references whose <code>uri</code> points to a verifiable credential.</p>
+<h3 id="document-actors">Who acted on a trade document<a class="headerlink" href="#document-actors" title="Permanent link">&para;</a></h3>
+<p>A GRN, a CRAC and an MSMED written objection start or move a money clock, and so does a credit-ledger
+acknowledgement. Each such act carries a typed <strong><code>actor</code></strong> (<code>Actor</code> in
+<a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a>), the same object as a ledger acknowledgement's <code>actor</code>
+in <a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a>:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Required</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kind</code></td>
+<td>yes</td>
+<td><code>human</code> or <code>agent</code></td>
+</tr>
+<tr>
+<td><code>role</code></td>
+<td>yes</td>
+<td><code>principal</code> (the party itself or its authorised human), <code>seller_operator</code> (seller staff such as a munim or a sales officer), <code>assisted_operator</code>, <code>agent</code> (the party's own AI agent) or <code>sub_agent</code>. A <code>human</code> acts only as <code>principal</code>, <code>seller_operator</code> or <code>assisted_operator</code>; an <code>agent</code> only as <code>agent</code> or <code>sub_agent</code></td>
+</tr>
+<tr>
+<td><code>participant_ref</code></td>
+<td>yes</td>
+<td>The acting participant's <code>participant_id</code>, or the agent id for an agent</td>
+</tr>
+<tr>
+<td><code>mandate_ref</code></td>
+<td>no (REQUIRED for an agent's order-less ledger act)</td>
+<td>The mandate under which an agent acted. It records the mandate; it does not authorise the act. For an order-less ledger act it also names the Mandate Manager that issues the step-up (<a href="../human-participants/#ts-signers">Step-up signers</a>)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>A GRN, CRAC, objection or acknowledgement by an agent (<code>actor.kind: agent</code>) <strong>MUST</strong> carry <code>hp_proof</code> of the
+  principal's confirmation on the Trusted Surface: a <code>post_order</code> step-up whose <code>ts_render</code> names the act
+  (<a href="../human-participants/#hp-proof">Presence proof</a>). No mandate scope authorises an agent's trade act. The seller
+  app or the gateway rejects any agent act without <code>hp_proof</code>, and the ledger schema rejects an agent
+  acknowledgement without it.</li>
+<li>A ledger acknowledgement other than one taken automatically from a rail receipt (<code>auto_from_rail_receipt</code>) carries
+  <code>actor</code>; the schema rejects one without it.</li>
+<li>A gateway that lists <code>in.bacp.trade_document</code> or <code>in.bacp.ledger</code> binds these acts at <code>POST /trade-acts</code>
+  (<a href="../human-participants/#trade-acts">Seller-side and trade acts</a>). The request names its subject (an order, a ledger entry
+  by <code>ledger_ref</code>, or a ledger statement by <code>ledger_range</code>), so a ledger entry with no <code>order_id</code> (an opening balance, a
+  payment or an adjustment) is named by <code>ts_render.subject_ref</code>, not by an order. Every trade-act <code>ts_render</code> carries
+  <code>subject_hash</code>. A GRN carries its lines (<code>line_ref</code>, quantities received, accepted and rejected, an enum reason), and
+  seller-posted delivery evidence (<code>proof_of_delivery</code>, <code>lorry_receipt</code>) dates acceptance only if the buyer counter-signs it or
+  it carries a third-party reference the buyer can check. Whether an objection sent by an agent is an objection "in writing"
+  under the MSMED Act is open (<a href="../open-questions/#q-21">Q-21</a>).</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../evidence/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Evidence and Instruction Log">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Evidence and Instruction Log
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../errors/" class="md-footer__link md-footer__link--next" aria-label="Next: Errors">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Errors
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,18 @@
+{
+  "id": "OFF-SLAB-10",
+  "kind": "slab",
+  "auto": true,
+  "min_order_value": {
+    "value": 100000,
+    "currency": "INR"
+  },
+  "benefit": {
+    "value_type": "percent",
+    "percent_bps": 10001,
+    "cap": {
+      "value": 10000,
+      "currency": "INR"
+    }
+  },
+  "title": "10% off, up to ₹100"
+}

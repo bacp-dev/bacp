@@ -1,0 +1,29 @@
+{
+  "subscriber_id": "ops.vaani.example.in",
+  "bacp_role": "support_operator",
+  "operator_id": "op_vaani",
+  "person_ref": "prs_9fK2xQ7LmA3vB8Tn",
+  "keys": [
+    {
+      "kid": "ops.vaani.example.in|staff-12|ed25519",
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "ops.vaani.example.in|staff-12|ed25519"
+      }
+    },
+    {
+      "kid": "ops.vaani.example.in|staff-13|ed25519",
+      "jwk": {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "ops.vaani.example.in|staff-12|ed25519"
+      }
+    }
+  ],
+  "valid_from": "2026-10-01T00:00:00+05:30",
+  "valid_until": "2027-04-01T00:00:00+05:30",
+  "status": "active"
+}

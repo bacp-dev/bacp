@@ -1,0 +1,7 @@
+{
+  "type": "delivery",
+  "amount": {
+    "value": 3500,
+    "currency": "INR"
+  }
+}

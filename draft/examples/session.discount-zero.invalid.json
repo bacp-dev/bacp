@@ -1,0 +1,171 @@
+{
+  "id": "ses_01HZXD",
+  "transaction_id": "7a2d4c1e-5b3f-4e8a-9c0d-2e3f4a5b6c7d",
+  "status": "ready_for_complete",
+  "presence": "HNP",
+  "bpp_id": "bpp.dairy.example.in",
+  "provider_id": "P-207",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "line_items": [
+    {
+      "id": "I-ATTA-2KG",
+      "quantity": 1,
+      "unit_price": {
+        "value": 11000,
+        "currency": "INR"
+      },
+      "total": {
+        "value": 11000,
+        "currency": "INR"
+      }
+    },
+    {
+      "id": "I-MILK-1L",
+      "quantity": 1,
+      "unit_price": {
+        "value": 6800,
+        "currency": "INR"
+      },
+      "total": {
+        "value": 6800,
+        "currency": "INR"
+      }
+    }
+  ],
+  "totals": [
+    {
+      "type": "subtotal",
+      "amount": {
+        "value": 17800,
+        "currency": "INR"
+      }
+    },
+    {
+      "type": "delivery",
+      "recipient": "seller",
+      "amount": {
+        "value": 2500,
+        "currency": "INR"
+      }
+    },
+    {
+      "type": "discount",
+      "amount": {
+        "value": 7500,
+        "currency": "INR"
+      }
+    },
+    {
+      "type": "total",
+      "amount": {
+        "value": 12800,
+        "currency": "INR"
+      }
+    }
+  ],
+  "quote": {
+    "id": "Q-91",
+    "ttl": "PT10M",
+    "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+    "bpp_signature": "eyJhbGciOiJFUzI1NiJ9.eyJxIjoiUS05MSJ9.c2ln"
+  },
+  "payment": {
+    "handler": "in.upi.reservepay",
+    "collected_by": "BPP",
+    "type": "ON-ORDER",
+    "status": "not_started"
+  },
+  "basket_id": "bkt_01HZXBASKET7",
+  "ai_disclosure": {
+    "notice": {
+      "hi-IN": "आप एक AI सहायक से बात कर रहे हैं।",
+      "en-IN": "You are talking to an AI assistant."
+    },
+    "handoff_routes": [
+      {
+        "channel": "app",
+        "uri": "https://vaani.example.in/human",
+        "languages": [
+          "hi-IN",
+          "en-IN"
+        ],
+        "hours": "24x7"
+      }
+    ]
+  },
+  "messages": [
+    {
+      "type": "disclosure",
+      "code": "ai_disclosure",
+      "content": {
+        "hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
+        "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"
+      },
+      "param": "$.ai_disclosure",
+      "resolution": "recoverable"
+    },
+    {
+      "type": "warning",
+      "code": "discount_code_expired",
+      "origin": "gateway",
+      "content": {
+        "en-IN": "This discount code has expired.",
+        "hi-IN": "यह डिस्काउंट कोड समाप्त हो चुका है।"
+      },
+      "param": "$.discounts.codes[1]",
+      "resolution": "recoverable"
+    }
+  ],
+  "discounts": {
+    "codes": [
+      "SAVE50",
+      "EXPIRED20"
+    ],
+    "applied": [
+      {
+        "code": "SAVE50",
+        "offer_id": "SAVE50",
+        "title": "₹50 off above ₹499",
+        "amount": {
+          "value": 0,
+          "currency": "INR"
+        },
+        "automatic": false,
+        "method": "across",
+        "allocations": [
+          {
+            "path": "$.line_items[0]",
+            "amount": {
+              "value": 3000,
+              "currency": "INR"
+            }
+          },
+          {
+            "path": "$.line_items[1]",
+            "amount": {
+              "value": 2000,
+              "currency": "INR"
+            }
+          }
+        ]
+      },
+      {
+        "title": "Free delivery",
+        "amount": {
+          "value": 2500,
+          "currency": "INR"
+        },
+        "automatic": true,
+        "allocations": [
+          {
+            "path": "$.totals[?@.type == 'delivery']",
+            "amount": {
+              "value": 2500,
+              "currency": "INR"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

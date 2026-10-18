@@ -1,0 +1,9 @@
+{
+  "unit": "KGM",
+  "scale": 3,
+  "increment": 250,
+  "display_text": {
+    "en-IN": "kg",
+    "hi-IN": "किलो"
+  }
+}

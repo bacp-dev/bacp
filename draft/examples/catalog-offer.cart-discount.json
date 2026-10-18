@@ -1,0 +1,20 @@
+{
+  "id": "OFF-CART-50",
+  "kind": "discount",
+  "auto": false,
+  "additive": false,
+  "valid_from": "2026-12-20T00:00:00+05:30",
+  "valid_until": "2026-12-31T23:59:59+05:30",
+  "min_order_value": {
+    "value": 49900,
+    "currency": "INR"
+  },
+  "benefit": {
+    "value_type": "amount",
+    "amount": {
+      "value": 5000,
+      "currency": "INR"
+    }
+  },
+  "title": "₹50 off orders above ₹499"
+}

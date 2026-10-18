@@ -1,0 +1,2746 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/overview/">
+      
+      
+      
+        <link rel="next" href="../getting-started/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Overview - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#bharat-agentic-commerce-protocol-bacp-specification" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Overview
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conventions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#requirements-language" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements language
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-bacp-solves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem BACP solves
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BACP at a glance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layering
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-layering-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The layering decision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actor-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actor model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-artefacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core artefacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-proposes-a-deterministic-engine-decides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model proposes, a deterministic engine decides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol-versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Protocol versioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extensibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extensibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#page-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Page map
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conventions
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conventions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#requirements-language" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Requirements language
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data conventions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-problem-bacp-solves" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The problem BACP solves
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#design-principles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Design principles
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Design principles">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#at-a-glance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BACP at a glance
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#layering" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Layering
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Layering">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-layering-decision" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The layering decision
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#actor-model" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Actor model
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#core-artefacts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core artefacts
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-model-proposes-a-deterministic-engine-decides" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The model proposes, a deterministic engine decides
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#protocol-versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Protocol versioning
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extensibility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Extensibility
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#page-map" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Page map
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="bharat-agentic-commerce-protocol-bacp-specification">Bharat Agentic Commerce Protocol (BACP) Specification<a class="headerlink" href="#bharat-agentic-commerce-protocol-bacp-specification" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release. Each one links to the relevant entry in <a href="../open-questions/">Open Questions</a>.</p>
+</div>
+<p>BACP is an open protocol that lets an AI agent run the full Indian commerce
+lifecycle on behalf of a person or a business: discover, negotiate, check out,
+pay, track fulfilment, return, get refunds and raise grievances. It does this
+on rails that already exist and are already regulated: ONDC/Beckn for commerce,
+UPI and the other Indian payment rails for money, Account Aggregator–style
+consent artefacts for authority, and the Digital Personal Data Protection
+(DPDP) Act for personal data.</p>
+<p>This page is the normative entry point. It defines the conventions that apply
+to every other page, the layering and actor model, the core artefacts, the
+lifecycle, and the rules for versioning and extensibility.</p>
+<h2 id="conventions">Conventions<a class="headerlink" href="#conventions" title="Permanent link">&para;</a></h2>
+<h3 id="requirements-language">Requirements language<a class="headerlink" href="#requirements-language" title="Permanent link">&para;</a></h3>
+<p>The key words <strong>MUST</strong>, <strong>MUST NOT</strong>, <strong>REQUIRED</strong>, <strong>SHALL</strong>, <strong>SHALL NOT</strong>,
+<strong>SHOULD</strong>, <strong>SHOULD NOT</strong>, <strong>RECOMMENDED</strong>, <strong>MAY</strong> and <strong>OPTIONAL</strong> in this
+specification are to be interpreted as described in
+<a href="https://www.rfc-editor.org/rfc/rfc2119.html" target="_blank">RFC 2119</a> and
+<a href="https://www.rfc-editor.org/rfc/rfc8174.html" target="_blank">RFC 8174</a>
+when, and only when, they appear in all capitals, as shown here.</p>
+<h3 id="data-conventions">Data conventions<a class="headerlink" href="#data-conventions" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Convention</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Amounts</td>
+<td>Every amount is an <code>Amount</code> object: an integer <code>value</code> in <strong>paise</strong> (INR minor units) and <code>currency: "INR"</code>. ₹302 is <code>{"value": 30200, "currency": "INR"}</code>. Every settlement amount MUST be in INR. A foreign-currency figure MAY appear only as a disclosure view (<a href="https://bacp.dev/schemas/fx.json"><code>fx.json</code></a>).</td>
+</tr>
+<tr>
+<td>Payable amounts</td>
+<td>A payable amount (a closed mandate's <code>amount</code>, a payment receipt's <code>amount</code>, a tender's <code>amount</code>) MUST be an integer number of paise greater than zero. Values that may legitimately be zero, such as a remaining budget or a free-goods line, MAY be zero.</td>
+</tr>
+<tr>
+<td>Date and time</td>
+<td>Timestamps are <a href="https://www.rfc-editor.org/rfc/rfc3339.html" target="_blank">RFC 3339</a> <code>date-time</code> strings, for example <code>2026-10-12T10:15:00+05:30</code>. Where a rule depends on a calendar period (a budget month, an AFA period), the period is computed in IST (UTC+05:30). BACP-owned timestamps SHOULD carry the offset <code>+05:30</code>; Beckn <code>context</code> fields follow ONDC, which requires <code>Z</code>, and are relayed unchanged. Every comparison of times is a comparison of instants, so <code>…T10:00:05+05:30</code> and <code>…T04:30:05Z</code> are equal. The Legal Metrology (Indian Standard Time) Rules, 2026 (G.S.R. 761(E)), Rule 7, require IST for any time reference from their commencement (notified, not in force as of 18-10-2026; about 24-02-2027, exact day not verified). Whether Rule 7 reaches machine timestamps is open (<a href="../open-questions/#q-84">Q-84</a>).</td>
+</tr>
+<tr>
+<td>Durations</td>
+<td>ISO 8601 durations, for example <code>P30D</code> or <code>PT5M</code>.</td>
+</tr>
+<tr>
+<td>Signature timestamps</td>
+<td>RFC 9421 <code>created</code> and <code>expires</code> parameters are integer seconds since the Unix epoch.</td>
+</tr>
+<tr>
+<td>Canonical JSON</td>
+<td>Signed and hashed JSON is canonicalised with JCS (<a href="https://www.rfc-editor.org/rfc/rfc8785.html" target="_blank">RFC 8785</a>).</td>
+</tr>
+<tr>
+<td>Hashes</td>
+<td>Written as <code>alg:base64url</code>. <code>sha-256</code> is mandatory. <code>blake2b-512</code> is allowed only for Beckn digests.</td>
+</tr>
+<tr>
+<td>Text shown to people</td>
+<td>Multilingual maps keyed by BCP 47 tag, for example <code>{"hi-IN": "...", "en-IN": "..."}</code>. Hindi display text under <code>hi-IN</code> is written in Devanagari. Romanised Hindi (for example a voice transcript) is tagged <code>hi-Latn-IN</code>.</td>
+</tr>
+<tr>
+<td>Schemas</td>
+<td>JSON Schema draft 2020-12. Schemas are identified by their <code>$id</code> under <code>https://bacp.dev/schemas/</code>, and tools MUST resolve <code>$ref</code>s by <code>$id</code>, not by file path.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="the-problem-bacp-solves">The problem BACP solves<a class="headerlink" href="#the-problem-bacp-solves" title="Permanent link">&para;</a></h2>
+<p>India already has interoperable commerce (ONDC/Beckn), instant interoperable
+payments with standing authorities (UPI Reserve Pay, UPI Circle, AutoPay),
+a consent-artefact model (Account Aggregator and DEPA), and a data-protection
+law (DPDP). None of them was designed for a software agent acting for a
+person. Each lacks the same four things:</p>
+<ul>
+<li><strong>Who</strong> the agent is. Today only the platform is identified on the network,
+  never the agent or the legal entity that operates it.</li>
+<li><strong>Under whose authority, and within what limits.</strong> Nothing expresses "buy
+  groceries for me, up to ₹3,000 a month, never more than ₹1,500 an order, and
+  ask me above ₹1,200".</li>
+<li><strong>Whether a human was present.</strong> Payment and consumer rules differ sharply
+  between a person approving a payment and an agent acting alone.</li>
+<li><strong>What the person agreed to share,</strong> with whom, for what purpose.</li>
+</ul>
+<p>BACP adds these four things as a thin, namespaced agent layer, together with a
+hash-chained instruction log and rail-anchored receipts so that any dispute can
+be reconstructed from the person's instruction to the bank reference number.
+BACP does not fork ONDC/Beckn, UPI or any other rail.</p>
+<h2 id="design-principles">Design principles<a class="headerlink" href="#design-principles" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>The model proposes, a deterministic engine decides.</strong> An LLM interprets
+   intent, searches, builds carts and drafts offers. It never verifies anything
+   that matters. Every commitment (paying, accepting an offer, placing a bid,
+   cancelling, returning) passes a deterministic, non-LLM check that fails
+   closed. The agent is treated as untrusted: prompt injection cannot be
+   prevented, so it is contained. See
+   <a href="#the-model-proposes-a-deterministic-engine-decides">the section below</a>.</li>
+<li><strong>The rail is authoritative.</strong> Payment rails enforce their own limits. BACP
+   limits MUST be at or below the rail's, and BACP re-checks them. BACP never
+   relies on the rail to bound its own budgets.</li>
+<li><strong>An agent is never an authentication factor.</strong> The agent never sees or
+   relays a UPI PIN, OTP or card credential, and never activates a mandate.
+   Approval and authentication happen only on a non-agentic
+   <a href="../glossary/#trusted-surface">Trusted Surface</a>.</li>
+<li><strong>Consent is explicit and never inferred.</strong> Purchase consent and DPDP
+   consent come from an affirmative action by the person, never from silence.</li>
+<li><strong>Minimum disclosure.</strong> The payment leg is basket-blind. The seller never
+   sees the payment instrument or the buyer's negotiation bounds. The bank
+   never sees the basket.</li>
+<li><strong>Evidence by default.</strong> Every step is signed and logged so that liability
+   can be decided from evidence. BACP makes no claim about how the law
+   allocates liability for agent error
+   (<a href="../open-questions/#q-01">Q-01</a>).</li>
+<li><strong>Bharat-first.</strong> Multilingual text, voice and IVR channels, voice-consent
+   evidence, GST lines and cash on delivery are first-class.</li>
+</ol>
+<h3 id="at-a-glance">BACP at a glance<a class="headerlink" href="#at-a-glance" title="Permanent link">&para;</a></h3>
+<pre class="mermaid"><code>flowchart LR
+    subgraph L["Principal and agent operator"]
+        PR["Principal"]
+        AG["Agent&lt;br/&gt;(untrusted)"]
+        OP["Agent operator&lt;br/&gt;AgentCredential"]
+    end
+    subgraph G["BACP gateway stack (at a BAP)"]
+        TR["Transports&lt;br/&gt;REST, MCP, A2A"]
+        CAP["Capabilities&lt;br/&gt;in.bacp.discover, checkout,&lt;br/&gt;mandate, order, issue"]
+        NEG["Negotiation&lt;br/&gt;(profile field)"]
+        VER["Verifier and&lt;br/&gt;negotiation guard"]
+        LOG["Instruction log&lt;br/&gt;and evidence"]
+    end
+    subgraph R["Sellers and BPPs on ONDC"]
+        BKN["Beckn transport&lt;br/&gt;context.bacp"]
+        BPP["Seller App (BPP)&lt;br/&gt;gateway profile"]
+        IGM["IGM grievance"]
+        REGS["ONDC registry"]
+    end
+    PR --&gt; AG
+    OP --- AG
+    AG --&gt; TR --&gt; CAP
+    CAP --&gt; VER
+    NEG --&gt; VER
+    VER --&gt; LOG
+    CAP --&gt; BKN --&gt; BPP
+    BPP --&gt; IGM
+    IGM -.-&gt; Q11["AI_AGENT actor&lt;br/&gt;Q-11"]
+    BKN -.-&gt; Q09["context.bacp on ONDC&lt;br/&gt;Q-09"]
+    subgraph S["Shared base"]
+        RAILS["Payment rails&lt;br/&gt;through the handler registry"]
+        CONS["Consent&lt;br/&gt;Mandate Manager,&lt;br/&gt;Trusted Surface"]
+        IDN["Identity&lt;br/&gt;registry, status lists"]
+    end
+    VER --&gt; RAILS
+    PR --&gt; CONS
+    CONS -.-&gt;|"mandates"| VER
+    IDN -.-&gt; OP
+    IDN -.-&gt; REGS
+    IDN -.-&gt; Q02["Agent identity anchor&lt;br/&gt;Q-02"]
+    CONS -.-&gt; Q36["One gateway per open mandate&lt;br/&gt;Q-36, settled"]
+    RAILS -.-&gt; UAP["in.upi.uap&lt;br/&gt;reserved"]
+    RAILS -.-&gt; AGT["in.card.agentic&lt;br/&gt;pilot, Q-39"]
+    RAILS -.-&gt; CIR["in.upi.circle&lt;br/&gt;pilot, closed, Q-77"]
+    subgraph B["Capability discovery and payment handlers"]
+        PROF["/.well-known/bacp profile:&lt;br/&gt;capabilities, negotiation,&lt;br/&gt;payment_handlers, reserved_handlers"]
+    end
+    CAP -.-&gt; PROF
+    RAILS -.-&gt; PROF
+    classDef proposed stroke-dasharray: 5 4,stroke-width:1.5px
+    class Q11,Q09,Q02,Q36,UAP,AGT,CIR proposed</code></pre>
+<p>Figure: BACP in one page. The principal and the agent operator (left) call the BACP gateway stack (centre), which
+reaches sellers and their Seller Apps on ONDC through Beckn (right). Payment rails, consent and identity (the "Shared base" group) are
+the base every call depends on. The "Capability discovery" group is the gateway's published profile, where a counterparty reads
+capabilities and payment handlers. Dashed boxes are Proposed or not yet usable, each tied to an
+<a href="../open-questions/">open question</a> or a <a href="../payments/handler-registry/">handler status</a>: a <code>reserved</code> handler
+backs no payment, and a <code>pilot</code> handler backs a mandate only when the gateway's conformance attestation lists it; <code>in.upi.circle</code> stays closed even then (<a href="../open-questions/#q-77">Q-77</a>).</p>
+<h2 id="layering">Layering<a class="headerlink" href="#layering" title="Permanent link">&para;</a></h2>
+<p>BACP is an agent layer <strong>over</strong> Beckn/ONDC, not a replacement for it. Each
+layer reuses an existing primitive.</p>
+<pre class="mermaid"><code>flowchart TB
+    subgraph T["Transport bindings"]
+        REST["REST, RFC 9421 signed"]
+        MCP["MCP tools"]
+        A2A["A2A extension"]
+    end
+    subgraph F["BACP session facade (at the BACP gateway)"]
+        SES["Checkout, negotiation and post-order sessions"]
+        VER["Deterministic verifier and negotiation guard"]
+        LOG["Instruction log, receipts, evidence bundle"]
+    end
+    subgraph N["Beckn / ONDC backbone"]
+        BKN["search, select, init, confirm, status, cancel, update"]
+        IGM["IGM 2.0 issue and on_issue"]
+        CTX["context.bacp extension"]
+    end
+    subgraph P["Indian payment rails"]
+        OPEN["Standing authorities for human-not-present use"]
+        CLOSED["Per-transaction 2FA for human-present use"]
+    end
+    subgraph C["Consent (AA / DEPA style)"]
+        MM["Mandate Manager and Trusted Surface"]
+    end
+    subgraph I["Identity"]
+        REG["Registry, AgentCredential, status lists"]
+    end
+    T --&gt; F
+    F --&gt; N
+    F --&gt; P
+    N -.-&gt;|"payment terms and bank reference"| P
+    C -.-&gt;|"mandates verified by"| F
+    C -.-&gt;|"rail binding attestation"| P
+    I -.-&gt;|"keys and credential status"| T
+    I -.-&gt;|"subscriber keys"| N</code></pre>
+<p>Solid arrows are call paths. Dotted arrows are trust dependencies. Consent and
+identity are cross-cutting: every call depends on them. The facade talks to the
+payment rails through the payer PSP rather than through Beckn, because Beckn
+carries only payment <em>terms</em>: money moves off-network.</p>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What BACP reuses</th>
+<th>What BACP adds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Transport bindings</strong></td>
+<td>REST (OpenAPI 3.1), MCP tools with <code>structuredContent</code>, A2A <code>DataPart</code> and the <code>TASK_STATE_AUTH_REQUIRED</code> task state. One operation set, bound three ways. UCP binds its own operations four ways (REST, MCP, A2A and an embedded binding), and BACP does not adopt the embedded one.</td>
+<td>RFC 9421 agent signatures with separate tags for browsing, paying, post-order writes and negotiation. Step-up mapped to A2A <code>TASK_STATE_AUTH_REQUIRED</code> and MCP <code>insufficient_scope</code>. See <a href="../transports/rest/">REST</a> and <a href="../transports/mcp-a2a/">MCP and A2A</a>.</td>
+</tr>
+<tr>
+<td><strong>Session facade</strong></td>
+<td>UCP checkout lifecycle and status names; ACP full-state responses, flat errors, <code>messages[].resolution</code> and idempotency; AP2's Trusted Surface and fail-closed constraint evaluation.</td>
+<td>A synchronous session over asynchronous Beckn; the deterministic verifier; the instruction log; an in-doubt payment saga. See <a href="../checkout/">Sessions and Checkout</a>.</td>
+</tr>
+<tr>
+<td><strong>Beckn/ONDC backbone</strong></td>
+<td>Beckn <code>{context, message}</code>, ACK plus <code>on_*</code> callbacks, Ed25519/BLAKE2b network signing, registry lookup, ONDC payment and settlement fields, IGM.</td>
+<td>The <a href="https://bacp.dev/schemas/beckn-context-bacp.json"><code>context.bacp</code></a> extension, mandatory idempotency and a replay cache, and an IGM <code>actors[]</code> entry of type <code>AI_AGENT</code> (Proposed: <a href="../open-questions/#q-11">Q-11</a>). Agent semantics stay in a namespace that network participants can ignore. See <a href="../transports/beckn/">Beckn / ONDC Binding</a>.</td>
+</tr>
+<tr>
+<td><strong>Payment rails</strong></td>
+<td>Live Indian rails: UPI Reserve Pay, UPI Circle, UPI AutoPay, card e-mandates, eNACH, PPIs, COD and others, with their own regulatory limits.</td>
+<td>Payment authority bound to a <strong>live</strong> rail primitive with a PSP-signed attestation; a basket-blind payment leg; rail-anchored receipts. See <a href="../payments/">Payments</a>.</td>
+</tr>
+<tr>
+<td><strong>Consent</strong></td>
+<td>AA/DEPA consent-artefact semantics: immutable, purpose-coded, use-counted, revocable. AP2-style open and closed mandates.</td>
+<td>Periodic budgets, allow-lists, step-up thresholds, post-order action scopes, a separate negotiation mandate, revocation within 60 seconds, DPDP consent receipts. See <a href="../mandates/">Mandates and Consent</a>.</td>
+</tr>
+<tr>
+<td><strong>Identity</strong></td>
+<td>ONDC registry onboarding and key lookup, W3C verifiable credentials and status lists, AP2 <code>cnf</code> key binding.</td>
+<td>The <a href="https://bacp.dev/schemas/agent-credential.json"><code>AgentCredential</code></a>: the agent, its operator's legal entity, its BAP binding, AI disclosure and human handoff. See <a href="../identity-and-signing/">Identity and Request Signing</a>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="the-layering-decision">The layering decision<a class="headerlink" href="#the-layering-decision" title="Permanent link">&para;</a></h3>
+<p>BACP makes four choices about how it sits on existing infrastructure:</p>
+<ol>
+<li><strong>An agent layer over Beckn/ONDC.</strong> Beckn already provides a signed
+   asynchronous grammar, registry PKI, post-order writes (cancel, return),
+   grievance handling (IGM), reconciliation and settlement (RSF), and a
+   production network. BACP carries agent semantics in <code>context.bacp</code> and
+   follows UCP checkout's lifecycle and status names (BACP spells <code>cancelled</code> and adds <code>human_handoff</code>). BACP is not
+   wire-compatible with UCP: paths, totals and the sign of discounts, the <code>ucp</code> envelope, the <code>complete</code> payload and payment
+   authority, and the MCP argument shape differ (<a href="https://bacp.dev/latest/documentation/other-protocols/#ucp">BACP and other protocols</a>). BACP is neither a UCP profile only (UCP has no
+   network discovery, post-order writes, Indian rails or DPDP) nor an ONDC
+   domain specification only (that would lose global-agent interoperability
+   and the AP2 mandate format).</li>
+<li><strong>Mandates in AP2 style with AA/DEPA consent semantics.</strong> A mandate has the
+   structure of an AP2 open or closed Checkout Mandate or Payment Mandate, and the life
+   of an Account Aggregator consent artefact: immutable once signed, tied to a
+   purpose code, use-counted, and revocable at any time.</li>
+<li><strong>Payment bound to live Indian rails.</strong> An open (human-not-present) payment
+   mandate MUST bind to a standing authority that a live rail already enforces,
+   such as a UPI Reserve Pay block or a UPI Circle delegation. A closed
+   (human-present) payment is authorised by a fresh per-transaction factor on
+   the Trusted Surface. BACP does not wait for a future rail: as of 17-10-2026,
+   NPCI has not published an agent-payment specification for UPI, so the handler
+   <code>in.upi.uap</code> is reserved.</li>
+<li><strong>RFC 9421 agent signatures.</strong> Every agent request is signed with
+   <a href="https://www.rfc-editor.org/rfc/rfc9421.html" target="_blank">RFC 9421</a>
+   HTTP Message Signatures under the key bound in the AgentCredential, with
+   a tag that limits what the request may do. The network leg keeps the
+   network's own signing.</li>
+</ol>
+<h2 id="actor-model">Actor model<a class="headerlink" href="#actor-model" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Actor</th>
+<th>Role in BACP</th>
+<th>Trust</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Principal</strong></td>
+<td>The person or business on whose behalf the agent acts (the DPDP Data Principal and, for payments, the payer). Sets up, pauses and revokes mandates; answers step-ups; receives notices.</td>
+<td>Trusted to authorise. Consent is always an explicit, affirmative action on the Trusted Surface, never inferred.</td>
+</tr>
+<tr>
+<td><strong>Agent</strong></td>
+<td>The LLM runtime (voice or text) that interprets intent, discovers, builds carts, negotiates and closes open mandates with its <code>cnf</code> key.</td>
+<td><strong>Untrusted.</strong> It never verifies anything that matters, never holds a PIN or OTP, never signs consent and is never an authentication factor.</td>
+</tr>
+<tr>
+<td><strong>Agent operator</strong></td>
+<td>The legal entity that runs the agent and holds its AgentCredential. Keeps the operator signing key out of the agent's reach, runs the instruction log, appoints a grievance officer, keeps an AI inventory, and provides AI disclosure and a human handoff.</td>
+<td>Accountable and identified through registry onboarding.</td>
+</tr>
+<tr>
+<td><strong>BACP gateway</strong></td>
+<td>The BACP endpoint that agents call. It is co-located with, or runs on behalf of, a registered <strong>Buyer App (BAP)</strong>, so the BAP subscriber is the network-visible party. It verifies agent signatures and credentials, runs the deterministic mandate verifier and negotiation guard, translates calls into signed Beckn actions, holds the replay cache, idempotency store and reservation ledger, and is the interfacing network participant for IGM.</td>
+<td>Trusted to enforce policy deterministically, but audited by conformance tests and evidence rather than trusted on its word.</td>
+</tr>
+<tr>
+<td><strong>Seller / BPP</strong></td>
+<td>The seller and its Seller App (BPP). Provides catalogue, signed quotes, fulfilment, cancel and return handling, GST invoices, and responds to IGM issues. A BACP-aware BPP verifies <code>context.bacp</code> and, in negotiation, the buyer's <code>within_bounds</code> attestation.</td>
+<td>Honest but curious. Its content is <strong>untrusted input</strong> to the agent (dark patterns, prompt injection).</td>
+</tr>
+<tr>
+<td><strong>Mandate Manager</strong></td>
+<td>Turns an approval on the Trusted Surface into signed, immutable mandates and consent receipts. Keeps status, usage and revocation, publishes a status list and notifies counterparties within 60 seconds. Acts as, or for, a DPDP Consent Manager.</td>
+<td><strong>Data-blind</strong>: stores mandates and logs, never order or payment payloads.</td>
+</tr>
+<tr>
+<td><strong>Trusted Surface</strong></td>
+<td>The non-agentic surface, typically the payer's UPI app, where the principal reads notices in their language, approves mandates and step-ups, and enters a PIN or biometric.</td>
+<td>Non-agentic by requirement. Trusted for consent capture and authentication.</td>
+</tr>
+<tr>
+<td><strong>PSP / rail</strong></td>
+<td>The payer PSP and the rail behind it (for UPI, NPCI and the issuer bank). Creates the standing authority (block, delegation, mandate), issues the <code>rail_binding</code> attestation, executes debits and refunds, and signs receipts with the rail reference (RRN, UTR or equivalent).</td>
+<td>Authoritative for money movement and limits. Sees only payee, amount, mandate reference and checkout hash, never the basket.</td>
+</tr>
+<tr>
+<td><strong>Registry</strong></td>
+<td>The ONDC registry or another accredited registry. Publishes subscriber keys for BAPs, BPPs, Mandate Managers and PSPs; issues AgentCredentials and their status lists; records conformance attestations and payment-aggregator authorisation.</td>
+<td>Root of trust for keys. Which body anchors agent identity is open (<a href="../open-questions/#q-02">Q-02</a>).</td>
+</tr>
+</tbody>
+</table>
+<p>Other parties appear in specific flows: the Beckn gateway (BG), which
+multicasts <code>search</code> and is routing-only; grievance redressal officers and ODR
+providers; payment aggregators; logistics providers; and, for trade profiles,
+roles such as consignee, paying authority, broker, financier and a neutral
+auctioneer (see <a href="../trade-profiles/">Trade Profiles</a>).</p>
+<div class="admonition note">
+<p class="admonition-title">Co-location</p>
+<p>In BACP <code>2026-10-18</code> the Mandate Manager is operated by, or co-located with, the
+payer PSP that also provides the Trusted Surface, so that consent capture
+and PIN entry happen on one non-agentic surface. The roles stay logically
+separate so that an independent DPDP Consent Manager can take over. An
+MM that acts as a registered Consent Manager does not also act as
+credential provider; that role runs as a separate component
+(<a href="../open-questions/#q-16">Q-16</a>).</p>
+</div>
+<h2 id="core-artefacts">Core artefacts<a class="headerlink" href="#core-artefacts" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Artefact</th>
+<th>Purpose</th>
+<th>Schema</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>AgentCredential</strong></td>
+<td>Identifies the agent, its operator and its BAP; binds the agent's signing key (<code>cnf</code>); lists the signature tags it may use; carries the AI disclosure and human-handoff link. An SD-JWT VC, <code>vct: in.bacp.agent.1</code>.</td>
+<td><a href="https://bacp.dev/schemas/agent-credential.json"><code>agent-credential.json</code></a></td>
+</tr>
+<tr>
+<td><strong>Mandate</strong></td>
+<td>The principal's signed authority, AP2-compatible: open or closed, Checkout or Payment, with budgets, allow-lists, step-up thresholds, action and data scopes, and a rail or auth binding.</td>
+<td><a href="https://bacp.dev/schemas/mandate.json"><code>mandate.json</code></a></td>
+</tr>
+<tr>
+<td><strong>Negotiation mandate</strong></td>
+<td>A separate mandate (<code>vct: in.bacp.mandate.negotiation.1</code>) holding negotiation bounds, including a reservation price that is never disclosed.</td>
+<td><a href="https://bacp.dev/schemas/mandate-negotiation.json"><code>mandate-negotiation.json</code></a></td>
+</tr>
+<tr>
+<td><strong>ConsentReceipt</strong></td>
+<td>The DPDP record of what personal data goes to which recipient, for what purpose, in which language, with the withdrawal and grievance routes. One per recipient per mandate.</td>
+<td><a href="https://bacp.dev/schemas/consent-receipt.json"><code>consent-receipt.json</code></a></td>
+</tr>
+<tr>
+<td><strong>Receipt</strong></td>
+<td>A PSP-signed payment or refund receipt anchored to the rail reference (RRN, UTR or other rail evidence). Budgets decrement only from these.</td>
+<td><a href="https://bacp.dev/schemas/receipt.json"><code>receipt.json</code></a></td>
+</tr>
+<tr>
+<td><strong>InstructionLog entry</strong></td>
+<td>A signed, hash-chained record of prompt → intent → cart → mandate → payment reference, held by the operator.</td>
+<td><a href="https://bacp.dev/schemas/instruction-log-entry.json"><code>instruction-log-entry.json</code></a></td>
+</tr>
+<tr>
+<td><strong><code>context.bacp</code></strong></td>
+<td>The extension carried in the Beckn/ONDC <code>context</code> of every BACP-originated network message.</td>
+<td><a href="https://bacp.dev/schemas/beckn-context-bacp.json"><code>beckn-context-bacp.json</code></a></td>
+</tr>
+<tr>
+<td><strong>TermSheet</strong></td>
+<td>The multi-issue terms under negotiation: price, quantity, delivery, payment, returns, warranty and more.</td>
+<td><a href="https://bacp.dev/schemas/termsheet.json"><code>termsheet.json</code></a></td>
+</tr>
+<tr>
+<td><strong>Offer and negotiation messages</strong></td>
+<td>Signed, expiring offers, counter-offers, bids, ACCEPT, REJECT, WITHDRAW and related messages.</td>
+<td><a href="https://bacp.dev/schemas/offer.json"><code>offer.json</code></a></td>
+</tr>
+<tr>
+<td><strong>NegotiationSession</strong></td>
+<td>The state of a negotiation, RFQ or auction, and the negotiation capability advert.</td>
+<td><a href="https://bacp.dev/schemas/negotiation-session.json"><code>negotiation-session.json</code></a></td>
+</tr>
+<tr>
+<td><strong>Handler descriptor</strong></td>
+<td>Data describing one Indian payment handler: binding class, presence rules, limits, AFA, refund route, settlement evidence.</td>
+<td><a href="https://bacp.dev/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a></td>
+</tr>
+<tr>
+<td><strong>PaymentPlan</strong></td>
+<td>A split-tender or multi-tranche payment plan.</td>
+<td><a href="https://bacp.dev/schemas/payment-plan.json"><code>payment-plan.json</code></a></td>
+</tr>
+<tr>
+<td><strong>Credit ledger entry</strong></td>
+<td>A hash-chained B2B credit (khata) posting.</td>
+<td><a href="https://bacp.dev/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+</tr>
+<tr>
+<td><strong>LoanOffer</strong></td>
+<td>A regulated credit offer with its key fact statement reference and cooling-off period.</td>
+<td><a href="https://bacp.dev/schemas/loan-offer.json"><code>loan-offer.json</code></a></td>
+</tr>
+<tr>
+<td><strong>FX view</strong></td>
+<td>A disclosure view of a foreign-currency amount; settlement stays in INR.</td>
+<td><a href="https://bacp.dev/schemas/fx.json"><code>fx.json</code></a></td>
+</tr>
+<tr>
+<td><strong>Common types</strong></td>
+<td><code>Amount</code>, <code>Hash</code>, <code>Jws</code>, <code>Jwk</code>, <code>Signature</code>, <code>Presence</code>, <code>LangText</code>, <code>HandlerRef</code> and others.</td>
+<td><a href="https://bacp.dev/schemas/common.json"><code>common.json</code></a></td>
+</tr>
+</tbody>
+</table>
+<p>The <strong>evidence bundle</strong>, which packages mandates, the BPP-signed quote,
+receipts and the instruction-log chain for a dispute, is defined in the REST
+binding (<code>EvidenceBundle</code> in the OpenAPI document listed under
+<a href="../reference/">Reference</a>) and described in
+<a href="../evidence/">Evidence and Instruction Log</a>.</p>
+<h2 id="lifecycle">Lifecycle<a class="headerlink" href="#lifecycle" title="Permanent link">&para;</a></h2>
+<p>A BACP transaction moves through seven stages. Mandate setup happens once,
+before the first stage, on the Trusted Surface. Negotiation is optional: a
+fixed-price catalogue purchase goes straight from discovery to checkout.</p>
+<pre class="mermaid"><code>flowchart LR
+    M["Mandate setup&lt;br/&gt;on the Trusted Surface"] --&gt; D
+    D["Discover&lt;br/&gt;POST /discover&lt;br/&gt;Beckn search"] --&gt; NG
+    D --&gt; C
+    NG["Negotiate (optional)&lt;br/&gt;signed offers under&lt;br/&gt;a negotiation mandate"] --&gt; C
+    C["Checkout&lt;br/&gt;POST and PUT /sessions&lt;br/&gt;Beckn select and init"] --&gt; P
+    P["Pay&lt;br/&gt;POST complete&lt;br/&gt;verifier, rail debit,&lt;br/&gt;Beckn confirm"] --&gt; F
+    F["Fulfil&lt;br/&gt;GET /orders&lt;br/&gt;Beckn status"] --&gt; R
+    F --&gt; G
+    R["Return and refund&lt;br/&gt;POST returns&lt;br/&gt;Beckn update,&lt;br/&gt;refund to source"] --&gt; G
+    G["Grievance&lt;br/&gt;POST /issues&lt;br/&gt;ONDC IGM as AI_AGENT"]</code></pre>
+<table>
+<thead>
+<tr>
+<th>Stage</th>
+<th>Agent call</th>
+<th>Signature tag</th>
+<th>Network or rail action</th>
+<th>Defined in</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mandate setup</td>
+<td><code>POST /mandates</code></td>
+<td><code>bacp-browse</code></td>
+<td>None on the network. The Mandate Manager and PSP create the mandate and the rail authority after the principal approves on the Trusted Surface.</td>
+<td><a href="../mandates/">Mandates and Consent</a></td>
+</tr>
+<tr>
+<td>Discover</td>
+<td><code>POST /discover</code></td>
+<td><code>bacp-browse</code></td>
+<td>Beckn <code>search</code> → <code>on_search</code> through the Beckn gateway, with registry lookup</td>
+<td><a href="../discovery/">Discovery and Profiles</a></td>
+</tr>
+<tr>
+<td>Negotiate</td>
+<td><code>/negotiations</code>, <code>/negotiations/{id}/offers</code>, <code>/negotiations/{id}/accept</code>, <code>/rfqs</code>, <code>/auctions</code></td>
+<td><code>bacp-browse</code> for non-binding messages; <code>bacp-negotiate</code> for firm offers, ACCEPT, auction creation, bids and awards</td>
+<td><code>select</code> / <code>on_select</code> rounds carrying negotiation tags</td>
+<td><a href="../negotiation/">Negotiation</a></td>
+</tr>
+<tr>
+<td>Checkout</td>
+<td><code>POST /sessions</code>, <code>PUT /sessions/{id}</code></td>
+<td><code>bacp-browse</code></td>
+<td><code>select</code> → <code>on_select</code> (quote), then <code>init</code> → <code>on_init</code> (signed quote, payment terms)</td>
+<td><a href="../checkout/">Sessions and Checkout</a></td>
+</tr>
+<tr>
+<td>Pay</td>
+<td><code>POST /sessions/{id}/complete</code></td>
+<td><code>bacp-pay</code></td>
+<td>Basket-blind debit through the payer PSP, then <code>confirm</code> → <code>on_confirm</code> with the rail reference</td>
+<td><a href="../payments/">Payments</a></td>
+</tr>
+<tr>
+<td>Fulfil</td>
+<td><code>GET /orders/{id}</code> and webhooks</td>
+<td><code>bacp-browse</code></td>
+<td><code>status</code> and unsolicited <code>on_status</code> (<code>track</code> is proposed)</td>
+<td><a href="../checkout/post-order/">Orders and Post-order</a></td>
+</tr>
+<tr>
+<td>Return and refund</td>
+<td><code>POST /orders/{id}/returns</code>, <code>POST /orders/{id}/cancel</code></td>
+<td><code>bacp-post-order</code></td>
+<td><code>update</code> (return) or <code>cancel</code>, then a refund to the original source</td>
+<td><a href="../checkout/post-order/">Orders and Post-order</a></td>
+</tr>
+<tr>
+<td>Grievance</td>
+<td><code>POST /issues</code>, <code>POST /issues/{id}/actions</code></td>
+<td><code>bacp-post-order</code></td>
+<td>IGM 2.0 <code>issue</code> / <code>on_issue</code> with an <code>AI_AGENT</code> actor (Proposed) and an evidence bundle</td>
+<td><a href="../evidence/">Evidence and Instruction Log</a></td>
+</tr>
+</tbody>
+</table>
+<p>Revocation can happen at any point. A revoked mandate stops new commitments
+within 60 seconds. Protective actions on orders already placed under it
+(cancel, return, grievance) remain allowed with the principal present
+(<code>presence: HP</code>).</p>
+<p><a href="../getting-started/">Getting Started</a> walks through one complete
+transaction.</p>
+<h2 id="the-model-proposes-a-deterministic-engine-decides">The model proposes, a deterministic engine decides<a class="headerlink" href="#the-model-proposes-a-deterministic-engine-decides" title="Permanent link">&para;</a></h2>
+<p>BACP separates proposing from deciding.</p>
+<ul>
+<li>The agent, and any LLM behind it, MAY propose anything: a search, a cart, a
+  counter-offer, a return.</li>
+<li>A <strong>deterministic, non-LLM engine</strong> inside the gateway trust zone decides
+  whether a proposal becomes a commitment. For checkout this is the mandate
+  verifier, which runs authoritatively on every <code>complete</code> and as an advisory
+  pre-check on every <code>PUT /sessions/{id}</code>. For negotiation it is the
+  negotiation guard, which runs on every outgoing firm counter-offer, ACCEPT,
+  bid and award, and on every incoming offer.</li>
+<li>The engine MUST fail closed: any failure, unknown constraint or
+  unevaluable input rejects the commitment. The first failing check wins.</li>
+<li>The engine's outcome is limited to <em>pass</em>, <em>reject</em> or <em>escalate to the
+  principal</em>. When the engine escalates, the decision moves to the principal on
+  the Trusted Surface, never back to the LLM. In negotiation the LLM sees only
+  the verdicts <code>acceptable</code>, <code>not_acceptable</code> or <code>needs_escalation</code>, never the
+  principal's bounds.</li>
+<li>Free text from counterparties (product descriptions, seller chat) is
+  untrusted input. It is returned to the agent only as data and can never widen
+  a mandate.</li>
+<li>Budgets, usage counts and rail caps are evaluated against an atomic
+  reservation ledger, so concurrent requests cannot together exceed a budget.</li>
+</ul>
+<p>The detailed evaluation order is defined in
+<a href="../mandates/">Mandates and Consent</a> and
+<a href="../negotiation/">Negotiation</a>.</p>
+<h2 id="protocol-versioning">Protocol versioning<a class="headerlink" href="#protocol-versioning" title="Permanent link">&para;</a></h2>
+<p>BACP versions are calendar dates in the form <code>YYYY-MM-DD</code>. A dated version is
+a snapshot of the whole protocol: the specification pages, the JSON Schemas,
+the OpenAPI document, the handler registry and the conformance manifest,
+published together.</p>
+<ul>
+<li>The current dated release is <code>2026-10-18</code>. The working version on <code>main</code>
+  is <code>draft</code>, which has no date and may change without notice.</li>
+<li>A gateway publishes the versions it supports in its
+  <a href="../discovery/#profile-document">profile</a> (<code>bacp.version</code> and
+  <code>bacp.supported_versions</code>). An agent MUST use a version that the gateway
+  lists.</li>
+<li>Schema <code>$id</code>s under <code>https://bacp.dev/schemas/</code> resolve to the latest
+  release. Pinned copies live under <code>https://bacp.dev/YYYY-MM-DD/schemas/</code>.</li>
+</ul>
+<p>The release process, URL scheme and breaking-change policy are defined on the
+<a href="https://bacp.dev/versioning/">Versioning</a> page.</p>
+<h2 id="extensibility">Extensibility<a class="headerlink" href="#extensibility" title="Permanent link">&para;</a></h2>
+<p>BACP is designed to be extended without breaking existing participants, with
+one deliberate exception: authority is never extended silently.</p>
+<ol>
+<li><strong>Unknown fields are ignored; a member of an unlisted capability is refused.</strong>
+   A receiver MUST ignore fields it does not understand in requests, responses,
+   webhooks and network messages, unless the schema for that object forbids
+   additional properties. A network participant that does not speak BACP
+   ignores <code>context.bacp</code>. The exception is a request member that a capability
+   owns, where the receiver's version defines the capability but the receiver
+   does not list it: the receiver MUST refuse it with <code>400 capability_unsupported</code>
+   at the member's path, MUST create or change nothing, and MUST NOT ignore it.
+   An ignored <code>discounts</code> member would let an agent tell the principal that a
+   coupon was applied when it was not. Fields from a version that the receiver
+   does not implement are ignored as before. See
+   <a href="../discovery/#capabilities">Capabilities</a>.</li>
+<li><strong>Unknown mandate constraints fail closed.</strong> A verifier that meets a
+   constraint key it does not understand, in any mandate, MUST reject the
+   mandate (<code>constraint_unknown</code>). An unknown constraint might be the very
+   limit the principal relied on.</li>
+<li><strong>New constraints go in new mandates.</strong> Because existing AP2-compatible
+   verifiers fail closed on unknown constraints, a new family of bounds is
+   carried in a separate mandate type, as negotiation bounds are, rather than
+   added to Checkout or Payment Mandates.</li>
+<li><strong>Closed objects stay closed.</strong> Objects whose schema forbids additional
+   properties (for example the mandate <code>constraints</code> object, <code>context.bacp</code> and
+   the term-sheet issue groups) MUST NOT carry extra fields. Extra negotiable
+   issues go only under namespaced <code>extensions</code>, and the negotiation guard
+   fails closed on any extension issue that is not agreed.</li>
+<li><strong>Error codes are registered.</strong> A new error code MUST be registered with its
+   HTTP status and resolution before use. A client that meets an unregistered
+   code MUST act on the HTTP status class and MUST NOT retry a 4xx with a new
+   <code>Idempotency-Key</code>. See <a href="../errors/">Errors</a>.</li>
+<li><strong>Unknown handlers fail closed.</strong> A payment handler reference that does not
+   resolve in the <a href="../payments/handler-registry/">handler registry</a> MUST be
+   treated as not eligible. Resolving a handler does not make it eligible:
+   reserved and deprecated handlers MUST NOT back a payment.</li>
+<li><strong>Namespaces.</strong> Indian rails and instruments use <code>in.&lt;family&gt;.&lt;variant&gt;</code>
+   handler ids. BACP-native constructs use <code>bacp.&lt;construct&gt;</code>. Capabilities use
+   <code>in.bacp.*</code>. The <code>in.*</code> ids are governed by the BACP registries and are
+   <strong>not bound to a DNS name</strong>: nothing about a domain such as <code>bacp.in</code>, which
+   an unrelated party holds (as of 18-10-2026), makes an <code>in.*</code> id or a schema URL under it
+   trustworthy. BACP never declares an <code>in.*</code> id together with a <code>schema</code> in a
+   profile that a UCP platform reads, and a BACP gateway MUST NOT accept or
+   fetch a schema for an <code>in.*</code> id from any source.</li>
+<li><strong>Extensions come from a digest-pinned registry and are never fetched.</strong> A
+   third-party extension is declared in <code>capability_declarations</code> by registry
+   reference and schema digest (<a href="../discovery/#capability-declarations">Capability declarations</a>),
+   and its payload travels under <code>ext.&lt;id&gt;</code>. A gateway MUST NOT fetch an
+   extension's schema at run time. An <code>ext</code> member that touches an amount, the
+   payee, presence, a mandate or a disclosure is <em>critical</em>: it is refused unless
+   its capability is listed and the amount also appears as a line of the base
+   <code>totals</code>, and it is never a mandate constraint.</li>
+</ol>
+<h2 id="page-map">Page map<a class="headerlink" href="#page-map" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Page</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="../getting-started/">Getting Started</a></td>
+<td>One end-to-end transaction, step by step</td>
+</tr>
+<tr>
+<td><a href="../glossary/">Glossary</a></td>
+<td>Definitions of every term</td>
+</tr>
+<tr>
+<td><a href="../discovery/">Discovery and Profiles</a></td>
+<td><code>/.well-known/bacp</code>, capability and version negotiation, registry lookup</td>
+</tr>
+<tr>
+<td><a href="../identity-and-signing/">Identity and Request Signing</a></td>
+<td>AgentCredential, RFC 9421 signatures, replay protection, idempotency, key rotation</td>
+</tr>
+<tr>
+<td><a href="../mandates/">Mandates and Consent</a></td>
+<td>Mandate types, constraints, deterministic verification, consent receipts, revocation</td>
+</tr>
+<tr>
+<td><a href="../checkout/">Sessions and Checkout</a></td>
+<td>The checkout session, its state machine and the payment saga</td>
+</tr>
+<tr>
+<td><a href="../checkout/post-order/">Orders and Post-order</a></td>
+<td>Order reads, cancel, return, refund</td>
+</tr>
+<tr>
+<td><a href="../negotiation/">Negotiation Overview</a></td>
+<td>Negotiation modes, term sheets, offers, the guard</td>
+</tr>
+<tr>
+<td><a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a></td>
+<td>RFQs, sealed bids, reverse, English and Dutch auctions</td>
+</tr>
+<tr>
+<td><a href="../payments/">Payments Overview</a></td>
+<td>Payment binding, presence, step-up, receipts</td>
+</tr>
+<tr>
+<td><a href="../payments/handler-registry/">Handler Registry</a></td>
+<td>Payment handlers, binding classes, alias resolution, intersection</td>
+</tr>
+<tr>
+<td><a href="../payments/rails/">Rail Bindings</a></td>
+<td>UPI Reserve Pay, Circle, AutoPay and other rail rules</td>
+</tr>
+<tr>
+<td><a href="../payments/credit-and-split-tender/">Credit and Split Tender</a></td>
+<td>Split tender, credit ledgers, loans, COD</td>
+</tr>
+<tr>
+<td><a href="../payments/economics/">Who Pays</a></td>
+<td>What the principal pays and to whom; MDR, fees and refunds (informative)</td>
+</tr>
+<tr>
+<td><a href="../evidence/">Evidence and Instruction Log</a></td>
+<td>Instruction log, receipts, evidence bundle, grievances</td>
+</tr>
+<tr>
+<td><a href="../trade-profiles/">Trade Profiles</a></td>
+<td>Roles and profiles for Indian trade models</td>
+</tr>
+<tr>
+<td><a href="../errors/">Errors</a></td>
+<td>Error model and code registry</td>
+</tr>
+<tr>
+<td><a href="../security-and-privacy/">Security and Privacy</a></td>
+<td>Threat model, controls, data minimisation</td>
+</tr>
+<tr>
+<td><a href="../regulatory-mapping/">Regulatory Mapping</a></td>
+<td>Regulatory requirements and how BACP meets them</td>
+</tr>
+<tr>
+<td><a href="../conformance/">Conformance</a></td>
+<td>Conformance levels and testing</td>
+</tr>
+<tr>
+<td><a href="../transports/rest/">REST</a></td>
+<td>REST binding</td>
+</tr>
+<tr>
+<td><a href="../transports/beckn/">Beckn / ONDC Binding</a></td>
+<td>Mapping onto Beckn and ONDC</td>
+</tr>
+<tr>
+<td><a href="../transports/mcp-a2a/">MCP and A2A</a></td>
+<td>MCP tool and A2A bindings</td>
+</tr>
+<tr>
+<td><a href="../reference/">Reference</a></td>
+<td>Schemas, OpenAPI and registry downloads</td>
+</tr>
+<tr>
+<td><a href="../open-questions/">Open Questions</a></td>
+<td>Questions pending an owner decision</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+        
+          
+          <a href="../getting-started/" class="md-footer__link md-footer__link--next" aria-label="Next: Getting Started">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Getting Started
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

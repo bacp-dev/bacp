@@ -1,0 +1,148 @@
+{
+  "id": "ses_01HZXD",
+  "transaction_id": "7a2d4c1e-5b3f-4e8a-9c0d-2e3f4a5b6c7d",
+  "status": "ready_for_complete",
+  "presence": "HNP",
+  "bpp_id": "bpp.dairy.example.in",
+  "provider_id": "P-207",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "line_items": [
+    {
+      "id": "I-PANEER-500G",
+      "quantity": 1,
+      "unit_price": {
+        "value": 24000,
+        "currency": "INR"
+      },
+      "total": {
+        "value": 24000,
+        "currency": "INR"
+      },
+      "added_by": "principal"
+    },
+    {
+      "id": "I-CURD-1KG",
+      "quantity": 1000,
+      "unit_price": {
+        "value": 21000,
+        "currency": "INR"
+      },
+      "total": {
+        "value": 21000,
+        "currency": "INR"
+      },
+      "added_by": "seller",
+      "measure": {
+        "unit": "KGM",
+        "scale": 3,
+        "increment": 250,
+        "display_text": {
+          "en-IN": "kg",
+          "hi-IN": "किलो"
+        }
+      }
+    }
+  ],
+  "totals": [
+    {
+      "type": "total",
+      "amount": {
+        "value": 45000,
+        "currency": "INR"
+      }
+    }
+  ],
+  "quote": {
+    "id": "Q-91",
+    "ttl": "PT10M",
+    "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+    "bpp_signature": "eyJhbGciOiJFUzI1NiJ9.eyJxIjoiUS05MSJ9.c2ln"
+  },
+  "payment": {
+    "handler": "in.upi.reservepay",
+    "collected_by": "BPP",
+    "type": "ON-ORDER",
+    "status": "not_started"
+  },
+  "basket_id": "bkt_01HZXBASKET7",
+  "ai_disclosure": {
+    "notice": {
+      "hi-IN": "आप एक AI सहायक से बात कर रहे हैं।",
+      "en-IN": "You are talking to an AI assistant."
+    },
+    "handoff_routes": [
+      {
+        "channel": "app",
+        "uri": "https://vaani.example.in/human",
+        "languages": [
+          "hi-IN",
+          "en-IN"
+        ],
+        "hours": "24x7"
+      }
+    ]
+  },
+  "messages": [
+    {
+      "type": "disclosure",
+      "code": "ai_disclosure",
+      "content": {
+        "hi-IN": "आप एक AI सहायक से बात कर रहे हैं। किसी इंसान से बात करने के लिए: https://vaani.example.in/human",
+        "en-IN": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human"
+      },
+      "param": "$.ai_disclosure",
+      "resolution": "recoverable"
+    }
+  ],
+  "fulfilment_options": [
+    {
+      "id": "fo1",
+      "type": "Delivery",
+      "label": {
+        "en-IN": "Evening slot"
+      },
+      "slot": {
+        "start": "2026-10-19T17:00:00+05:30",
+        "end": "2026-10-19T19:00:00+05:30"
+      },
+      "tat": "PT2H",
+      "charge": {
+        "value": 2000,
+        "currency": "INR"
+      }
+    },
+    {
+      "id": "fo2",
+      "type": "Self-Pickup",
+      "label": {
+        "en-IN": "Collect from the store"
+      },
+      "charge": {
+        "value": 0,
+        "currency": "INR"
+      },
+      "pickup_location": {
+        "name": "Shree Dairy, Koramangala",
+        "pincode": "560034",
+        "gps": "12.9352,77.6245"
+      }
+    }
+  ],
+  "policies": [
+    {
+      "type": "in.bacp.policy.warranty",
+      "allowed": true,
+      "window": "P2D",
+      "applies_to": [
+        "I-PANEER-500G"
+      ],
+      "description": {
+        "en-IN": "Returnable within 2 days if damaged"
+      }
+    },
+    {
+      "type": "in.bacp.policy.cod",
+      "allowed": false
+    }
+  ]
+}

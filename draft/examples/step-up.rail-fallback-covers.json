@@ -1,0 +1,52 @@
+{
+  "step_up_id": "stp_01HZXKq8W3nK5vRt7YcLm2",
+  "kind": "confirm",
+  "reason": "rail_fallback",
+  "summary": {
+    "hi-IN": "3 दुकानें, कुल ₹932। 2 भुगतानों के लिए आपके UPI PIN की ज़रूरत है। कृपया UPI ऐप में पुष्टि करें।",
+    "en-IN": "3 sellers, ₹932 in all. 2 payments need your UPI PIN. Please confirm in your UPI app."
+  },
+  "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXKq8W3nK5vRt7YcLm2",
+  "surface": "psp.example.in",
+  "ts_render": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImJhY3AtdHMtcmVuZGVyK2p3cyJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYS3E4VzNuSzV2UnQ3WWNMbTIifQ.c2ln",
+  "delivery": "deep_link",
+  "covers": [
+    {
+      "session_id": "ses_01HZXB",
+      "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+      "payee": {
+        "vpa": "ganeshkirana@examplebank",
+        "bpp_id": "bpp.kirana.example.in"
+      },
+      "amount": {
+        "value": 30200,
+        "currency": "INR"
+      }
+    },
+    {
+      "session_id": "ses_01HZXD",
+      "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+      "payee": {
+        "vpa": "dairy@examplebank",
+        "bpp_id": "bpp.dairy.example.in"
+      },
+      "amount": {
+        "value": 45000,
+        "currency": "INR"
+      }
+    },
+    {
+      "session_id": "ses_01HZXF",
+      "checkout_hash": "sha-256:spdIh_IlShNd2jhCwajzmOrqcCYN5_y6BOmBN3j8aSA",
+      "payee": {
+        "vpa": "sabzi@examplebank",
+        "bpp_id": "bpp.sabzi.example.in"
+      },
+      "amount": {
+        "value": 18000,
+        "currency": "INR"
+      }
+    }
+  ],
+  "expires_at": "2026-10-22T18:45:00+05:30"
+}

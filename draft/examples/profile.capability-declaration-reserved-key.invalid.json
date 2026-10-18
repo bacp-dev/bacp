@@ -1,0 +1,55 @@
+{
+  "bacp": {
+    "version": "2026-10-18",
+    "supported_versions": [
+      "2026-10-18",
+      "2026-11-01"
+    ]
+  },
+  "bap_id": "bap.vaani.example.in",
+  "transports": [
+    "rest",
+    "mcp"
+  ],
+  "capabilities": [
+    "in.bacp.discover",
+    "in.bacp.checkout",
+    "in.bacp.mandate",
+    "in.bacp.payment_plan",
+    "in.bacp.discounts",
+    "com.examplebank.checkout.emi"
+  ],
+  "payment_handlers": [
+    "in.upi.reservepay",
+    "in.upi.circle",
+    "in.ppi.gift"
+  ],
+  "message_id_namespace": "55884fda-3b41-58be-87a9-2be7b3b43b7f",
+  "payment_handlers_registry": "https://gw.bap.example.in/bacp/payment-handlers",
+  "keys": {
+    "keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "ukid-7"
+      }
+    ]
+  },
+  "capability_declarations": {
+    "com.examplebank.checkout.emi": {
+      "version": "2026-11-01",
+      "extends": "in.bacp.checkout",
+      "registry_ref": "ext/com.examplebank.checkout.emi",
+      "schema_digest": "sha-256:X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE"
+    },
+    "in.bacp.emi": {
+      "version": "2026-10-18",
+      "extends": "in.bacp.checkout"
+    }
+  },
+  "mcp_endpoints": {
+    "2026-10-18": "https://gw.bap.example.in/bacp/mcp/2026-10-18",
+    "2026-11-01": "https://gw.bap.example.in/bacp/mcp/2026-11-01"
+  }
+}

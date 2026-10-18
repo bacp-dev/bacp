@@ -1,0 +1,25 @@
+{
+  "step_up_id": "stp_01HZYPq8W3nK5vRt7YcLm2",
+  "kind": "post_order",
+  "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "action": "LEDGER_ACK",
+  "language": "hi-IN",
+  "total": {
+    "value": 435000,
+    "currency": "INR"
+  },
+  "summary": {
+    "hi-IN": "42 प्रविष्टियाँ, कुल बकाया ₹4,350, सबसे पुराना बकाया 30-10-2026। इस खाते की पुष्टि करें?",
+    "en-IN": "42 entries, ₹4,350 outstanding, oldest unpaid 30-10-2026. Acknowledge this statement?"
+  },
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T19:05:00+05:30",
+  "subject_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc",
+  "subject_ref": {
+    "kind": "ledger_statement",
+    "id": "ldg_KIRANAKHATA01",
+    "through_seq": 41
+  }
+}

@@ -1,0 +1,2216 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/draft/schemas/termsheet.json",
+  "title": "TermSheet",
+  "description": "Multi-issue term sheet carried in every binding Offer. Every issue carries {value, negotiable, status}. Reservation values never appear here. Issues not listed are fixed.",
+  "type": "object",
+  "required": [
+    "term_sheet_id",
+    "version",
+    "currency",
+    "pricing_basis",
+    "parties",
+    "lines",
+    "all_in_total",
+    "payment"
+  ],
+  "properties": {
+    "term_sheet_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[\\x21-\\x7e]+$",
+      "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+    },
+    "version": {
+      "const": "1"
+    },
+    "currency": {
+      "const": "INR"
+    },
+    "pricing_basis": {
+      "enum": [
+        "list",
+        "volume",
+        "negotiated",
+        "personalised",
+        "auction",
+        "scheme",
+        "posted_dynamic"
+      ],
+      "description": "Device/OS-based pricing is prohibited regardless of basis."
+    },
+    "personalisation_factors": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "quantity",
+          "location",
+          "delivery_cost",
+          "membership",
+          "payment_instrument",
+          "customer_segment"
+        ]
+      }
+    },
+    "parties": {
+      "type": "object",
+      "properties": {
+        "buyer": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        },
+        "seller": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        },
+        "ordering_entity": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        },
+        "consignee": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        },
+        "paying_authority": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        },
+        "intermediaries": {
+          "type": "array",
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+          }
+        }
+      },
+      "required": [
+        "buyer",
+        "seller"
+      ],
+      "description": "Orderer, consignee and payer may differ.",
+      "additionalProperties": false
+    },
+    "lines": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "line_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[\\x21-\\x7e]+$",
+            "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+          },
+          "item_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[\\x21-\\x7e]+$",
+            "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+          },
+          "name": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/LangText"
+          },
+          "hsn": {
+            "type": "string",
+            "pattern": "^[0-9]{4,8}$"
+          },
+          "unit": {
+            "enum": [
+              "each",
+              "kg",
+              "g",
+              "l",
+              "ml",
+              "m",
+              "sqft",
+              "set",
+              "case",
+              "quintal",
+              "tonne",
+              "hour",
+              "job",
+              "seat",
+              "night"
+            ]
+          },
+          "quantity": {
+            "allOf": [
+              {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "moq": {
+            "allOf": [
+              {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "tolerance_pct": {
+            "allOf": [
+              {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "option_clause_pct": {
+            "allOf": [
+              {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false,
+            "description": "GeM-style +/- quantity option."
+          },
+          "unit_price": {
+            "allOf": [
+              {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "tax_inclusive": {
+            "type": "boolean"
+          },
+          "gst_rate_pct": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100
+          },
+          "mrp": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount",
+            "readOnly": true,
+            "description": "From catalog price.maximum_value. Read-only, never negotiable."
+          },
+          "retail_package_mrp_required": {
+            "type": "boolean",
+            "description": "True for a retail package that must bear MRP: the Legal Metrology (Packaged Commodities) Rules r.18(2) ceiling (validator V-01) applies. False signals a Rule 3 exemption (industrial or institutional consumer packs, packages over 25 kg or 25 L). Fail-safe default until Q-20 is settled: in B2C, V-01 is checked on every line that carries an mrp, whatever this flag; false is honoured only in B2B; and mandatory packing and convenience charges count toward the MRP."
+          },
+          "price_breaks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "min_qty": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "unit_price": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                }
+              },
+              "required": [
+                "min_qty",
+                "unit_price"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "line_total": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+          },
+          "asserted_by_buyer": {
+            "type": "boolean",
+            "description": "False for seller-added lines. A counter may not add unasserted lines (anti basket-sneaking)."
+          },
+          "quality": {
+            "$ref": "#/$defs/Quality"
+          }
+        },
+        "required": [
+          "line_id",
+          "item_id",
+          "quantity",
+          "unit_price",
+          "line_total"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "charges": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "enum": [
+              "delivery",
+              "packing",
+              "convenience",
+              "platform",
+              "handling",
+              "cod_fee",
+              "payment_handling",
+              "insurance",
+              "installation",
+              "loading",
+              "market_fee",
+              "commission",
+              "rto_fee",
+              "restocking_fee",
+              "return_shipping",
+              "other"
+            ],
+            "description": "What the charge is. These are charges the payer owes. The seller's own costs (merchant discount rate, payment aggregator commission, finder fee) are never charge codes."
+          },
+          "amount": {
+            "allOf": [
+              {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+              }
+            ],
+            "properties": {
+              "value": {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "value"
+            ],
+            "unevaluatedProperties": false
+          },
+          "mandatory": {
+            "type": "boolean"
+          },
+          "payment_method_specific": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/HandlerRef",
+            "description": "The one payment handler this charge applies to. A charge with neither this nor applies_to_handlers applies to every handler. Use applies_to_handlers for a charge that applies to several handlers but not all."
+          },
+          "applies_to_handlers": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/HandlerRef"
+            },
+            "description": "The payment handlers this charge applies to. A charge with neither this nor payment_method_specific applies to every handler. It MUST NOT appear together with payment_method_specific."
+          },
+          "recipient": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/ChargeRecipient",
+            "not": {
+              "enum": [
+                "government",
+                "agent_operator",
+                "assisted_operator"
+              ]
+            },
+            "description": "Who receives the charge from the payer's money, as the seller's side signed it. REQUIRED. The gateway never infers it from the charge code; for a charge that arrives over Beckn it applies the published title_type mapping of the Beckn binding. A charge of the seller's side is never to the government (tax is not a charge code here) and never to the agent operator or an assisted operator."
+          },
+          "refund_rule": {
+            "enum": [
+              "always",
+              "before_dispatch",
+              "never"
+            ],
+            "description": "Whether the charge is refunded on a cancellation or return: always, only before dispatch, or never. It MUST have been disclosed before the principal committed. A refund below the amount paid is lawful only for a charge disclosed as retained and only where the Consumer Protection (E-Commerce) Rules, 2020 permit it."
+          },
+          "first_disclosed_round": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Round in which the fee first appeared. A fee first disclosed after round 1 forces re-consent."
+          }
+        },
+        "required": [
+          "code",
+          "amount",
+          "mandatory",
+          "recipient"
+        ],
+        "not": {
+          "required": [
+            "payment_method_specific",
+            "applies_to_handlers"
+          ]
+        },
+        "additionalProperties": false
+      }
+    },
+    "all_in_total": {
+      "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount",
+      "description": "Every mandatory charge incl. tax. REQUIRED from round 1. Must equal Beckn quote.price."
+    },
+    "delivery": {
+      "type": "object",
+      "properties": {
+        "fulfilment_type": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "delivery",
+                "self_pickup",
+                "service_at_location",
+                "digital",
+                "ex_works"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "deliver_by": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "slot": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "start": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "end": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "hold_until": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "tat": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Duration"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "incoterm": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "EXW",
+                "FCA",
+                "FAS",
+                "FOB",
+                "CFR",
+                "CIF",
+                "CPT",
+                "CIP",
+                "DAP",
+                "DPU",
+                "DDP",
+                "FOR_DESTINATION"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "FOR_DESTINATION is Indian domestic practice, not an Incoterm."
+        },
+        "named_place": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "At most 200 characters."
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "partial_allowed": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "delivery_charge": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "late_delivery_penalty": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "pct_per_week": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "cap_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "pct_per_week"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "payment": {
+      "type": "object",
+      "properties": {
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "option_id": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[\\x21-\\x7e]+$",
+                "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+              },
+              "handlers": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/HandlerRef"
+                },
+                "minItems": 1
+              },
+              "timing": {
+                "enum": [
+                  "ON-ORDER",
+                  "PRE-FULFILLMENT",
+                  "ON-FULFILLMENT",
+                  "POST-FULFILLMENT"
+                ]
+              },
+              "method_fee": {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+              },
+              "method_discount": {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+              },
+              "all_in_total": {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+              }
+            },
+            "required": [
+              "option_id",
+              "handlers",
+              "timing",
+              "all_in_total"
+            ],
+            "description": "One payment alternative with its own all-in total, so COD vs prepaid prices are visible from round 1.",
+            "additionalProperties": false
+          }
+        },
+        "selected_option_id": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[\\x21-\\x7e]+$",
+              "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "schedule": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "tranche_id": {
+                "type": "string",
+                "maxLength": 64,
+                "pattern": "^[\\x21-\\x7e]+$",
+                "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+              },
+              "amount": {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+              },
+              "pct": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100
+              },
+              "due": {
+                "type": "object",
+                "properties": {
+                  "event": {
+                    "enum": [
+                      "on_order",
+                      "pre_fulfilment",
+                      "on_fulfilment",
+                      "post_fulfilment",
+                      "on_invoice",
+                      "on_acceptance",
+                      "on_crac",
+                      "milestone",
+                      "date"
+                    ],
+                    "description": "Beckn timing vocabulary plus acceptance events: GRN for MSMED, CRAC for GeM."
+                  },
+                  "offset_days": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "milestone_id": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+                  },
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "event"
+                ],
+                "additionalProperties": false
+              },
+              "handlers_allowed": {
+                "type": "array",
+                "items": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/HandlerRef"
+                },
+                "minItems": 1
+              },
+              "is_credit": {
+                "type": "boolean",
+                "description": "True when goods/services move before this tranche is paid (trade credit)."
+              },
+              "refundable": {
+                "type": "boolean"
+              },
+              "deductible_from_final": {
+                "type": "boolean",
+                "description": "Token/advance adjusted against the final amount."
+              }
+            },
+            "required": [
+              "tranche_id",
+              "due"
+            ],
+            "additionalProperties": false,
+            "oneOf": [
+              {
+                "required": [
+                  "amount"
+                ]
+              },
+              {
+                "required": [
+                  "pct"
+                ]
+              }
+            ]
+          },
+          "description": "Tranches, e.g. 30% on_order + 70% on_acceptance+45."
+        },
+        "advance_pct": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "credit_days": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 365
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "credit_reference_event": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "on_invoice",
+                "on_fulfilment",
+                "on_acceptance",
+                "on_crac"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "early_pay_discount": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "within_days": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "required": [
+                "pct",
+                "within_days"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "delay_interest_pa_pct": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "ONDC BPP_TERMS.DELAY_INTEREST."
+        },
+        "emi": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "tenor_months": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "apr_pct": {
+                  "type": "number",
+                  "description": "Annual percentage rate including fees and charges, as required by the RBI Key Facts Statement rules; not the interest rate alone.",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "lender": {
+                  "type": "string",
+                  "maxLength": 120,
+                  "description": "At most 120 characters."
+                },
+                "kfs_ref": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "interest_amount": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                },
+                "upfront_discount": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                },
+                "subvention_by": {
+                  "enum": [
+                    "brand",
+                    "seller",
+                    "platform",
+                    "bank",
+                    "none"
+                  ]
+                },
+                "no_cost": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "tenor_months",
+                "apr_pct",
+                "lender",
+                "kfs_ref"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "Equated monthly instalments. no_cost MUST be false when interest_amount > 0."
+        },
+        "collected_by": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "BAP",
+                "BPP"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "settlement_basis": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "delivery",
+                "shipment",
+                "return_window_expiry"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "settlement_window": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Duration"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "withholding_amount": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "cod": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "allowed": {
+                  "type": "boolean"
+                },
+                "fee": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                },
+                "rto_fee": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                },
+                "max_amount": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                }
+              },
+              "required": [
+                "allowed"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "cross_border_instrument": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "enum": [
+                    "advance_tt",
+                    "lc_sight",
+                    "lc_usance",
+                    "dp",
+                    "da",
+                    "open_account"
+                  ]
+                },
+                "usance_days": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "ecgc_cover": {
+                  "type": "boolean"
+                },
+                "currency": {
+                  "type": "string",
+                  "pattern": "^[A-Z]{3}$"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "credit_ledger": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "ledger_id": {
+                  "type": "string",
+                  "maxLength": 64,
+                  "pattern": "^[\\x21-\\x7e]+$",
+                  "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+                },
+                "credit_limit": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                }
+              },
+              "required": [
+                "ledger_id"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "Settle via bacp.credit_ledger."
+        }
+      },
+      "required": [
+        "schedule"
+      ],
+      "additionalProperties": false
+    },
+    "returns": {
+      "type": "object",
+      "properties": {
+        "return_window": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Duration"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "return_type": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "refund",
+                "replace",
+                "credit_note",
+                "exchange_only",
+                "none"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "restocking_fee_pct": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "return_shipping_paid_by": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "buyer",
+                "seller"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "open_box_delivery": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "warranty_penalty": {
+      "type": "object",
+      "properties": {
+        "warranty_months": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "warranty_type": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "manufacturer",
+                "seller",
+                "extended",
+                "none"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "extended_warranty_price": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "liquidated_damages": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "pct_per_week": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "cap_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "pct_per_week",
+                "cap_pct"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "pbg_pct": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "Performance bank guarantee."
+        },
+        "retention_pct": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "max_liability": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "arbitration": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "court_jurisdiction": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "maxLength": 200,
+              "description": "At most 200 characters."
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "quality": {
+      "$ref": "#/$defs/Quality"
+    },
+    "scope": {
+      "type": "object",
+      "properties": {
+        "deliverables": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+                  },
+                  "description": {
+                    "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/LangText"
+                  },
+                  "acceptance_criteria": {
+                    "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/LangText"
+                  }
+                },
+                "required": [
+                  "id",
+                  "description"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "milestones": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+                  },
+                  "description": {
+                    "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/LangText"
+                  },
+                  "amount": {
+                    "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                  },
+                  "due": {
+                    "type": "string",
+                    "format": "date-time"
+                  }
+                },
+                "required": [
+                  "id",
+                  "amount"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "inspection_then_quote": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false,
+          "description": "Two-phase service pricing."
+        },
+        "inspection_fee": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "revisions": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "change_order_policy": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "new_offer_required",
+                "within_tolerance_pct"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "no_show_policy": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "fee": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                },
+                "window": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Duration"
+                }
+              },
+              "required": [
+                "fee"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "schemes": {
+      "type": "object",
+      "properties": {
+        "applied": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SchemeApplication"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "commission": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "payee": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+          },
+          "basis": {
+            "enum": [
+              "pct",
+              "flat"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "minimum": 0
+          },
+          "amount": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+          },
+          "paid_by": {
+            "enum": [
+              "buyer",
+              "seller",
+              "both"
+            ]
+          },
+          "deducted_at_source": {
+            "type": "boolean",
+            "description": "e.g. arhtiya commission or interlocked loan repayment shown as a separate line."
+          },
+          "status": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueStatus"
+          }
+        },
+        "required": [
+          "payee",
+          "basis",
+          "value",
+          "paid_by",
+          "status"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "deposit": {
+      "allOf": [
+        {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+        }
+      ],
+      "properties": {
+        "value": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "enum": [
+                "token",
+                "booking",
+                "security",
+                "emd",
+                "refundable_deposit",
+                "caution_money"
+              ]
+            },
+            "amount": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            },
+            "refundable": {
+              "type": "boolean"
+            },
+            "refund_conditions": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/LangText"
+            },
+            "deduction_policy": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/LangText"
+            },
+            "held_by": {
+              "enum": [
+                "pa_escrow",
+                "seller",
+                "gem_pool_account",
+                "bank_guarantee",
+                "lc"
+              ]
+            },
+            "linked_agreement_ref": {
+              "type": "string",
+              "description": "e.g. registered RERA agreement for sale, required above 10%. At most 120 characters.",
+              "maxLength": 120
+            }
+          },
+          "required": [
+            "type",
+            "amount",
+            "refundable"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "value"
+      ],
+      "unevaluatedProperties": false
+    },
+    "cancellation": {
+      "type": "object",
+      "properties": {
+        "terms": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "fulfilment_state": {
+                    "type": "string",
+                    "maxLength": 60,
+                    "description": "At most 60 characters."
+                  },
+                  "fee_pct": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "fee": {
+                    "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+                  }
+                },
+                "required": [
+                  "fulfilment_state"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "tax_docs": {
+      "type": "object",
+      "properties": {
+        "gst_credit_invoice": {
+          "type": "boolean"
+        },
+        "e_invoice_required": {
+          "type": "boolean"
+        },
+        "e_way_bill_required": {
+          "type": "boolean"
+        },
+        "tds_section": {
+          "type": "string",
+          "maxLength": 20,
+          "description": "At most 20 characters."
+        },
+        "documents_required": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "maxLength": 120,
+            "description": "At most 120 characters."
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "conditions_precedent": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "payment_on_order",
+          "advance_received",
+          "credit_approval",
+          "kyc",
+          "inspection_passed",
+          "lc_opened",
+          "ebg_verified",
+          "rera_agreement_registered"
+        ]
+      },
+      "description": "ICA s.6: offer lapses if a condition precedent fails."
+    },
+    "extensions": {
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9]+(\\.[a-z0-9_]+)+$"
+      },
+      "additionalProperties": {
+        "allOf": [
+          {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+          }
+        ]
+      },
+      "description": "Namespaced extra issues. Guards fail closed on any extension issue not in Agree."
+    },
+    "fx": {
+      "type": "object",
+      "required": [
+        "currency",
+        "foreign_amount",
+        "rate",
+        "markup_bps",
+        "inr_total"
+      ],
+      "additionalProperties": false,
+      "description": "Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "pattern": "^(?!INR)[A-Z]{3}$"
+        },
+        "foreign_amount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "minor units of currency"
+        },
+        "rate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "INR per 1 unit of currency"
+        },
+        "markup_bps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inr_total": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+        },
+        "rate_source": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "At most 60 characters."
+        },
+        "quoted_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Quality": {
+      "type": "object",
+      "properties": {
+        "spec_ref": {
+          "type": "string",
+          "maxLength": 120,
+          "description": "At most 120 characters."
+        },
+        "grade": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "string",
+              "maxLength": 120,
+              "description": "At most 120 characters."
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "assay": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "maxLength": 120,
+                  "description": "At most 120 characters."
+                },
+                "certificate": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/DocumentRef"
+                },
+                "moisture_max_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "foreign_matter_max_pct": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "required": [
+                "method"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "inspection": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "type": "object",
+              "properties": {
+                "by": {
+                  "enum": [
+                    "buyer",
+                    "seller",
+                    "third_party",
+                    "assayer"
+                  ]
+                },
+                "at": {
+                  "enum": [
+                    "pre_dispatch",
+                    "on_receipt"
+                  ]
+                },
+                "report": {
+                  "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/DocumentRef"
+                }
+              },
+              "required": [
+                "by",
+                "at"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "rejection_terms": {
+          "allOf": [
+            {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueMeta"
+            }
+          ],
+          "properties": {
+            "value": {
+              "enum": [
+                "return_at_seller_cost",
+                "replace",
+                "debit_note",
+                "price_adjustment"
+              ]
+            }
+          },
+          "required": [
+            "value"
+          ],
+          "unevaluatedProperties": false
+        },
+        "hallmark_huid_required": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SchemeApplication": {
+      "type": "object",
+      "properties": {
+        "offer_id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+        },
+        "funder": {
+          "enum": [
+            "brand",
+            "platform",
+            "bank",
+            "seller",
+            "distributor",
+            "government"
+          ]
+        },
+        "benefit_type": {
+          "enum": [
+            "pct_discount",
+            "flat_discount",
+            "free_goods",
+            "cashback_instant",
+            "cashback_deferred",
+            "emi_subvention",
+            "loyalty_points",
+            "target_incentive",
+            "slab_discount"
+          ]
+        },
+        "benefit_value": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+        },
+        "free_goods": {
+          "type": "object",
+          "properties": {
+            "item_id": {
+              "type": "string",
+              "maxLength": 64,
+              "pattern": "^[\\x21-\\x7e]+$",
+              "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+            },
+            "quantity": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "item_id",
+            "quantity"
+          ],
+          "additionalProperties": false
+        },
+        "eligibility_proof": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "enum": [
+                "card_bin",
+                "payment_handler",
+                "basket",
+                "quantity_slab",
+                "segment",
+                "date_window",
+                "geo",
+                "membership",
+                "tier"
+              ]
+            },
+            "value_hash": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        "stacking_group": {
+          "type": "string",
+          "maxLength": 60,
+          "description": "At most 60 characters."
+        },
+        "exclusive": {
+          "type": "boolean"
+        },
+        "conditional": {
+          "type": "boolean",
+          "description": "Conditional/deferred cashback MUST NOT be counted in all_in_total."
+        },
+        "claim_lifecycle": {
+          "enum": [
+            "at_invoice",
+            "accrue_claim_credit_note"
+          ]
+        },
+        "credit_note": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/DocumentRef"
+        },
+        "status": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/IssueStatus"
+        }
+      },
+      "required": [
+        "offer_id",
+        "funder",
+        "benefit_type",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "allOf": [
+    {
+      "description": "MSMED Act s.15 cap: a manufacturing or services micro/small seller may not be given more than 45 days from acceptance or deemed acceptance. Whether traders are covered is open question Q-21.",
+      "if": {
+        "properties": {
+          "parties": {
+            "properties": {
+              "seller": {
+                "properties": {
+                  "udyam": {
+                    "properties": {
+                      "category": {
+                        "enum": [
+                          "micro",
+                          "small"
+                        ]
+                      },
+                      "activity": {
+                        "enum": [
+                          "manufacturing",
+                          "services"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "category",
+                      "activity"
+                    ]
+                  }
+                },
+                "required": [
+                  "udyam"
+                ]
+              }
+            },
+            "required": [
+              "seller"
+            ]
+          }
+        },
+        "required": [
+          "parties"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payment": {
+            "properties": {
+              "credit_days": {
+                "properties": {
+                  "value": {
+                    "maximum": 45
+                  }
+                }
+              },
+              "schedule": {
+                "items": {
+                  "properties": {
+                    "due": {
+                      "properties": {
+                        "offset_days": {
+                          "maximum": 45
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "An interest-bearing EMI cannot be described as no-cost.",
+      "if": {
+        "properties": {
+          "payment": {
+            "properties": {
+              "emi": {
+                "properties": {
+                  "value": {
+                    "properties": {
+                      "interest_amount": {
+                        "properties": {
+                          "value": {
+                            "exclusiveMinimum": 0
+                          }
+                        },
+                        "required": [
+                          "value"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "interest_amount"
+                    ]
+                  }
+                },
+                "required": [
+                  "value"
+                ]
+              }
+            },
+            "required": [
+              "emi"
+            ]
+          }
+        },
+        "required": [
+          "payment"
+        ]
+      },
+      "then": {
+        "properties": {
+          "payment": {
+            "properties": {
+              "emi": {
+                "properties": {
+                  "value": {
+                    "properties": {
+                      "no_cost": {
+                        "const": false
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

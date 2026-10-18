@@ -1,0 +1,91 @@
+{
+  "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
+  "results": [
+    {
+      "bpp_id": "bpp.kirana.example.in",
+      "provider": {
+        "id": "P-112",
+        "name": "Shree Ganesh Kirana",
+        "rating": 4.5
+      },
+      "items": [
+        {
+          "id": "I-ATTA-2KG",
+          "name": {
+            "en-IN": "Chakki Atta 2 kg",
+            "hi-IN": "चक्की आटा 2 किलो"
+          },
+          "unit_price": {
+            "value": 11000,
+            "currency": "INR"
+          },
+          "mrp": {
+            "value": 12000,
+            "currency": "INR"
+          },
+          "tax_inclusive": true,
+          "sponsorship": {
+            "status": "not_sponsored"
+          },
+          "hsn": "1101",
+          "gst_rate_bps": 0
+        },
+        {
+          "id": "I-GHEE-1L",
+          "name": {
+            "en-IN": "Desi Ghee 1 L",
+            "hi-IN": "देसी घी 1 लीटर"
+          },
+          "unit_price": {
+            "value": 54900,
+            "currency": "INR"
+          },
+          "mrp": {
+            "value": 65000,
+            "currency": "INR"
+          },
+          "tax_inclusive": true,
+          "prior_price": {
+            "amount": {
+              "value": 59900,
+              "currency": "INR"
+            },
+            "basis": "lowest_30d",
+            "announced_on": "2026-12-20"
+          },
+          "sponsorship": {
+            "status": "sponsored",
+            "by": [
+              "gateway"
+            ]
+          },
+          "hsn": "0405",
+          "gst_rate_bps": 1200,
+          "available_on_cod": true,
+          "returnable": false
+        }
+      ],
+      "within_mandate": true,
+      "source_digest": "sha-256:lWfwvAF9PMhwrWdb1rhZL_wgvkFtkBv5FIsbptP6r8w",
+      "needs_principal_factor": true,
+      "requires_principal_confirmation": {
+        "reason": "made_to_order",
+        "above_amount": {
+          "value": 500000,
+          "currency": "INR"
+        }
+      }
+    }
+  ],
+  "ranking": {
+    "main_parameters": [
+      "distance",
+      "price",
+      "seller_rating"
+    ],
+    "sponsored": true,
+    "description_url": "https://gw.bap.example.in/ranking"
+  },
+  "complete": true,
+  "messages": []
+}

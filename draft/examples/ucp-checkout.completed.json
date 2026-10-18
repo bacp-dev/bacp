@@ -1,0 +1,146 @@
+{
+  "ucp": {
+    "version": "2026-08-25",
+    "capabilities": {
+      "dev.ucp.shopping.checkout": [
+        {
+          "version": "2026-08-25"
+        }
+      ]
+    },
+    "payment_handlers": {
+      "dev.bacp.in.ppi.gift": [
+        {
+          "id": "in.ppi.gift",
+          "version": "2026-10-18",
+          "schema": "https://bacp.dev/schemas/ucp/in.ppi.gift.json"
+        }
+      ],
+      "dev.bacp.in.upi.circle": [
+        {
+          "id": "in.upi.circle",
+          "version": "2026-10-18",
+          "schema": "https://bacp.dev/schemas/ucp/in.upi.circle.json"
+        }
+      ]
+    }
+  },
+  "id": "ses_01HZXB",
+  "status": "completed",
+  "currency": "INR",
+  "line_items": [
+    {
+      "id": "li_1",
+      "item": {
+        "id": "I-ATTA-2KG",
+        "title": "Chakki Atta 2 kg",
+        "price": 11000
+      },
+      "quantity": 1,
+      "totals": [
+        {
+          "type": "subtotal",
+          "amount": 11000
+        },
+        {
+          "type": "total",
+          "amount": 11000
+        }
+      ]
+    },
+    {
+      "id": "li_2",
+      "item": {
+        "id": "I-GHEE-1L",
+        "title": "Desi Ghee 1 L",
+        "price": 22200
+      },
+      "quantity": 1,
+      "totals": [
+        {
+          "type": "subtotal",
+          "amount": 22200
+        },
+        {
+          "type": "total",
+          "amount": 22200
+        }
+      ]
+    }
+  ],
+  "totals": [
+    {
+      "type": "subtotal",
+      "amount": 33200
+    },
+    {
+      "type": "discount",
+      "amount": -3000,
+      "display_text": "Discount"
+    },
+    {
+      "type": "total",
+      "amount": 30200
+    }
+  ],
+  "links": [
+    {
+      "type": "terms_of_service",
+      "url": "https://gw.bap.example.in/terms",
+      "title": "Terms of service"
+    },
+    {
+      "type": "refund_policy",
+      "url": "https://gw.bap.example.in/refunds",
+      "title": "Return and refund terms"
+    }
+  ],
+  "payment": {
+    "instruments": [
+      {
+        "id": "tdr_gift001",
+        "handler_id": "in.ppi.gift",
+        "type": "in.bacp.tender",
+        "selected": true
+      },
+      {
+        "id": "tdr_upi001",
+        "handler_id": "in.upi.circle",
+        "type": "in.bacp.tender",
+        "selected": true
+      }
+    ]
+  },
+  "order": {
+    "id": "ORD-KIR-88231",
+    "permalink_url": "https://gw.bap.example.in/orders/ORD-KIR-88231"
+  },
+  "messages": [
+    {
+      "type": "warning",
+      "code": "ai_disclosure",
+      "content": "You are talking to an AI assistant. To talk to a human: https://vaani.example.in/human",
+      "severity": "recoverable"
+    }
+  ],
+  "bacp": {
+    "status": "completed",
+    "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+    "all_in_total": {
+      "value": 30200,
+      "currency": "INR"
+    },
+    "messages": [
+      {
+        "type": "disclosure",
+        "code": "ai_disclosure",
+        "content": {
+          "hi-IN": "आप एक AI सहायक से बात कर रहे हैं।",
+          "en-IN": "You are talking to an AI assistant."
+        },
+        "param": "$.ai_disclosure",
+        "resolution": "recoverable"
+      }
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "transaction_id": "txn_01HZXD",
+  "agent_credential_hash": "sha-256:3q2-7wQm1Zr8Jt5pLx0eNfV6bYc9HkAuGdSiWoRlTnE",
+  "mandates": [
+    "eyJhbGciOiJFUzI1NiJ9.eyJtYW5kYXRlX2lkIjoibWR0X0RBSVJZMDAwMDAwMSJ9.c2lnbmF0dXJlLW9wZW4tcGF5bWVudA"
+  ],
+  "checkout": {
+    "bpp_signed_quote": "eyJhbGciOiJFZERTQSJ9.eyJxdW90ZSI6InNlcy0wMUhaWEQifQ.c2lnbmF0dXJlLXF1b3Rl",
+    "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+    "disclosures_hash": "sha-256:Qm9vdHN0cmFwLWRpc2Nsb3N1cmVzLWhhc2gtMDAwMDE",
+    "bpp_signed_payment_terms": {
+      "body": "{\"context\":{\"domain\":\"ONDC:RET10\",\"action\":\"on_init\",\"bap_id\":\"bap.vaani.example.in\",\"bpp_id\":\"bpp.dairy.example.in\",\"transaction_id\":\"txn_01HZXD\",\"message_id\":\"6f1c2e1a-3b7d-5c2e-9a41-2d7e0c5b8f10\",\"timestamp\":\"2026-10-22T18:31:04.000+05:30\"},\"message\":{\"order\":{\"payments\":[{\"collected_by\":\"BPP\",\"type\":\"PRE-FULFILLMENT\",\"params\":{\"virtual_payment_address\":\"dairy@examplebank\",\"amount\":\"450.00\",\"currency\":\"INR\"}}]}}}",
+      "authorization": "Signature keyId=\"bpp.dairy.example.in|k1|ed25519\",algorithm=\"ed25519\",created=\"1761138064\",expires=\"1761141664\",headers=\"(created) (expires) digest\",signature=\"c2lnbmF0dXJlLWJwcC1kYWlyeS1vbi1pbml0LWV4YW1wbGU=\""
+    }
+  },
+  "receipts": [
+    {
+      "receipt_id": "rcp_01HZXD",
+      "receipt_hash": "sha-256:UmVjZWlwdC1oYXNoLWRhaXJ5LXBheW1lbnQtMDAwMDE",
+      "receipt_type": "payment",
+      "result": "success",
+      "amount": {
+        "value": 45000,
+        "currency": "INR"
+      },
+      "rail": {
+        "type": "in.upi.intent",
+        "rrn": "629518374021",
+        "status": "SUCCESS"
+      }
+    }
+  ],
+  "instruction_log": [],
+  "ts_render_digests": [
+    {
+      "step_up_id": "stp_01HZXKq8W3nK5vRt7YcLm2",
+      "render_hash": "sha-256:U3VtbWFyeS1yZW5kZXItaGFzaC1iYXNrZXQtMDAwMDE",
+      "cover": {
+        "session_id": "ses_01HZXD",
+        "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+        "payee": {
+          "vpa": "dairy@examplebank",
+          "bpp_id": "bpp.dairy.example.in"
+        },
+        "amount": {
+          "value": 45000,
+          "currency": "INR"
+        }
+      }
+    }
+  ],
+  "verification": {
+    "steps_passed": 6,
+    "chain_valid": true,
+    "catalogue_result": "passed",
+    "catalogue_unchecked": []
+  },
+  "discovery_response": {
+    "body": "{\"transaction_id\":\"txn_01HZXD\",\"results\":[{\"item_id\":\"I-ATTA\",\"sponsorship\":{\"status\":\"not_sponsored\"}}]}",
+    "content_digest": "sha-256=:1vCUMHx+0xAz5Ad4zQ957mxU4Qx+hSPNgKJK72a5pOw=:",
+    "signature_input": "sig1=(\"@status\" \"content-digest\");created=1792501322;keyid=\"gw-2026-10\"",
+    "signature": "sig1=:Z2F0ZXdheS1zaWduYXR1cmUtZXhhbXBsZQ==:"
+  }
+}

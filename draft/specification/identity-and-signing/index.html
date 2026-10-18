@@ -1,0 +1,2792 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/identity-and-signing/">
+      
+      
+        <link rel="prev" href="../discovery/">
+      
+      
+        <link rel="next" href="../mandates/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Identity and Request Signing - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#identity-and-request-signing" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Identity and Request Signing
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#agentcredential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AgentCredential
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AgentCredential">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#presenting-the-credential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presenting the credential
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifying-the-credential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying the credential
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-operators-and-the-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent operators and the registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent operators and the registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conformance-authority-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conformance-authority keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-signatures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request signatures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Request signatures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#covered-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Covered components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signature-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signature-algorithms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature algorithms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification order
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signature-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature tags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replay-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replay protection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#content-digest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Content-Digest
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Idempotency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Idempotency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outcomes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outcomes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artefact-signatures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artefact signatures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-leg-signing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network leg signing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-rotation-and-revocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key rotation and revocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#agentcredential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AgentCredential
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AgentCredential">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#presenting-the-credential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Presenting the credential
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verifying-the-credential" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verifying the credential
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent-operators-and-the-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Agent operators and the registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Agent operators and the registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#conformance-authority-keys" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conformance-authority keys
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#request-signatures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Request signatures
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Request signatures">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#covered-components" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Covered components
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signature-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature parameters
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signature-algorithms" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature algorithms
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#verification-order" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Verification order
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#signature-tags" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signature tags
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#replay-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Replay protection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#content-digest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Content-Digest
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#idempotency" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Idempotency
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Idempotency">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#outcomes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Outcomes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#artefact-signatures" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Artefact signatures
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#network-leg-signing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network leg signing
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-rotation-and-revocation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Key rotation and revocation
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="identity-and-request-signing">Identity and Request Signing<a class="headerlink" href="#identity-and-request-signing" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>This page defines who an agent is on the wire and how every request proves
+it: the <a href="#agentcredential">AgentCredential</a>, the
+<a href="#agent-operators-and-the-registry">operator</a> behind it, RFC 9421
+<a href="#request-signatures">request signatures</a> with
+<a href="#signature-tags">signature tags</a>, <a href="#replay-protection">replay protection</a>,
+<a href="#content-digest">Content-Digest</a>, <a href="#idempotency">idempotency</a>, signing on the
+<a href="#network-leg-signing">Beckn network leg</a>, and
+<a href="#key-rotation-and-revocation">key rotation and revocation</a>.</p>
+<p>The design goal is that an agent can never do more than its credential and its
+principal's mandates allow, even if the agent is fully compromised. The agent
+is untrusted; its key is scoped by purpose, its requests are bound to their
+exact bytes, and every check happens in the gateway before the request body is
+parsed.</p>
+<h2 id="agentcredential">AgentCredential<a class="headerlink" href="#agentcredential" title="Permanent link">&para;</a></h2>
+<p>An <strong>AgentCredential</strong> identifies one agent, the legal entity that operates
+it, and the BAP whose gateway it uses. It is an SD-JWT verifiable credential
+with <code>vct: in.bacp.agent.1</code>. Its claims are defined by
+<a href="https://bacp.dev/latest/schemas/agent-credential.json"><code>agent-credential.json</code></a>.</p>
+<table>
+<thead>
+<tr>
+<th>Claim</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>vct</code></td>
+<td>Always <code>in.bacp.agent.1</code>.</td>
+</tr>
+<tr>
+<td><code>iss</code></td>
+<td>The issuer: the network registry or an issuer it accredits (<a href="../open-questions/#q-02">Q-02</a>).</td>
+</tr>
+<tr>
+<td><code>sub</code></td>
+<td>The agent id, for example <code>did:web:agents.example.in:krishi-voice</code>.</td>
+</tr>
+<tr>
+<td><code>iat</code>, <code>exp</code></td>
+<td>Issue and expiry times. <code>exp</code> MUST be no later than <code>iat</code> + 180 days.</td>
+</tr>
+<tr>
+<td><code>operator</code></td>
+<td>The operator's <code>legal_name</code>, <code>entity_id</code> (<code>CIN</code>, <code>LLPIN</code>, <code>GSTIN</code> or <code>PAN</code>) and <code>grievance_officer</code>; optionally an <code>incident_contact</code> and an <code>ai_inventory_ref</code>.</td>
+</tr>
+<tr>
+<td><code>bap</code></td>
+<td>The BAP <code>subscriber_id</code> and <code>ukid</code> (unique key id) the agent is bound to.</td>
+</tr>
+<tr>
+<td><code>agent</code></td>
+<td>The agent <code>class</code> (<code>shopping</code>, <code>voice_shopping</code>, <code>assisted</code>, <code>sub_agent</code>), <code>model_family</code>, <code>build</code>, and optionally <code>channels</code>, <code>languages</code> and <code>uap_agent_id</code>.</td>
+</tr>
+<tr>
+<td><code>cnf.jwk</code></td>
+<td>The agent's public key (RFC 7800). The matching private key signs the agent's requests and closes its open mandates.</td>
+</tr>
+<tr>
+<td><code>purposes</code></td>
+<td>The <a href="#signature-tags">signature tags</a> this key may use: any of <code>bacp-browse</code>, <code>bacp-pay</code>, <code>bacp-post-order</code>, <code>bacp-negotiate</code>.</td>
+</tr>
+<tr>
+<td><code>disclosure</code></td>
+<td><code>ai_notice</code> (a multilingual AI-disclosure text), <code>human_handoff_url</code> and <code>handoff_routes[]</code> (typed routes to a human: <code>channel</code>, a <code>tel:</code> or <code>https:</code> <code>uri</code>, optional <code>dtmf</code>, only on a <code>tel:</code> route, <code>languages</code>, <code>hours</code>). When <code>agent.channels</code> includes <code>voice</code>, <code>ivr</code> or <code>upi123pay</code>, <code>handoff_routes</code> MUST contain a <code>tel:</code> route. The agent's first message in every session MUST present the notice and offer the handoff (<a href="../human-participants/#ai-disclosure">Human participants</a>).</td>
+</tr>
+<tr>
+<td><code>conformance</code></td>
+<td>The conformance levels the agent's stack has passed, with a signed attestation (see below).</td>
+</tr>
+<tr>
+<td><code>status.status_list</code></td>
+<td>The status-list <code>uri</code> and index <code>idx</code> used to check revocation.</td>
+</tr>
+</tbody>
+</table>
+<p><code>uap_agent_id</code> is reserved for an agent id issued under a future NPCI agent
+registry. It MUST be <code>null</code> or absent until such a registry is published.</p>
+<p><code>conformance</code> MUST carry <code>levels[]</code>, the ids of the
+<a href="../conformance/#conformance-levels">conformance levels</a> passed (<code>bacp.core.1</code>,
+<code>bacp.pay.upi.1</code>, <code>bacp.pay.all.1</code>, <code>bacp.neg.1</code>, <code>bacp.b2b.1</code>,
+<code>bacp.auction.1</code>, <code>bacp.ts.1</code>), plus the signed <code>attestation</code>.</p>
+<p>RBI's directive on Storage of Payment System Data (RBI/2017-18/153,
+06-04-2018) already requires RBI-authorised payment system providers to store
+payment data only in India. Where an agent operator's own model may process
+payment data is open (<a href="../open-questions/#q-15">Q-15</a>). Until it is settled:</p>
+<ul>
+<li>The credential and the registry record MAY carry a <code>data_residency</code>
+  statement (<code>payment_data</code>, <code>llm_region</code>, <code>log_region</code>, <code>transfer_basis</code>).
+  It is OPTIONAL in this version.</li>
+<li>A gateway MUST NOT treat a missing or incomplete <code>data_residency</code>
+  statement as permission to send payment data outside India. The gateway's
+  own storage and processing of payment data stays in India
+  (<a href="../security-and-privacy/#data-localisation">Data localisation</a>).</li>
+</ul>
+<h3 id="presenting-the-credential">Presenting the credential<a class="headerlink" href="#presenting-the-credential" title="Permanent link">&para;</a></h3>
+<ul>
+<li>An agent MUST send its AgentCredential, as a compact SD-JWT with only the
+  disclosures the gateway needs, in the <code>BACP-Agent</code> request header on every
+  request except the unsigned <code>GET /.well-known/bacp</code> and
+  <code>GET /payment-handlers</code> calls.</li>
+<li>The legacy header name <code>BACP-Agent-Credential</code> is removed in <code>2026-10-18</code>.
+  An agent MUST NOT send it, and a gateway MUST NOT accept it in place of
+  <code>BACP-Agent</code>.</li>
+<li>The credential header is a <a href="#covered-components">covered component</a> of the
+  request signature, so it cannot be swapped.</li>
+</ul>
+<h3 id="verifying-the-credential">Verifying the credential<a class="headerlink" href="#verifying-the-credential" title="Permanent link">&para;</a></h3>
+<p>Before acting on any request, the gateway MUST check, and reject with <code>401</code>
+on failure:</p>
+<ol>
+<li>The credential's signature verifies against the issuer's key in the
+   registry (<code>agent_unregistered</code> otherwise).</li>
+<li>The status list does not mark it revoked (<code>agent_credential_revoked</code>).</li>
+<li>It has not expired.</li>
+<li><code>bap.subscriber_id</code> is the gateway's own BAP.</li>
+<li>The request signature's <code>keyid</code> resolves to <code>cnf.jwk</code>.</li>
+<li>The signature's <code>tag</code> is listed in <code>purposes</code> (<code>signature_invalid</code>).</li>
+</ol>
+<h2 id="agent-operators-and-the-registry">Agent operators and the registry<a class="headerlink" href="#agent-operators-and-the-registry" title="Permanent link">&para;</a></h2>
+<p>Every agent is run by an <strong>agent operator</strong>, a legal entity that is onboarded
+and identified through the network registry. The operator:</p>
+<ul>
+<li>holds the AgentCredential and answers for it through the named grievance
+  officer;</li>
+<li>keeps its own <strong>operator signing key</strong> separate from the agent's <code>cnf</code> key
+  and out of the agent's reach. The operator key signs
+  <a href="../evidence/">instruction-log</a> entries and evidence bundles; the agent key
+  signs requests and closes mandates. A verifier MUST NOT accept one in place
+  of the other;</li>
+<li>signs instruction-log entries asymmetrically. HMAC MUST NOT be used, because
+  it cannot give non-repudiation;</li>
+<li>keeps an AI inventory, red-teams the agent, reports incidents, and runs a
+  kill switch that revokes its agents' credentials.</li>
+</ul>
+<p>The registry is the root of trust for every key BACP uses: AgentCredential
+issuers, BAPs, BPPs, Mandate Managers and PSPs. A gateway MUST resolve every
+key by its registry key id, for example <code>bap.example.in|ukid-7|ed25519</code>, and
+MUST NOT trust a key presented only in a request. See
+<a href="../discovery/#registry-lookup">Registry lookup</a>, which names the
+<a href="https://bacp.dev/latest/schemas/registry-record.json"><code>registry-record.json</code></a> fields that BACP reads, among them the
+<code>operator_id</code> of a <code>support_operator</code> key (the agent operator that the key serves), the Trusted Surface origins of a
+Mandate Manager or PSP, and the legal <code>operator</code>, <code>regulatory_status[]</code> and <code>data_residency</code> of any subscriber. An
+AgentCredential's <code>operator.entity_id</code> and a registry record's <code>operator.entity_ids[]</code> use the same
+<a href="https://bacp.dev/schemas/common.json"><code>EntityId</code></a> shape (<code>type</code> of <code>CIN</code>, <code>LLPIN</code>, <code>GSTIN</code> or <code>PAN</code>, and <code>value</code>).</p>
+<h3 id="conformance-authority-keys">Conformance-authority keys<a class="headerlink" href="#conformance-authority-keys" title="Permanent link">&para;</a></h3>
+<p>A key of the registry role <code>conformance_authority</code> (<code>Signature.role</code>) signs <a href="../conformance/#conformance-attestation">conformance
+attestations</a> and nothing else. Such a key qualifies only if it belongs to an
+entry of the <a href="../conformance/#conformance-authority-list">public conformance-authority list</a>; a key that the registry
+record or a profile presents without a list entry does not qualify. The role grants no right to sign a mandate, a
+receipt, a request or a rail attestation.</p>
+<ul>
+<li>An attestation's <code>exp</code> is at most 180 days after its <code>iat</code>.</li>
+<li>A verifier of an attestation reads its status list and refuses to rely on the attestation when the list marks it
+  revoked, when the copy it holds is more than 24 hours old, or when the list cannot be reached; a stale or
+  unreachable list does not pause a mandate, while a revocation, an expiry or a lapse of the entry or key (next bullet) does (<a href="../mandates/#handler-binding">Handler binding</a>). This rule is
+  fail-closed for issuing a mandate and for a new <code>complete</code> on a pilot handler; it never blocks a status check, a
+  reversal, a refund or a post-order write.</li>
+<li>An entry that is removed from the latest dated release of the list, whose validity has ended or whose status is
+  revoked, and a key that is removed from its entry, no longer qualify: an attestation that rests on them is a lapsed
+  attestation for every mandate bound to it (<a href="../conformance/#attestation-rules">Rules</a>).</li>
+</ul>
+<h2 id="request-signatures">Request signatures<a class="headerlink" href="#request-signatures" title="Permanent link">&para;</a></h2>
+<p>Every agent request to a gateway, other than the two unsigned discovery
+<code>GET</code>s above, MUST carry an
+<a href="https://www.rfc-editor.org/rfc/rfc9421.html" target="_blank">RFC 9421</a>
+HTTP Message Signature made with the private key matching the credential's
+<code>cnf.jwk</code>, in the <code>Signature-Input</code> and <code>Signature</code> headers.</p>
+<h3 id="covered-components">Covered components<a class="headerlink" href="#covered-components" title="Permanent link">&para;</a></h3>
+<p>The signature MUST cover:</p>
+<table>
+<thead>
+<tr>
+<th>Component</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>@method</code></td>
+<td>Always</td>
+</tr>
+<tr>
+<td><code>@authority</code></td>
+<td>Always</td>
+</tr>
+<tr>
+<td><code>@path</code></td>
+<td>Always</td>
+</tr>
+<tr>
+<td><code>@query</code></td>
+<td>Whenever the target URI has a query component, for example <code>GET /orders/ORD-KIR-88231?bpp_id=bpp.kirana.example.in</code></td>
+</tr>
+<tr>
+<td><code>content-digest</code></td>
+<td>Always (see <a href="#content-digest">Content-Digest</a>)</td>
+</tr>
+<tr>
+<td><code>bacp-agent</code></td>
+<td>Always: the AgentCredential header. Exception: a request under tag <code>bacp-ts</code>, <code>bacp-handoff</code> or <code>bacp-mm-event</code> is signed with a registry key, carries no <code>BACP-Agent</code> header and does not cover <code>bacp-agent</code></td>
+</tr>
+<tr>
+<td><code>idempotency-key</code></td>
+<td>On every request other than <code>GET</code> and <code>HEAD</code></td>
+</tr>
+<tr>
+<td><code>bacp-version</code></td>
+<td>Whenever the request carries a <code>BACP-Version</code> header. The header is REQUIRED when the gateway's profile lists more than one version (<a href="../discovery/#request-version">Version negotiation</a>). A header that is present and not covered is refused with <code>401 signature_invalid</code></td>
+</tr>
+<tr>
+<td><code>content-type</code></td>
+<td>SHOULD be covered whenever the request has a body</td>
+</tr>
+</tbody>
+</table>
+<p>A signature that does not cover a required component MUST be rejected with
+<code>401 signature_invalid</code>. A signer MAY cover additional components.</p>
+<h3 id="signature-parameters">Signature parameters<a class="headerlink" href="#signature-parameters" title="Permanent link">&para;</a></h3>
+<p>The <code>Signature-Input</code> MUST carry these parameters:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>created</code></td>
+<td>Signing time, integer seconds since the Unix epoch.</td>
+</tr>
+<tr>
+<td><code>expires</code></td>
+<td>Expiry time. <code>expires − created</code> MUST be greater than 0 and at most 300 seconds.</td>
+</tr>
+<tr>
+<td><code>nonce</code></td>
+<td>A fresh random value for every request (see <a href="#replay-protection">Replay protection</a>).</td>
+</tr>
+<tr>
+<td><code>keyid</code></td>
+<td>The id of the agent's <code>cnf</code> key.</td>
+</tr>
+<tr>
+<td><code>tag</code></td>
+<td>One of the <a href="#signature-tags">signature tags</a>.</td>
+</tr>
+</tbody>
+</table>
+<p>Example, for <code>POST /sessions/{session_id}/complete</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Signature-Input: sig1=("@method" "@authority" "@path" "content-digest" "content-type" "idempotency-key" "bacp-agent");created=1792501322;expires=1792501622;nonce="q8Fz1V2w";keyid="sakhi-2026-10";tag="bacp-pay"
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Signature: sig1=:MEUCIQDexampleSignatureBase64Value=:
+</code></pre></div>
+<h3 id="signature-algorithms">Signature algorithms<a class="headerlink" href="#signature-algorithms" title="Permanent link">&para;</a></h3>
+<p>BACP signatures use exactly two algorithms: ES256 (ECDSA with P-256 and
+SHA-256) and EdDSA with Ed25519.</p>
+<ul>
+<li>Every verifier of a BACP signature (RFC 9421 requests and webhooks, JWS
+  mandates, receipts, ConsentReceipts, attestations and InstructionLog
+  entries) MUST support both.</li>
+<li>Every signer MUST use one of the two. A signature with any other algorithm
+  MUST be rejected (<code>401 signature_invalid</code> on a request).</li>
+<li>The conformance suite will carry test vectors for both. The signature values in the published examples are placeholders: they are well-formed and do not verify. Real vectors come from implementations of the specification and are offered back to it after release.</li>
+</ul>
+<p>This settles <a href="../open-questions/#q-42">Q-42</a>. The Beckn network leg keeps the
+network's own Ed25519 signing (see <a href="#network-leg-signing">Network leg signing</a>).</p>
+<h3 id="verification-order">Verification order<a class="headerlink" href="#verification-order" title="Permanent link">&para;</a></h3>
+<p>The gateway MUST verify on the <strong>raw request bytes, before any JSON parsing</strong>,
+in this order. The first failure ends processing:</p>
+<ol>
+<li>Body size. A body larger than the gateway's limit (at most 256 KiB) gets
+   <code>413 request_too_large</code>.</li>
+<li><code>Signature-Input</code> and <code>Signature</code> are present and well formed.</li>
+<li>Every required component is covered.</li>
+<li><code>tag</code> is the tag the endpoint requires and is in the credential's
+   <code>purposes</code>.</li>
+<li>The validity window holds (see <a href="#replay-protection">Replay protection</a>).</li>
+<li><code>Content-Digest</code> matches the raw body.</li>
+<li><code>keyid</code> resolves through the registry and the credential (<code>401
+   agent_unregistered</code> if unknown).</li>
+<li>The signature verifies.</li>
+<li>The <code>(keyid, nonce)</code> pair has not been seen (<code>401 replay_detected</code>).</li>
+</ol>
+<p>Failures at steps 2–6 and 8 return <code>401 signature_invalid</code>. Only then does the
+gateway parse the body and apply <a href="#idempotency">idempotency</a>.</p>
+<h2 id="signature-tags">Signature tags<a class="headerlink" href="#signature-tags" title="Permanent link">&para;</a></h2>
+<p>A tag states what kind of action a request performs. An AgentCredential lists
+the tags its key may use in <code>purposes</code>, so an operator can, for example, issue
+a browse-only credential. Each endpoint accepts exactly one agent tag, or one
+of two for negotiation messages; any other tag MUST be rejected with
+<code>401 signature_invalid</code>, even if the credential lists it. An agent endpoint that is not listed in the table below gets
+<code>401 signature_invalid</code> as well: there is no default tag (<a href="../transports/rest/#signature-tags">REST</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Meaning</th>
+<th>Endpoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>bacp-browse</code></td>
+<td>Reads, discovery, cart building and other non-committing calls</td>
+<td><code>POST /discover</code>; <code>POST /sessions</code>, <code>GET</code> and <code>PUT /sessions/{id}</code>, <code>POST /sessions/{id}/cancel</code>, <code>POST /sessions/{id}/handoff</code> (<code>action: request</code>, and <code>action: release</code> before acceptance); <code>POST /mandates</code>, <code>GET /mandates/{id}</code>, <code>POST /mandates/{id}/relinquish</code>; <code>GET /orders/{id}</code>, <code>GET /orders/{id}/returns/{rid}</code>; <code>GET /issues/{id}</code>; <code>GET /evidence/{transaction_id}</code>; <code>GET /evidence/{transaction_id}/summary</code>; <code>GET /step-ups/{step_up_id}</code>; <code>POST /negotiations</code>, <code>GET /negotiations/{id}</code>, <code>GET /negotiations/{id}/offers</code>, and non-firm messages other than <code>withdraw</code> and <code>accept_revoke</code> on <code>POST /negotiations/{id}/offers</code>; <code>POST /rfqs</code>, <code>GET /rfqs/{id}</code>; <code>GET /auctions/{id}</code>; <code>POST /payment-handlers/intersect</code>; <code>GET /discover/{transaction_id}/sources/{source_digest}</code>; <code>GET /ledgers/{id}</code>, <code>GET /ledgers/{id}/entries</code>; <code>GET /orders/{id}/documents</code>; <code>POST /checkout-sessions</code>, <code>GET</code> and <code>PUT /checkout-sessions/{id}</code>, <code>POST /checkout-sessions/{id}/cancel</code></td>
+</tr>
+<tr>
+<td><code>bacp-pay</code></td>
+<td>Commits money</td>
+<td><code>POST /sessions/{id}/complete</code>; <code>POST /checkout-sessions/{id}/complete</code></td>
+</tr>
+<tr>
+<td><code>bacp-post-order</code></td>
+<td>Mandate-scoped writes on an existing order, trade acts and ledger postings</td>
+<td><code>POST /orders/{id}/cancel</code>; <code>POST /orders/{id}/returns</code>; <code>POST /issues</code>; <code>POST /issues/{id}/actions</code>; <code>POST /trade-acts</code>; <code>POST /ledgers/{id}/entries</code></td>
+</tr>
+<tr>
+<td><code>bacp-negotiate</code></td>
+<td>Binds the principal in a negotiation</td>
+<td>Firm offers and counter-offers, <code>withdraw</code> and <code>accept_revoke</code> on <code>POST /negotiations/{id}/offers</code>; <code>POST /negotiations/{id}/accept</code>; <code>POST /rfqs/{id}/award</code>; <code>POST /auctions</code>; bids on <code>POST /auctions/{id}/bids</code>; <code>POST /auctions/{id}/award</code></td>
+</tr>
+<tr>
+<td><code>bacp-ts</code></td>
+<td>Trusted Surface events and render fetches. <strong>Never</strong> an agent tag.</td>
+<td><code>POST /trusted-surface/events</code> and <code>GET /trusted-surface/step-ups/{step_up_id}</code>, signed with the registry key of the step-up's Mandate Manager or payer PSP</td>
+</tr>
+<tr>
+<td><code>bacp-handoff</code></td>
+<td>A human support operator accepts or releases a handoff. <strong>Never</strong> an agent tag.</td>
+<td><code>POST /sessions/{id}/handoff</code> (<code>action: accept</code> or <code>release</code>), signed with a registry key whose role is support operator</td>
+</tr>
+<tr>
+<td><code>bacp-mm-event</code></td>
+<td>A gateway reports a mandate event (<code>use</code>, <code>relinquished</code>, <code>pause_changed</code>) to the Mandate Manager. <strong>Never</strong> an agent tag.</td>
+<td>The webhook <code>mandate.event</code>, delivered to the mandate's <code>audit_uri</code> and signed with the registry key of the gateway's BAP (<a href="../mandates/#mandate-events">Mandate events</a>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>POST /trusted-surface/events</code> and <code>GET /trusted-surface/step-ups/{step_up_id}</code>
+MUST accept only signatures under tag <code>bacp-ts</code> by the registry key of the
+step-up's Mandate Manager or payer PSP. For a session step-up these are the
+issuer of the session's mandate and the PSP named in <code>rail_binding.psp_id</code> of
+the leg's planned open Payment Mandate under the session's root; for a summary
+step-up over a multi-seller basket (one whose <code>ts_render</code> carries <code>covers[]</code>),
+only the issuer of the shared root, and no payer PSP; for a <code>post_order</code> step-up, the issuer of the mandate the order was placed
+under and the PSP named in <code>auth_binding.psp_id</code> of the order's closed Payment
+Mandate (any of them under split tender)
+(<a href="../human-participants/#ts-signers">Step-up signers</a>). A request under
+<code>bacp-ts</code> carries no <code>BACP-Agent</code> header, and its signature does not cover
+<code>bacp-agent</code>. A request that carries an AgentCredential, or is
+signed by an agent key, MUST be refused with <code>403 trusted_surface_only</code>,
+whatever its tag. A request signed by any other Mandate Manager or PSP key MUST
+be answered <code>404 not_found</code>, never <code>403</code>, so that the endpoints do not reveal
+which sessions and step-ups exist.</p>
+<p>A handoff acceptance (<code>action: accept</code> on <code>POST /sessions/{id}/handoff</code>) MUST
+be signed under tag <code>bacp-handoff</code> by a registry key whose role is
+<strong>support operator</strong>: a key the registry issues to one human support operator of
+the agent operator, never to an agent and never as a shared desk key. <code>bacp-handoff</code> is not a value of an
+AgentCredential's <code>purposes</code>. An acceptance under any other tag, or signed by a key whose role is not support operator,
+is refused with <code>401 signature_invalid</code>; one signed by a support operator key of another agent operator is
+answered <code>404 not_found</code>; and one that arrives while <code>accepted_by</code> is set is answered <code>409 session_state_conflict</code>.
+The same split applies to a release. Revocation of the key takes effect at the next registry refresh, as for other keys. The gateway records the key id as
+<code>handoff.accepted_by</code> (<a href="../checkout/#handoff">Human handoff</a>). Only that
+key, under <code>bacp-handoff</code>, may later release the handoff (<code>action: release</code>).
+A request under <code>bacp-handoff</code> carries no <code>BACP-Agent</code> header, and its
+signature does not cover <code>bacp-agent</code>.</p>
+<p>The gateway signs its webhooks to the agent with a key published in its
+profile's <code>keys</code>, so that the agent can verify them. It signs the content-free <code>app_push</code> that it sends to a Mandate
+Manager's or payer PSP's <code>ts_notify_url</code> the same way, and a receiver that cannot verify the signature ignores the push
+(<a href="../human-participants/#ts-origins">Origins and delivery</a>). It signs the response of <code>POST /discover</code> with the same key, under
+RFC 9421, covering <code>@status</code> and <code>content-digest</code> (<a href="../discovery/#response-signature">Response signature</a>).</p>
+<div class="admonition warning">
+<p class="admonition-title">Proposed</p>
+<p>A dedicated tag for gateway-signed webhooks, <code>bacp-webhook</code>, is proposed
+(<a href="../open-questions/#q-58">Q-58</a>). Until it is settled, an agent MUST
+verify every webhook against a key in the gateway profile's <code>keys</code>, MUST
+NOT act on a webhook that fails verification, and MUST NOT reject a
+webhook only because its signature has no <code>tag</code> or an unknown one.</p>
+</div>
+<h2 id="replay-protection">Replay protection<a class="headerlink" href="#replay-protection" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Requirement</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Window</td>
+<td><code>expires − created</code> MUST be in (0, 300] seconds.</td>
+</tr>
+<tr>
+<td>Clock skew</td>
+<td>A receiver MUST allow, and MUST NOT allow more than, 5 seconds of clock skew: reject when <code>now + 5 &lt; created</code> or <code>now − 5 &gt; expires</code>.</td>
+</tr>
+<tr>
+<td>Nonce cache</td>
+<td>The receiver MUST keep every <code>(keyid, nonce)</code> pair it has accepted until that signature's <code>expires</code>, and MUST reject a repeat with <code>401 replay_detected</code>.</td>
+</tr>
+<tr>
+<td>Record after verify</td>
+<td>A nonce MUST be recorded only after the signature verifies, so that forged requests cannot fill the cache.</td>
+</tr>
+<tr>
+<td>Bounded cache</td>
+<td>The cache is bounded by the 300-second window; entries MAY be evicted once expired.</td>
+</tr>
+<tr>
+<td>Shared state</td>
+<td>A gateway that runs as several instances MUST share the nonce cache in an atomic store.</td>
+</tr>
+</tbody>
+</table>
+<p>The same 5-second skew applies to every inbound signed message, including
+negotiation messages and the counterparty's receipts for messages BACP sent. For negotiation it is a freshness bound only: the order of two negotiation messages comes from transcript positions, never from these times (<a href="../negotiation/#signed-seller-acceptance-and-clock-skew">Signed seller acceptance and clock skew</a>).</p>
+<h2 id="content-digest">Content-Digest<a class="headerlink" href="#content-digest" title="Permanent link">&para;</a></h2>
+<p>Every signed request MUST carry a <code>Content-Digest</code> header as defined by
+<a href="https://www.rfc-editor.org/rfc/rfc9530.html" target="_blank">RFC 9530</a>,
+computed with <code>sha-256</code> over the exact bytes of the request body, for example:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>Content-Digest: sha-256=:X48E9qOokqqrvdts8nOJRJN3OWDUoyWxBf7kbu9DBPE=:
+</code></pre></div>
+<p>A request without a body carries the digest of the empty body. The receiver
+MUST recompute the digest over the raw bytes it received and MUST reject a
+mismatch with <code>401 signature_invalid</code>. Because <code>content-digest</code> is a covered
+component, changing one byte of the body invalidates the signature.</p>
+<h2 id="idempotency">Idempotency<a class="headerlink" href="#idempotency" title="Permanent link">&para;</a></h2>
+<p>Every <code>POST</code> and <code>PUT</code> MUST carry an <code>Idempotency-Key</code>. <code>GET</code> requests do not.</p>
+<h3 id="the-key">The key<a class="headerlink" href="#the-key" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The key MUST be 22–64 printable ASCII characters and SHOULD carry at least
+  122 random bits (for example a UUIDv4).</li>
+<li>For <code>POST /discover</code> the key MUST be generated afresh for each search from at least 122 random bits (for example a
+  UUIDv4), MUST NOT be predictable from earlier keys, and MUST NOT be reused, even after the gateway's idempotency
+  record has expired. The key binds the sellers' <code>on_search</code> callbacks to this search
+  (<a href="../discovery/#verifying-results">Verifying discovery results</a>).</li>
+<li>Keys are scoped to (agent, canonical operation, path parameters). The same key on a different
+  operation, or on the same operation with other path parameters, is a different key. The <code>BACP-Version</code> of a request
+  is part of its <em>fingerprint</em>, which the gateway compares with the stored request's, and not part of the key's scope:
+  the same key with the same body and another version is not a different key but a conflict (<code>422 idempotency_conflict</code>),
+  and the gateway executes nothing a second time.</li>
+<li>The gateway carries the key end to end: in <code>context.bacp.idempotency_key</code>
+  and in the derivation of the Beckn <code>message_id</code> (see
+  <a href="#network-leg-signing">Network leg signing</a>).</li>
+<li>One key is one intent. A new key means a new intent and goes through mandate
+  evaluation afresh. A closed payment mandate can still pay only once, so a new
+  key never causes a second debit for the same checkout.</li>
+</ul>
+<h3 id="outcomes">Outcomes<a class="headerlink" href="#outcomes" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Situation</th>
+<th>Status</th>
+<th>Code or header</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Key missing or malformed on a <code>POST</code> or <code>PUT</code></td>
+<td><code>400</code></td>
+<td><code>idempotency_key_required</code></td>
+</tr>
+<tr>
+<td>First request with this key</td>
+<td>As the operation defines</td>
+<td>The response is stored</td>
+</tr>
+<tr>
+<td>Same key, same body, after the first response</td>
+<td>The stored status</td>
+<td>Stored body, plus <code>Idempotent-Replayed: true</code></td>
+</tr>
+<tr>
+<td>Same key, different body, or the same body under another <code>BACP-Version</code></td>
+<td><code>422</code></td>
+<td><code>idempotency_conflict</code> (<code>unrecoverable</code>: use a new key only for a new intent)</td>
+</tr>
+<tr>
+<td>Same key while the first request is still being processed</td>
+<td><code>409</code></td>
+<td><code>idempotency_in_flight</code>, with <code>Retry-After</code></td>
+</tr>
+<tr>
+<td>Per-agent limit of live keys or in-flight requests exceeded</td>
+<td><code>429</code></td>
+<td><code>quota_exceeded</code>, with <code>Retry-After</code></td>
+</tr>
+<tr>
+<td>The idempotency store is unavailable</td>
+<td><code>503</code></td>
+<td><code>idempotency_store_unavailable</code> (writes fail closed)</td>
+</tr>
+<tr>
+<td>Body larger than the gateway's limit</td>
+<td><code>413</code></td>
+<td><code>request_too_large</code></td>
+</tr>
+</tbody>
+</table>
+<p>Rules:</p>
+<ol>
+<li><strong>Body equality is semantic.</strong> Bodies are compared in JCS form, so member
+   order and whitespace do not matter, but <code>null</code> and an absent member differ.</li>
+<li><strong>What is stored.</strong> <code>2xx</code> and <code>4xx</code> responses are stored and replayed.
+   <code>5xx</code> responses MUST NOT be stored: a retry after a <code>5xx</code> executes again.</li>
+<li><strong>Retention.</strong> Keys MUST be kept for at least 24 hours; 48 hours is
+   RECOMMENDED.</li>
+<li><strong>Quotas.</strong> The store MUST bound, per agent, the number of live keys
+   (default 10,000) and in-flight requests (default 64). It MUST NOT evict a
+   live key early to make room.</li>
+<li><strong>Lost responses.</strong> If an agent does not receive a response, it MUST first
+   read the resource (for example <code>GET /sessions/{id}</code>) and then retry, if
+   still needed, with the <strong>same</strong> key. It MUST NOT retry a <code>complete</code> with a
+   new key to recover a lost response.</li>
+<li><strong>Unregistered codes.</strong> A client that receives a <code>4xx</code> with a code it does
+   not know MUST NOT retry with a new key.</li>
+</ol>
+<h2 id="artefact-signatures">Artefact signatures<a class="headerlink" href="#artefact-signatures" title="Permanent link">&para;</a></h2>
+<p>A BACP artefact that carries a <code>Signature</code> object (<code>kid</code>, <code>alg</code>, <code>value</code>) is signed over a payload that this section fixes, in
+the form that this section fixes. The two statements below are the interoperable rule: two independent implementations that
+follow them verify each other's artefacts.</p>
+<p><strong>Form: a detached JWS.</strong> <code>Signature.value</code> is a detached JWS in the sense of RFC 7515 Appendix F, in its compact serialisation
+with the payload segment omitted: <code>BASE64URL(protected header) || ".." || BASE64URL(signature)</code>. The <code>b64</code> header parameter
+(RFC 7797) is not used, so the signing input is <code>BASE64URL(protected header) || "." || BASE64URL(payload)</code> with the payload
+below.</p>
+<ul>
+<li><strong>Protected header.</strong> <code>{alg, kid}</code>, and also <code>typ</code> where the specification requires one for the artefact. <code>alg</code> is <code>ES256</code> or <code>EdDSA</code> and equals
+  <code>Signature.alg</code>. The header <code>kid</code> <strong>MUST</strong> equal <code>Signature.kid</code>. A value whose header <code>alg</code> or <code>kid</code> differs from the
+  <code>Signature</code> object that carries it does not verify.</li>
+<li><strong>No embedded payload.</strong> A signer omits the payload segment. A verifier recomputes the payload as below, never trusts a
+  payload that the value carries, and refuses a value whose payload segment is not empty.</li>
+<li><strong>Which artefacts.</strong> This form applies to a <code>Signature</code> object. An artefact that is defined as a compact JWS that carries its
+  payload keeps that form: the attached JWS that closes a mandate (whose payload still holds the mandate's own <code>signatures[]</code>), the
+  operator's wrapper of a mandate in an evidence bundle, a CounterSignature, a <code>ts_render</code> (whose header carries <code>typ: bacp-ts-render+jws</code>,
+  <a href="../human-participants/#ts-render">Typed JWS</a>) and a gateway-signed notice.</li>
+</ul>
+<p><strong>Payload: the JCS form of the artefact minus the members it excludes from its hash.</strong> The signed bytes are the RFC 8785
+(JCS) form of the artefact without the members listed here, which are the members that the artefact's own hash also leaves
+out, so one canonical form serves both.</p>
+<table>
+<thead>
+<tr>
+<th>Artefact</th>
+<th>Signature member</th>
+<th>Members left out of the signed bytes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mandate, open or closed</td>
+<td><code>signatures[]</code></td>
+<td><code>status</code>, <code>usage</code>, <code>signatures</code>, and in a closed Payment Mandate record that the gateway stores, <code>auth_binding.afa_ref</code> (the bytes whose <code>sha-256</code> is the mandate hash)</td>
+</tr>
+<tr>
+<td>InstructionLog entry</td>
+<td><code>signature</code></td>
+<td><code>signature</code> (the <code>entry_hash</code> is signed)</td>
+</tr>
+<tr>
+<td>Receipt</td>
+<td><code>signature</code></td>
+<td><code>signature</code> (the <code>receipt_hash</code> is over the signed receipt, <code>signature</code> included)</td>
+</tr>
+<tr>
+<td>ConsentReceipt</td>
+<td><code>signature</code></td>
+<td><code>signature</code></td>
+</tr>
+<tr>
+<td>Negotiation message</td>
+<td><code>signatures[]</code></td>
+<td><code>signatures</code>, <code>counter_signature</code>, <code>received_at</code> (the bytes whose <code>sha-256</code> is the <code>msg_hash</code>)</td>
+</tr>
+<tr>
+<td>Trusted Surface event (<code>TrustedSurfaceEvent</code>)</td>
+<td><code>signature</code></td>
+<td><code>signature</code></td>
+</tr>
+<tr>
+<td>Evidence bundle</td>
+<td><code>bundle_signature</code></td>
+<td><code>bundle_signature</code></td>
+</tr>
+</tbody>
+</table>
+<p>Where an artefact carries several signatures (a mandate has the principal's and the Mandate Manager's, a negotiation message
+the network participant's and the agent's), <strong>each signature covers the same payload independently</strong>. The Mandate Manager's
+countersignature does not cover the principal's signature, the signatures can be verified in any order, and removing one
+leaves the others valid. A <code>StandingAccept</code> and the signed objects of an auction are signed over their JCS form without
+<code>signature</code>, as their own descriptions say.</p>
+<p><code>Signature.role</code> is outside the signed bytes, so a label proves nothing. A verifier takes a signature's role from the resolution of its <code>kid</code> (a registry key's role, or for <code>principal</code> the device key that the Mandate Manager attested), never from <code>Signature.role</code>. A signature whose <code>role</code> differs from that resolution does not count, and two entries with the same <code>kid</code> are invalid. A verifier that finds an artefact with two entries of the same <code>kid</code> counts the role that the label claims as missing and refuses the artefact with <code>evidence_unverifiable</code> (or <code>mandate_invalid</code> for a mandate).</p>
+<h2 id="network-leg-signing">Network leg signing<a class="headerlink" href="#network-leg-signing" title="Permanent link">&para;</a></h2>
+<p>The gateway, acting as the BAP, signs its Beckn/ONDC messages with the BAP's
+registry key, as the network requires. On Beckn/ONDC this is an Ed25519
+signature over a BLAKE2b-512 digest of the request body, sent in the
+<code>Authorization</code> header and verified against the sender's registry record.
+BACP does not replace this signing; the agent's RFC 9421 signature ends at the
+gateway.</p>
+<p>The network's own signing is normative on the Beckn leg. BACP does not
+require Beckn 2.0 signed acknowledgements; the gateway SHOULD use them, and
+the <code>request-signature</code> binding of callbacks, where the counterparty supports
+them. The CounterSignature that negotiation timing relies on is a BACP
+artefact carried in the negotiation message, not a Beckn acknowledgement
+(settled in <a href="../open-questions/#q-43">Q-43</a>; see
+<a href="../negotiation/">Negotiation</a>).</p>
+<p>Rules for the network leg:</p>
+<ol>
+<li><strong>Deterministic message ids.</strong> The gateway MUST derive each Beckn
+   <code>message_id</code> as a UUIDv5 under its published <code>message_id_namespace</code> over
+   <code>agent_id | idempotency_key | action</code> (the exact name is in <a href="../transports/beckn/#message-ids">Message ids</a>), so a retried call re-sends an
+   identical message.</li>
+<li><strong>Duplicate rejection.</strong> A BACP-aware receiver MUST reject a duplicate
+   <code>message_id</code> within the message's <code>ttl</code> with a NACK. The gateway treats that
+   NACK as "already received".</li>
+<li><strong>Callback binding.</strong> Where the counterparty does not support signed
+   acknowledgements, the gateway MUST bind each <code>on_*</code> callback to its request
+   by <code>(transaction_id, message_id)</code>, accept only the first, and log
+   duplicates. An unsolicited callback with an unknown <code>message_id</code> is ignored
+   and logged.</li>
+<li><strong>Mandate binding.</strong> On <code>init</code>, <code>confirm</code>, <code>update</code>, <code>cancel</code> and IGM
+   <code>issue</code>, <code>context.bacp.mandate_ref</code> is REQUIRED. It MAY carry a <code>kb_jwt</code>
+   signed with the agent's <code>cnf</code> key, with <code>aud</code> = the <code>bpp_id</code> and <code>nonce</code> =
+   the <code>confirm</code> <code>message_id</code>, so that a BACP-aware seller can check that the
+   agent holds the mandate's key.</li>
+</ol>
+<p>Durable artefacts (credentials, mandates, receipts, log entries, negotiation
+messages) are signed separately as compact or detached JWS over their JCS
+form, with a key id that the registry resolves. See
+<a href="../mandates/">Mandates and Consent</a> and <a href="../evidence/">Evidence and Instruction Log</a>.</p>
+<h2 id="key-rotation-and-revocation">Key rotation and revocation<a class="headerlink" href="#key-rotation-and-revocation" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Key or credential</th>
+<th>Rotation</th>
+<th>Revocation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AgentCredential and its <code>cnf</code> key</td>
+<td><code>exp</code> at most 180 days after <code>iat</code>; the operator re-issues with a new <code>cnf</code> key</td>
+<td>The issuer marks the credential revoked in its status list. The gateway rejects it with <code>401 agent_credential_revoked</code>.</td>
+</tr>
+<tr>
+<td>Registry keys (BAP, BPP, Mandate Manager, PSP, credential issuer)</td>
+<td>At least every 180 days</td>
+<td>Removed or marked invalid in the registry record; verifiers stop accepting signatures under it once they refresh the record</td>
+</tr>
+<tr>
+<td>Operator signing key</td>
+<td>Per the operator's registry record</td>
+<td>As for registry keys</td>
+</tr>
+<tr>
+<td>Conformance attestation</td>
+<td><code>exp</code> at most 180 days after <code>iat</code></td>
+<td>The authority marks the attestation revoked in its status list, or the entry is removed from the latest release of the public list (<a href="#conformance-authority-keys">Conformance-authority keys</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>Rules:</p>
+<ol>
+<li>A gateway MUST re-check a credential's status no later than the end of the
+   cached registry record's validity, and MUST NOT accept a credential after
+   its status list shows it revoked.</li>
+<li>An operator's kill switch revokes its agents' credentials through the
+   status list. Once a credential is revoked, the gateway sends no further
+   network traffic for that agent.</li>
+<li>An open mandate's <code>cnf</code> key is part of the signed, immutable mandate. A
+   closed mandate made with any other key fails verification. So when an agent
+   rotates its <code>cnf</code> key, open mandates bound to the old key can no longer be
+   closed, and the principal needs to approve new mandates for the new key.</li>
+<li>Mandate Manager and PSP keys sign mandates, attestations and receipts that
+   are used later as evidence. A verifier resolves the signing key by its key
+   id in the registry.</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../discovery/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Discovery and Profiles">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Discovery and Profiles
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../mandates/" class="md-footer__link md-footer__link--next" aria-label="Next: Mandates and Consent">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Mandates and Consent
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

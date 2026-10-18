@@ -1,0 +1,21 @@
+{
+  "profile": "in.bacp.evidence.summary.1",
+  "bundle_hash": "sha-256:kQjXdlwqRyFLW56p7AS8q374BSOL7RSzVQXuJIO88cg",
+  "language": "Hindi",
+  "template_id": "gw.bap.example.in/evidence-summary/2",
+  "text": "मीरा देवी ने 22-10-2026 को शाम 6:45 बजे (IST) नंदिनी डेयरी स्टोर के ₹450 के ऑर्डर की पुष्टि की। भुगतान UPI से हुआ; भुगतान की रसीद सत्यापित है।",
+  "items": [
+    {
+      "ref": "mdt_CHK7Q2W9X4K1M3",
+      "verified": true
+    },
+    {
+      "ref": "rcpt_PAY0000000001",
+      "verified": true
+    },
+    {
+      "ref": "stp_01HZXAq8W3nK5vRt7YcLm2",
+      "verified": true
+    }
+  ]
+}

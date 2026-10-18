@@ -1,0 +1,3017 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/payments/handler-registry/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../rails/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Handler Registry - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#handler-registry" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Handler Registry
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#descriptor-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Descriptor format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry governance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registry governance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#release-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conformance-authorities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conformance authorities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ref-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference patterns and receipt echo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alias-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alias resolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposing-a-new-handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposing a new handler
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry table
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registry table">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#open-primitives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open-eligible primitives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#declared-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declared aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#descriptor-format" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Descriptor format
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry-governance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry governance
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registry governance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#release-manifest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Release manifest
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#conformance-authorities" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Conformance authorities
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ref-pattern" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reference patterns and receipt echo
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alias-resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Alias resolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#proposing-a-new-handler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Proposing a new handler
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry table
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registry table">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#open-primitives" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open-eligible primitives
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#declared-aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Declared aliases
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="handler-registry">Handler Registry<a class="headerlink" href="#handler-registry" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>The handler registry lists every Indian payment mode BACP can bind to: 57 handlers across UPI, cards, net banking, account-to-account transfers, NACH, PPIs, credit, COD, BBPS, e-RUPI, e₹, AePS, transit, trade finance, cross-border, GeM, PA settlement, cheques and the BACP credit ledger. Each entry is a <strong>handler descriptor</strong>: a JSON document that validates against <a href="https://bacp.dev/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a>.</p>
+<p>Descriptors are <strong>data</strong>. Limits, AFA models, refund routes and notice rules are configuration that a gateway loads, not code. When a regulator changes a limit, the descriptor changes and the gateway's behaviour follows without a code release.</p>
+<p>How handlers are used at payment time is defined in the <a href="../">Payments Overview</a>. The rail-by-rail rules are in <a href="../rails/">Rail Bindings</a>.</p>
+<h2 id="descriptor-format">Descriptor format<a class="headerlink" href="#descriptor-format" title="Permanent link">&para;</a></h2>
+<p>A descriptor has the fields below. Required fields are marked <strong>R</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>R</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>handler_id</code></td>
+<td>R</td>
+<td>The canonical id: <code>in.&lt;family&gt;.&lt;variant&gt;</code> for an Indian rail or instrument, <code>bacp.&lt;construct&gt;</code> for a BACP-native construct. Pattern <code>common.json#/$defs/HandlerId</code>.</td>
+</tr>
+<tr>
+<td><code>aliases[]</code></td>
+<td></td>
+<td>Legacy ids that resolve to this handler during the deprecation window. A trailing <code>.*</code> makes a glob alias. See <a href="#alias-resolution">alias resolution</a>.</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>R</td>
+<td>Display name as language-tagged text, e.g. <code>{"en-IN": "UPI AutoPay (recurring e-mandate)"}</code>.</td>
+</tr>
+<tr>
+<td><code>family</code></td>
+<td>R</td>
+<td>Rail family: <code>upi</code>, <code>card</code>, <code>netbanking</code>, <code>a2a</code>, <code>nach</code>, <code>ppi</code>, <code>credit</code>, <code>cod</code>, <code>bbps</code>, <code>voucher</code>, <code>cbdc</code>, <code>aeps</code>, <code>transit</code>, <code>trade_finance</code>, <code>cross_border</code>, <code>government</code>, <code>pa</code>, <code>cheque</code>, <code>ledger</code>, <code>loyalty</code>, <code>store_credit</code>, <code>pos</code>.</td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td>R</td>
+<td><code>payment</code>, <code>mandate_registration</code>, <code>financing</code>, <code>security_verification</code>, <code>tracker</code> or <code>ledger</code>.</td>
+</tr>
+<tr>
+<td><code>status</code></td>
+<td>R</td>
+<td><code>live</code>, <code>pilot</code>, <code>reserved</code> or <code>deprecated</code>. See <a href="#registry-governance">governance</a>.</td>
+</tr>
+<tr>
+<td><code>rail</code></td>
+<td>R</td>
+<td><code>operator</code> (required), <code>network</code>, and <code>params</code> such as <code>qr_type</code>, <code>network</code>, <code>kyc</code>, <code>funding</code>, <code>direction</code>.</td>
+</tr>
+<tr>
+<td><code>regulator[]</code></td>
+<td>R</td>
+<td>One or more <code>{body, instrument, ref}</code>, e.g. <code>{"body": "RBI", "instrument": "E-mandate Framework 2026"}</code>.</td>
+</tr>
+<tr>
+<td><code>presence</code></td>
+<td>R</td>
+<td><code>human_presence</code> (<code>required</code>, <code>mandate</code> or <code>none</code>), <code>hp</code> (may run with a human present), <code>hnp</code> (<code>none</code>, <code>rail_enforced</code> or <code>order_only</code>), <code>device_bound</code>, <code>assisted_only</code>. <code>rail_enforced</code> means a standing authority whose limits the rail or issuer enforces. <code>order_only</code> means the order may be placed HNP but payment happens later with a human (COD).</td>
+</tr>
+<tr>
+<td><code>binding</code></td>
+<td>R</td>
+<td><code>class</code> (<code>O</code>, <code>C</code>, <code>A</code>, <code>D</code> or <code>N</code>; see <a href="../#handler-classes">handler classes</a>), <code>open_eligible</code>, <code>open_primitives[]</code> (the <code>mandate_primitives[].type</code> values that may back an open mandate; only primitives whose <code>limits_enforced_by</code> is <code>rail</code> or <code>issuer</code>, and at least one when <code>open_eligible</code> is <code>true</code>), <code>open_requires</code> (a condition in words, e.g. "only with an AFA-registered PPI e-mandate"), and <code>closed_auth[]</code>: the per-transaction authorisations a closed HP payment may use (<code>upi.pin</code>, <code>upi.biometric</code>, <code>card.3ds</code>, <code>card.otp</code>, <code>card.passkey</code>, <code>netbanking.login_otp</code>, <code>maker_checker</code>, <code>aadhaar_biometric</code>, <code>voucher_code</code>, <code>wallet_pin</code>, <code>kfs_esign</code>, <code>dsc</code>, <code>cash_at_door</code>, <code>parent_rail_binding</code>).</td>
+</tr>
+<tr>
+<td><code>mandate_primitives[]</code></td>
+<td>R</td>
+<td>The rail object that carries the standing authority: <code>type</code> (e.g. <code>sbmd_block</code>, <code>otm_block</code>, <code>circle_delegation</code>, <code>upi_autopay_umn</code>, <code>card_emandate</code>, <code>agentic_token_intent</code>, <code>nach_umrn</code>, <code>ppi_emandate</code>, <code>balance_cap</code>, <code>voucher</code>, <code>programmability_rules</code>, <code>upms_registration</code>, <code>topup_mandate</code>, <code>loan_sanction</code>, <code>payee_binding</code>, <code>approval_policy</code>, <code>assisted_session</code>, <code>credit_limit</code>, <code>factoring_unit</code>, <code>gpa_block</code>, <code>pps_registration</code>), <code>ref_name</code> (what <code>rail_binding.rail_ref</code> holds, e.g. UMN, UMRN, SBMD block id), <code>limits_enforced_by</code> (<code>rail</code>, <code>issuer</code>, <code>merchant</code>, <code>lender</code>, <code>bacp</code>, <code>none</code>), <code>payee_scope</code> (<code>single_merchant</code>, <code>single_biller</code>, <code>single_creditor</code>, <code>any_merchant</code>, <code>purpose_locked</code>, <code>issuer_contracted</code>, <code>lender</code>, <code>n_a</code>) and <code>multi_capture</code>. <code>issuer_contracted</code> means that a seller accepts the instrument only through a contract with its issuer, as for a gift PPI (RBI Master Direction on Prepaid Payment Instruments, paras 2.6 and 11.4.3), so that a gateway checks the seller's acceptance before it ranks the rung.</td>
+</tr>
+<tr>
+<td><code>limits[]</code></td>
+<td>R</td>
+<td>Each limit has a <code>name</code> (<code>per_txn</code>, <code>per_txn_min</code>, <code>per_day</code>, <code>per_month</code>, <code>per_year</code>, <code>first_24h</code>, <code>balance</code>, <code>block_amount</code>, <code>mandate_max</code>, <code>voucher_max</code>, <code>no_afa_debit</code>, <code>no_afa_debit_special_categories</code>, <code>validity</code>, <code>devices</code>, <code>pps_threshold</code>, <code>cash_threshold</code>), one of <code>amount</code> (integer paise), <code>duration</code> (ISO 8601) or <code>count</code>, an <code>applies_to</code> note, a <code>source</code> citation, a <code>verification</code> grade (<code>verified</code>, <code>secondary</code>, <code>vendor</code>, <code>unverified</code>, <code>conflict</code>), a <code>conflict_note</code> where sources disagree, <code>configurable</code>, and an optional <code>bound</code> (<code>min</code> or <code>max</code>) that says whether the value is a floor or a ceiling, for example the one-year minimum validity of a gift PPI.</td>
+</tr>
+<tr>
+<td><code>afa</code></td>
+<td>R</td>
+<td><code>model</code> (<code>per_txn_2fa</code>, <code>at_registration_and_first_debit</code>, <code>at_registration_only</code>, <code>at_block_creation</code>, <code>at_provisioning</code>, <code>exempt</code>, <code>exempt_below_threshold</code>, <code>biometric_assisted</code>, <code>maker_checker</code>, <code>loan_acceptance</code>, <code>voucher_code</code>, <code>none_cash</code>, <code>n_a</code>), <code>threshold</code> and <code>threshold_special</code> (amounts above which AFA is needed), <code>pre_debit_notice</code> (<code>required_24h</code>, <code>bacp_policy_24h</code>, <code>exempt</code>, <code>unknown</code>, <code>not_applicable</code>) <code>verification</code> (optional; how well the <code>source</code> citation was checked, on the scale of <code>limits[].verification</code>, so that an NPCI-layer citation is graded separately from the RBI layer), and <code>rbi_annex1_item</code> (the row of Annexure-1 of RBI/2025-26/79 that exempts the handler: REQUIRED when <code>model</code> is <code>exempt</code> or <code>exempt_below_threshold</code>, FORBIDDEN when it is <code>at_block_creation</code> or <code>at_registration_only</code>, so that Reserve Pay or UPI Circle is never labelled an RBI exemption; the upper bound is kept by the registry, because Annexure-1 says that later additions also apply).</td>
+</tr>
+<tr>
+<td><code>refund</code></td>
+<td>R</td>
+<td><code>route</code> (<code>source</code>, <code>source_with_card_credit_consent</code>, <code>same_ppi</code>, <code>release_block_or_source</code>, <code>lender</code>, <code>user_elected_account</code>, <code>same_balance</code>, <code>issuer_or_sponsor</code>, <code>new_credit_push</code>, <code>ledger_credit_note</code>, <code>n_a</code>, <code>unverified</code>), <code>failed_txn_tat</code> (ISO 8601 duration), <code>compensation_per_day</code>, <code>notes</code>. See <a href="../#refunds">refunds</a>.</td>
+</tr>
+<tr>
+<td><code>dispute</code></td>
+<td>R</td>
+<td><code>channels[]</code> (e.g. UDIR, issuer billing dispute, RBI Integrated Ombudsman, Bharat Connect complaints, GeM incident management) and <code>window</code>.</td>
+</tr>
+<tr>
+<td><code>settlement</code></td>
+<td>R</td>
+<td><code>mechanism</code> (free text), <code>evidence_refs[]</code> (the keys a receipt may carry: <code>rrn</code>, <code>utr</code>, <code>umn</code>, <code>umrn</code>, <code>arn</code>, <code>auth_code</code>, <code>bconnect_txn_id</code>, <code>voucher_id</code>, <code>cbdc_txn_id</code>, <code>factoring_unit_id</code>, <code>loan_id</code>, <code>lc_no</code>, <code>ebg_no</code>, <code>gem_order_no</code>, <code>crac_no</code>, <code>pfms_payment_id</code>, <code>pa_order_id</code>, <code>cheque_no</code>, <code>uetr</code>, <code>ledger_entry_id</code>, <code>awb</code>, <code>none</code>), <code>escrow</code> (<code>pa_escrow</code>, <code>none</code>, <code>gem_pool_account</code>, <code>platform</code>, <code>n_a</code>) and <code>timeline_source</code>. The PA-to-merchant timeline follows the PA–merchant agreement; there is no RBI T+N.</td>
+</tr>
+<tr>
+<td><code>data_minimisation</code></td>
+<td>R</td>
+<td><code>payment_leg_fields</code> (by default <code>payee</code>, <code>amount</code>, <code>mandate_ref</code>, <code>checkout_hash</code>), <code>never_collect</code> (always includes <code>pin</code>, <code>otp</code>, <code>card_pan</code>, <code>cvv</code>, <code>card_expiry</code>, <code>netbanking_credentials</code>, <code>aadhaar_number</code>, <code>biometric</code> and <code>basket</code>; vouchers add <code>voucher_code_plaintext</code>), <code>retain_only</code> (cards: last four digits and issuer) and <code>basket_blind</code>.</td>
+</tr>
+<tr>
+<td><code>funding</code></td>
+<td>R</td>
+<td><code>debit</code>, <code>credit</code>, <code>prepaid</code>, <code>cash</code>, <code>voucher</code>, <code>loan</code>, <code>cbdc</code>, <code>trade_credit</code> or <code>n_a</code>.</td>
+</tr>
+<tr>
+<td><code>funding_sources[]</code></td>
+<td></td>
+<td>Every source of funds a payer can bring to the handler, when it is more than <code>funding</code>. It MUST contain <code>funding</code>. UPI Reserve Pay lists <code>debit</code> and <code>credit</code>, because a block can sit on a savings, current or overdraft account or on a RuPay credit card or a pre-sanctioned credit line (NPCI Consolidated Circular para 16.1). The source of a given mandate is the one its payer PSP attests, never the list.</td>
+</tr>
+<tr>
+<td><code>credit_disclosure_required</code></td>
+<td></td>
+<td>MUST be <code>true</code> when <code>funding</code> is <code>credit</code> or <code>loan</code>: the agent discloses that the payment is credit and holds the user's prior consent.</td>
+</tr>
+<tr>
+<td><code>segments[]</code></td>
+<td></td>
+<td><code>b2c</code>, <code>b2b</code>, <code>g2b</code>, <code>c2c</code>, <code>assisted</code>, <code>cross_border</code>.</td>
+</tr>
+<tr>
+<td><code>requirements[]</code></td>
+<td></td>
+<td>Identifiers of the requirements the descriptor implements (see <a href="../../regulatory-mapping/">Regulatory Mapping</a>).</td>
+</tr>
+<tr>
+<td><code>sources[]</code></td>
+<td>R</td>
+<td>Citations for the descriptor's content.</td>
+</tr>
+<tr>
+<td><code>notes</code></td>
+<td></td>
+<td>Free text.</td>
+</tr>
+</tbody>
+</table>
+<p>The schema enforces these cross-field rules:</p>
+<ol>
+<li><code>binding.open_eligible: true</code> requires <code>presence.hnp: rail_enforced</code>.</li>
+<li><code>binding.open_eligible: true</code> requires a non-empty <code>binding.open_primitives</code>.</li>
+<li><code>presence.device_bound: true</code> requires <code>binding.open_eligible: false</code>.</li>
+<li><code>funding</code> of <code>credit</code> or <code>loan</code> requires <code>credit_disclosure_required: true</code>.</li>
+<li><code>presence.hnp: rail_enforced</code> requires at least one entry of <code>mandate_primitives</code> whose <code>limits_enforced_by</code> is <code>rail</code> or <code>issuer</code>. A descriptor whose limits only a merchant or BACP enforces is <code>hnp: none</code>.</li>
+<li><code>funding_sources</code>, when present, contains <code>funding</code>, and <code>binding.open_primitives</code> never lists <code>none</code>.</li>
+</ol>
+<p>That every <code>binding.open_primitives</code> entry is one of the descriptor's own <code>mandate_primitives[].type</code> values with <code>limits_enforced_by</code> <code>rail</code> or <code>issuer</code> cannot be expressed in JSON Schema. <code>scripts/validate.py</code> checks it for the registry, and registry review MUST check it for a proposed descriptor.</p>
+<p>An abridged descriptor (the <code>in.upi.autopay</code> entry, with optional fields and the per-field citations shortened) looks like this:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"handler_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"in.upi.autopay"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"aliases"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"upi.autopay"</span><span class="p">],</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"en-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UPI AutoPay (recurring e-mandate)"</span><span class="p">},</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"family"</span><span class="p">:</span><span class="w"> </span><span class="s2">"upi"</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"kind"</span><span class="p">:</span><span class="w"> </span><span class="s2">"payment"</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"live"</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">"rail"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"operator"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NPCI"</span><span class="p">},</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">  </span><span class="nt">"regulator"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"body"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RBI"</span><span class="p">,</span><span class="w"> </span><span class="nt">"instrument"</span><span class="p">:</span><span class="w"> </span><span class="s2">"E-mandate Framework 2026"</span><span class="p">}],</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">  </span><span class="nt">"presence"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"human_presence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mandate"</span><span class="p">,</span><span class="w"> </span><span class="nt">"hp"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"hnp"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rail_enforced"</span><span class="p">},</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">  </span><span class="nt">"binding"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"class"</span><span class="p">:</span><span class="w"> </span><span class="s2">"O"</span><span class="p">,</span><span class="w"> </span><span class="nt">"open_eligible"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span><span class="w"> </span><span class="nt">"open_primitives"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"upi_autopay_umn"</span><span class="p">],</span><span class="w"> </span><span class="nt">"closed_auth"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"upi.pin"</span><span class="p">]},</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="nt">"mandate_primitives"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"upi_autopay_umn"</span><span class="p">,</span><span class="w"> </span><span class="nt">"ref_name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UMN"</span><span class="p">,</span><span class="w"> </span><span class="nt">"limits_enforced_by"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rail"</span><span class="p">,</span><span class="w"> </span><span class="nt">"payee_scope"</span><span class="p">:</span><span class="w"> </span><span class="s2">"single_merchant"</span><span class="p">,</span><span class="w"> </span><span class="nt">"multi_capture"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">}],</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="nt">"limits"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">    </span><span class="p">{</span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"no_afa_debit"</span><span class="p">,</span><span class="w"> </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">1500000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">     </span><span class="nt">"source"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RBI E-mandate Framework 2026"</span><span class="p">,</span><span class="w"> </span><span class="nt">"section"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RBI"</span><span class="p">},</span><span class="w"> </span><span class="nt">"verification"</span><span class="p">:</span><span class="w"> </span><span class="s2">"verified"</span><span class="p">,</span><span class="w"> </span><span class="nt">"configurable"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">}</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">  </span><span class="nt">"afa"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"at_registration_and_first_debit"</span><span class="p">,</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">          </span><span class="nt">"threshold"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">1500000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">          </span><span class="nt">"threshold_special"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">10000000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">          </span><span class="nt">"pre_debit_notice"</span><span class="p">:</span><span class="w"> </span><span class="s2">"required_24h"</span><span class="p">},</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">  </span><span class="nt">"refund"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"route"</span><span class="p">:</span><span class="w"> </span><span class="s2">"source"</span><span class="p">,</span><span class="w"> </span><span class="nt">"failed_txn_tat"</span><span class="p">:</span><span class="w"> </span><span class="s2">"P5D"</span><span class="p">,</span><span class="w"> </span><span class="nt">"compensation_per_day"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">10000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">}},</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">  </span><span class="nt">"dispute"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"channels"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"UDIR in payer app"</span><span class="p">,</span><span class="w"> </span><span class="s2">"MyUPI automated chargeback"</span><span class="p">,</span><span class="w"> </span><span class="s2">"RBI Integrated Ombudsman"</span><span class="p">]},</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">  </span><span class="nt">"settlement"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"mechanism"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NPCI UPI settlement cycles"</span><span class="p">,</span><span class="w"> </span><span class="nt">"evidence_refs"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"rrn"</span><span class="p">,</span><span class="w"> </span><span class="s2">"utr"</span><span class="p">],</span><span class="w"> </span><span class="nt">"escrow"</span><span class="p">:</span><span class="w"> </span><span class="s2">"pa_escrow"</span><span class="p">},</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">  </span><span class="nt">"data_minimisation"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"payment_leg_fields"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"payee"</span><span class="p">,</span><span class="w"> </span><span class="s2">"amount"</span><span class="p">,</span><span class="w"> </span><span class="s2">"mandate_ref"</span><span class="p">,</span><span class="w"> </span><span class="s2">"checkout_hash"</span><span class="p">],</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">                        </span><span class="nt">"never_collect"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"pin"</span><span class="p">,</span><span class="w"> </span><span class="s2">"otp"</span><span class="p">,</span><span class="w"> </span><span class="s2">"card_pan"</span><span class="p">,</span><span class="w"> </span><span class="s2">"cvv"</span><span class="p">,</span><span class="w"> </span><span class="s2">"card_expiry"</span><span class="p">,</span><span class="w"> </span><span class="s2">"netbanking_credentials"</span><span class="p">,</span><span class="w"> </span><span class="s2">"aadhaar_number"</span><span class="p">,</span><span class="w"> </span><span class="s2">"biometric"</span><span class="p">,</span><span class="w"> </span><span class="s2">"basket"</span><span class="p">],</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">                        </span><span class="nt">"basket_blind"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span><span class="p">},</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">  </span><span class="nt">"funding"</span><span class="p">:</span><span class="w"> </span><span class="s2">"debit"</span><span class="p">,</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">  </span><span class="nt">"sources"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RBI E-mandate Framework 2026"</span><span class="p">,</span><span class="w"> </span><span class="nt">"section"</span><span class="p">:</span><span class="w"> </span><span class="s2">"8"</span><span class="p">,</span><span class="w"> </span><span class="nt">"label"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RBI"</span><span class="p">}]</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="registry-governance">Registry governance<a class="headerlink" href="#registry-governance" title="Permanent link">&para;</a></h2>
+<p>The registry is maintained in the specification repository as <code>source/handlers/registry.json</code> and is versioned with the specification. Each descriptor has a <code>status</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Meaning</th>
+<th>May back a payment</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>live</code></td>
+<td>The rail or instrument is generally available, and its rules are documented.</td>
+<td>Yes, subject to its class</td>
+</tr>
+<tr>
+<td><code>pilot</code></td>
+<td>The rail runs as a pilot or closed user group, or has no general availability (e.g. UPI Circle software delegates, network agentic card tokens, retail and programmable e₹, OCEN), or BACP has not verified how agents may use it (e-RUPI, until <a href="../../open-questions/#q-38">Q-38</a> is answered).</td>
+<td>Only when the gateway's <a href="../../conformance/#conformance-attestation">conformance attestation</a> lists that pilot in <code>pilots[]</code></td>
+</tr>
+<tr>
+<td><code>reserved</code></td>
+<td>The id is held for a rail that is not yet published or not open to agents (<code>in.upi.uap</code>, <code>in.cbdc.wholesale</code>).</td>
+<td>No</td>
+</tr>
+<tr>
+<td><code>deprecated</code></td>
+<td>The handler is being withdrawn.</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+<p>Rules for registry content:</p>
+<ul>
+<li>Every limit MUST cite its source and carry a <code>verification</code> grade. A limit graded <code>conflict</code> MUST carry a <code>conflict_note</code>. Where sources conflict, a gateway SHOULD enforce the stricter value unless the deployment documents a different choice.</li>
+<li>A limit whose regulator may change it SHOULD be <code>configurable: true</code>.</li>
+<li>A registry in which an exact alias maps to two descriptors, or a canonical id is also declared as an alias, MUST be rejected at load.</li>
+<li>Every descriptor MUST validate against <a href="https://bacp.dev/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a>.</li>
+<li>Status changes (<code>pilot</code> to <code>live</code>, <code>reserved</code> to <code>pilot</code>) are registry changes and follow the <a href="#proposing-a-new-handler">proposal process</a>.</li>
+<li>Eligibility is evaluated against the current registry at every <code>complete</code>, not when a mandate was issued. A change that makes an active mandate's binding ineligible (a downgrade from <code>live</code> to <code>pilot</code>, <code>reserved</code> or <code>deprecated</code>, or a primitive removed from <code>binding.open_primitives</code>) pauses the affected mandates (<a href="../../mandates/#handler-binding">Handler binding</a>). Mandate Managers and gateways take the registry from the dated release, never from a gateway's <code>GET /payment-handlers</code>, and a gateway adopts a downgrade within 24 hours of the <code>published_at</code> of the publication that makes it. There is no registry-signed snapshot: no party holds a registry key.</li>
+</ul>
+<h3 id="release-manifest">Release manifest<a class="headerlink" href="#release-manifest" title="Permanent link">&para;</a></h3>
+<p>Each publication of the registry files has a release manifest, <code>source/handlers/release.json</code>, valid against
+<a href="https://bacp.dev/schemas/registry-release.json"><code>registry-release.json</code></a>. It names the <code>registry_version</code>, a strictly
+increasing <code>registry_serial</code> (backports included), the <code>published_at</code> instant in IST and the <code>sha-256</code> digest, over the
+JCS form, of <code>registry.json</code> and of the conformance-authority list. A copy is newer than another when its serial is
+greater. <code>scripts/validate.py</code> recomputes the digests, and <code>scripts/registry_release.py --write</code> refreshes them after a
+registry change. The rules that use the serial and <code>published_at</code> are in
+<a href="../../mandates/#handler-binding">Handler binding</a> and the <a href="https://bacp.dev/versioning/#registry-release-manifest">versioning policy</a>.</p>
+<h3 id="conformance-authorities">Conformance authorities<a class="headerlink" href="#conformance-authorities" title="Permanent link">&para;</a></h3>
+<p>Who may sign the attestation that admits a <code>pilot</code> handler is data, like the handler status: the public, dated
+<a href="../../conformance/#conformance-authority-list">conformance-authority list</a>, published as
+<code>source/registry/conformance-authorities.json</code> beside <code>source/handlers/registry.json</code> and valid against
+<a href="https://bacp.dev/schemas/conformance-authority-list.json"><code>conformance-authority-list.json</code></a>.</p>
+<ul>
+<li>Each entry is scoped to named handlers (<code>scope.pilots</code>, at least one). An attestation that lists a pilot outside the
+  signing entry's scope is refused.</li>
+<li>The list is the floor and the ceiling: a Mandate Manager MAY narrow it by publishing an exclusion list and MUST NOT
+  add a signer to it.</li>
+<li>The list ships empty in <code>2026-10-18</code>. Until an entry is added, no pilot handler can back an open mandate.</li>
+<li>Adding an entry, and moving any handler from <code>pilot</code> to <code>live</code>, needs the approvals in
+  <a href="https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md#interim-maintainer">GOVERNANCE.md</a>.</li>
+</ul>
+<h3 id="ref-pattern">Reference patterns and receipt echo<a class="headerlink" href="#ref-pattern" title="Permanent link">&para;</a></h3>
+<p>A descriptor's <code>mandate_primitives[].ref_pattern</code> is an OPTIONAL regular expression that a <code>rail_binding.rail_ref</code> of
+that primitive has to match, so that a Mandate Manager can check the reference's shape. It is set only from a public
+source that states the format; no descriptor sets one in this version, and putting one on a <code>live</code> descriptor later is a
+breaking change. A payer-PSP-signed receipt SHOULD echo the mandate <code>primitive</code> and <code>rail.rail_ref</code>
+(<a href="https://bacp.dev/schemas/receipt.json"><code>receipt.json</code></a>), so that the gateway can reconcile it against the mandate's
+binding.</p>
+<h2 id="alias-resolution">Alias resolution<a class="headerlink" href="#alias-resolution" title="Permanent link">&para;</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Settled</p>
+<p>The <code>in.*</code> canonical ids, the alias rules below, the governance of handler names and the length of the deprecation window are settled in <a href="../../open-questions/#q-28">Q-28</a>.</p>
+</div>
+<p>A <strong>handler reference</strong> (<code>HandlerRef</code>) is a canonical id, an exact alias, or a string matched by a glob alias. It resolves as follows:</p>
+<ol>
+<li><strong>Order.</strong> First an exact canonical <code>handler_id</code>, then an exact alias, then a glob alias (<code>prefix.*</code>), longest prefix first.</li>
+<li><strong>Exact beats glob.</strong> An exact alias always wins over a glob alias. So <code>upi.uap.pin</code> resolves to <code>in.upi.intent</code>, not to <code>in.upi.uap</code>, whose glob alias is <code>upi.uap.*</code>.</li>
+<li><strong>Globs never cover canonical ids.</strong> A glob alias MUST NOT match any canonical id. It MUST NOT match an exact alias of another descriptor, except the deprecation-window aliases listed below, which MUST be removed when the window closes.</li>
+<li><strong>One target.</strong> An exact alias MUST map to exactly one canonical id.</li>
+<li><strong>Emit canonical.</strong> Producers MUST emit canonical ids in new artefacts: receipts, payment state, profiles, intersection results. Consumers MUST accept any handler reference and MUST compare handlers only after resolution, for example a session's handler against its mandate's <code>rail_binding.type</code>.</li>
+<li><strong>Unknown fails closed.</strong> A reference that does not resolve is not eligible: the intersection excludes it with <code>not_in_registry</code>, and at PUT or <code>complete</code> it gets 403 <code>mandate_scope_mismatch</code>.</li>
+<li><strong>Resolution is not eligibility.</strong> After resolution, the binding rules still apply: a <code>reserved</code> or <code>deprecated</code> descriptor MUST NOT back a payment, a <code>pilot</code> descriptor only when attested, and an open mandate only through a primitive in <code>binding.open_primitives</code>.</li>
+<li><strong>Deprecation window.</strong> Legacy aliases are accepted for one deprecation window: at least two dated releases after the release that deprecates them, and at least 180 days after that release, whichever is later (<a href="https://bacp.dev/versioning/#deprecation">versioning policy</a>). Removing an alias is a breaking change and gets at least 90 days' notice. The registry SHOULD publish each alias's end date (a proposed descriptor field <code>aliases_deprecated_after</code>, not yet in the schema).</li>
+</ol>
+<p>The registry declares two exact aliases of <code>in.upi.intent</code> for the deprecation window: <code>upi.pin</code> and <code>upi.uap.pin</code> (listed after the <a href="#registry-table">registry table</a>). They identify a human-present one-off UPI payment authorised by UPI PIN. <code>auth_binding.type</code> stays <code>upi.pin</code>.</p>
+<h2 id="proposing-a-new-handler">Proposing a new handler<a class="headerlink" href="#proposing-a-new-handler" title="Permanent link">&para;</a></h2>
+<p>A new handler, or a change to an existing one (a new limit, a status change, a new alias), is proposed as a change to the registry:</p>
+<ol>
+<li><strong>Open an issue</strong> in the BACP repository titled <code>handler: &lt;proposed id&gt;</code>, with the rail, its operator and regulator, and the primary sources (circulars, master directions, operator product pages).</li>
+<li><strong>Choose the id.</strong> Use <code>in.&lt;family&gt;.&lt;variant&gt;</code> for an Indian rail or instrument and <code>bacp.&lt;construct&gt;</code> for a BACP-native construct. The id MUST match <code>HandlerId</code>, MUST NOT collide with an existing id or alias, and MUST NOT be matched by an existing glob alias.</li>
+<li><strong>Write the descriptor</strong> with every required field. Grade each limit honestly. A limit that comes only from a vendor or the press is <code>vendor</code> or <code>secondary</code>; one with no source is <code>unverified</code>.</li>
+<li><strong>Classify it.</strong> State the class and justify it against the RBI Authentication Directions 2025: a handler is class O only if a standing authority exists that the rail, issuer or both parties enforce, and the descriptor then has <code>hnp: rail_enforced</code>. An open-eligible descriptor lists in <code>binding.open_primitives</code> only primitives whose <code>limits_enforced_by</code> is <code>rail</code> or <code>issuer</code>. A device-bound handler is never open-eligible.</li>
+<li><strong>Start at <code>pilot</code> or <code>reserved</code></strong> unless the rail is generally available with published rules.</li>
+<li><strong>Add conformance cases.</strong> A handler that a gateway claims under a conformance level needs cases for its binding, limits, AFA and refund route. See <a href="../../conformance/">Conformance</a>.</li>
+<li><strong>Validate.</strong> The pull request MUST pass schema validation of the whole registry and the alias rules above.</li>
+</ol>
+<p>The BACP working group reviews the proposal. A registry change is a normative change under <a href="https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md"><code>GOVERNANCE.md</code></a>: it needs a 14-day review and the approval of two maintainers, one of them the payments editor, and ships in a dated release or an approved backport (settled in <a href="../../open-questions/#q-28">Q-28</a>).</p>
+<h2 id="registry-table">Registry table<a class="headerlink" href="#registry-table" title="Permanent link">&para;</a></h2>
+<p>The table below is generated from <code>source/handlers/registry.json</code>. "Presence allowed" summarises <code>presence</code>: HP means a human-present payment, "HNP (rail-enforced)" means the handler may run with no human present under a standing authority, "HNP order only" means the order may be placed HNP with payment later. "Mandate binding" lists the <code>mandate_primitives</code> types. The full limits, AFA models, dispute channels and settlement evidence are in the JSON.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Handler id</th>
+<th>Name</th>
+<th>Class</th>
+<th>Presence allowed</th>
+<th>Mandate binding</th>
+<th>Refund route</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><code>in.upi.intent</code></td>
+<td>UPI intent</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>in.upi.qr</code></td>
+<td>UPI QR (static, dynamic, Bharat QR)</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>in.upi.collect</code></td>
+<td>UPI collect (P2M only)</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>in.upi.otm</code></td>
+<td>UPI One-Time Mandate (single block, single debit)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>otm_block</code></td>
+<td><code>release_block_or_source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>in.upi.reservepay</code></td>
+<td>UPI Reserve Pay (SBMD block)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>sbmd_block</code></td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>in.upi.circle</code></td>
+<td>UPI Circle delegate (IoT or software secondary)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>circle_delegation</code></td>
+<td><code>source</code></td>
+<td>pilot</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>in.upi.autopay</code></td>
+<td>UPI AutoPay (recurring e-mandate)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>upi_autopay_umn</code></td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>8</td>
+<td><code>in.upi.credit_line</code></td>
+<td>Pre-sanctioned credit line on UPI</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>9</td>
+<td><code>in.upi.rupay_cc</code></td>
+<td>RuPay credit card on UPI</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source_with_card_credit_consent</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>in.upi.intl</code></td>
+<td>UPI international (outbound corridors, inbound FIR)</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>unverified</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>11</td>
+<td><code>in.upi.lite</code></td>
+<td>UPI Lite and Lite X (on-device, offline NFC)</td>
+<td>A</td>
+<td>HP (device-bound, assisted)</td>
+<td><code>balance_cap</code></td>
+<td><code>same_balance</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>12</td>
+<td><code>in.upi.123pay</code></td>
+<td>UPI 123PAY (feature phone, IVR)</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>13</td>
+<td><code>in.upi.uap</code></td>
+<td>UPI agentic payments (UAP), reserved</td>
+<td>O</td>
+<td>none (reserved)</td>
+<td>—</td>
+<td><code>unverified</code></td>
+<td>reserved</td>
+</tr>
+<tr>
+<td>14</td>
+<td><code>in.card.token</code></td>
+<td>Card on file token (CoFT / network token)</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source_with_card_credit_consent</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>15</td>
+<td><code>in.card.mandate</code></td>
+<td>Card e-mandate (standing instruction)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>card_emandate</code></td>
+<td><code>source_with_card_credit_consent</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>16</td>
+<td><code>in.card.agentic</code></td>
+<td>Network agentic token (Mastercard Agent Pay, Visa Intelligent Commerce)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>agentic_token_intent</code></td>
+<td><code>source_with_card_credit_consent</code></td>
+<td>pilot</td>
+</tr>
+<tr>
+<td>17</td>
+<td><code>in.card.emi</code></td>
+<td>Card EMI (credit or debit)</td>
+<td>C</td>
+<td>HP</td>
+<td><code>loan_sanction</code></td>
+<td><code>lender</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>18</td>
+<td><code>in.card.present</code></td>
+<td>Card present (EMV, contactless)</td>
+<td>A</td>
+<td>HP (assisted)</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>19</td>
+<td><code>in.pos.tap</code></td>
+<td>UPI Tap &amp; Pay / contactless at POS</td>
+<td>A</td>
+<td>HP (assisted)</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>20</td>
+<td><code>in.pos.dynamic_qr</code></td>
+<td>POS / soundbox dynamic QR</td>
+<td>A</td>
+<td>HP (assisted)</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>21</td>
+<td><code>in.netbanking</code></td>
+<td>Net banking (redirect)</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>22</td>
+<td><code>in.nach.debit</code></td>
+<td>NACH / eNACH debit mandate</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>nach_umrn</code></td>
+<td><code>new_credit_push</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>23</td>
+<td><code>in.nach.credit</code></td>
+<td>NACH credit (bulk payouts)</td>
+<td>C</td>
+<td>HP</td>
+<td><code>approval_policy</code></td>
+<td><code>n_a</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>24</td>
+<td><code>in.ppi.wallet</code></td>
+<td>PPI wallet (small or full KYC)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>ppi_emandate</code>, <code>balance_cap</code></td>
+<td><code>same_ppi</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>25</td>
+<td><code>in.ppi.card</code></td>
+<td>PPI card</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>same_ppi</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>26</td>
+<td><code>in.ppi.gift</code></td>
+<td>Gift PPI (open or semi-closed gift card)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>balance_cap</code></td>
+<td><code>same_ppi</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>27</td>
+<td><code>in.store_credit</code></td>
+<td>Closed-system store credit</td>
+<td>O</td>
+<td>HP</td>
+<td><code>balance_cap</code></td>
+<td><code>same_balance</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>28</td>
+<td><code>in.loyalty</code></td>
+<td>Loyalty / reward points</td>
+<td>O</td>
+<td>HP</td>
+<td><code>balance_cap</code></td>
+<td><code>same_balance</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>29</td>
+<td><code>in.ppi.netc_topup</code></td>
+<td>FASTag (NETC) auto top-up</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>topup_mandate</code></td>
+<td><code>issuer_or_sponsor</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>30</td>
+<td><code>in.ppi.ncmc_topup</code></td>
+<td>NCMC auto top-up</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>topup_mandate</code></td>
+<td><code>issuer_or_sponsor</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>31</td>
+<td><code>in.ppi.transit</code></td>
+<td>Transit PPI (PPI-MTS)</td>
+<td>C</td>
+<td>HP</td>
+<td><code>balance_cap</code></td>
+<td><code>same_ppi</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>32</td>
+<td><code>in.credit.bnpl</code></td>
+<td>BNPL / pay later</td>
+<td>C</td>
+<td>HP</td>
+<td><code>loan_sanction</code></td>
+<td><code>lender</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>33</td>
+<td><code>in.credit.cardless_emi</code></td>
+<td>Cardless EMI</td>
+<td>C</td>
+<td>HP</td>
+<td><code>loan_sanction</code></td>
+<td><code>lender</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>34</td>
+<td><code>in.fin.ocen</code></td>
+<td>OCEN / ULI credit at point of purchase</td>
+<td>C</td>
+<td>HP</td>
+<td><code>loan_sanction</code></td>
+<td><code>lender</code></td>
+<td>pilot</td>
+</tr>
+<tr>
+<td>35</td>
+<td><code>in.fin.dealer_line</code></td>
+<td>Distributor / dealer finance drawdown</td>
+<td>C</td>
+<td>HP</td>
+<td><code>credit_limit</code></td>
+<td><code>lender</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>36</td>
+<td><code>in.cod</code></td>
+<td>Cash on delivery (banknotes)</td>
+<td>D</td>
+<td>HNP order only</td>
+<td>—</td>
+<td><code>user_elected_account</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>37</td>
+<td><code>in.cod.upi</code></td>
+<td>Pay on delivery by UPI (doorstep dynamic QR)</td>
+<td>D</td>
+<td>HP, HNP order only</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>38</td>
+<td><code>in.a2a.imps</code></td>
+<td>IMPS</td>
+<td>C</td>
+<td>HP</td>
+<td><code>payee_binding</code>, <code>approval_policy</code></td>
+<td><code>new_credit_push</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>39</td>
+<td><code>in.a2a.neft</code></td>
+<td>NEFT</td>
+<td>C</td>
+<td>HP</td>
+<td><code>payee_binding</code>, <code>approval_policy</code></td>
+<td><code>new_credit_push</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>40</td>
+<td><code>in.a2a.rtgs</code></td>
+<td>RTGS</td>
+<td>C</td>
+<td>HP</td>
+<td><code>payee_binding</code>, <code>approval_policy</code></td>
+<td><code>new_credit_push</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>41</td>
+<td><code>in.bbps.bill</code></td>
+<td>BBPS / Bharat Connect bill payment</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>42</td>
+<td><code>in.bbps.b2b_invoice</code></td>
+<td>Bharat Connect for Business (B2B invoice)</td>
+<td>C</td>
+<td>HP</td>
+<td><code>approval_policy</code></td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>43</td>
+<td><code>in.bbps.upms</code></td>
+<td>BBPS UPMS recurring registration</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>upms_registration</code></td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>44</td>
+<td><code>in.erupi</code></td>
+<td>e-RUPI purpose-bound voucher</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>voucher</code></td>
+<td><code>issuer_or_sponsor</code></td>
+<td>pilot</td>
+</tr>
+<tr>
+<td>45</td>
+<td><code>in.cbdc.retail</code></td>
+<td>e₹ retail wallet</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>new_credit_push</code></td>
+<td>pilot</td>
+</tr>
+<tr>
+<td>46</td>
+<td><code>in.cbdc.programmed</code></td>
+<td>Programmable e₹ (sponsor-locked)</td>
+<td>O</td>
+<td>HP, HNP (rail-enforced)</td>
+<td><code>programmability_rules</code></td>
+<td><code>issuer_or_sponsor</code></td>
+<td>pilot</td>
+</tr>
+<tr>
+<td>47</td>
+<td><code>in.cbdc.wholesale</code></td>
+<td>Wholesale e₹ settlement (reserved)</td>
+<td>N</td>
+<td>none (non-paying)</td>
+<td>—</td>
+<td><code>n_a</code></td>
+<td>reserved</td>
+</tr>
+<tr>
+<td>48</td>
+<td><code>in.aeps.assisted</code></td>
+<td>AePS / Aadhaar Pay (assisted)</td>
+<td>A</td>
+<td>HP (assisted)</td>
+<td><code>assisted_session</code></td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>49</td>
+<td><code>in.fin.treds</code></td>
+<td>TReDS invoice discounting</td>
+<td>N</td>
+<td>none (non-paying)</td>
+<td><code>factoring_unit</code></td>
+<td><code>n_a</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>50</td>
+<td><code>in.fin.lc</code></td>
+<td>Letter of credit (verify and track)</td>
+<td>N</td>
+<td>none (non-paying)</td>
+<td>—</td>
+<td><code>n_a</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>51</td>
+<td><code>in.fin.ebg</code></td>
+<td>e-Bank guarantee (verify and track)</td>
+<td>N</td>
+<td>none (non-paying)</td>
+<td>—</td>
+<td><code>n_a</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>52</td>
+<td><code>in.xb.pacb</code></td>
+<td>PA cross-border (export collection, import payment)</td>
+<td>C</td>
+<td>HP</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>53</td>
+<td><code>bacp.trade.export_realisation</code></td>
+<td>Export realisation tracker</td>
+<td>N</td>
+<td>none (non-paying)</td>
+<td>—</td>
+<td><code>n_a</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>54</td>
+<td><code>in.gov.gem</code></td>
+<td>GeM order and payment tracker (PFMS, GPA)</td>
+<td>N</td>
+<td>none (non-paying)</td>
+<td><code>gpa_block</code></td>
+<td><code>n_a</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>55</td>
+<td><code>in.pa.settlement</code></td>
+<td>PA settlement status (read-only)</td>
+<td>N</td>
+<td>none (non-paying)</td>
+<td>—</td>
+<td><code>source</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>56</td>
+<td><code>in.cheque.positive_pay</code></td>
+<td>Cheque with Positive Pay (record and track)</td>
+<td>C</td>
+<td>HP</td>
+<td><code>pps_registration</code></td>
+<td><code>n_a</code></td>
+<td>live</td>
+</tr>
+<tr>
+<td>57</td>
+<td><code>bacp.credit_ledger</code></td>
+<td>Bilateral credit ledger (khata, net-N trade credit)</td>
+<td>O</td>
+<td>HP</td>
+<td><code>credit_limit</code></td>
+<td><code>ledger_credit_note</code></td>
+<td>live</td>
+</tr>
+</tbody>
+</table>
+<h3 id="open-primitives">Open-eligible primitives<a class="headerlink" href="#open-primitives" title="Permanent link">&para;</a></h3>
+<p>Generated from <code>binding.open_primitives</code> in the same file. An open payment mandate on a class-O handler MUST name one of these primitives in <code>rail_binding.primitive</code> (<a href="../../mandates/#handler-binding">Handler binding</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Handler id</th>
+<th><code>open_primitives</code></th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in.upi.otm</code></td>
+<td><code>otm_block</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.reservepay</code></td>
+<td><code>sbmd_block</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.circle</code></td>
+<td><code>circle_delegation</code></td>
+<td><code>pilot</code>: not open-eligible while <a href="../../open-questions/#q-77">Q-77</a> is open, even when attested</td>
+</tr>
+<tr>
+<td><code>in.upi.autopay</code></td>
+<td><code>upi_autopay_umn</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.uap</code></td>
+<td>—</td>
+<td><code>reserved</code></td>
+</tr>
+<tr>
+<td><code>in.card.mandate</code></td>
+<td><code>card_emandate</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.card.agentic</code></td>
+<td><code>agentic_token_intent</code></td>
+<td><code>pilot</code>: only when attested</td>
+</tr>
+<tr>
+<td><code>in.nach.debit</code></td>
+<td><code>nach_umrn</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.ppi.wallet</code></td>
+<td><code>ppi_emandate</code></td>
+<td>A wallet balance (<code>balance_cap</code>) never backs an open mandate</td>
+</tr>
+<tr>
+<td><code>in.ppi.gift</code></td>
+<td><code>balance_cap</code></td>
+<td>Only with a seller contracted with the issuer (<a href="#descriptor-format"><code>issuer_contracted</code></a>), and only when the PSP attestation states that the gift code vault is on the principal's side</td>
+</tr>
+<tr>
+<td><code>in.store_credit</code></td>
+<td>—</td>
+<td>not open-eligible in <code>2026-10-18</code> (<a href="../../open-questions/#q-59">Q-59</a>, <a href="../../open-questions/#q-46">Q-46</a>)</td>
+</tr>
+<tr>
+<td><code>in.loyalty</code></td>
+<td>—</td>
+<td>not open-eligible in <code>2026-10-18</code> (<a href="../../open-questions/#q-59">Q-59</a>, <a href="../../open-questions/#q-46">Q-46</a>)</td>
+</tr>
+<tr>
+<td><code>in.ppi.netc_topup</code></td>
+<td><code>topup_mandate</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.ppi.ncmc_topup</code></td>
+<td><code>topup_mandate</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.bbps.upms</code></td>
+<td><code>upms_registration</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.erupi</code></td>
+<td><code>voucher</code></td>
+<td><code>pilot</code> until <a href="../../open-questions/#q-38">Q-38</a> is answered: only when attested</td>
+</tr>
+<tr>
+<td><code>in.cbdc.programmed</code></td>
+<td><code>programmability_rules</code></td>
+<td><code>pilot</code>: only when attested</td>
+</tr>
+<tr>
+<td><code>bacp.credit_ledger</code></td>
+<td>—</td>
+<td>not open-eligible in <code>2026-10-18</code> (<a href="../../open-questions/#q-59">Q-59</a>, <a href="../../open-questions/#q-46">Q-46</a>)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="declared-aliases">Declared aliases<a class="headerlink" href="#declared-aliases" title="Permanent link">&para;</a></h3>
+<p>Generated from the <code>aliases</code> field of the same file. No descriptor lists a canonical id as an alias.</p>
+<table>
+<thead>
+<tr>
+<th>Handler id</th>
+<th>Legacy aliases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in.upi.intent</code></td>
+<td><code>upi.pin</code>, <code>upi.uap.pin</code></td>
+</tr>
+<tr>
+<td><code>in.upi.reservepay</code></td>
+<td><code>upi.reservepay.block</code></td>
+</tr>
+<tr>
+<td><code>in.upi.circle</code></td>
+<td><code>upi.circle.delegate</code></td>
+</tr>
+<tr>
+<td><code>in.upi.autopay</code></td>
+<td><code>upi.autopay</code></td>
+</tr>
+<tr>
+<td><code>in.upi.intl</code></td>
+<td><code>bacp.pay.xb.upi_global</code></td>
+</tr>
+<tr>
+<td><code>in.upi.lite</code></td>
+<td><code>upi.lite</code></td>
+</tr>
+<tr>
+<td><code>in.upi.123pay</code></td>
+<td><code>upi.123pay</code></td>
+</tr>
+<tr>
+<td><code>in.upi.uap</code></td>
+<td><code>upi.uap.*</code>, <code>in.upi.uap.*</code></td>
+</tr>
+<tr>
+<td><code>in.card.token</code></td>
+<td><code>rupay.token</code></td>
+</tr>
+<tr>
+<td><code>in.nach.debit</code></td>
+<td><code>in.enach</code>, <code>bacp.pay.nach.debit</code>, <code>bacp.mandate.enach.register</code></td>
+</tr>
+<tr>
+<td><code>in.nach.credit</code></td>
+<td><code>bacp.pay.nach.credit</code></td>
+</tr>
+<tr>
+<td><code>in.ppi.netc_topup</code></td>
+<td><code>bacp.pay.ppi.netc_topup</code></td>
+</tr>
+<tr>
+<td><code>in.ppi.ncmc_topup</code></td>
+<td><code>bacp.pay.ppi.ncmc_topup</code></td>
+</tr>
+<tr>
+<td><code>in.ppi.transit</code></td>
+<td><code>bacp.pay.ppi.transit</code></td>
+</tr>
+<tr>
+<td><code>in.credit.bnpl</code></td>
+<td><code>in.bnpl</code></td>
+</tr>
+<tr>
+<td><code>in.fin.ocen</code></td>
+<td><code>bacp.fin.ocen</code></td>
+</tr>
+<tr>
+<td><code>in.fin.dealer_line</code></td>
+<td><code>bacp.fin.dealer_line</code></td>
+</tr>
+<tr>
+<td><code>in.cod</code></td>
+<td><code>cod</code>, <code>bacp.pay.cod.record</code></td>
+</tr>
+<tr>
+<td><code>in.a2a.imps</code></td>
+<td><code>bacp.pay.a2a.imps</code></td>
+</tr>
+<tr>
+<td><code>in.a2a.neft</code></td>
+<td><code>bacp.pay.a2a.neft</code></td>
+</tr>
+<tr>
+<td><code>in.a2a.rtgs</code></td>
+<td><code>bacp.pay.a2a.rtgs</code></td>
+</tr>
+<tr>
+<td><code>in.bbps.bill</code></td>
+<td><code>bbps</code>, <code>bacp.pay.bbps.bill</code></td>
+</tr>
+<tr>
+<td><code>in.bbps.b2b_invoice</code></td>
+<td><code>bacp.pay.bbps.b2b_invoice</code></td>
+</tr>
+<tr>
+<td><code>in.bbps.upms</code></td>
+<td><code>bacp.mandate.bbps.upms</code></td>
+</tr>
+<tr>
+<td><code>in.erupi</code></td>
+<td><code>erupi</code>, <code>bacp.pay.erupi</code></td>
+</tr>
+<tr>
+<td><code>in.cbdc.retail</code></td>
+<td><code>erupee</code>, <code>bacp.pay.cbdc.retail</code></td>
+</tr>
+<tr>
+<td><code>in.cbdc.programmed</code></td>
+<td><code>bacp.pay.cbdc.programmed</code></td>
+</tr>
+<tr>
+<td><code>in.cbdc.wholesale</code></td>
+<td><code>bacp.settle.cbdc.wholesale</code></td>
+</tr>
+<tr>
+<td><code>in.aeps.assisted</code></td>
+<td><code>bacp.pay.aeps.assisted</code></td>
+</tr>
+<tr>
+<td><code>in.fin.treds</code></td>
+<td><code>bacp.fin.treds</code></td>
+</tr>
+<tr>
+<td><code>in.fin.lc</code></td>
+<td><code>bacp.fin.lc</code></td>
+</tr>
+<tr>
+<td><code>in.fin.ebg</code></td>
+<td><code>bacp.fin.ebg</code></td>
+</tr>
+<tr>
+<td><code>in.xb.pacb</code></td>
+<td><code>bacp.pay.xb.pacb</code></td>
+</tr>
+<tr>
+<td><code>in.gov.gem</code></td>
+<td><code>bacp.gov.gem.order</code>, <code>bacp.gov.gem.payment_tracker</code></td>
+</tr>
+<tr>
+<td><code>in.pa.settlement</code></td>
+<td><code>bacp.pa.settlement</code></td>
+</tr>
+<tr>
+<td><code>in.cheque.positive_pay</code></td>
+<td><code>bacp.pay.cheque.positive_pay</code></td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../rails/" class="md-footer__link md-footer__link--next" aria-label="Next: Rail Bindings">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Rail Bindings
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

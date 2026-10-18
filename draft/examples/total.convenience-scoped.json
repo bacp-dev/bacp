@@ -1,0 +1,13 @@
+{
+  "type": "convenience_fee",
+  "applies_to_handlers": [
+    "in.upi.intent",
+    "in.upi.collect"
+  ],
+  "recipient": "seller",
+  "refund_rule": "never",
+  "amount": {
+    "value": 2000,
+    "currency": "INR"
+  }
+}

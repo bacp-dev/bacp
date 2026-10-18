@@ -1,0 +1,19 @@
+{
+  "surface": "psp.example.in",
+  "channel": "ivr",
+  "language": "hi-IN",
+  "modality": "audio",
+  "content_hash": "sha-256:Bm827PMImR-m3T6Og1qtyYWbfP6FnGgvFauB-iWKvhI",
+  "content_ref": "#/ts_renders/0",
+  "template_id": "psp.example.in/ivr/step-up-cancel/2",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "user_action": "voice_confirm_plus_device",
+  "shown_at": "2026-10-17T10:00:00+05:30",
+  "acted_at": "2026-10-17T10:00:52+05:30",
+  "voice_evidence": {
+    "audio_hash": "sha-256:Wm0nGZ8x8CjJc1dLQjvY4Qy3R0yq5N6mE2c6mP8Qk1s",
+    "transcript_hash": "sha-256:rLx0m0fT3fqYb9uQ0X0b2J5kX4V2yD1pF8mQ3tZ7aHc",
+    "translation_model": "bhashini-asr-hi-1",
+    "challenge_hash": "sha-256:tLHHALlT0PCLAgt8zXQW7-ToFwuxdJ6nkXhd-TuCsLQ"
+  }
+}

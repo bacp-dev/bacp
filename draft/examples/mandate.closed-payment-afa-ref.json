@@ -1,0 +1,70 @@
+{
+  "vct": "in.bacp.mandate.payment.1",
+  "mandate_id": "mdt_PAYC0000000001",
+  "kind": "payment",
+  "form": "closed",
+  "iss": "did:web:agents.vaani.example.in:sakhi",
+  "iat": 1791763200,
+  "valid_from": "2026-10-20T19:01:00+05:30",
+  "valid_until": "2026-10-20T19:16:00+05:30",
+  "principal": {
+    "ref": "pp_9f2c1e",
+    "assurance": "vpa_pin"
+  },
+  "agent": {
+    "id": "did:web:agents.vaani.example.in:sakhi",
+    "credential_hash": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM"
+  },
+  "purpose": {
+    "code": "P-GRO-01",
+    "text": {
+      "hi-IN": "घर का किराना सामान",
+      "en-IN": "Household grocery replenishment"
+    }
+  },
+  "action_scope": [
+    "PAY"
+  ],
+  "presence_allowed": [
+    "HNP"
+  ],
+  "revocation": {
+    "status_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/status",
+    "notify_sla_seconds": 60
+  },
+  "signatures": [
+    {
+      "role": "agent",
+      "kid": "did:web:agents.vaani.example.in:sakhi#sakhi-2026-10",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJrYiI6MX0.c2ln"
+    }
+  ],
+  "checkout_mandate_ref": "mdt_CHKC0000000001",
+  "ap2_vct": "mandate.payment.1",
+  "parent_mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "constraints": {},
+  "checkout_hash": "sha-256:MdzPb6o2QprB1t01MqITDlt_3VlU_4O8efFu8026Jpo",
+  "amount": {
+    "value": 116000,
+    "currency": "INR"
+  },
+  "payee": {
+    "vpa": "ganeshkirana@examplebank"
+  },
+  "auth_binding": {
+    "type": "parent_rail_binding",
+    "handler": "upi.reservepay.block",
+    "ref": "SBMD-HDFX-000123456",
+    "psp_id": "psp.example.in",
+    "afa_ref": {
+      "handler": "in.upi.reservepay",
+      "primitive": "sbmd_block",
+      "registry_version": "2026-10-18"
+    }
+  },
+  "tender": {
+    "plan_hash": "sha-256:Hq5vYd2m0aB7sKxP3oWc9eTnLuZ1fRiG4jXyVb6QhMA",
+    "tender_id": "tdr_upi001"
+  }
+}

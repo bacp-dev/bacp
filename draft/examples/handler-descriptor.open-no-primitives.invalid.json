@@ -1,0 +1,166 @@
+{
+  "handler_id": "in.upi.autopay",
+  "aliases": [
+    "upi.autopay"
+  ],
+  "name": {
+    "en-IN": "UPI AutoPay (recurring e-mandate)"
+  },
+  "family": "upi",
+  "kind": "payment",
+  "status": "live",
+  "rail": {
+    "operator": "NPCI"
+  },
+  "regulator": [
+    {
+      "body": "RBI",
+      "instrument": "E-mandate Framework 2026"
+    },
+    {
+      "body": "NPCI",
+      "instrument": "UPI AutoPay"
+    }
+  ],
+  "presence": {
+    "human_presence": "mandate",
+    "hp": true,
+    "hnp": "rail_enforced",
+    "device_bound": false,
+    "assisted_only": false
+  },
+  "binding": {
+    "class": "O",
+    "open_eligible": true,
+    "closed_auth": [
+      "upi.pin"
+    ]
+  },
+  "mandate_primitives": [
+    {
+      "type": "upi_autopay_umn",
+      "limits_enforced_by": "rail",
+      "ref_name": "UMN",
+      "payee_scope": "single_merchant",
+      "multi_capture": true
+    }
+  ],
+  "limits": [
+    {
+      "name": "no_afa_debit",
+      "source": {
+        "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+        "section": "para 8",
+        "label": "RBI"
+      },
+      "verification": "verified",
+      "configurable": false,
+      "amount": {
+        "value": 1500000,
+        "currency": "INR"
+      }
+    },
+    {
+      "name": "no_afa_debit_special_categories",
+      "source": {
+        "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+        "section": "para 8",
+        "label": "RBI"
+      },
+      "verification": "verified",
+      "configurable": false,
+      "amount": {
+        "value": 10000000,
+        "currency": "INR"
+      },
+      "applies_to": "insurance, mutual funds, credit-card bills"
+    }
+  ],
+  "afa": {
+    "model": "at_registration_and_first_debit",
+    "pre_debit_notice": "required_24h",
+    "source": {
+      "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+      "section": "whole instrument",
+      "label": "RBI"
+    },
+    "threshold": {
+      "value": 1500000,
+      "currency": "INR"
+    },
+    "threshold_special": {
+      "value": 10000000,
+      "currency": "INR"
+    }
+  },
+  "refund": {
+    "route": "source",
+    "source": {
+      "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693",
+      "section": "Annex",
+      "label": "RBI"
+    },
+    "failed_txn_tat": "P5D",
+    "compensation_per_day": {
+      "value": 10000,
+      "currency": "INR"
+    }
+  },
+  "dispute": {
+    "channels": [
+      "UDIR in payer app",
+      "MyUPI automated chargeback",
+      "RBI Integrated Ombudsman"
+    ]
+  },
+  "settlement": {
+    "mechanism": "NPCI UPI settlement cycles (10 authorisation cycles a day, separate dispute cycles OC 222)",
+    "evidence_refs": [
+      "rrn",
+      "utr"
+    ],
+    "escrow": "pa_escrow"
+  },
+  "data_minimisation": {
+    "payment_leg_fields": [
+      "payee",
+      "amount",
+      "mandate_ref",
+      "checkout_hash"
+    ],
+    "never_collect": [
+      "pin",
+      "otp",
+      "card_pan",
+      "cvv",
+      "card_expiry",
+      "netbanking_credentials",
+      "aadhaar_number",
+      "biometric",
+      "basket"
+    ],
+    "basket_blind": true
+  },
+  "funding": "debit",
+  "credit_disclosure_required": false,
+  "segments": [
+    "b2c"
+  ],
+  "requirements": [
+    "REQ-303",
+    "REQ-304",
+    "TRADE-113"
+  ],
+  "sources": [
+    {
+      "file": "RBI Digital Payments - E-mandate Framework, 2026 (RBI/DPSS/2026-27/396; CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=13374",
+      "section": "whole instrument",
+      "label": "RBI"
+    },
+    {
+      "file": "NPCI UPI AutoPay Brand Guidelines, https://www.npci.org.in/uploads/UPI_Auto_Pay_Brand_Guidelines_bcabed7282.pdf",
+      "section": "whole instrument",
+      "label": "NPCI"
+    }
+  ]
+}

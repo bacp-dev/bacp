@@ -1,0 +1,8 @@
+{
+  "type": "tax",
+  "recipient": "seller",
+  "amount": {
+    "value": 1800,
+    "currency": "INR"
+  }
+}

@@ -1,0 +1,609 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/draft/schemas/credit-ledger-entry.json",
+  "title": "CreditLedgerEntry",
+  "description": "One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger. Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler.",
+  "type": "object",
+  "required": [
+    "entry_id",
+    "ledger_id",
+    "seq",
+    "type",
+    "amount",
+    "effect",
+    "at",
+    "prev_hash",
+    "entry_hash",
+    "status",
+    "signatures"
+  ],
+  "properties": {
+    "entry_id": {
+      "type": "string",
+      "pattern": "^lde_[A-Za-z0-9]{8,40}$"
+    },
+    "ledger_id": {
+      "type": "string",
+      "pattern": "^ldg_[A-Za-z0-9]{8,40}$"
+    },
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "type": {
+      "enum": [
+        "opening_balance",
+        "sale",
+        "payment",
+        "credit_note",
+        "debit_note",
+        "scheme_credit",
+        "interest_msmed",
+        "interest_contractual",
+        "gem_penal_interest",
+        "adjustment",
+        "write_off",
+        "limit_change"
+      ]
+    },
+    "amount": {
+      "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+    },
+    "effect": {
+      "enum": [
+        "increase_receivable",
+        "decrease_receivable",
+        "none"
+      ],
+      "description": "From the creditor's (seller's) view."
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "credit_terms": {
+      "type": "object",
+      "properties": {
+        "credit_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reference_event": {
+          "enum": [
+            "on_invoice",
+            "on_fulfilment",
+            "on_acceptance",
+            "on_crac",
+            "statement_date"
+          ]
+        },
+        "reference_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "agreed_in_offer_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+        }
+      },
+      "additionalProperties": false
+    },
+    "msmed": {
+      "type": "object",
+      "properties": {
+        "applies": {
+          "type": "boolean"
+        },
+        "supplier_category": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/UdyamCategory"
+        },
+        "acceptance_date": {
+          "type": "string",
+          "format": "date"
+        },
+        "acceptance_basis": {
+          "enum": [
+            "grn",
+            "attested_delivery",
+            "unattested"
+          ],
+          "description": "What dates the acceptance. grn: a buyer-signed GRN. attested_delivery: delivery evidence that the buyer counter-signed or that carries a third-party reference (an e-way bill number or a transporter signature). unattested: seller-posted evidence only; no acceptance_date or statutory_due_date is derived from it, and the debtor is notified that evidence was posted."
+        },
+        "written_agreement": {
+          "type": "boolean",
+          "description": "No written agreement means 15 days (MSMED s.15)."
+        },
+        "statutory_due_date": {
+          "type": "string",
+          "format": "date",
+          "description": "min(agreed, acceptance + 45) or acceptance + 15."
+        },
+        "interest_basis": {
+          "const": "3x_rbi_bank_rate_compound_monthly"
+        },
+        "bank_rate_pct": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "interest_accrued": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+        },
+        "tax_flag": {
+          "enum": [
+            "none",
+            "s43B_h_disallowed",
+            "s37_2_g_disallowed"
+          ],
+          "description": "Income-tax Act, 1961 s.43B(h); Income-tax Act, 2025 s.37(2)(g)."
+        }
+      },
+      "required": [
+        "applies"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "acceptance_basis": {
+                "const": "unattested"
+              }
+            },
+            "required": [
+              "acceptance_basis"
+            ]
+          },
+          "then": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "acceptance_date"
+                  ]
+                },
+                {
+                  "required": [
+                    "statutory_due_date"
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/DocumentRef"
+      }
+    },
+    "order_id": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[\\x21-\\x7e]+$",
+      "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+    },
+    "offer_hash": {
+      "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+    },
+    "settles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "entry_id": {
+            "type": "string",
+            "maxLength": 64,
+            "pattern": "^[\\x21-\\x7e]+$",
+            "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+          },
+          "amount": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+          }
+        },
+        "required": [
+          "entry_id",
+          "amount"
+        ],
+        "additionalProperties": false
+      },
+      "description": "payment / credit_note entries list the sale entries they close."
+    },
+    "settlement_evidence": {
+      "type": "object",
+      "properties": {
+        "handler": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/HandlerRef"
+        },
+        "receipt_id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+        },
+        "rrn": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "utr": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+        },
+        "factoring_unit_id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+        },
+        "new_payee": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        }
+      },
+      "description": "Rail-anchored proof. Screenshots never count. new_payee is set after TReDS discounting.",
+      "additionalProperties": false
+    },
+    "ledger_after": {
+      "type": "object",
+      "properties": {
+        "balance": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+        },
+        "credit_limit": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+        },
+        "overdue": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+        },
+        "ageing": {
+          "type": "object",
+          "properties": {
+            "d0_30": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            },
+            "d31_45": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            },
+            "d46_60": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            },
+            "d61_90": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            },
+            "d90_plus": {
+              "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "acknowledgements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "by": {
+            "enum": [
+              "seller",
+              "buyer"
+            ]
+          },
+          "actor": {
+            "$ref": "#/$defs/Actor"
+          },
+          "hp_proof": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/HpProof",
+            "description": "REQUIRED when actor.kind is agent: proof of the principal's confirmation of this acknowledgement on the Trusted Surface."
+          },
+          "method": {
+            "enum": [
+              "signature",
+              "trusted_surface_tap",
+              "sms_link",
+              "voice_confirmation",
+              "assisted_operator",
+              "auto_from_rail_receipt"
+            ]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "evidence_hash": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash",
+            "description": "Hash of the evidence of the acknowledgement, for example the counterparty's signature."
+          },
+          "covers": {
+            "type": "object",
+            "description": "Present when one statement acknowledgement covered this entry: the through_seq and the head_hash of the ledger that the principal was shown. One acknowledgement event names the head_hash. An entry above the ledger's itemise_above is never covered this way.",
+            "required": [
+              "through_seq",
+              "head_hash"
+            ],
+            "properties": {
+              "through_seq": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "head_hash": {
+                "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "by",
+          "method",
+          "at"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "method": {
+                  "const": "auto_from_rail_receipt"
+                }
+              },
+              "required": [
+                "method"
+              ]
+            },
+            "then": {},
+            "else": {
+              "required": [
+                "actor"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "actor": {
+                  "properties": {
+                    "kind": {
+                      "const": "agent"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              },
+              "required": [
+                "actor"
+              ]
+            },
+            "then": {
+              "required": [
+                "hp_proof"
+              ]
+            }
+          }
+        ],
+        "description": "Every acknowledgement other than one taken automatically from a rail receipt names who acted (actor): a human or an agent, and in which role. An agent may acknowledge only with hp_proof of the principal's confirmation on the Trusted Surface; no mandate scope authorises an agent acknowledgement."
+      }
+    },
+    "status": {
+      "enum": [
+        "pending_ack",
+        "acknowledged",
+        "disputed",
+        "settled",
+        "partially_settled",
+        "overdue",
+        "written_off"
+      ],
+      "description": "An entry unacknowledged by the counterparty past its ack window becomes disputed."
+    },
+    "dispute_ref": {
+      "type": "string",
+      "maxLength": 64,
+      "pattern": "^[\\x21-\\x7e]+$",
+      "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+    },
+    "agent": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+        },
+        "mandate_ref": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[\\x21-\\x7e]+$",
+          "description": "Identifier: printable ASCII without spaces, at most 64 characters."
+        },
+        "presence": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Presence"
+        }
+      },
+      "additionalProperties": false
+    },
+    "prev_hash": {
+      "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+    },
+    "entry_hash": {
+      "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+    },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "enum": [
+              "payment",
+              "credit_note"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "settles"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "payment"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "settlement_evidence"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "sale"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "due_date",
+          "credit_terms"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "msmed": {
+            "properties": {
+              "supplier_category": {
+                "enum": [
+                  "micro",
+                  "small"
+                ]
+              }
+            },
+            "required": [
+              "supplier_category"
+            ]
+          }
+        },
+        "required": [
+          "msmed"
+        ]
+      },
+      "then": {
+        "properties": {
+          "credit_terms": {
+            "properties": {
+              "credit_days": {
+                "maximum": 45
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "CreditLedger": {
+      "type": "object",
+      "properties": {
+        "ledger_id": {
+          "type": "string",
+          "pattern": "^ldg_[A-Za-z0-9]{8,40}$"
+        },
+        "creditor": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        },
+        "debtor": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Party"
+        },
+        "kind": {
+          "enum": [
+            "khata",
+            "trade_credit",
+            "distributor_credit",
+            "gem_receivable"
+          ]
+        },
+        "credit_limit": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount"
+        },
+        "default_credit_days": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "interest_rule": {
+          "enum": [
+            "none",
+            "msmed_statutory",
+            "contractual",
+            "gem_penal_1pct_pm"
+          ]
+        },
+        "ack_window": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Duration"
+        },
+        "itemise_above": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Amount",
+          "description": "Signed by both parties at opening, with the rest of the header. A statement acknowledgement MUST NOT cover an entry whose amount is above it (or above the 90th percentile of the amounts the poster has posted on this ledger, whichever is lower); such an entry is acknowledged one by one. When absent, only the percentile rule applies."
+        },
+        "head_hash": {
+          "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Hash"
+        },
+        "opened_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "signatures": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Signature"
+          }
+        }
+      },
+      "required": [
+        "ledger_id",
+        "creditor",
+        "debtor",
+        "kind",
+        "credit_limit",
+        "interest_rule",
+        "ack_window",
+        "opened_at",
+        "signatures"
+      ],
+      "description": "Ledger header, signed by both parties at opening. The creditor's settlement_accounts[] and itemise_above are part of what both sign; only the creditor may add a settlement account later, by a signed amendment.",
+      "additionalProperties": false
+    },
+    "Actor": {
+      "$ref": "https://bacp.dev/draft/schemas/common.json#/$defs/Actor",
+      "description": "The Actor definition of common.json, kept here so that this reference resolves."
+    }
+  }
+}

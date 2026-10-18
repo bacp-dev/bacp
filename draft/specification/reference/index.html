@@ -1,0 +1,2964 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/reference/">
+      
+      
+        <link rel="prev" href="../transports/ucp-checkout/">
+      
+      
+        <link rel="next" href="../open-questions/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Reference - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#reference" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Reference
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON Schemas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openapi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenAPI document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payment-handler registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#schemas" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JSON Schemas
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#openapi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        OpenAPI document
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#handler-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payment-handler registry
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Examples
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="reference">Reference<a class="headerlink" href="#reference" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>An index of the normative artefacts of this BACP version: the JSON Schemas, the OpenAPI document, the payment-handler
+registry and the example vectors. All of them are published next to this specification; the lists on this page are
+generated from the <code>source/</code> directory of the specification repository.</p>
+<div class="admonition note">
+<p class="admonition-title">Versioned URLs</p>
+<p>Schema <code>$id</code>s have the form <code>https://bacp.dev/schemas/&lt;name&gt;.json</code>. In a published release they are served at
+<code>https://bacp.dev/&lt;version&gt;/schemas/&lt;name&gt;.json</code>, where <code>&lt;version&gt;</code> is <code>draft</code>, <code>latest</code> or a date, and every
+<code>$ref</code> inside them points to the same release. Tools MUST resolve <code>$ref</code>s by <code>$id</code>, not by file path. <code>ts-render.json</code> refers to components of <code>bacp.openapi.yaml</code>; a validator loads that document as a resource under its published URL (<code>https://bacp.dev/&lt;version&gt;/services/bacp.openapi.yaml</code>).</p>
+</div>
+<h2 id="schemas">JSON Schemas<a class="headerlink" href="#schemas" title="Permanent link">&para;</a></h2>
+<p>All schemas are JSON Schema draft 2020-12.</p>
+<p>The human-participant types in <code>common.json</code> (<code>LanguageTag</code>, <code>Participant</code>, <code>ParticipantRole</code>, <code>HandoffRoute</code>,
+<code>Presentation</code>, <code>HpProof</code>, <code>Actor</code>) are described in <a href="../human-participants/">Human Participants and the Trusted Surface</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Schema</th>
+<th>Title</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/agent-credential.json"><code>agent-credential.json</code></a></td>
+<td>AgentCredential</td>
+<td>Claims of an SD-JWT VC (vct in.bacp.agent.1) issued by a registry-accredited issuer to an agent operated by a registered legal entity and bound to a BAP subscriber.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/beckn-context-bacp.json"><code>beckn-context-bacp.json</code></a></td>
+<td>Beckn context extension: context.bacp</td>
+<td>Added to Beckn/ONDC context on every BACP-originated message. Non-BACP NPs ignore it. Mirrored in message.order.tags[descriptor.code=bacp] where a network validator rejects unknown context keys.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a></td>
+<td>BACP common types</td>
+<td>Shared definitions: <code>Amount</code>, <code>PositiveAmount</code>, <code>Hash</code>, <code>Jws</code>, <code>Jwk</code>, <code>Signature</code>, <code>Presence</code>, <code>LangText</code>, <code>LanguageTag</code>, <code>RailType</code>, <code>Channel</code>, <code>Handler</code>, <code>Duration</code>, <code>IssueStatus</code>, <code>IssueMeta</code>, <code>HandlerId</code>, <code>HandlerRef</code>, <code>RailTypeV1</code>, <code>UdyamCategory</code>, <code>Party</code>, <code>DocumentRef</code>, <code>Citation</code>, <code>ParticipantRole</code>, <code>Participant</code>, <code>HandoffRoute</code>, <code>Presentation</code>, <code>HpProof</code>, <code>Actor</code>, <code>ConformanceLevel</code>, <code>EntityId</code>, <code>QuantityUnit</code>, <code>ChargeRecipient</code>, <code>MandatePrimitiveType</code>, <code>OperatorCompensation</code>, <code>ProtocolVersion</code></td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>Conformance attestation payload</td>
+<td>The payload of a BACP conformance attestation: a compact JWS with the JOSE header typ bacp-conformance+jwt, signed by a key in the public conformance-authority list. It records that the subject passed BACP protocol tests. It is not approval, certification or onboarding by NPCI, RBI, ONDC or any public body.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/conformance-authority-list.json"><code>conformance-authority-list.json</code></a></td>
+<td>Conformance-authority list</td>
+<td>The public, dated list of conformance authorities: the only way to admit a signer of conformance attestations, published as source/registry/conformance-authorities.json. It ships empty.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/consent-receipt.json"><code>consent-receipt.json</code></a></td>
+<td>ConsentReceipt (DPDP)</td>
+<td>One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or for) a DPDP Consent Manager. A receipt with consent_kind marketing (Proposed) is standalone, names one seller and carries marketing purposes and channels.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>CreditLedgerEntry</td>
+<td>One entry in a bilateral, hash-chained credit ledger (khata, B2B net-N, distributor credit) behind handler bacp.credit_ledger. Both parties sign or acknowledge. No money moves on a sale entry: settlement entries reference rail receipts (RRN/UTR) of another handler.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/fx.json"><code>fx.json</code></a></td>
+<td>FX disclosure</td>
+<td>Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a></td>
+<td>HandlerDescriptor</td>
+<td>One entry of the BACP payment-handler registry. Descriptors are data: limits and rules are configuration, not code.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/instruction-log-entry.json"><code>instruction-log-entry.json</code></a></td>
+<td>InstructionLogEntry</td>
+<td>Append-only, hash-chained evidence of prompt -&gt; intent -&gt; cart -&gt; mandate -&gt; payment. entry_hash = sha-256(JCS(entry minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/loan-offer.json"><code>loan-offer.json</code></a></td>
+<td>Credit-at-checkout offer list (KFS)</td>
+<td>Key Fact Statement fields, unbiased multi-lender display (every matched offer, unmatched lenders named, pre-disclosed ranking metric), cooling-off, and the lender as repayment payee. RBI Digital Lending Directions 2025 paras 6(i), 6(iii), 6(iv), 8(i), 9(ii)-(iii), 10 (08-05-2025 numbering; RBI has since withdrawn these Directions in its consolidation into entity-wise directions, see <a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>).</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/mandate-negotiation.json"><code>mandate-negotiation.json</code></a></td>
+<td>NegotiationMandate (separate BACP negotiation mandate)</td>
+<td>A separate BACP mandate that carries the bacp.neg.* constraints, so that legacy AP2/VI verifiers, which fail closed on unknown constraint types, still accept the AP2-compatible checkout and payment mandates. Same envelope conventions as mandate.json (SD-JWT over JCS, MM + principal signatures, status list). Verified only by the buyer's guard and credential provider, never by the seller.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>Mandate</td>
+<td>AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status, usage and signatures is signed and immutable.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/negotiation-session.json"><code>negotiation-session.json</code></a></td>
+<td>NegotiationSession</td>
+<td>Authoritative full-state view of one bilateral negotiation (one buyer, one seller, one transaction_id), as returned by the gateway (ACP full-state pattern). RFQs and auctions own several sessions.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>Negotiation messages (Offer, CounterOffer, Accept, Reject, Withdraw, Terminate, RequestExtension, AcceptRevoke, BidCommit, BidReveal, BidRetract)</td>
+<td>Structured, signed and expiring negotiation messages. Only these are binding. Discriminated by type.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/payment-plan.json"><code>payment-plan.json</code></a></td>
+<td>PaymentPlan (split and multi-tender)</td>
+<td>How one accepted all_in_total is paid: several tenders now (gift card + UPI) and/or tranches over time (token advance + loan + balance). One closed payment mandate and one Receipt per tender. Step-up and AFA are evaluated on the plan total, never per tender.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/receipt.json"><code>receipt.json</code></a></td>
+<td>Receipt (rail-anchored)</td>
+<td>Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family handler (upi.<em>, in.upi.</em>, in.cod.upi, in.pos.tap, in.pos.dynamic_qr) MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists utr. Any other successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/registry-record.json"><code>registry-record.json</code></a></td>
+<td>RegistryRecord</td>
+<td>The part of a network registry record that BACP reads about one subscriber: its id, BACP role, keys and validity, the Trusted Surface origins, notify endpoint, call numbers, languages and modalities of a Mandate Manager or PSP, the operator and person of a support operator, and, for any subscriber, its legal operator, regulatory status and data residency.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/registry-release.json"><code>registry-release.json</code></a></td>
+<td>RegistryRelease</td>
+<td>The manifest of one publication of the registry files: <code>registry_version</code>, a strictly increasing <code>registry_serial</code>, <code>published_at</code> in IST and the JCS <code>sha-256</code> digest of each file. It is published as <code>source/handlers/release.json</code>.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/ucp/in.upi.circle.json"><code>ucp/&lt;handler id&gt;.json</code></a></td>
+<td>UCP payment handler <code>dev.bacp.&lt;handler id&gt;</code></td>
+<td>One schema for each of the 57 handlers of the registry (for example <code>ucp/in.upi.circle.json</code>): the schema of the UCP alias key <code>dev.bacp.&lt;handler id&gt;</code> that the <a href="../transports/ucp-checkout/#namespaces">UCP checkout projection</a> declares. An entry carries the BACP handler id as <code>id</code> and no <code>config</code>.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/termsheet.json"><code>termsheet.json</code></a></td>
+<td>TermSheet</td>
+<td>Multi-issue term sheet carried in every binding Offer. Every issue carries {value, negotiable, status}. Reservation values never appear here. Issues not listed are fixed.</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/schemas/ts-render.json"><code>ts-render.json</code></a></td>
+<td>TsRender</td>
+<td>The payload of a ts_render, the compact JWS that the gateway signs once per step-up over the JCS form of this object and serves to the step-up's Mandate Manager or payer PSP. The fields are defined on the Human participants page.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="openapi">OpenAPI document<a class="headerlink" href="#openapi" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Format</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a></td>
+<td>OpenAPI 3.1.0</td>
+<td>The REST binding: 49 operations, 10 webhooks, 120 component schemas. See <a href="../transports/rest/">REST</a>.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="handler-registry">Payment-handler registry<a class="headerlink" href="#handler-registry" title="Permanent link">&para;</a></h2>
+<p><a href="https://bacp.dev/latest/handlers/registry.json"><code>registry.json</code></a> holds 57 handler descriptors, each valid against
+<a href="https://bacp.dev/latest/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a>. The binding classes are explained in
+<a href="../payments/handler-registry/">Handler Registry</a>: <strong>O</strong> open-eligible, <strong>C</strong> closed (human present), <strong>A</strong> assisted or
+device-bound, <strong>D</strong> deferred (COD), <strong>N</strong> non-paying.</p>
+<table>
+<thead>
+<tr>
+<th>Handler id</th>
+<th>Name</th>
+<th>Kind</th>
+<th>Class</th>
+<th>Status</th>
+<th>Aliases</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in.upi.intent</code></td>
+<td>UPI intent</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.qr</code></td>
+<td>UPI QR (static, dynamic, Bharat QR)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.collect</code></td>
+<td>UPI collect (P2M only)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.otm</code></td>
+<td>UPI One-Time Mandate (single block, single debit)</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.reservepay</code></td>
+<td>UPI Reserve Pay (SBMD block)</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td><code>upi.reservepay.block</code></td>
+</tr>
+<tr>
+<td><code>in.upi.circle</code></td>
+<td>UPI Circle delegate (IoT or software secondary)</td>
+<td>payment</td>
+<td>O</td>
+<td>pilot</td>
+<td><code>upi.circle.delegate</code></td>
+</tr>
+<tr>
+<td><code>in.upi.autopay</code></td>
+<td>UPI AutoPay (recurring e-mandate)</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td><code>upi.autopay</code></td>
+</tr>
+<tr>
+<td><code>in.upi.credit_line</code></td>
+<td>Pre-sanctioned credit line on UPI</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.rupay_cc</code></td>
+<td>RuPay credit card on UPI</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.upi.intl</code></td>
+<td>UPI international (outbound corridors; inbound Foreign Inward Remittance to UPI)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.xb.upi_global</code></td>
+</tr>
+<tr>
+<td><code>in.upi.lite</code></td>
+<td>UPI Lite and Lite X (on-device, offline NFC)</td>
+<td>payment</td>
+<td>A</td>
+<td>live</td>
+<td><code>upi.lite</code></td>
+</tr>
+<tr>
+<td><code>in.upi.123pay</code></td>
+<td>UPI 123PAY (feature phone, IVR)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>upi.123pay</code></td>
+</tr>
+<tr>
+<td><code>in.upi.uap</code></td>
+<td>UPI agentic payments (UAP), reserved</td>
+<td>payment</td>
+<td>O</td>
+<td>reserved</td>
+<td><code>upi.uap.*</code>, <code>in.upi.uap.*</code></td>
+</tr>
+<tr>
+<td><code>in.card.token</code></td>
+<td>Card on file token (CoFT / network token)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>rupay.token</code></td>
+</tr>
+<tr>
+<td><code>in.card.mandate</code></td>
+<td>Card e-mandate (standing instruction)</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.card.agentic</code></td>
+<td>Network agentic token (Mastercard Agent Pay, Visa Intelligent Commerce)</td>
+<td>payment</td>
+<td>O</td>
+<td>pilot</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.card.emi</code></td>
+<td>Card EMI (credit or debit)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.card.present</code></td>
+<td>Card present (EMV, contactless)</td>
+<td>payment</td>
+<td>A</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.pos.tap</code></td>
+<td>UPI Tap &amp; Pay / contactless at POS</td>
+<td>payment</td>
+<td>A</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.pos.dynamic_qr</code></td>
+<td>POS / soundbox dynamic QR</td>
+<td>payment</td>
+<td>A</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.netbanking</code></td>
+<td>Net banking (redirect)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.nach.debit</code></td>
+<td>NACH / eNACH debit mandate</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td><code>in.enach</code>, <code>bacp.pay.nach.debit</code>, <code>bacp.mandate.enach.register</code></td>
+</tr>
+<tr>
+<td><code>in.nach.credit</code></td>
+<td>NACH credit (bulk payouts)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.nach.credit</code></td>
+</tr>
+<tr>
+<td><code>in.ppi.wallet</code></td>
+<td>PPI wallet (small or full KYC)</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.ppi.card</code></td>
+<td>PPI card</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.ppi.gift</code></td>
+<td>Gift PPI (open or semi-closed gift card)</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.store_credit</code></td>
+<td>Closed-system store credit</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.loyalty</code></td>
+<td>Loyalty / reward points</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.ppi.netc_topup</code></td>
+<td>FASTag (NETC) auto top-up</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td><code>bacp.pay.ppi.netc_topup</code></td>
+</tr>
+<tr>
+<td><code>in.ppi.ncmc_topup</code></td>
+<td>NCMC auto top-up</td>
+<td>payment</td>
+<td>O</td>
+<td>live</td>
+<td><code>bacp.pay.ppi.ncmc_topup</code></td>
+</tr>
+<tr>
+<td><code>in.ppi.transit</code></td>
+<td>Transit PPI (PPI-MTS)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.ppi.transit</code></td>
+</tr>
+<tr>
+<td><code>in.credit.bnpl</code></td>
+<td>BNPL / pay later</td>
+<td>financing</td>
+<td>C</td>
+<td>live</td>
+<td><code>in.bnpl</code></td>
+</tr>
+<tr>
+<td><code>in.credit.cardless_emi</code></td>
+<td>Cardless EMI</td>
+<td>financing</td>
+<td>C</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.fin.ocen</code></td>
+<td>OCEN / ULI credit at point of purchase</td>
+<td>financing</td>
+<td>C</td>
+<td>pilot</td>
+<td><code>bacp.fin.ocen</code></td>
+</tr>
+<tr>
+<td><code>in.fin.dealer_line</code></td>
+<td>Distributor / dealer finance drawdown</td>
+<td>financing</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.fin.dealer_line</code></td>
+</tr>
+<tr>
+<td><code>in.cod</code></td>
+<td>Cash on delivery (banknotes)</td>
+<td>payment</td>
+<td>D</td>
+<td>live</td>
+<td><code>cod</code>, <code>bacp.pay.cod.record</code></td>
+</tr>
+<tr>
+<td><code>in.cod.upi</code></td>
+<td>Pay on delivery by UPI (doorstep dynamic QR)</td>
+<td>payment</td>
+<td>D</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.a2a.imps</code></td>
+<td>IMPS</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.a2a.imps</code></td>
+</tr>
+<tr>
+<td><code>in.a2a.neft</code></td>
+<td>NEFT</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.a2a.neft</code></td>
+</tr>
+<tr>
+<td><code>in.a2a.rtgs</code></td>
+<td>RTGS</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.a2a.rtgs</code></td>
+</tr>
+<tr>
+<td><code>in.bbps.bill</code></td>
+<td>BBPS / Bharat Connect bill payment</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bbps</code>, <code>bacp.pay.bbps.bill</code></td>
+</tr>
+<tr>
+<td><code>in.bbps.b2b_invoice</code></td>
+<td>Bharat Connect for Business (B2B invoice)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.bbps.b2b_invoice</code></td>
+</tr>
+<tr>
+<td><code>in.bbps.upms</code></td>
+<td>BBPS UPMS recurring registration</td>
+<td>mandate_registration</td>
+<td>O</td>
+<td>live</td>
+<td><code>bacp.mandate.bbps.upms</code></td>
+</tr>
+<tr>
+<td><code>in.erupi</code></td>
+<td>e-RUPI purpose-bound voucher</td>
+<td>payment</td>
+<td>O</td>
+<td>pilot</td>
+<td><code>erupi</code>, <code>bacp.pay.erupi</code></td>
+</tr>
+<tr>
+<td><code>in.cbdc.retail</code></td>
+<td>e₹ (Digital Rupee) retail wallet</td>
+<td>payment</td>
+<td>C</td>
+<td>pilot</td>
+<td><code>erupee</code>, <code>bacp.pay.cbdc.retail</code></td>
+</tr>
+<tr>
+<td><code>in.cbdc.programmed</code></td>
+<td>Programmable e₹ (sponsor-locked)</td>
+<td>payment</td>
+<td>O</td>
+<td>pilot</td>
+<td><code>bacp.pay.cbdc.programmed</code></td>
+</tr>
+<tr>
+<td><code>in.cbdc.wholesale</code></td>
+<td>Wholesale e₹ settlement (reserved)</td>
+<td>tracker</td>
+<td>N</td>
+<td>reserved</td>
+<td><code>bacp.settle.cbdc.wholesale</code></td>
+</tr>
+<tr>
+<td><code>in.aeps.assisted</code></td>
+<td>AePS / Aadhaar Pay (assisted)</td>
+<td>payment</td>
+<td>A</td>
+<td>live</td>
+<td><code>bacp.pay.aeps.assisted</code></td>
+</tr>
+<tr>
+<td><code>in.fin.treds</code></td>
+<td>TReDS invoice discounting</td>
+<td>financing</td>
+<td>N</td>
+<td>live</td>
+<td><code>bacp.fin.treds</code></td>
+</tr>
+<tr>
+<td><code>in.fin.lc</code></td>
+<td>Letter of credit (verify and track)</td>
+<td>security_verification</td>
+<td>N</td>
+<td>live</td>
+<td><code>bacp.fin.lc</code></td>
+</tr>
+<tr>
+<td><code>in.fin.ebg</code></td>
+<td>e-Bank guarantee (verify and track)</td>
+<td>security_verification</td>
+<td>N</td>
+<td>live</td>
+<td><code>bacp.fin.ebg</code></td>
+</tr>
+<tr>
+<td><code>in.xb.pacb</code></td>
+<td>PA cross-border (export collection, import payment)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.xb.pacb</code></td>
+</tr>
+<tr>
+<td><code>bacp.trade.export_realisation</code></td>
+<td>Export realisation tracker</td>
+<td>tracker</td>
+<td>N</td>
+<td>live</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>in.gov.gem</code></td>
+<td>GeM order and payment tracker (PFMS, GPA)</td>
+<td>tracker</td>
+<td>N</td>
+<td>live</td>
+<td><code>bacp.gov.gem.order</code>, <code>bacp.gov.gem.payment_tracker</code></td>
+</tr>
+<tr>
+<td><code>in.pa.settlement</code></td>
+<td>PA settlement status (read-only)</td>
+<td>tracker</td>
+<td>N</td>
+<td>live</td>
+<td><code>bacp.pa.settlement</code></td>
+</tr>
+<tr>
+<td><code>in.cheque.positive_pay</code></td>
+<td>Cheque with Positive Pay (record and track)</td>
+<td>payment</td>
+<td>C</td>
+<td>live</td>
+<td><code>bacp.pay.cheque.positive_pay</code></td>
+</tr>
+<tr>
+<td><code>bacp.credit_ledger</code></td>
+<td>Bilateral credit ledger (khata, net-N trade credit)</td>
+<td>ledger</td>
+<td>O</td>
+<td>live</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<h2 id="examples">Examples<a class="headerlink" href="#examples" title="Permanent link">&para;</a></h2>
+<p>Each example is named <code>&lt;schema&gt;.&lt;case&gt;.json</code> and is checked against <code>&lt;schema&gt;.json</code> (<code>rfq.*</code> and <code>auction.*</code> against the <code>Rfq</code> and
+<code>AuctionSpec</code> definitions of <code>negotiation-session.json</code>, and <code>common.&lt;definition&gt;-&lt;case&gt;.json</code> against that definition of
+<code>common.json</code>, for example <code>common.presentation-*</code> against <code>#/$defs/Presentation</code>). A <code>&lt;component&gt;.&lt;case&gt;.json</code> whose
+<code>&lt;component&gt;</code> names no schema file is checked against the OpenAPI component schema of that name in PascalCase, for
+example <code>mandate-request.*</code> against <code>#/components/schemas/MandateRequest</code> and <code>ts-render.*</code> against <code>TsRender</code> in
+<code>bacp.openapi.yaml</code>. Files ending in <code>.invalid.json</code>
+are negative vectors: a conforming validator MUST reject them. The file <a href="https://bacp.dev/latest/examples/index.json"><code>examples/index.json</code></a> is the
+normative map from each example to the schema or schemas it is checked against, and a validator MUST assert <code>format</code>
+(<a href="../conformance/#how-conformance-is-tested">Conformance</a>). The repository checks every vector, the index, the registry and the
+OpenAPI document with <code>uv run python scripts/validate.py</code>.</p>
+<p>The table lists a selection; <a href="https://bacp.dev/latest/examples/index.json"><code>examples/index.json</code></a> lists every example.</p>
+<table>
+<thead>
+<tr>
+<th>Example</th>
+<th>Schema</th>
+<th>Expected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/agent-credential.ivr-handoff-routes.json"><code>agent-credential.ivr-handoff-routes.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/agent-credential.json"><code>agent-credential.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/agent-credential.ivr-https-only.invalid.json"><code>agent-credential.ivr-https-only.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/agent-credential.json"><code>agent-credential.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/auction.reverse-l1.json"><code>auction.reverse-l1.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/negotiation-session.json"><code>negotiation-session.json</code></a> <code>#/$defs/AuctionSpec</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/auction.sealed-no-deposit.invalid.json"><code>auction.sealed-no-deposit.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/negotiation-session.json"><code>negotiation-session.json</code></a> <code>#/$defs/AuctionSpec</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/auction.seller-run.invalid.json"><code>auction.seller-run.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/negotiation-session.json"><code>negotiation-session.json</code></a> <code>#/$defs/AuctionSpec</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/beckn-context-bacp.acting-for-business.json"><code>beckn-context-bacp.acting-for-business.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/beckn-context-bacp.json"><code>beckn-context-bacp.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/beckn-context-bacp.no-ai-disclosure.invalid.json"><code>beckn-context-bacp.no-ai-disclosure.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/beckn-context-bacp.json"><code>beckn-context-bacp.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/beckn-context-bacp.profile-business.json"><code>beckn-context-bacp.profile-business.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/beckn-context-bacp.json"><code>beckn-context-bacp.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/beckn-context-bacp.profile-unknown.invalid.json"><code>beckn-context-bacp.profile-unknown.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/beckn-context-bacp.json"><code>beckn-context-bacp.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.handoffroute-dtmf-https.invalid.json"><code>common.handoffroute-dtmf-https.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/HandoffRoute</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.handoffroute-ivr-dtmf.json"><code>common.handoffroute-ivr-dtmf.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/HandoffRoute</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.presentation-assisted-tap.invalid.json"><code>common.presentation-assisted-tap.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/Presentation</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.presentation-both-hashes.invalid.json"><code>common.presentation-both-hashes.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/Presentation</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.presentation-channel-sms.invalid.json"><code>common.presentation-channel-sms.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/Presentation</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.presentation-language-hindi.invalid.json"><code>common.presentation-language-hindi.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/Presentation</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.presentation-negotiation-offer-hash.json"><code>common.presentation-negotiation-offer-hash.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/Presentation</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/common.presentation-upi123pay-hi.json"><code>common.presentation-upi123pay-hi.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/common.json"><code>common.json</code></a> <code>#/$defs/Presentation</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.agent-with-pilots.invalid.json"><code>conformance-attestation.agent-with-pilots.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.extra-claim.invalid.json"><code>conformance-attestation.extra-claim.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.gateway-circle.json"><code>conformance-attestation.gateway-circle.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.level-unknown.invalid.json"><code>conformance-attestation.level-unknown.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.no-report-digest.invalid.json"><code>conformance-attestation.no-report-digest.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.no-status.invalid.json"><code>conformance-attestation.no-status.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.pilot-alias.invalid.json"><code>conformance-attestation.pilot-alias.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.registry-version-bad.invalid.json"><code>conformance-attestation.registry-version-bad.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-attestation.scope-wrong.invalid.json"><code>conformance-attestation.scope-wrong.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-attestation.json"><code>conformance-attestation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-authority-list.empty.json"><code>conformance-authority-list.empty.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-authority-list.json"><code>conformance-authority-list.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-authority-list.lab-and-sponsor.json"><code>conformance-authority-list.lab-and-sponsor.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-authority-list.json"><code>conformance-authority-list.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-authority-list.no-operator.invalid.json"><code>conformance-authority-list.no-operator.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-authority-list.json"><code>conformance-authority-list.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/conformance-authority-list.no-scope.invalid.json"><code>conformance-authority-list.no-scope.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/conformance-authority-list.json"><code>conformance-authority-list.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/consent-receipt.assisted-presentation.json"><code>consent-receipt.assisted-presentation.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/consent-receipt.json"><code>consent-receipt.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.agent-ack-no-actor.invalid.json"><code>credit-ledger-entry.agent-ack-no-actor.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.agent-ack-no-hp-proof.invalid.json"><code>credit-ledger-entry.agent-ack-no-hp-proof.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.agent-ack-with-hp-proof.json"><code>credit-ledger-entry.agent-ack-with-hp-proof.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.human-actor-agent-role.invalid.json"><code>credit-ledger-entry.human-actor-agent-role.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.net60-micro.invalid.json"><code>credit-ledger-entry.net60-micro.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.payment-no-evidence.invalid.json"><code>credit-ledger-entry.payment-no-evidence.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.payment.json"><code>credit-ledger-entry.payment.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/credit-ledger-entry.sale.json"><code>credit-ledger-entry.sale.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/evidence-bundle.basket-leg-for-seller.json"><code>evidence-bundle.basket-leg-for-seller.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/EvidenceBundle</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/evidence-bundle.digest-no-render-hash.invalid.json"><code>evidence-bundle.digest-no-render-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/EvidenceBundle</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/evidence-bundle.payment-terms-no-authorization.invalid.json"><code>evidence-bundle.payment-terms-no-authorization.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/EvidenceBundle</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/handler-descriptor.open-no-primitives.invalid.json"><code>handler-descriptor.open-no-primitives.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/handler-descriptor.ref-pattern-number.invalid.json"><code>handler-descriptor.ref-pattern-number.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/handler-descriptor.upi-autopay.json"><code>handler-descriptor.upi-autopay.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/handler-descriptor.json"><code>handler-descriptor.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/instruction-log-entry.ai-disclosure.json"><code>instruction-log-entry.ai-disclosure.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/instruction-log-entry.json"><code>instruction-log-entry.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/instruction-log-entry.operator-no-actor-ref.invalid.json"><code>instruction-log-entry.operator-no-actor-ref.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/instruction-log-entry.json"><code>instruction-log-entry.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/instruction-log-entry.support-staff-actor.invalid.json"><code>instruction-log-entry.support-staff-actor.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/instruction-log-entry.json"><code>instruction-log-entry.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate-negotiation.buyer.json"><code>mandate-negotiation.buyer.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate-negotiation.json"><code>mandate-negotiation.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate-negotiation.disclosed.invalid.json"><code>mandate-negotiation.disclosed.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate-negotiation.json"><code>mandate-negotiation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate-negotiation.no-reservation.invalid.json"><code>mandate-negotiation.no-reservation.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate-negotiation.json"><code>mandate-negotiation.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate-request.block-amount-zero.invalid.json"><code>mandate-request.block-amount-zero.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/MandateRequest</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate-request.checkout-mandate-ref-pattern.invalid.json"><code>mandate-request.checkout-mandate-ref-pattern.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/MandateRequest</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate-request.payee-no-bpp-id.invalid.json"><code>mandate-request.payee-no-bpp-id.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/MandateRequest</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate-request.sibling-reservepay.json"><code>mandate-request.sibling-reservepay.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/MandateRequest</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.rail-binding-conformance-no-sub.invalid.json"><code>mandate.rail-binding-conformance-no-sub.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.open-payment-no-primitive.invalid.json"><code>mandate.open-payment-no-primitive.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.open-payment-no-registry-version.invalid.json"><code>mandate.open-payment-no-registry-version.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.open-payment-registry-version-not-date.invalid.json"><code>mandate.open-payment-registry-version-not-date.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.open-payment-reservepay.json"><code>mandate.open-payment-reservepay.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.open-payment-unknown-primitive.invalid.json"><code>mandate.open-payment-unknown-primitive.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.payee-bpp-id-type.invalid.json"><code>mandate.payee-bpp-id-type.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/mandate.rail-binding-conformance.json"><code>mandate.rail-binding-conformance.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/mandate.json"><code>mandate.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-message-draft.accept-msg-hash-pattern.invalid.json"><code>negotiation-message-draft.accept-msg-hash-pattern.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/NegotiationMessageDraft</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-message-draft.accept-revoke-no-offer-hash.invalid.json"><code>negotiation-message-draft.accept-revoke-no-offer-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/NegotiationMessageDraft</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-message-draft.accept-revoke.json"><code>negotiation-message-draft.accept-revoke.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/NegotiationMessageDraft</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-message-draft.firm-no-acceptance-revocation.invalid.json"><code>negotiation-message-draft.firm-no-acceptance-revocation.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/NegotiationMessageDraft</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-message-draft.firm-waived-contract.json"><code>negotiation-message-draft.firm-waived-contract.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/NegotiationMessageDraft</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-message-draft.waived-no-basis.invalid.json"><code>negotiation-message-draft.waived-no-basis.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/NegotiationMessageDraft</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-session.agreed.json"><code>negotiation-session.agreed.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/negotiation-session.json"><code>negotiation-session.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/negotiation-session.old-state.invalid.json"><code>negotiation-session.old-state.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/negotiation-session.json"><code>negotiation-session.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.accept-revoke-no-offer-hash.invalid.json"><code>offer.accept-revoke-no-offer-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.accept-revoke.json"><code>offer.accept-revoke.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.accept-with-terms.invalid.json"><code>offer.accept-with-terms.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.accept.json"><code>offer.accept.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.acceptance-revocation-typo.invalid.json"><code>offer.acceptance-revocation-typo.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.b2c-counter.json"><code>offer.b2c-counter.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>valid (shape; receivers refuse <code>allowed_until_receipt</code> in this version)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.escalate-but-firm.invalid.json"><code>offer.escalate-but-firm.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.firm-allowed-until-receipt.json"><code>offer.firm-allowed-until-receipt.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>valid (shape; receivers refuse <code>allowed_until_receipt</code> in this version)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.firm-no-acceptance-revocation.invalid.json"><code>offer.firm-no-acceptance-revocation.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.indicative-no-acceptance-revocation.json"><code>offer.indicative-no-acceptance-revocation.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.no-acceptance-manner.invalid.json"><code>offer.no-acceptance-manner.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.waived-contract-basis.json"><code>offer.waived-contract-basis.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.waived-no-basis.invalid.json"><code>offer.waived-no-basis.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.waiver-basis-no-hash.invalid.json"><code>offer.waiver-basis-no-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.waiver-basis-po.invalid.json"><code>offer.waiver-basis-po.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/offer.withdraw.json"><code>offer.withdraw.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/offer.json"><code>offer.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/payment-plan.gift-upi.json"><code>payment-plan.gift-upi.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/payment-plan.json"><code>payment-plan.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/receipt.primitive-echo.json"><code>receipt.primitive-echo.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/receipt.json"><code>receipt.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/receipt.primitive-wallet.invalid.json"><code>receipt.primitive-wallet.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/receipt.json"><code>receipt.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/rfq.sealed.json"><code>rfq.sealed.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/negotiation-session.json"><code>negotiation-session.json</code></a> <code>#/$defs/Rfq</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/session.basket-id-pattern.invalid.json"><code>session.basket-id-pattern.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/Session</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/session.basket-id.json"><code>session.basket-id.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/Session</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/step-up.covers-missing-checkout-hash.invalid.json"><code>step-up.covers-missing-checkout-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/StepUp</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/step-up.rail-fallback-covers.json"><code>step-up.rail-fallback-covers.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/StepUp</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/termsheet.b2b-net30.json"><code>termsheet.b2b-net30.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/termsheet.json"><code>termsheet.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/termsheet.b2c-saree.json"><code>termsheet.b2c-saree.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/termsheet.json"><code>termsheet.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/termsheet.emi-nocost.invalid.json"><code>termsheet.emi-nocost.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/termsheet.json"><code>termsheet.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/termsheet.net60-micro-trader.json"><code>termsheet.net60-micro-trader.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/termsheet.json"><code>termsheet.json</code></a></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/termsheet.net60-micro.invalid.json"><code>termsheet.net60-micro.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/schemas/termsheet.json"><code>termsheet.json</code></a></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/trusted-surface-event.negotiation-approved-checkout-hash.invalid.json"><code>trusted-surface-event.negotiation-approved-checkout-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TrustedSurfaceEvent</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/trusted-surface-event.negotiation-approved-decline.invalid.json"><code>trusted-surface-event.negotiation-approved-decline.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TrustedSurfaceEvent</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/trusted-surface-event.negotiation-approved-no-presentation.invalid.json"><code>trusted-surface-event.negotiation-approved-no-presentation.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TrustedSurfaceEvent</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/trusted-surface-event.negotiation-approved.json"><code>trusted-surface-event.negotiation-approved.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TrustedSurfaceEvent</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/trusted-surface-event.offer-hash-pattern.invalid.json"><code>trusted-surface-event.offer-hash-pattern.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TrustedSurfaceEvent</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/trusted-surface-event.step-up-approved-offer-hash.invalid.json"><code>trusted-surface-event.step-up-approved-offer-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TrustedSurfaceEvent</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.acceptance-revocation-boolean.invalid.json"><code>ts-render.acceptance-revocation-boolean.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.acceptance-revocation-no-offer-hash.invalid.json"><code>ts-render.acceptance-revocation-no-offer-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.action-unknown.invalid.json"><code>ts-render.action-unknown.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.basket-amount-fraction.invalid.json"><code>ts-render.basket-amount-fraction.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.basket-summary.json"><code>ts-render.basket-summary.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.negotiation-confirm.json"><code>ts-render.negotiation-confirm.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>valid</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.no-grievance-contact.invalid.json"><code>ts-render.no-grievance-contact.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.no-revoke-route.invalid.json"><code>ts-render.no-revoke-route.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.offer-and-checkout-hash.invalid.json"><code>ts-render.offer-and-checkout-hash.invalid.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>invalid (MUST fail)</td>
+</tr>
+<tr>
+<td><a href="https://bacp.dev/latest/examples/ts-render.post-order-cancel.json"><code>ts-render.post-order-cancel.json</code></a></td>
+<td><a href="https://bacp.dev/latest/services/bacp.openapi.yaml"><code>bacp.openapi.yaml</code></a> <code>#/components/schemas/TsRender</code></td>
+<td>valid</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../transports/ucp-checkout/" class="md-footer__link md-footer__link--prev" aria-label="Previous: UCP checkout projection">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                UCP checkout projection
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../open-questions/" class="md-footer__link md-footer__link--next" aria-label="Next: Open Questions">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Open Questions
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

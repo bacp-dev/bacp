@@ -1,0 +1,2745 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/payments/credit-and-split-tender/">
+      
+      
+        <link rel="prev" href="../rails/">
+      
+      
+        <link rel="next" href="../economics/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Credit and Split Tender - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#credit-and-split-tender" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Credit and Split Tender
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#split-tender-payment-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split tender: payment plans
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Split tender: payment plans">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plan-wire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On the wire: in.bacp.payment_plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refunds-of-a-split-tender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refunds of a split tender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-plus-loan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token plus loan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#credit-at-checkout-bnpl-and-loan-offers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credit at checkout: BNPL and loan offers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Credit at checkout: BNPL and loan offers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loan-offers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loan offers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rules-for-credit-at-checkout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules for credit at checkout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-khata-credit-ledger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The khata credit ledger
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The khata credit ledger">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opening-a-ledger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opening a ledger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acknowledgement-the-creditor-cannot-self-confirm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acknowledgement: the creditor cannot self-confirm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#booking-and-settling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Booking and settling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ledger-wire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On the wire: in.bacp.ledger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interlocked-credit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interlocked credit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regulatory-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regulatory status
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#msme-late-payment-interest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MSME late-payment interest
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trade-credit-treds-and-gem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trade credit, TReDS and GeM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trade credit, TReDS and GeM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#treds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TReDS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gem-receivables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeM receivables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fx-disclosure-for-cross-border-payments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX disclosure for cross-border payments
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#split-tender-payment-plans" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Split tender: payment plans
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Split tender: payment plans">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plan-wire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On the wire: in.bacp.payment_plan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refunds-of-a-split-tender" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refunds of a split tender
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#token-plus-loan" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Token plus loan
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Example
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#credit-at-checkout-bnpl-and-loan-offers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credit at checkout: BNPL and loan offers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Credit at checkout: BNPL and loan offers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#loan-offers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Loan offers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rules-for-credit-at-checkout" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rules for credit at checkout
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#the-khata-credit-ledger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The khata credit ledger
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="The khata credit ledger">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#opening-a-ledger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Opening a ledger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#entries" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entries
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#acknowledgement-the-creditor-cannot-self-confirm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Acknowledgement: the creditor cannot self-confirm
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#booking-and-settling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Booking and settling
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ledger-wire" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        On the wire: in.bacp.ledger
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#interlocked-credit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Interlocked credit
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#regulatory-status" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Regulatory status
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#msme-late-payment-interest" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MSME late-payment interest
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trade-credit-treds-and-gem" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Trade credit, TReDS and GeM
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Trade credit, TReDS and GeM">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#treds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        TReDS
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#gem-receivables" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeM receivables
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fx-disclosure-for-cross-border-payments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FX disclosure for cross-border payments
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="credit-and-split-tender">Credit and Split Tender<a class="headerlink" href="#credit-and-split-tender" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>This page covers the ways an order is paid other than one tender in full at checkout:</p>
+<ul>
+<li><a href="#split-tender-payment-plans">split tender</a>: several tenders now, or tranches over time;</li>
+<li><a href="#credit-at-checkout-bnpl-and-loan-offers">credit at checkout</a>: BNPL, cardless EMI, card EMI and point-of-purchase loans, with lender-signed loan offers;</li>
+<li>the <a href="#the-khata-credit-ledger">khata credit ledger</a> for seller credit between known parties;</li>
+<li><a href="#msme-late-payment-interest">MSME late-payment interest</a>, <a href="#trade-credit-treds-and-gem">trade credit, TReDS and GeM</a>;</li>
+<li>the <a href="#fx-disclosure-for-cross-border-payments">FX disclosure</a> for cross-border payments.</li>
+</ul>
+<p>The general payment model, handler classes and refund rules are in the <a href="../">Payments Overview</a>.</p>
+<div class="admonition info">
+<p class="admonition-title">Wire binding by capability</p>
+<p>Payment plans, credit ledgers and trade documents are bound on REST, MCP and A2A (<a href="../../open-questions/#q-44">Q-44</a>, settled 18-10-2026), each behind a capability id that a gateway lists in its <a href="../../discovery/#capabilities">profile</a>: <code>in.bacp.payment_plan</code>, <code>in.bacp.ledger</code> and <code>in.bacp.trade_document</code>. The rules marked as MUST for a capability bind only a gateway that lists it. A gateway that lists none of the three keeps the earlier behaviour: a <code>complete</code> that carries <code>payment_plan</code> is refused with <code>400 capability_unsupported</code> at <code>$.payment_plan</code> and is never ignored in favour of a single tender, and it exposes no MCP tool or A2A DataPart for these interfaces. Splitting an order into tranches over time is accepted only in the form <a href="#token-plus-loan">below</a>.</p>
+</div>
+<h2 id="split-tender-payment-plans">Split tender: payment plans<a class="headerlink" href="#split-tender-payment-plans" title="Permanent link">&para;</a></h2>
+<p>A <strong>payment plan</strong> (<a href="https://bacp.dev/schemas/payment-plan.json">schema</a>) says how one accepted all-in total is paid. There are two kinds of split:</p>
+<ul>
+<li><strong>Split in space (tenders):</strong> for example a gift card for ₹1,000 plus UPI for ₹1,160 on a ₹2,160 order.</li>
+<li><strong>Split in time (tranches):</strong> for example a booking token by UPI now, a loan disbursal by the lender later, and the balance at delivery. Each tender points to a TermSheet <code>payment.schedule[]</code> tranche through <code>tranche_id</code>.</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>plan_id</code></td>
+<td><code>plan_</code> followed by 8 to 40 characters</td>
+</tr>
+<tr>
+<td><code>plan_hash</code></td>
+<td>The sha-256 over the JCS form of the tenders: the array of <code>{tender_id, handler, amount, sequence}</code> objects (with <code>tranche_id</code> when present) in ascending <code>sequence</code>, without <code>payment_mandate</code> and without any response-only field</td>
+</tr>
+<tr>
+<td><code>checkout_hash</code></td>
+<td>The hash of the BPP-signed quote. The same value for every tender. It is not the negotiation <code>offer_hash</code>, and nothing in BACP may assert that the two are equal.</td>
+</tr>
+<tr>
+<td><code>all_in_total</code></td>
+<td>The accepted all-in total, in paise</td>
+</tr>
+<tr>
+<td><code>tenders[]</code></td>
+<td>One to four tenders: <code>tender_id</code>, <code>handler</code>, <code>amount</code>, <code>sequence</code> (capture order), and optionally <code>tranche_id</code>, <code>presence</code>, <code>closed_payment_mandate_ref</code>, <code>auth_binding_type</code>, <code>rail_ref</code>, <code>funding</code>, <code>receipt_id</code>; <code>status</code> is <code>planned</code>, <code>held</code>, <code>captured</code>, <code>in_doubt</code>, <code>reversal_pending</code>, <code>failed</code>, <code>released</code>, <code>refunded</code> or <code>partially_refunded</code>; on the wire a tender record also carries <code>reversal_deadline</code> and <code>psp_key</code> (both set by the gateway)</td>
+</tr>
+<tr>
+<td><code>refund_allocation</code></td>
+<td><code>lifo</code> (default), <code>pro_rata</code> or <code>tender_specific</code></td>
+</tr>
+<tr>
+<td><code>atomicity</code></td>
+<td><code>saga</code></td>
+</tr>
+<tr>
+<td><code>afa_evaluated_on</code></td>
+<td><code>plan_total</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="rules">Rules<a class="headerlink" href="#rules" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>One checkout, many payment mandates.</strong> A plan has one closed checkout mandate (one <code>checkout_hash</code>), and <strong>one closed payment mandate and one receipt per tender</strong>. Each tender is debited at most once.</li>
+<li><strong>Positive amounts.</strong> Every tender amount MUST be an integer number of paise greater than zero. A zero or negative tender MUST be refused with <code>amount_not_positive</code>, even when the sum matches.</li>
+<li><strong>Exact sum.</strong> The tender amounts MUST add up to <code>all_in_total</code> exactly. The gateway checks this and refuses a mismatch with <code>plan_sum_mismatch</code>. A plan has at most four tenders. Operator charges are not tenders and are not in <code>all_in_total</code>.</li>
+<li><strong>Capture order and atomicity.</strong> Capture runs as a saga. Stored-value tenders (gift PPI, store credit, loyalty, e-RUPI) go first, held where the issuer supports holds, then rail tenders. If a later tender fails, the earlier ones are released or refunded to source at once. A refund of a failed, returned, rejected or cancelled PPI tender is applied to the PPI immediately (RBI Master Direction on Prepaid Payment Instruments, para 14.3(a), as updated 30-09-2026); the T+1 of the RBI turnaround-time circular (RBI/2019-20/67, 20-09-2019; later amendments not verified as of 18-10-2026) for an on-us PPI failure is a separate deadline. A plan whose <code>sequence</code> breaks this order gets <code>plan_order_invalid</code>.</li>
+<li><strong>Thresholds on the total.</strong> Step-up thresholds, the ₹15,000 AFA threshold, contactless and Tap &amp; Pay exemptions, and split-order detection are evaluated on the <strong>plan total</strong>. A plan that keeps each tender under a threshold while the total is above it gets <code>requires_escalation</code> with reason <code>split_tender_afa_on_total</code>.</li>
+<li><strong>Presence per tender.</strong> Each tender's handler MUST be eligible at that tender's presence (see <a href="../#handler-classes">handler classes</a>). For example a gift PPI may be captured HNP, but an HP card-token tender in the same plan needs a Trusted Surface approval, and that approval shows and covers the whole plan.</li>
+<li>
+<p><strong>Code custody.</strong> The agent never sees gift-card or voucher codes. They are held in the Trusted Surface or the PSP-adapter vault, and the gateway's PSP adapter redeems them. A gift PPI backs an open mandate only when the PSP attestation states <code>custody: principal_side</code>, that is, that the vault is on the principal's side (the Trusted Surface or the payer PSP); with a gateway-side vault the Mandate Manager refuses issuance and the gift PPI stays human-present (<a href="../../mandates/#handler-binding">Handler binding</a>).</p>
+</li>
+<li>
+<p><strong>Every tender carries an amount.</strong> An open-amount tender is refused with <code>400 invalid_request</code> at <code>$.payment_plan.tenders[i].amount</code>.</p>
+</li>
+<li><strong>At most one tender without a hold primitive, and it comes last.</strong> A handler with no hold or void primitive cannot be unwound before the debit, so at most one tender of a plan may use one, and it MUST have the highest <code>sequence</code>; otherwise the plan gets <code>plan_order_invalid</code>. This is a BACP design rule that refuses some plans and never debits wrongly; a verified hold or void primitive for UPI P2M outside Reserve Pay and one-time-mandate blocks would relax it.</li>
+<li><strong>An in-doubt tender freezes the plan.</strong> While any tender is <code>in_doubt</code>, the gateway MUST NOT release or refund any other tender, and the session stays <code>complete_in_progress</code>. The gateway reconciles the tender with the PSP by its derived key and applies the PSP-signed result.</li>
+<li><strong>Cancelled only after the credit settles.</strong> When a later tender fails, the session becomes <code>cancelled</code> only when every unwound tender is <code>released</code> or <code>refunded</code> and its refund credit has settled. Until then the session stays <code>complete_in_progress</code> and the principal is told that the earlier amount "is being returned; it can take up to one day", never that "no money moved", because the issuer's own message shows two legs.</li>
+<li><strong>One PSP key for each tender.</strong> The idempotency key that the gateway sends to the PSP for a tender MUST be derived deterministically from the gateway's own id, the <code>session_id</code>, the <code>Idempotency-Key</code> of the <code>complete</code> request and the <code>tender_id</code> (for example, the sha-256 of their JCS array), so that two sessions never share a PSP key, and so that a replay of <code>complete</code> never re-debits any tender and the PSP, which never sees the <code>tender_id</code>, can still de-duplicate. The key is recorded in the tender's <code>psp_key</code>, with <code>rail_ref</code> and <code>reversal_deadline</code> (the debit time plus the rail's turnaround time: T+5 for a UPI P2M debit that did not confirm, T+1 for a PPI on-us failure; RBI/2019-20/67, 20-09-2019, later amendments not verified as of 18-10-2026), so that support staff can answer a call from one record. The gateway applies a PSP result to a tender only when the receipt's closed-mandate reference and amount are that tender's.</li>
+<li><strong>Refund allocation on the wire.</strong> A plan names <code>lifo</code> or <code>tender_specific</code>. <code>pro_rata</code> is refused with <code>400 invalid_request</code> until <a href="../../open-questions/#q-40">Q-40</a> is settled.</li>
+</ol>
+<h3 id="plan-wire">On the wire: <code>in.bacp.payment_plan</code><a class="headerlink" href="#plan-wire" title="Permanent link">&para;</a></h3>
+<p>A gateway that lists <code>in.bacp.payment_plan</code> (which requires <code>in.bacp.checkout</code>) MUST support everything in this section.</p>
+<ul>
+<li><strong>Offering.</strong> The session carries <code>payment.plan_options[]</code>. Each <a href="https://bacp.dev/schemas/payment-plan.json"><code>PlanOption</code></a> has a <code>plan_id</code>, a <code>plan_hash</code>, a read-only <code>tenders[]</code>, the <code>all_in_total</code> and a one-sentence <code>description</code> that the gateway writes from its own templates, for example <code>hi-IN</code> "₹1,000 गिफ्ट कार्ड से और ₹1,160 UPI से" (in English: "₹1,000 from gift card and ₹1,160 by UPI"). A voice channel reads it unchanged. No option is marked as a default or is preselected, and the gateway records in the evidence bundle the order in which it showed the options, because a gateway that also issues the PPI may be tempted to prefer its own stored value.</li>
+<li><strong>Choosing.</strong> <code>complete</code> carries either <code>payment_mandate</code> (one tender, the whole total) or <code>payment_plan</code> (a <a href="https://bacp.dev/schemas/payment-plan.json"><code>PlanRequest</code></a>), never both. The request is sent in full: <code>plan_id</code> and, for each tender, <code>tender_id</code>, <code>handler</code>, <code>amount</code>, <code>sequence</code>, <code>payment_mandate</code> (and <code>tranche_id</code> where one applies).</li>
+<li><strong>Offered or Trusted-Surface-confirmed only.</strong> The tenders MUST hash to the <code>plan_hash</code> of an entry of <code>payment.plan_options[]</code>, or to the <code>plan_hash</code> of a plan that the principal confirmed on the Trusted Surface (an approved step-up whose <code>ts_render.plan</code> carries it). A plan that matches neither gets <code>400 plan_not_offered</code> at <code>$.payment_plan</code> and nothing is debited. A <code>plan_id</code> that names an offered option while the tenders hash differently gets <code>403 mandate_scope_mismatch</code>, and no tender is captured. The agent composes no tender amount of its own: it cannot see gift-card balances, hold capability or the AFA total across tenders, which are known only to the vault, the issuers and the gateway. This version defines no agent operation that proposes a custom split to the Trusted Surface. Until such an operation exists, a plan counts as Trusted-Surface-confirmed only when it is also an entry of the session's <code>payment.plan_options[]</code>, and the approved step-up is of this session at its current <code>checkout_hash</code>. A gateway MUST NOT put in <code>ts_render.plan</code> a plan that is not an entry of <code>plan_options[]</code>.</li>
+<li><strong>P1, one live plan.</strong> For one <code>checkout_hash</code> the gateway holds at most one live plan. A <code>complete</code> with a different plan while one is live gets <code>409 plan_conflict</code>, or <code>409 session_state_conflict</code> while the session is <code>complete_in_progress</code>; nothing is debited and no mandate usage changes.</li>
+<li><strong>P2, never over the total.</strong> Inside the atomic section keyed on the root Checkout Mandate, the sum of held, captured and in-doubt tender amounts MUST NOT exceed <code>all_in_total</code>.</li>
+<li><strong>P3, each mandate names its tender.</strong> Each closed payment mandate carries <code>tender{plan_hash, tender_id}</code>, and its <code>amount</code> is that tender's amount (not the quote total). A mandate that carries <code>tender</code> MUST NOT pay a <code>complete</code> without <code>payment_plan</code>, and a tender's mandate whose <code>tender</code> does not match the plan is refused with <code>403 mandate_scope_mismatch</code>.</li>
+<li><strong>P4, the principal sees the whole plan.</strong> A step-up over a plan carries <code>ts_render.plan{plan_hash, tenders[]}</code>; the Trusted Surface shows every tender and its amount, and its approval event carries <code>Presentation.plan_hash</code> and lists <code>plan</code> in <code>Presentation.renders</code> (<a href="../../human-participants/#presentation">Presentation record</a>).</li>
+<li><strong>P5, no credentials in arguments.</strong> No MCP tool argument and no A2A DataPart carries a gift-card code, a voucher code or an instrument credential. A call that does gets <code>400 invalid_request</code> and makes no rail call.</li>
+</ul>
+<h3 id="refunds-of-a-split-tender">Refunds of a split tender<a class="headerlink" href="#refunds-of-a-split-tender" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>lifo</code> (default): refunds reverse the capture order, each tender back to its own source under its handler's refund route, capped at what that tender captured.</li>
+<li><code>tender_specific</code>: used when lines were bound to a tender, for example a purpose-bound e-RUPI item.</li>
+<li>A refund above a tender's capture gets <code>refund_exceeds_capture</code>.</li>
+</ul>
+<p>Whether LIFO allocation satisfies the refund-to-source rule of PA Master Direction para 10(f) is open (<a href="../../open-questions/#q-40">Q-40</a>).</p>
+<h3 id="token-plus-loan">Token plus loan<a class="headerlink" href="#token-plus-loan" title="Permanent link">&para;</a></h3>
+<p>A tranche plan for a high-value purchase (a vehicle, a property booking) combines a token, a loan and a balance:</p>
+<ul>
+<li>The token tranche is limited by RERA (a booking token of at most 10% without a registered agreement) and by the cash limit of Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 equivalent: s.186 per secondary sources, not verified as of 17-10-2026; cash of ₹2,00,000 or more is refused, <code>NEG_CASH_LIMIT</code>).</li>
+<li>The loan tranche is an <code>in.credit.*</code> or <code>in.fin.ocen</code> tender with all the <a href="#credit-at-checkout-bnpl-and-loan-offers">credit-at-checkout</a> duties: the KFS shown, HP acceptance, disbursal to the end beneficiary's account, and a cooling-off period of at least one day.</li>
+</ul>
+<p><strong>Tranches over the wire.</strong> A gateway that lists <code>in.bacp.payment_plan</code> accepts <code>tranche_id</code> on a plan tender and displays the schedule, but a tranche carries no debit authority at <code>complete</code>:</p>
+<ul>
+<li>only the tranche paid at <code>complete</code> is debited;</li>
+<li>no later tranche is debited without its own fresh closed payment mandate and the rail's pre-debit notice at execution time (otherwise the debit is refused with no rail call);</li>
+<li>a delivery tranche is a fresh closed mandate at delivery, never a pre-authorised debit; a delivery debit attempted without one is refused with no rail call;</li>
+<li>if the principal refuses at delivery, the token is refunded under <code>refund_allocation</code>.</li>
+</ul>
+<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">&para;</a></h3>
+<p>A gift card plus a UPI Circle tender. The agent is paying a weaver it has not paid before, so a Reserve Pay block (which belongs to one seller) cannot be used, and the UPI tender runs under a Circle delegation.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"plan_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"plan_GIFTUPI0001"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"checkout_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:MdzPb6o2QprB1t01MqITDlt_3VlU_4O8efFu8026Jpo"</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"all_in_total"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">216000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"tenders"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">      </span><span class="nt">"tender_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tdr_gift001"</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">      </span><span class="nt">"handler"</span><span class="p">:</span><span class="w"> </span><span class="s2">"in.ppi.gift"</span><span class="p">,</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">      </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">100000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">      </span><span class="nt">"sequence"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">      </span><span class="nt">"presence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HNP"</span><span class="p">,</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">      </span><span class="nt">"funding"</span><span class="p">:</span><span class="w"> </span><span class="s2">"prepaid"</span><span class="p">,</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">      </span><span class="nt">"closed_payment_mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_PAYGIFT0000001"</span><span class="p">,</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">      </span><span class="nt">"auth_binding_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"parent_rail_binding"</span><span class="p">,</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"captured"</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">      </span><span class="nt">"receipt_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rcpt_GIFT000000001"</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">      </span><span class="nt">"tender_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tdr_upi001"</span><span class="p">,</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="w">      </span><span class="nt">"handler"</span><span class="p">:</span><span class="w"> </span><span class="s2">"in.upi.circle"</span><span class="p">,</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="w">      </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">116000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="w">      </span><span class="nt">"sequence"</span><span class="p">:</span><span class="w"> </span><span class="mi">2</span><span class="p">,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="w">      </span><span class="nt">"presence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HNP"</span><span class="p">,</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="w">      </span><span class="nt">"funding"</span><span class="p">:</span><span class="w"> </span><span class="s2">"debit"</span><span class="p">,</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="w">      </span><span class="nt">"closed_payment_mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_PAYUPI00000001"</span><span class="p">,</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="w">      </span><span class="nt">"auth_binding_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"parent_rail_binding"</span><span class="p">,</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">      </span><span class="nt">"rail_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"CIRCLE-DLG-40917"</span><span class="p">,</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"captured"</span><span class="p">,</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">      </span><span class="nt">"receipt_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rcpt_UPI0000000001"</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">  </span><span class="nt">"refund_allocation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lifo"</span><span class="p">,</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">  </span><span class="nt">"atomicity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"saga"</span><span class="p">,</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">  </span><span class="nt">"afa_evaluated_on"</span><span class="p">:</span><span class="w"> </span><span class="s2">"plan_total"</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="p">}</span>
+</code></pre></div>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    participant A as Agent
+    participant G as BACP Gateway
+    participant V as PSP adapter vault
+    participant GI as Gift PPI issuer
+    participant N as Payer PSP and NPCI
+    participant S as Seller BPP
+    A-&gt;&gt;G: Complete session with plan gift ₹1,000 plus Circle UPI ₹1,160
+    G-&gt;&gt;G: Check sum equals ₹2,160, step-up and AFA on the ₹2,160 total
+    G-&gt;&gt;V: Redeem gift tender ₹1,000 for checkout_hash
+    V-&gt;&gt;GI: Debit gift PPI ₹1,000, AFA exempt
+    GI--&gt;&gt;G: Receipt for tender 1
+    G-&gt;&gt;N: Debit ₹1,160 under the Circle delegation
+    alt UPI debit fails
+        N--&gt;&gt;G: Failure
+        G-&gt;&gt;GI: Refund ₹1,000 to the same gift PPI at once
+        G--&gt;&gt;A: Earlier tender refunded; session cancelled when the refund settles
+    end
+    N--&gt;&gt;G: Receipt for tender 2 with RRN
+    G-&gt;&gt;S: confirm with payment PAID and both receipts
+    S--&gt;&gt;G: on_confirm
+    G--&gt;&gt;A: completed with plan status captured</code></pre>
+<h2 id="credit-at-checkout-bnpl-and-loan-offers">Credit at checkout: BNPL and loan offers<a class="headerlink" href="#credit-at-checkout-bnpl-and-loan-offers" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.credit.bnpl</code> (alias <code>in.bnpl</code>), <code>in.credit.cardless_emi</code>, <code>in.fin.ocen</code> (registry status <code>pilot</code>), <code>in.fin.dealer_line</code>, and <code>in.card.emi</code>. All are class C, with <code>funding: loan</code> or <code>credit</code>, so <code>credit_disclosure_required</code> is <code>true</code>.</p>
+<p>They are governed by the RBI <strong>Digital Lending Directions 2025</strong> (RBI/2025-26/36, DOR.STR.REC.19/21.07.001/2025-26, 08-05-2025). These apply to commercial banks, co-operative banks, NBFCs and AIFIs (para 3) and repeal the 2022 and 2023 digital-lending guidelines (para 30). The Key Fact Statement (KFS) and the annual percentage rate (APR) follow DOR.STR.REC.13/13.03.00/2024-25 (15-04-2024). Credit-card EMI is governed instead by the RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 ("Credit Card MD") para 6(b)(iii) and is outside the Digital Lending Directions; loans on debit cards, including EMI, are inside them (para 29(i)). That PPIs may not be loaded from credit lines, which rules out PPI-based BNPL by non-banks, rests on an RBI letter of June 2022 that is not public and is reported only by secondary sources.</p>
+<div class="admonition warning">
+<p class="admonition-title">Directions since withdrawn</p>
+<p>RBI's list of circulars withdrawn by its Department of Regulation now includes both the Digital Lending Directions 2025 and the KFS circular. They were withdrawn in the November 2025 consolidation into entity-wise directions, such as the Commercial Banks – Responsible Business Conduct Directions, 2025. The paragraph numbers on this page are those of the 08-05-2025 text, where every rule cited was checked. The draft consolidated directions carry the same disbursal wording, but the final paragraph numbers have not been checked. Implementers MUST map each rule to the consolidated directions that apply to their lender.</p>
+</div>
+<h3 id="loan-offers">Loan offers<a class="headerlink" href="#loan-offers" title="Permanent link">&para;</a></h3>
+<p>Credit offers are carried as an <strong>offer list</strong> (<a href="https://bacp.dev/schemas/loan-offer.json">schema</a>):</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>requested_amount</code></td>
+<td>The amount the buyer needs financed</td>
+<td>—</td>
+</tr>
+<tr>
+<td><code>offers[]</code></td>
+<td><strong>Every</strong> matching offer</td>
+<td>DL Directions para 6(i), from 01-11-2025</td>
+</tr>
+<tr>
+<td><code>unmatched_lenders[]</code></td>
+<td>Each lender that did not match, by name, with a reason. The Directions require the names; the reason is a BACP addition.</td>
+<td>para 6(i)</td>
+</tr>
+<tr>
+<td><code>ranking_metric</code></td>
+<td>A URI to a publicly pre-disclosed ranking rule (for example APR ascending). Ranking by such a metric "shall not be construed as promoting a particular product". Sponsored ranking is not allowed, because the content must be "unbiased, objective".</td>
+<td>para 6(iv)</td>
+</tr>
+</tbody>
+</table>
+<p>Each <code>LoanOffer</code> MUST carry:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Content</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>offer_id</code>, <code>lender</code>, <code>lender_regulated_entity</code></td>
+<td>The lender and its RBI registration</td>
+<td>para 6(iii)</td>
+</tr>
+<tr>
+<td><code>loan_amount</code>, <code>tenor_months</code>, <code>apr_pct</code>, <code>emi_amount</code>, <code>interest_amount</code>, <code>penal_charges</code></td>
+<td>The cost of credit; <code>processing_fee</code> is optional</td>
+<td>para 6(iii), 8(i)</td>
+</tr>
+<tr>
+<td><code>kfs_ref</code></td>
+<td>A URI to the KFS, shown before acceptance</td>
+<td>para 6(iii), 8(i)</td>
+</tr>
+<tr>
+<td><code>cooling_off_days</code></td>
+<td>At least 1</td>
+<td>para 10(i)</td>
+</tr>
+<tr>
+<td><code>repayment{payee, mandate_type}</code></td>
+<td>The payee is always the lender; <code>mandate_type</code> is <code>in.nach.debit</code>, <code>in.upi.autopay</code> or <code>manual</code></td>
+<td>para 9(ii), 9(iii)</td>
+</tr>
+<tr>
+<td><code>no_cost</code></td>
+<td><code>true</code> only if the interest is genuinely nil</td>
+<td>Credit Card MD para 6(b)(iii)</td>
+</tr>
+<tr>
+<td><code>preselected</code></td>
+<td>Always <code>false</code>: no offer is pre-selected. This is BACP's reading of the bar on content that would "promote or push a product of a particular RE, including the use of dark patterns".</td>
+<td>para 6(iv)</td>
+</tr>
+<tr>
+<td><code>rank</code></td>
+<td>Position under <code>ranking_metric</code></td>
+<td>para 6(iv)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Lender signature.</strong> Each offer is signed by the lender. Because the offer schema is closed, the lender's signature is carried beside the offer, not inside it. The gateway MUST verify it, and MUST reject an offer whose APR, cooling-off period or repayment payee has been altered.</p>
+<p>An example offer:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"offer_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lof_7Q2K91"</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"lender"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Example Finance Ltd"</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"lender_regulated_entity"</span><span class="p">:</span><span class="w"> </span><span class="s2">"N-14.03512"</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">"loan_amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">3000000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">"tenor_months"</span><span class="p">:</span><span class="w"> </span><span class="mi">6</span><span class="p">,</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">"apr_pct"</span><span class="p">:</span><span class="w"> </span><span class="mf">24.4</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">"emi_amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">527300</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">"interest_amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">163800</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">"processing_fee"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">49900</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">"penal_charges"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2% per month on the overdue EMI, as stated in the KFS"</span><span class="p">,</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">"kfs_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://lender.example.in/kfs/lof_7Q2K91"</span><span class="p">,</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">  </span><span class="nt">"cooling_off_days"</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p">,</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="nt">"repayment"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"payee"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Example Finance Ltd collection account"</span><span class="p">,</span><span class="w"> </span><span class="nt">"mandate_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"in.upi.autopay"</span><span class="p">},</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nt">"no_cost"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">"preselected"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="nt">"rank"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">}</span>
+</code></pre></div>
+<p>In this offer <code>apr_pct</code> is the annual percentage rate including the ₹499 processing fee, as the KFS rules require: about 24.4% on the ₹30,000 loan repaid in 6 EMIs of ₹5,273. The annual interest rate alone is 18.5%, and the KFS states it separately. An agent MUST show the APR, not the interest rate, as the cost of credit.</p>
+<h3 id="rules-for-credit-at-checkout">Rules for credit at checkout<a class="headerlink" href="#rules-for-credit-at-checkout" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Consent to credit.</strong> A credit-funded handler MUST be refused with <code>credit_funding_not_allowed</code> unless the governing checkout or negotiation mandate sets <code>credit_funding_allowed: true</code>. The agent MUST tell the user that the payment is credit.</li>
+<li><strong>Human acceptance.</strong> Accepting a KFS or loan agreement MUST be a human act on the Trusted Surface: a step-up with <code>kind: confirm</code> and reason <code>credit_acceptance</code>, completed by e-sign or the lender's acceptance flow. An agent that tries to accept gets <code>credit_acceptance_requires_hp</code>. Explicit consent is also required by E-Commerce Rule 4(9).</li>
+<li><strong>Full disclosure.</strong> Before acceptance the user sees every field above, and every matched offer with the unmatched lenders named.</li>
+<li><strong>Cooling-off.</strong> During the cooling-off period (set by the lender's board, at least one day) the borrower MUST be able to exit without penalty by repaying the principal and the proportionate APR. A one-time processing fee may be kept if it was disclosed in the KFS (DL Directions para 10). The post-disbursal state carries the end of the cooling-off period and an exit action.</li>
+<li><strong>Fund flow.</strong> The DL Directions require disbursal to the borrower's bank account (para 9(i)). Their exceptions do not include a general merchant exception; the relevant one is disbursal "for specific end use, provided the loan is disbursed directly into the bank account of the end-beneficiary". A checkout loan that pays the seller MUST fit that exception: the lender documents the end use and pays the end beneficiary directly. Whether this holds when the merchant is the beneficiary is open (<a href="../../open-questions/#q-32">Q-32</a>).</li>
+<li><strong>Repayment to the lender only.</strong> Repayments and refunds MUST go to the lender. No agent platform or lending service provider may pool them (para 9(ii), 9(iii)). A repayment or refund addressed to anyone else gets <code>repayment_payee_not_lender</code>. A merchant refund on a financed purchase goes to the lender and reduces the loan; the exact mechanics are not verified.</li>
+<li><strong>No automatic limit increase</strong> without the borrower's explicit request (para 7(ii)).</li>
+<li><strong>Data.</strong> Need-based, explicit, auditable consent; no access to contacts, call logs or media (para 12).</li>
+<li><strong>Neutrality.</strong> An agent that ranks or selects credit offers is acting as, or for, a lending service provider and inherits the para 6 neutrality duties.</li>
+<li><strong>Card EMI.</strong> Before converting a card purchase to EMI the agent shows principal, interest and any upfront discount, and never calls an interest-bearing EMI "no cost". A TermSheet that claims <code>no_cost</code> with non-zero interest is refused (<code>NEG_EMI_NO_COST_FALSE</code>).</li>
+<li><strong>OCEN and dealer lines.</strong> <code>in.fin.ocen</code> offers carry the lender, APR or all-in cost, tenure, repayment mandate type and KFS link, and acceptance is human-present. <code>in.fin.dealer_line</code> drawdowns run under a maker-checker approval and are repaid by NACH. No RBI direction specific to dealer finance was found.</li>
+</ol>
+<p>Disputes go to the lender's grievance officer and, after 30 days, to the RBI Integrated Ombudsman (DL Directions para 11(iv)).</p>
+<h2 id="the-khata-credit-ledger">The khata credit ledger<a class="headerlink" href="#the-khata-credit-ledger" title="Permanent link">&para;</a></h2>
+<p><code>bacp.credit_ledger</code> is a bilateral, hash-chained, signed ledger for credit between known parties: a kirana's khata, net-N trade credit, distributor credit, and GeM receivables. It is class O, but its limits are enforced by BACP rather than by a rail or issuer, so in BACP <code>2026-10-18</code> it is not open-eligible: an open (HNP) payment mandate cannot bind to it (<a href="../../mandates/#handler-binding">Handler binding</a>). <strong>No money moves on a ledger entry.</strong> Money moves on another handler, and the ledger records that handler's receipt.</p>
+<p>Schemas: <a href="https://bacp.dev/schemas/credit-ledger-entry.json"><code>credit-ledger-entry.json</code></a>, with <code>$defs/CreditLedger</code> for the ledger header.</p>
+<h3 id="opening-a-ledger">Opening a ledger<a class="headerlink" href="#opening-a-ledger" title="Permanent link">&para;</a></h3>
+<p>The <code>CreditLedger</code> header is signed by <strong>both</strong> parties at opening (at least two signatures). It records:</p>
+<ul>
+<li><code>creditor</code> and <code>debtor</code>. The creditor carries <code>settlement_accounts[]</code> (at most 10: a UPI VPA, or a hash of the account number and IFSC), the accounts on which it accepts payment. Only the creditor may add one later, by a signed amendment;</li>
+<li><code>kind</code>: <code>khata</code>, <code>trade_credit</code>, <code>distributor_credit</code> or <code>gem_receivable</code>;</li>
+<li><code>credit_limit</code> and <code>default_credit_days</code>;</li>
+<li><code>interest_rule</code>: <code>none</code>, <code>msmed_statutory</code>, <code>contractual</code> or <code>gem_penal_1pct_pm</code>. The header selects exactly one rule;</li>
+<li><code>ack_window</code>: how long the counterparty has to acknowledge an entry (ISO 8601 duration);</li>
+<li><code>itemise_above</code> (optional): an amount above which an entry is always acknowledged on its own, never inside a statement acknowledgement;</li>
+<li><code>head_hash</code> and <code>opened_at</code>.</li>
+</ul>
+<h3 id="entries">Entries<a class="headerlink" href="#entries" title="Permanent link">&para;</a></h3>
+<p>Entry types are <code>opening_balance</code>, <code>sale</code>, <code>payment</code>, <code>credit_note</code>, <code>debit_note</code>, <code>scheme_credit</code>, <code>interest_msmed</code>, <code>interest_contractual</code>, <code>gem_penal_interest</code>, <code>adjustment</code>, <code>write_off</code> and <code>limit_change</code>. <code>effect</code> is <code>increase_receivable</code>, <code>decrease_receivable</code> or <code>none</code>, from the creditor's side.</p>
+<ul>
+<li><strong>Positive amounts.</strong> Every value-bearing posting MUST have an amount greater than zero. Direction is carried by the entry type and <code>effect</code>, never by the sign.</li>
+<li><strong>Who posts.</strong> Only the ledger's creditor or debtor may post. The poster signs the entry.</li>
+<li><strong>Hash chain.</strong> Entries are chained by <code>prev_hash</code> and <code>entry_hash</code>. <code>entry_hash</code> and the entry signatures cover only the <strong>immutable posting</strong>. <code>status</code>, <code>acknowledgements</code> and <code>dispute_ref</code> are lifecycle fields kept outside the hash, so acknowledging an entry never rewrites history.</li>
+<li><strong>Lifecycle events are chained too.</strong> Every status change (posted, acknowledged, disputed, settled) is recorded as its own hash-chained event. An entry's current <code>status</code> and <code>dispute_ref</code> MUST equal what its chained events say, and every acknowledgement MUST verify under the counterparty's registry key. A silent change, for example from <code>disputed</code> back to <code>acknowledged</code>, therefore breaks chain verification.</li>
+<li>A <code>sale</code> requires <code>due_date</code> and <code>credit_terms</code>. A <code>payment</code> or <code>credit_note</code> requires <code>settles[]</code>, the sale entries it closes. A <code>payment</code> requires <code>settlement_evidence</code>.</li>
+<li>Each entry carries <code>ledger_after</code>: balance, credit limit, overdue amount and ageing buckets (0–30, 31–45, 46–60, 61–90 and over 90 days). A balance confirmation can be exported from the ledger.</li>
+</ul>
+<h3 id="acknowledgement-the-creditor-cannot-self-confirm">Acknowledgement: the creditor cannot self-confirm<a class="headerlink" href="#acknowledgement-the-creditor-cannot-self-confirm" title="Permanent link">&para;</a></h3>
+<ul>
+<li>An entry is acknowledged by the <strong>counterparty of the poster</strong>, never by the poster. When the seller books a sale, only the buyer can acknowledge it. An acknowledgement by anyone else gets <code>ack_not_by_counterparty</code>.</li>
+<li>The acknowledgement MUST be signed with the counterparty's key, whatever the channel: a signature, a Trusted Surface tap, an SMS link, a voice confirmation, or an assisted operator. Every channel ends in the counterparty's signature over the entry hash, and the channel is recorded as <code>method</code>.</li>
+<li>A <code>payment</code> entry is acknowledged automatically from the rail receipt it cites (<code>auto_from_rail_receipt</code>), because the PSP's signature is the evidence, <strong>only when</strong> the receipt's <code>payee</code> matches one of <code>creditor.settlement_accounts[]</code> (or <code>settlement_evidence.new_payee</code> after TReDS discounting) and the receipt's <code>issued_at</code> is not before the settled sale's <code>at</code>. A receipt without a <code>payee</code> matches no settlement account. A receipt that pays someone else, or that predates the sale, does not settle the sale: the entry is accepted as <code>pending_ack</code> for the creditor, with message <code>settlement_payee_unmatched</code>, and settles nothing until the creditor acknowledges it. A shop may collect on several VPAs, a family member's or a soundbox's, so a mismatch is not refused; it waits for the creditor's tap, SMS link or voice confirmation.</li>
+<li><strong>Statement acknowledgement.</strong> Beside the per-entry form, a gateway that lists <code>in.bacp.ledger</code> SHOULD support acknowledging a range: the subject is <code>ledger_range{ledger_id, through_seq, head_hash}</code>, and one acknowledgement event names the <code>head_hash</code> and covers every pending entry up to <code>through_seq</code> that the <strong>other</strong> party posted. An entry that the acknowledging party posted is never covered and keeps its status. A <code>payment</code> entry in <code>pending_ack</code> after <code>settlement_payee_unmatched</code> is never covered by a statement acknowledgement. The creditor acknowledges it on its own, on a render that shows the payee it was paid to. The principal sees the count, the closing balance, the oldest unpaid date and every itemised entry first. A statement acknowledgement MUST NOT cover an entry above the ledger's <code>itemise_above</code> or above the 90th percentile of the amounts that the poster has posted on this ledger. The 90th percentile is computed by the nearest-rank method over the amounts of the poster's entries on this ledger that were acknowledged before the range; entries inside the range are not in the set. With fewer than 10 such entries, every entry in the range above the largest earlier acknowledged entry of that poster is acknowledged one by one. Such an entry is acknowledged one by one (<code>422 invalid_request</code> at <code>$.subject.through_seq</code> otherwise, with no change). An entry posted after the render moves the head: the acknowledgement then gets <code>409 ledger_head_mismatch</code>, and the new entry is not covered. A per-entry dispute after a statement acknowledgement stays possible and moves only that entry. The 90th-percentile limit is a BACP design value against a hidden inflated line, not a legal rule, and has not been tested against trade practice.</li>
+<li>An entry still unacknowledged when <code>ack_window</code> expires becomes <strong><code>disputed</code></strong>, with a <code>dispute_ref</code>; this applies only where a notice of the entry was delivered to the counterparty, and whether silence after a delivered notice is acceptance or dispute is flagged to counsel (<a href="../../open-questions/#q-83">Q-83</a>). A disputed entry does not count toward the balance or ageing, cannot be acknowledged (<code>entry_disputed</code>), and can be settled or credit-noted only after the dispute is resolved.</li>
+</ul>
+<p>Entry <code>status</code> values: <code>pending_ack</code>, <code>acknowledged</code>, <code>disputed</code>, <code>settled</code>, <code>partially_settled</code>, <code>overdue</code>, <code>written_off</code>.</p>
+<h3 id="booking-and-settling">Booking and settling<a class="headerlink" href="#booking-and-settling" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Sale.</strong> A <code>sale</code> is booked only within <code>credit_limit − balance</code> <strong>and</strong> within the negotiation mandate's <code>payment.credit_ledger.max_outstanding</code>. Otherwise it gets <code>credit_limit_exceeded</code>. A sale counts against the checkout mandate's budgets and against <code>max_outstanding</code> only when a gateway <code>complete</code> books it under the buyer's mandate, inside the root's atomic section; a sale that the creditor posts never touches the budgets. A disputed entry keeps its count until it is resolved or credit-noted. A <code>payment</code> that settles a sale counts within the sale, never on top of it, and releases <code>max_outstanding</code> only; a <code>credit_note</code> releases both (<a href="../../open-questions/#q-46">Q-46</a>, settled). <code>bacp.credit_ledger</code> is not open-eligible in this release (<a href="../../open-questions/#q-59">Q-59</a>, settled as closed), so a sale is booked with the principal present (HP).</li>
+<li><strong>Payment.</strong> A <code>payment</code> entry MUST cite a PSP-signed receipt from another handler: <code>settlement_evidence.receipt_id</code> with its RRN or UTR. The gateway verifies the receipt signature against the PSP's registry key, and checks that the amount, result and RRN or UTR match. A screenshot or any other evidence MUST be refused, and the sale stays unpaid. A receipt settles ledger entries at most once, and that is checked across every ledger that the creditor's custodian holds, keyed on the rail and the RRN or UTR (<code>receipt_reused</code>). The payee match of the <a href="#acknowledgement-the-creditor-cannot-self-confirm">acknowledgement rules</a> applies. Every posting is a compare-and-swap on the chain head: a posting whose <code>prev_hash</code> is not the current head gets <code>409 ledger_head_mismatch</code>.</li>
+<li><strong>Credit note.</strong> An unpaid sale is reduced by a <code>credit_note</code> entry (<code>refund_state: credit_note_issued</code> where a refund is involved). A credit note cannot exceed the sale's open amount. A paid sale is refunded to the instrument that settled it.</li>
+</ul>
+<p>An example <code>payment</code> entry, settling a sale by NEFT:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">"entry_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lde_TILH00000042"</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">"ledger_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ldg_ANNAxTILH0001"</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">"seq"</span><span class="p">:</span><span class="w"> </span><span class="mi">42</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"payment"</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">42105000</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">"effect"</span><span class="p">:</span><span class="w"> </span><span class="s2">"decrease_receivable"</span><span class="p">,</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">"at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-11-17T12:00:00+05:30"</span><span class="p">,</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">"settles"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">      </span><span class="nt">"entry_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"lde_TILH00000041"</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">      </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">        </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">42105000</span><span class="p">,</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">        </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">  </span><span class="nt">"settlement_evidence"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="nt">"handler"</span><span class="p">:</span><span class="w"> </span><span class="s2">"in.a2a.neft"</span><span class="p">,</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">    </span><span class="nt">"receipt_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rcpt_NEFT00000001"</span><span class="p">,</span>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">    </span><span class="nt">"utr"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UTIBN26321000045"</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">  </span><span class="nt">"ledger_after"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">    </span><span class="nt">"balance"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">      </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-2-31" name="__codelineno-2-31" href="#__codelineno-2-31"></a><span class="w">    </span><span class="nt">"credit_limit"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-32" name="__codelineno-2-32" href="#__codelineno-2-32"></a><span class="w">      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">100000000</span><span class="p">,</span>
+<a id="__codelineno-2-33" name="__codelineno-2-33" href="#__codelineno-2-33"></a><span class="w">      </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span>
+<a id="__codelineno-2-34" name="__codelineno-2-34" href="#__codelineno-2-34"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-2-35" name="__codelineno-2-35" href="#__codelineno-2-35"></a><span class="w">    </span><span class="nt">"overdue"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-36" name="__codelineno-2-36" href="#__codelineno-2-36"></a><span class="w">      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-2-37" name="__codelineno-2-37" href="#__codelineno-2-37"></a><span class="w">      </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span>
+<a id="__codelineno-2-38" name="__codelineno-2-38" href="#__codelineno-2-38"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-39" name="__codelineno-2-39" href="#__codelineno-2-39"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-2-40" name="__codelineno-2-40" href="#__codelineno-2-40"></a><span class="w">  </span><span class="nt">"acknowledgements"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-2-41" name="__codelineno-2-41" href="#__codelineno-2-41"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-2-42" name="__codelineno-2-42" href="#__codelineno-2-42"></a><span class="w">      </span><span class="nt">"by"</span><span class="p">:</span><span class="w"> </span><span class="s2">"seller"</span><span class="p">,</span>
+<a id="__codelineno-2-43" name="__codelineno-2-43" href="#__codelineno-2-43"></a><span class="w">      </span><span class="nt">"method"</span><span class="p">:</span><span class="w"> </span><span class="s2">"auto_from_rail_receipt"</span><span class="p">,</span>
+<a id="__codelineno-2-44" name="__codelineno-2-44" href="#__codelineno-2-44"></a><span class="w">      </span><span class="nt">"at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-11-17T12:05:00+05:30"</span>
+<a id="__codelineno-2-45" name="__codelineno-2-45" href="#__codelineno-2-45"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-46" name="__codelineno-2-46" href="#__codelineno-2-46"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-2-47" name="__codelineno-2-47" href="#__codelineno-2-47"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"settled"</span><span class="p">,</span>
+<a id="__codelineno-2-48" name="__codelineno-2-48" href="#__codelineno-2-48"></a><span class="w">  </span><span class="nt">"prev_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:2j76-F435SKJwqHuMivnGIyVn2QjD-8_t2gJjvOWAAA"</span><span class="p">,</span>
+<a id="__codelineno-2-49" name="__codelineno-2-49" href="#__codelineno-2-49"></a><span class="w">  </span><span class="nt">"entry_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc"</span><span class="p">,</span>
+<a id="__codelineno-2-50" name="__codelineno-2-50" href="#__codelineno-2-50"></a><span class="w">  </span><span class="nt">"signatures"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-2-51" name="__codelineno-2-51" href="#__codelineno-2-51"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-2-52" name="__codelineno-2-52" href="#__codelineno-2-52"></a><span class="w">      </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bap"</span><span class="p">,</span>
+<a id="__codelineno-2-53" name="__codelineno-2-53" href="#__codelineno-2-53"></a><span class="w">      </span><span class="nt">"kid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bap.annapurna.example.in|k1"</span><span class="p">,</span>
+<a id="__codelineno-2-54" name="__codelineno-2-54" href="#__codelineno-2-54"></a><span class="w">      </span><span class="nt">"alg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ES256"</span><span class="p">,</span>
+<a id="__codelineno-2-55" name="__codelineno-2-55" href="#__codelineno-2-55"></a><span class="w">      </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"</span>
+<a id="__codelineno-2-56" name="__codelineno-2-56" href="#__codelineno-2-56"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-2-57" name="__codelineno-2-57" href="#__codelineno-2-57"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-2-58" name="__codelineno-2-58" href="#__codelineno-2-58"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="ledger-wire">On the wire: <code>in.bacp.ledger</code><a class="headerlink" href="#ledger-wire" title="Permanent link">&para;</a></h3>
+<p>A gateway that lists <code>in.bacp.ledger</code> MUST support these operations (<a href="https://bacp.dev/latest/services/bacp.openapi.yaml">OpenAPI</a>), and serves them only for a ledger of which the agent's principal is the creditor or the debtor (any other ledger is <code>404 not_found</code>). The gateway resolves the principal of every <code>in.bacp.ledger</code> operation and every <code>LEDGER_ACK</code> from <code>mandate_ref</code>. It is REQUIRED as a query parameter on both ledger GETs, in the body of <code>POST /ledgers/{ledger_id}/entries</code>, and in <code>actor.mandate_ref</code> of a <code>LEDGER_ACK</code>. The mandate MUST be held by the calling agent (the request is signed with its <code>cnf</code> key), and MUST name a principal who is the ledger's creditor or debtor; otherwise the gateway returns <code>404 not_found</code>. For a read the mandate is <code>ACTIVE</code>; for a write it is in a status in which <a href="../../mandates/">Mandates</a> allows a <code>post_order</code> write. A posting is accepted only when that principal is the debtor. A <code>LEDGER_ACK</code> is accepted only when that principal is the counterparty of the poster of every entry it covers; otherwise the gateway returns <code>403 ack_not_by_counterparty</code> before any step-up is raised. The step-up is issued by that mandate's Mandate Manager, and the approval is made with that principal's own factor.</p>
+<table>
+<thead>
+<tr>
+<th>Operation</th>
+<th>Tag</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>GET /ledgers/{ledger_id}</code></td>
+<td><code>bacp-browse</code></td>
+<td>The header, <code>head_seq</code>, <code>head_hash</code>, closing balance, overdue amount, oldest unpaid date and entry count.</td>
+</tr>
+<tr>
+<td><code>GET /ledgers/{ledger_id}/entries?after_seq=&amp;limit=&amp;status=</code></td>
+<td><code>bacp-browse</code></td>
+<td>A page of summaries, ascending by <code>seq</code>. <code>limit</code> is at most 50 (a larger value is <code>400 invalid_request</code> at <code>$.limit</code>) and the response carries <code>next_after_seq</code> until the last page.</td>
+</tr>
+<tr>
+<td><code>POST /ledgers/{ledger_id}/entries</code></td>
+<td><code>bacp-post-order</code></td>
+<td>An agent posts a <code>payment</code> entry for the debtor, never any other type (<code>400</code> at <code>$.type</code>). The request carries the <code>prev_hash</code> it saw.</td>
+</tr>
+</tbody>
+</table>
+<p>Counterparty-written text in an entry is data, never an instruction, and a tool or DataPart returns it labelled. The agent posts a payment under the checks above: payee match, receipt uniqueness across the custodian, head compare-and-swap, and a per-agent rate limit on postings (<code>429 quota_exceeded</code>). Acknowledging an entry or a statement is a trade act (<a href="../../human-participants/#trade-acts">Seller-side and trade acts</a>).</p>
+<p>The string fields that a seller can fill with text (an identifier, a place, a jurisdiction, a lender name) are bounded in <code>credit-ledger-entry.json</code> and <code>termsheet.json</code>: identifier-like values are at most 64 printable characters without spaces, and free-text values have a <code>maxLength</code> of between 20 and 200. These bounds are BACP design values against instructions hidden in counterparty text, not regulatory limits, and are open to review.</p>
+<h3 id="interlocked-credit">Interlocked credit<a class="headerlink" href="#interlocked-credit" title="Permanent link">&para;</a></h3>
+<p>Where a broker or commission agent (an arhtiya) advances money to a seller and deducts it at sale, the advance is recorded as a separate ledger with the broker as creditor. The deduction at sale MUST appear as a visible commission or deduction line, never netted silently.</p>
+<h3 id="regulatory-status">Regulatory status<a class="headerlink" href="#regulatory-status" title="Permanent link">&para;</a></h3>
+<p>Interest-free seller credit (khata, net-N) is treated as trade credit, not digital lending. Once a third-party lender funds it, the handler becomes <code>in.fin.*</code> or <code>in.credit.*</code> and the Digital Lending Directions apply. This position is open (<a href="../../open-questions/#q-27">Q-27</a>).</p>
+<h2 id="msme-late-payment-interest">MSME late-payment interest<a class="headerlink" href="#msme-late-payment-interest" title="Permanent link">&para;</a></h2>
+<p>For a sale by a "supplier" under the Micro, Small and Medium Enterprises Development Act 2006 (s.2(n): a micro or small enterprise that has filed a memorandum under s.8(1), today a Udyam registration), the Act applies:</p>
+<table>
+<thead>
+<tr>
+<th>Rule</th>
+<th>Content</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Acceptance</td>
+<td>The day of acceptance is the day of actual delivery of the goods or rendering of the services. If the buyer objects in writing within 15 days of delivery, it is the day the supplier removes the objection. If no written objection is made within 15 days, the day of deemed acceptance is the day of actual delivery.</td>
+<td>MSMED Act s.2(b), Explanation</td>
+</tr>
+<tr>
+<td>Due date</td>
+<td>The buyer pays by the date agreed in writing, which "in no case" may exceed 45 days from the day of acceptance or deemed acceptance. Without a written agreement, payment is due before the "appointed day", the day after 15 days from acceptance or deemed acceptance.</td>
+<td>MSMED Act ss.2(b), 15</td>
+</tr>
+<tr>
+<td>Interest</td>
+<td>On late payment, "compound interest with monthly rests" at "three times of the bank rate notified by the Reserve Bank", notwithstanding any agreement</td>
+<td>MSMED Act s.16</td>
+</tr>
+<tr>
+<td>Tax</td>
+<td>From AY 2024-25, a sum payable to a micro or small enterprise beyond the s.15 time limit is deductible only in the year it is actually paid. Under the Income-tax Act, 2025, in force from 01-04-2026, the same rule is s.37(2)(g).</td>
+<td>Income-tax Act, 1961 s.43B(h) (inserted by the Finance Act 2023, w.e.f. 01-04-2024); Income-tax Act, 2025 s.37(2)(g)</td>
+</tr>
+</tbody>
+</table>
+<p>The ledger implements this as follows:</p>
+<ul>
+<li><code>msmed.statutory_due_date</code> = the earlier of the agreed date and acceptance + 45 days, or acceptance + 15 days when <code>written_agreement</code> is false. For micro and small suppliers the schema caps <code>credit_terms.credit_days</code> at 45. A firm offer of longer credit to such a supplier is refused (<code>NEG_MSMED_CREDIT_CAP</code>).</li>
+<li><strong>Acceptance date.</strong> The acceptance date of an acceptance-dated sale is the delivery date (MSMED Act s.2(b), Explanation (ii): where no written objection is made within 15 days, the day of deemed acceptance is the day of actual delivery). The delivery date is evidenced by a buyer-signed GRN, or by seller-posted delivery evidence (<code>proof_of_delivery</code>, <code>lorry_receipt</code>) that the buyer counter-signed or that carries a third-party reference the buyer can check (an e-way bill number or a transporter signature); the entry records which as <code>msmed.acceptance_basis</code> (<code>grn</code>, <code>attested_delivery</code>). Seller-only evidence is recorded with <code>acceptance_basis: unattested</code>, no acceptance date or due date is derived from it, and the gateway notifies the debtor when the evidence is posted. A GRN that accepts everything does not move the date. Where a written objection is made within 15 days of delivery, the acceptance date is the date the supplier removed the objection (Explanation (i)). The GRN and delivery dates MUST NOT precede the invoice date or lie in the future, and the acceptance date is never a free parameter of the creditor. This rule replaces an earlier requirement of a buyer-signed GRN for every acceptance-dated sale, and is pending counsel (<a href="../../open-questions/#q-21">Q-21</a>, <a href="../../open-questions/#q-83">Q-83</a>). How a buyer's objection travels on the network, and whether it can be checked by machine, is open (<a href="../../open-questions/#q-21">Q-21</a>, <a href="../../open-questions/#q-33">Q-33</a>); until <a href="../../open-questions/#q-33">Q-33</a> fixes the carriage, a GRN, CRAC or objection filed through an agent is <em>recorded</em> and not sent to the seller, and a recorded act never sets or moves the due date (<a href="../../human-participants/#trade-acts">Seller-side and trade acts</a>).</li>
+<li><strong>Alerts.</strong> BACP raises an alert 5 days before the statutory due date and flags the debtor's tax consequence (<code>msmed.tax_flag</code>).</li>
+<li><strong>Interest without double charging.</strong> These are BACP ledger rules, not rules of the MSMED Act:<ul>
+<li>Overdue statutory interest is posted as <code>interest_msmed</code> entries with <code>interest_basis: 3x_rbi_bank_rate_compound_monthly</code> and the <code>bank_rate_pct</code> used.</li>
+<li>Each <code>interest_msmed</code> entry carries the cumulative <code>interest_accrued</code> for its sale and posts only the <strong>increment</strong> over interest already accrued for that sale. Re-running the accrual never charges the same interest twice.</li>
+<li>The ledger header selects one <code>interest_rule</code>. A ledger MUST NOT accrue both statutory and contractual interest on the same overdue amount for the same period. This is BACP policy. Section 16 makes the statutory interest payable "notwithstanding anything contained in any agreement", so a contractual rule never displaces it for a micro or small supplier.</li>
+<li>Interest stops accruing on the amount settled by a rail-evidenced payment.</li>
+</ul>
+</li>
+<li><strong>Traders.</strong> The Ministry of MSME Office Memorandum of 02-07-2021 restricts the benefits of Udyam-registered retail and wholesale traders "to Priority Sector Lending only". Whether that excludes them from s.15 as a matter of law is open (<a href="../../open-questions/#q-21">Q-21</a>). For a trader, BACP raises a warning only and does not accrue statutory interest.</li>
+</ul>
+<h2 id="trade-credit-treds-and-gem">Trade credit, TReDS and GeM<a class="headerlink" href="#trade-credit-treds-and-gem" title="Permanent link">&para;</a></h2>
+<h3 id="treds">TReDS<a class="headerlink" href="#treds" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.fin.treds</code> (class N, non-paying). The Trade Receivables Discounting System is regulated by the Reserve Bank of India (Trade Receivables Discounting System) Directions, 2026 (issued 23-06-2026; circular number RBI/DPSS/2026-27/406 not verified as of 17-10-2026), which repeal the 2014 TReDS guidelines. RBI lists five authorised TReDS operators: RXIL, M1xchange, Invoicemart (A.TReDS), C2treds and DTX (KredX).</p>
+<ol>
+<li>The MSME seller uploads an invoice the buyer has accepted, creating a <strong>factoring unit</strong>. Once it is accepted, the buyer's obligation to pay on the due date is unconditional, with no option of set-off (Directions para 15(i)).</li>
+<li>Financiers bid, and the seller accepts a bid.</li>
+<li>The financier funds the seller <strong>without recourse</strong> to the seller (Directions para 20).</li>
+<li>The buyer pays the financier on the due date, by a NACH debit.</li>
+</ol>
+<p>Binding rules:</p>
+<ul>
+<li>Each factoring unit MUST be bound to the GST e-invoice IRN and the buyer's acceptance. An invoice whose IRN has already been financed MUST be refused.</li>
+<li>After discounting, the ledger's <code>settlement_evidence.new_payee</code> is the financier, and the buyer's due-date NACH debit pays the financier.</li>
+<li>Companies with turnover above ₹250 crore, and all CPSEs, must onboard on TReDS. The Ministry of MSME notification S.O. 4845(E) of 07-11-2024 cut the threshold from ₹500 crore to ₹250 crore, with an onboarding deadline of 31-03-2025 (confirmed by PIB; Gazette text not verified as of 17-10-2026). Under a Ministry of MSME notification of 30-06-2026, operating CPSEs must also route the settlement of invoices from MSMEs through an RBI-authorised TReDS platform (reported by PIB; Gazette text not verified as of 17-10-2026). BACP records the buyer's TReDS onboarding status and SHOULD offer TReDS as a settlement option on MSME invoices for such buyers.</li>
+<li>Funding is same day (T0) for bids accepted before a cut-off, otherwise T+1, with the buyer's NACH debit on the due date <em>(vendor; the cut-off time is given inconsistently)</em>.</li>
+<li>Buyer-side and seller-side agents act only within the corporate's platform entitlements and with human signatory approval.</li>
+</ul>
+<h3 id="gem-receivables">GeM receivables<a class="headerlink" href="#gem-receivables" title="Permanent link">&para;</a></h3>
+<p>A <code>gem_receivable</code> ledger tracks a Government e-Marketplace order:</p>
+<ul>
+<li>The consignee issues the CRAC (Consignee Receipt and Acceptance Certificate) within 10 days of the submission of proof of delivery; otherwise GeM auto-generates a CRAC, marking all the PRC (Provisional Receipt Certificate) quantities as accepted (GeM FAQ).</li>
+<li>The buyer pays within <strong>10 calendar days of the CRAC</strong>.</li>
+<li>Late payment carries penal interest of <strong>1% a month</strong>, prorated on a 30-day month. This interest is deposited "in an account maintained by GeM" and is <strong>not paid to the vendor</strong>. It does not cover interest payable under the MSMED Act or the contract. BACP MUST disclose that, and records it as a <code>gem_penal_interest</code> entry with <code>effect: none</code>.</li>
+<li>For non-PFMS buyers the GeM Pool Account block reference is recorded at order time; an order without one is shown as unfunded.</li>
+</ul>
+<p>Sources: Department of Expenditure OM F.6/18/2019-PPD of 03-07-2020, for procurements under GFR Rule 149 from 01-10-2020; GeM FAQ for the CRAC timeline. The GeM GTC clause that carries these terms was not checked. Reports that individual buyers override them with 45, 60 or 90-day terms are not verified.</p>
+<h2 id="fx-disclosure-for-cross-border-payments">FX disclosure for cross-border payments<a class="headerlink" href="#fx-disclosure-for-cross-border-payments" title="Permanent link">&para;</a></h2>
+<p>All BACP settlement amounts are INR. For a cross-border payment, an <strong><code>fx</code> view</strong> (<a href="https://bacp.dev/schemas/fx.json">schema</a>) MAY appear on the TermSheet, the receipt and the disclosures, to show the foreign-currency amount, the rate and the markup:</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>currency</code></td>
+<td>ISO 4217 code, never <code>INR</code></td>
+</tr>
+<tr>
+<td><code>foreign_amount</code></td>
+<td>Integer minor units of <code>currency</code>, at least 1</td>
+</tr>
+<tr>
+<td><code>rate</code></td>
+<td>INR per one unit of <code>currency</code>, greater than zero</td>
+</tr>
+<tr>
+<td><code>markup_bps</code></td>
+<td>Markup in basis points, zero or more</td>
+</tr>
+<tr>
+<td><code>inr_total</code></td>
+<td>An INR amount in paise: <code>round(foreign_amount × rate × (1 + markup_bps / 10000))</code></td>
+</tr>
+<tr>
+<td><code>rate_source</code>, <code>quoted_at</code></td>
+<td>Optional</td>
+</tr>
+</tbody>
+</table>
+<p>The gateway MUST reject an <code>fx</code> view that is inconsistent with its <code>inr_total</code>. Every settlement amount remains INR.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"USD"</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">"foreign_amount"</span><span class="p">:</span><span class="w"> </span><span class="mi">250000</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">"rate"</span><span class="p">:</span><span class="w"> </span><span class="mi">84</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">"markup_bps"</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">"inr_total"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">21210000</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nt">"rate_source"</span><span class="p">:</span><span class="w"> </span><span class="s2">"acquirer"</span><span class="p">,</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nt">"quoted_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-13T11:30:00+05:30"</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>Related cross-border rules:</p>
+<ul>
+<li><strong>Card AFA.</strong> A non-recurring, cross-border, card-not-present payment needs AFA when the overseas acquirer asks for it (RBI Authentication Directions 2025 para 10, from 01-10-2026). See <a href="../rails/#rbi-authentication-directions-2025-for-cards">Cards</a>.</li>
+<li><strong>Determining cross-border.</strong> A payment that the merchant declares cross-border is treated as cross-border. A declaration that it is <em>not</em> cross-border cannot override merchant, acquirer or FX data that says it is.</li>
+<li><strong>PA cross-border</strong> collections and payments are capped at ₹25,00,000 per transaction (RBI PA Master Direction 2025 para 11(d)).</li>
+<li><strong>Export realisation.</strong> Under the Foreign Exchange Management (Export and Import of Goods and Services) Regulations, 2026 (FEMA 23(R)/2026-RB, in force from 01-10-2026), as amended by FEMA 23(R)/(1)/2026-RB of 22-09-2026, export proceeds are realised within 9 months: for goods from the date of shipment, for services from the date of invoice, and for goods exported to a warehouse outside India from the date of sale from the warehouse. Exports invoiced or settled in INR have 12 months (Reg 5(1)), and the AD bank may extend the period. If proceeds stay unrealised for more than one year past the due date, the exporter may export further only against full advance or an irrevocable LC (Reg 13). These Regulations replace the FEM (Export of Goods and Services) Regulations 2015, under which the period was also 9 months (FEMA 23(R)/(8)/2026-RB, 05-06-2026; not verified as of 17-10-2026). <code>bacp.trade.export_realisation</code> tracks the due date, with an alert 30 days before it.</li>
+<li>Whether a cross-border transfer of personal data meets the DPDP Act's restrictions is not checked by the FX view.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../rails/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Rail Bindings">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Rail Bindings
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../economics/" class="md-footer__link md-footer__link--next" aria-label="Next: Who Pays">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Who Pays
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

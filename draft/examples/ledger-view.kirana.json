@@ -1,0 +1,65 @@
+{
+  "ledger": {
+    "ledger_id": "ldg_KIRANAKHATA01",
+    "creditor": {
+      "role": "seller",
+      "id": "seller.kirana.example.in",
+      "legal_name": "Shree Ganesh Kirana",
+      "settlement_accounts": [
+        {
+          "vpa": "ganeshkirana@examplebank"
+        },
+        {
+          "vpa": "ganeshkirana.shop@examplebank"
+        },
+        {
+          "account_hash": "sha-256:Qm8vXz1bN6dRtY0eWuS5cAfGhL2oP9iVxT4yKnBwJk3"
+        }
+      ]
+    },
+    "debtor": {
+      "role": "buyer",
+      "id": "pp_9f2c1e"
+    },
+    "kind": "khata",
+    "credit_limit": {
+      "value": 2000000,
+      "currency": "INR"
+    },
+    "default_credit_days": 30,
+    "interest_rule": "none",
+    "ack_window": "P7D",
+    "itemise_above": {
+      "value": 1000000,
+      "currency": "INR"
+    },
+    "head_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc",
+    "opened_at": "2026-10-01T10:00:00+05:30",
+    "signatures": [
+      {
+        "role": "bap",
+        "kid": "bap.annapurna.example.in|k1",
+        "alg": "ES256",
+        "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+      },
+      {
+        "role": "bpp",
+        "kid": "seller.kirana.example.in|k1",
+        "alg": "ES256",
+        "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+      }
+    ]
+  },
+  "head_seq": 41,
+  "head_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc",
+  "balance": {
+    "value": 435000,
+    "currency": "INR"
+  },
+  "overdue": {
+    "value": 0,
+    "currency": "INR"
+  },
+  "oldest_unpaid_date": "2026-10-30",
+  "entry_count": 42
+}

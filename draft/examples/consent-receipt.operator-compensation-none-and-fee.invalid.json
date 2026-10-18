@@ -1,0 +1,91 @@
+{
+  "receipt_id": "cr_A1B2C3D4E5F6G7",
+  "iss": "mm.psp.example.in",
+  "cm_registration_no": null,
+  "issued_at": "2026-10-17T11:05:00+05:30",
+  "principal_ref": "prn_8f3k2m9q",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "recipient": {
+    "fiduciary_name": "Shree Ganesh Kirana",
+    "bpp_id": "bpp.kirana.example.in",
+    "provider_id": "P-112"
+  },
+  "data_items": [
+    {
+      "field": "NAME",
+      "form": "plain"
+    },
+    {
+      "field": "PHONE",
+      "form": "masked"
+    },
+    {
+      "field": "DELIVERY_ADDRESS",
+      "form": "plain"
+    }
+  ],
+  "purpose": {
+    "code": "P-GRO-01",
+    "text": {
+      "hi-IN": "घर के किराने का सामान मँगाना और पहुँचाना",
+      "en-IN": "Ordering and delivering household groceries"
+    }
+  },
+  "legal_basis": "consent_s6",
+  "notice": {
+    "language": "hi-IN",
+    "hash": "sha-256:kQjXdlwqRyFLW56p7AS8q374BSOL7RSzVQXuJIO88cg",
+    "uri": "https://mm.psp.example.in/notices/cr_A1B2C3D4E5F6G7",
+    "operator_compensation": {
+      "from_principal": [
+        {
+          "basis": "none"
+        },
+        {
+          "basis": "per_order",
+          "amount": {
+            "value": 2000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "from_sellers": "none"
+    }
+  },
+  "captured_via": {
+    "surface": "mm.psp.example.in",
+    "user_action": "upi_pin",
+    "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQXE4VzNuSzV2UnQ3WWNMbTIifQ.c2lnbmF0dXJl",
+    "presentation": {
+      "surface": "mm.psp.example.in",
+      "channel": "assisted",
+      "language": "hi-IN",
+      "modality": "both",
+      "content_hash": "sha-256:kQjXdlwqRyFLW56p7AS8q374BSOL7RSzVQXuJIO88cg",
+      "content_ref": "https://mm.psp.example.in/notices/cr_A1B2C3D4E5F6G7",
+      "template_id": "mm.psp.example.in/assisted/mandate-notice/2",
+      "user_action": "upi_pin",
+      "shown_at": "2026-10-17T11:02:10+05:30",
+      "acted_at": "2026-10-17T11:04:55+05:30",
+      "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQXE4VzNuSzV2UnQ3WWNMbTIifQ.c2lnbmF0dXJl",
+      "assisted_by": "par_csc_operator_01"
+    }
+  },
+  "withdrawal": {
+    "uri": "https://mm.psp.example.in/withdraw/cr_A1B2C3D4E5F6G7",
+    "erasure_signal": true
+  },
+  "grievance": {
+    "contact": "grievance@mm.psp.example.in"
+  },
+  "retention": {
+    "recipient_max": "P1Y",
+    "legal_minimum": "P1Y"
+  },
+  "signature": {
+    "role": "mandate_manager",
+    "kid": "mm.psp.example.in|ukid-2|es256",
+    "alg": "ES256",
+    "value": "eyJhbGciOiJFUzI1NiJ9.eyJjciI6MX0.c2ln"
+  }
+}

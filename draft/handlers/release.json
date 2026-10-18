@@ -1,0 +1,15 @@
+{
+  "registry_version": "2026-10-18",
+  "registry_serial": 1,
+  "published_at": "2026-10-18T00:00:00+05:30",
+  "files": [
+    {
+      "uri": "registry.json",
+      "digest": "sha-256:m-MLwV2Bmo4hk52aLeUnCDRa-vuEfC8MhgGF8D_toHA"
+    },
+    {
+      "uri": "../registry/conformance-authorities.json",
+      "digest": "sha-256:T1PNoYwrqgwDVLtfmj7L5e0Sq02OEbqHPC8RFhICuUU"
+    }
+  ]
+}

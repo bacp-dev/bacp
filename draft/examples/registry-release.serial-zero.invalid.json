@@ -1,0 +1,15 @@
+{
+  "registry_version": "2026-12-15",
+  "registry_serial": 0,
+  "published_at": "2026-12-15T18:00:00+05:30",
+  "files": [
+    {
+      "uri": "registry.json",
+      "digest": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM"
+    },
+    {
+      "uri": "../registry/conformance-authorities.json",
+      "digest": "sha-256:9fQ1b7mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM"
+    }
+  ]
+}

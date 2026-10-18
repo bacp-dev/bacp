@@ -1,0 +1,9 @@
+{
+  "channel": "web",
+  "uri": "https://vaani.example.in/human",
+  "dtmf": "0",
+  "languages": [
+    "hi-IN"
+  ],
+  "hours": "24x7"
+}

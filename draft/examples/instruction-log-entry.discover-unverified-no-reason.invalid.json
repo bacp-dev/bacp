@@ -1,0 +1,38 @@
+{
+  "seq": 5,
+  "session_id": "ses_01HZXB",
+  "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
+  "stage": "discover",
+  "actor": "agent",
+  "at": "2026-10-20T19:00:20+05:30",
+  "channel": "voice",
+  "language": "hi-IN",
+  "content_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "content_ref": "https://logs.vaani.example.in/blobs/ses_01HZXB/5",
+  "summary": {
+    "en-IN": "Searched for atta and ghee; the seller's signed callback was verified.",
+    "hi-IN": "आटा और घी खोजा गया; विक्रेता के हस्ताक्षर वाले कॉलबैक की जाँच हुई और वह सही निकला।"
+  },
+  "refs": {
+    "idempotency_key": "01HZX8W3T6Q9M2R7C4B1N8K5D0",
+    "message_id": "2cdc0c55-cb14-513a-b6fe-b5adde249e11",
+    "source_digests": [
+      "sha-256:lWfwvAF9PMhwrWdb1rhZL_wgvkFtkBv5FIsbptP6r8w"
+    ],
+    "source_checks": [
+      {
+        "source_digest": "sha-256:lWfwvAF9PMhwrWdb1rhZL_wgvkFtkBv5FIsbptP6r8w",
+        "outcome": "unverified"
+      }
+    ],
+    "registry_lookup": "lookup.vaani.example.in"
+  },
+  "prev_hash": "sha-256:fIhWyL-awPYfWeZ4sEEclRYJ4MkPizvOBYUHsU-E4Uw",
+  "entry_hash": "sha-256:7vGq2bYV0n4rKX5oV0m8k3sR9uXc1h2W6dLzPq3aTfE",
+  "signature": {
+    "role": "operator",
+    "kid": "bap.vaani.example.in|ukid-7|ed25519",
+    "alg": "EdDSA",
+    "value": "eyJhbGciOiJFZERTQSJ9.eyJsIjowfQ.c2ln"
+  }
+}

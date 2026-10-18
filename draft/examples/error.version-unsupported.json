@@ -1,0 +1,11 @@
+{
+  "type": "invalid_request",
+  "code": "version_unsupported",
+  "message": "BACP-Version 2026-09-01 is not listed by this gateway",
+  "param": "$.headers.BACP-Version",
+  "supported_versions": [
+    "2026-10-18",
+    "2026-11-01"
+  ],
+  "resolution": "recoverable"
+}

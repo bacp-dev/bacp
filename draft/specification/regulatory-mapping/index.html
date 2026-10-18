@@ -1,0 +1,3776 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/draft/specification/regulatory-mapping/">
+      
+      
+        <link rel="prev" href="../security-and-privacy/">
+      
+      
+        <link rel="next" href="../conformance/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Regulatory Mapping - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#regulatory-mapping" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Regulatory Mapping
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to read this page
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rbi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reserve Bank of India (RBI)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#npci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NPCI and card networks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meity-dpdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumer-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CCPA and Consumer Protection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ondc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ONDC network policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gst-legal-metrology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GST, Income-tax and Legal Metrology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#msmed-competition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MSMED and Competition
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FEMA and cross-border trade
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-law" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other statutes and government procurement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bacp-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BACP policy and DPI design patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#how-to-read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How to read this page
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#summary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Summary
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#rbi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reserve Bank of India (RBI)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#npci" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NPCI and card networks
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#meity-dpdp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#consumer-protection" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CCPA and Consumer Protection
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ondc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ONDC network policy
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gst-legal-metrology" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GST, Income-tax and Legal Metrology
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#msmed-competition" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MSMED and Competition
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fema" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FEMA and cross-border trade
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-law" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other statutes and government procurement
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bacp-policy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BACP policy and DPI design patterns
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="regulatory-mapping">Regulatory Mapping<a class="headerlink" href="#regulatory-mapping" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>This page maps every regulatory and policy requirement that BACP tracks to the part of the specification that
+answers it. Each row gives the requirement, the instrument it comes from, the BACP control, and whether BACP <code>2026-10-18</code>
+<strong>covers</strong> it, covers it <strong>partially</strong>, or leaves a <strong>gap</strong>. Every partial or gap row names what is
+missing and, where one exists, links the open question that must be answered first.</p>
+<p>This is the only page that uses requirement identifiers (<code>REQ-…</code>, <code>PAY-…</code>, <code>NEG-…</code>, <code>TRADE-…</code>). They are stable
+labels for traceability between this page, the open questions and conformance reports.</p>
+<div class="admonition danger">
+<p class="admonition-title">Not legal advice</p>
+<p>This mapping is an engineering aid for implementers and reviewers. <strong>It is not legal advice</strong> and it does not
+establish that any deployment complies with any law, direction or network policy. Several sources are cited from
+secondary material or are unverified, and are marked as such. Laws, directions and circulars change; the
+citations were last checked as of 17-10-2026. Each participant remains responsible for its own compliance and
+should take advice from qualified counsel.</p>
+</div>
+<h2 id="how-to-read">How to read this page<a class="headerlink" href="#how-to-read" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Status judges the specification, not a deployment.</strong> "Covered" means the specification as written satisfies the
+  requirement. It does not mean any implementation has been certified.</li>
+<li><strong>Group</strong> is the regulator or body whose instrument is the primary source. A row is listed once, under its primary
+  source, even when several instruments apply.</li>
+<li><strong>Forward-dated duties.</strong> DPDP duties that start in November 2026 or May 2027 are mapped now; their dates are in
+  <a href="../security-and-privacy/#commencement">Security and Privacy</a>.</li>
+<li><strong>N/A</strong> rows are operator duties outside the wire protocol (contracts, audits, data-lifecycle jobs), which belong
+  in an operator conformance checklist, or requirements whose source has been withdrawn.</li>
+<li><strong>Source labels.</strong> A source with no qualifier was checked against the primary text (RBI, NPCI, MeitY, Gazette,
+  ONDC or statute). "Secondary", "press", "not verified" or "not checked" marks a source that could not be seen in
+  a primary text. "BACP policy" marks the part of a requirement that BACP adds beyond what the instrument says.</li>
+</ul>
+<h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Covered</td>
+<td>177</td>
+</tr>
+<tr>
+<td>Partial</td>
+<td>70</td>
+</tr>
+<tr>
+<td>Gap</td>
+<td>15</td>
+</tr>
+<tr>
+<td>N/A</td>
+<td>6</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td><strong>268</strong></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Group</th>
+<th>Requirements</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="#rbi">Reserve Bank of India (RBI)</a></td>
+<td>73</td>
+</tr>
+<tr>
+<td><a href="#npci">NPCI and card networks</a></td>
+<td>16</td>
+</tr>
+<tr>
+<td><a href="#meity-dpdp">MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar</a></td>
+<td>30</td>
+</tr>
+<tr>
+<td><a href="#consumer-protection">Central Consumer Protection Authority (CCPA) and Consumer Protection</a></td>
+<td>35</td>
+</tr>
+<tr>
+<td><a href="#ondc">ONDC network policy</a></td>
+<td>6</td>
+</tr>
+<tr>
+<td><a href="#gst-legal-metrology">GST, Income-tax and Legal Metrology</a></td>
+<td>10</td>
+</tr>
+<tr>
+<td><a href="#msmed-competition">MSMED and Competition</a></td>
+<td>11</td>
+</tr>
+<tr>
+<td><a href="#fema">FEMA and cross-border trade</a></td>
+<td>4</td>
+</tr>
+<tr>
+<td><a href="#other-law">Other statutes and government procurement</a></td>
+<td>21</td>
+</tr>
+<tr>
+<td><a href="#bacp-policy">BACP policy and DPI design patterns</a></td>
+<td>62</td>
+</tr>
+</tbody>
+</table>
+<h2 id="rbi">Reserve Bank of India (RBI)<a class="headerlink" href="#rbi" title="Permanent link">&para;</a></h2>
+<p>RBI directions, master directions and circulars on authentication, e-mandates, payment aggregators, cards, PPIs, digital lending, payment-data storage and turnaround times. The FREE-AI recommendations are non-binding.</p>
+<div class="admonition warning">
+<p class="admonition-title">Digital Lending Directions withdrawn</p>
+<p>RBI now lists the Digital Lending Directions 2025 (DOR.STR.REC.19/21.07.001/2025-26, 08-05-2025) and the KFS
+circular (DOR.STR.REC.13/13.03.00/2024-25) among the circulars withdrawn by its Department of Regulation, in
+its consolidation into entity-wise directions. Rows citing "Digital Lending Directions" give the paragraph numbers
+of the 08-05-2025 text; they have not yet been mapped to the consolidated directions. See
+<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>.</p>
+</div>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REQ-113</strong> Financial data only through a ReBIT AA flow via a regulated FIU, minimum scope</td>
+<td>RBI NBFC-AA Master Direction (2016, updated 2024) paras 6.3, 7; ReBIT (routing all financial data through an AA is BACP policy)</td>
+<td>—</td>
+<td><strong>Gap</strong>: No Account Aggregator consent reference for affordability or financial-data use</td>
+</tr>
+<tr>
+<td><strong>REQ-117</strong> A mandate alone never moves money</td>
+<td>RBI NBFC-AA Master Direction para 5(3) (pattern); RBI AFA Directions 2025 para 6</td>
+<td>An open payment mandate needs <code>rail_binding</code>, a closed one <code>auth_binding</code>; a mandate alone never moves money (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-212</strong> Check restricted destinations for transfers; payment system data stored only in India</td>
+<td>RBI Storage of Payment System Data (RBI/2017-18/153, 06-04-2018); DPDP Act s.16, Rule 15</td>
+<td>— (<a href="../security-and-privacy/#data-localisation">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: Fail-safe default: gateway, MM and PSP adapter store and process payment data only in India; agent-side model region open → <a href="../open-questions/#q-15">Q-15</a></td>
+</tr>
+<tr>
+<td><strong>REQ-301</strong> Every agent payment runs under an e-mandate or exemption, or gets fresh 2FA</td>
+<td>RBI AFA Directions 2025 para 6, Annex 1</td>
+<td>Open mandates bind to a class-O standing authority, only through a primitive whose limits the rail or issuer enforces (<code>binding.open_primitives</code>), re-checked at every <code>complete</code>; closed human-present mandates bind to a per-transaction 2FA (<a href="../mandates/#handler-binding">Mandates</a>, <a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-302</strong> Agent never stores or replays PIN, OTP or biometrics</td>
+<td>RBI AFA Directions 2025 para 6(b) (dynamic factor; the no-storage rule is BACP policy)</td>
+<td>The agent never holds a PIN, OTP or biometric; descriptors list <code>never_collect</code> (<a href="../security-and-privacy/#data-minimisation">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-303</strong> Recurring payments use an e-mandate; AFA above ₹15,000 (₹1 lakh for listed categories)</td>
+<td>RBI E-mandate Framework 2026 para 8</td>
+<td>AFA thresholds produce a <code>rail_auth</code> step-up (<a href="../mandates/">Mandates</a>, <a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-304</strong> Show the issuer's ≥24 h pre-debit notice; honour opt-out</td>
+<td>RBI E-mandate Framework 2026 para 6</td>
+<td>Pre-debit notice relayed and opt-out honoured; notice-gated checkout; fail-safe 24 h notice for repeat Reserve Pay and OTM debits (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-03">Q-03</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-305</strong> Payments only through RBI-authorised PAs or banks; no funds held; no card storage</td>
+<td>RBI PA Directions 2025 paras 5, 10(a)–(b), 16; Annex 1 para 2.1</td>
+<td>Collecting party checked against the registry record's <code>regulatory_status</code> (a <code>verified</code> <code>rbi_pa</code> or <code>bank</code> entry) before money moves (<code>collector_not_authorised</code>) (<a href="../payments/">Payments</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-18">Q-18</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-306</strong> Refund to the original method unless the user instructs otherwise</td>
+<td>RBI PA Directions 2025 para 10(f); Consumer Protection (E-Commerce) Rules r.4(10) (refunds as prescribed by RBI, within a reasonable time)</td>
+<td>Refunds to the original method, identified by the original rail reference (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-307</strong> "Debited but not confirmed" state; T+5 / T+1 tracking; tell the user about ₹100/day</td>
+<td>RBI TAT circular (RBI/2019-20/67, 20-09-2019)</td>
+<td>Payment saga state <code>reversal_pending</code> with <code>reversal_deadline</code>; <code>debited_not_confirmed</code> message follows <code>reversal_basis</code>: it states T+5 and ₹100 a day only for <code>rbi_tat</code>, never for <code>bacp_policy</code>, and names the refund, UDIR and Ombudsman routes for <code>unknown</code> (<a href="../checkout/#debited-not-confirmed">Checkout</a>). Each tender of a payment plan carries its own <code>reversal_deadline</code>, <code>rail_ref</code> and derived <code>psp_key</code> (<a href="../payments/credit-and-split-tender/#plan-wire">Plans on the wire</a>)</td>
+<td><strong>Partial</strong>: Refund-settlement trigger undefined; saga UPI-only → <a href="../open-questions/#q-49">Q-49</a>. Whether TAT row 4(b) reaches a payment that the rail completed and only the seller's confirmation is missing is not verified as of 18-10-2026 and is asked of counsel and RBI, so the message promises no compensation outside <code>rbi_tat</code></td>
+</tr>
+<tr>
+<td><strong>REQ-308</strong> Machine-readable dispute and ODR channel linked to UTR/RRN</td>
+<td>RBI ODR circular (RBI/2020-21/21, 06-08-2020) Annex paras 5.1–5.4 (UTR/RRN linkage is BACP's choice)</td>
+<td>IGM issue carries the RRN or UTR; payment disputes raised through the PSP channel by RRN (<a href="../transports/beckn/#igm">Beckn binding</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-309</strong> AI disclosure; switch to a human at any time</td>
+<td>RBI FREE-AI report (13-08-2025) para 4.4.54 (non-binding; not verified as of 17-10-2026)</td>
+<td>AI disclosure with typed routes to a human (a <code>tel:</code> route, optionally with DTMF digits, on voice, IVR and UPI 123PAY) in the AgentCredential and the first session message, logged at stage <code>ai_disclosure</code>; <code>POST /sessions/{id}/handoff</code> in any state and after revocation, with status <code>human_handoff</code>, acceptance only by a registered human support operator, and release back to the agent (<a href="../human-participants/#handoff">Human participants</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-310</strong> AI inventory, red-teaming, incident reporting, kill switch</td>
+<td>RBI FREE-AI report (13-08-2025) Recs 20–23, para 4.4.58 (non-binding; not verified as of 17-10-2026)</td>
+<td>AI inventory reference and incident contact in the AgentCredential; credential revocation as kill switch (<a href="../identity-and-signing/">Identity</a>)</td>
+<td><strong>Partial</strong>: No red-team or incident artefact in conformance</td>
+</tr>
+<tr>
+<td><strong>REQ-401</strong> Instrument model covers UPI variants, Lite, 123PAY, Reserve Pay/Circle, cards, e-RUPI, e₹ and BBPS, each with limits, auth mode and refund route</td>
+<td>RBI and NPCI rail rules</td>
+<td>Payment-handler registry: 57 descriptors with limits, authentication, refund route (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-402</strong> Enforce configurable rail caps (Lite ₹1,000 / ₹5,000; 123PAY ₹10,000)</td>
+<td>RBI offline payments framework (RBI/2021-22/146, updated 04-12-2024); RBI Statement on Developmental and Regulatory Policies, Oct 2024</td>
+<td>Configurable rail caps in handler descriptors; device-bound handlers not open-eligible (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-05">Q-05</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-403</strong> Mandate constraints map to e₹ programmability and e-RUPI restrictions</td>
+<td>RBI CBDC Concept Note (07-10-2022) s.5.7; RBI Digital Rupee FAQ Q22</td>
+<td>Programmability and voucher primitives in descriptors (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: No mapping from mandate constraints to e₹ or e-RUPI rules</td>
+</tr>
+<tr>
+<td><strong>REQ-404</strong> Bill payments through BBPS operating units, fetch before pay, no scraping</td>
+<td>RBI BBPS Directions 2024 para 4(d) ("no scraping" is BACP policy)</td>
+<td>BBPS handlers with Bharat Connect transaction reference as evidence (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-405</strong> Cross-border: show currency, FX rate and markup; CNP AFA; DPDP s.16 check</td>
+<td>RBI AFA Directions para 10; FEMA; DPDP Act s.16</td>
+<td>FX disclosure view with INR settlement; cross-border card-not-present AFA step-up (<a href="../payments/">Payments</a>)</td>
+<td><strong>Partial</strong>: No restricted-destination check under DPDP s.16 → <a href="../open-questions/#q-15">Q-15</a></td>
+</tr>
+<tr>
+<td><strong>REQ-406</strong> Credit at checkout only from RBI-regulated lenders, with lender, APR and KFS disclosed</td>
+<td>RBI Digital Lending Directions 2025 paras 6, 8(i) (withdrawn; 08-05-2025 numbering)</td>
+<td>Credit options carry lender, regulated-entity status, APR and KFS (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered (Account Aggregator consent is tracked under REQ-113)</td>
+</tr>
+<tr>
+<td><strong>PAY-102</strong> No handler marked "human presence required" runs without a human auth event</td>
+<td>RBI AFA Directions para 6</td>
+<td>Human-present-only handlers refuse human-not-present requests (<code>presence_handler_mismatch</code>) (<a href="../payments/">Payments</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-107</strong> Disclose credit funding and hold prior consent</td>
+<td>RBI/2023-24/58 (prior consent; disclosure is BACP policy)</td>
+<td><code>credit_funding_allowed</code> on the governing mandate; credit handlers need it (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td><strong>Partial</strong>: The PSP attestation carries <code>funding</code> (an overdraft account is credit unless the PSP attests deposit, and a missing value is credit) and a credit without <code>credit_funding_allowed</code> is refused with <code>credit_funding_not_allowed</code>; the consent reference itself is still not carried</td>
+</tr>
+<tr>
+<td><strong>PAY-108</strong> Lite and Lite X never available to remote agents; marked device-bound</td>
+<td>RBI offline payments framework; NPCI</td>
+<td>UPI Lite is class A (device-bound), never open-eligible (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-109</strong> No storage of PAN, CVV or expiry; keep only last 4 digits and issuer</td>
+<td>RBI CoFT 2021 paras 4.1–4.2; PA Directions 2025 Annex 1 para 2.1</td>
+<td>Descriptors forbid storing card number, CVV and expiry; retain last four digits only (<a href="../security-and-privacy/#data-minimisation">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-110</strong> Token provisioned with consent and AFA; bound to card, requestor and merchant; never presented elsewhere</td>
+<td>RBI CoFT 2021 para 3.5; Annex conditions 1, 2, 6</td>
+<td>Card-token handler descriptor; a token is never presented at another merchant (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td><strong>Partial</strong>: Merchant-binding rule stated, but no gateway check or error code → <a href="../open-questions/#q-54">Q-54</a></td>
+</tr>
+<tr>
+<td><strong>PAY-111</strong> Token requestor lists tokenised merchants and offers de-registration</td>
+<td>RBI CoFT Annex condition 3</td>
+<td>—</td>
+<td><strong>Gap</strong>: Token-requestor merchant listing and de-registration → <a href="../open-questions/#q-54">Q-54</a></td>
+</tr>
+<tr>
+<td><strong>PAY-112</strong> Fresh consent on card renewal before re-linking</td>
+<td>RBI CoFT Annex condition 5</td>
+<td>—</td>
+<td><strong>Gap</strong>: No re-consent state on card reissue → <a href="../open-questions/#q-54">Q-54</a></td>
+</tr>
+<tr>
+<td><strong>PAY-113</strong> A "CNP not enabled" decline becomes an actionable error; no silent fallback</td>
+<td>RBI/2019-20/142</td>
+<td><code>card_not_enabled_for_cnp</code> with no silent fallback (<a href="../errors/#registry-payments">Errors</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-114</strong> Unattended card debits only under an e-mandate or an agentic token</td>
+<td>RBI E-mandate Framework 2026; AFA Directions Annex 1 (agentic tokens are card-network programmes, not an RBI rule)</td>
+<td>Open mandates may bind to card e-mandates or agentic tokens; AFA above threshold (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-39">Q-39</a>)</td>
+</tr>
+<tr>
+<td><strong>PAY-116</strong> Cross-border CNP AFA step-up when the acquirer asks</td>
+<td>RBI AFA Directions para 10</td>
+<td>Step-up reason <code>afa_crossborder_cnp</code> when the acquirer requests AFA (<a href="../errors/#step-up-reasons">Errors</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-117</strong> EMI: show principal, interest and discount; never call interest-bearing EMI "no cost"</td>
+<td>RBI Credit Card Master Direction 6(b)(iii)</td>
+<td>TermSheet EMI fields; interest-bearing EMI cannot be no-cost (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-118</strong> Refunds that create a card credit balance surface the consent states</td>
+<td>RBI Credit Card Master Direction 10(h)</td>
+<td>Refund states <code>pending_cardholder_consent</code>, <code>reversed_to_bank_account</code> (<a href="../errors/#refund-states">Errors</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-119</strong> Never refund card, UPI or net-banking payments into a PPI; store credit only on instruction</td>
+<td>RBI PPI Master Direction 14.3; PA Master Direction 10(f)</td>
+<td><code>refund_to_ppi_forbidden</code>; store credit only on explicit instruction (<a href="../payments/">Payments</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-120</strong> Refunds of PPI payments go back to the same PPI; a refund of a failed, returned, rejected or cancelled PPI transaction is applied to the PPI immediately</td>
+<td>RBI PPI Master Direction para 14.3(a) (as updated 30-09-2026)</td>
+<td>PPI refunds return to the same PPI (<a href="../payments/rails/">Rail Bindings</a>); the split-tender unwind refunds an earlier PPI tender to the same PPI at once (<a href="../payments/credit-and-split-tender/#rules">Split tender rules</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-121</strong> Enforce PPI caps; no credit-line funding of PPI loads</td>
+<td>RBI PPI Master Direction 9.1, 9.2 (caps); the credit-line load ban rests on a press-reported RBI clarification (letter not public)</td>
+<td>PPI wallet limits in the descriptor (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: No rule blocking credit-line loads of PPIs</td>
+</tr>
+<tr>
+<td><strong>PAY-122</strong> Gift PPI spendable by an agent without AFA; no reload or cash-out</td>
+<td>RBI PPI Master Direction 10.1, 15.3(5)</td>
+<td>Gift PPI is class O; codes vaulted away from the agent (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-30">Q-30</a>)</td>
+</tr>
+<tr>
+<td><strong>PAY-123</strong> Net banking only as a redirect; no credentials handled</td>
+<td>RBI AFA Directions para 6 (redirect-only is BACP policy)</td>
+<td>Net banking is class C (redirect); credentials never collected (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-124</strong> eNACH carries UMRN, cap, frequency and validity; stop on revocation; T+1</td>
+<td>RBI TAT circular, row 7b</td>
+<td>eNACH debit carries UMRN, cap, frequency and validity; stops on cancellation (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-125</strong> Credit offer shows lender, amount, tenor, APR, EMI, penal charges and KFS</td>
+<td>RBI Digital Lending Directions paras 6(iii), 8(i) (withdrawn; 08-05-2025 numbering)</td>
+<td>Loan offers carry lender, amount, tenor, APR, EMI, interest, penal charges and KFS (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-126</strong> Multi-lender display: every matched offer, unmatched lenders named, pre-disclosed ranking metric</td>
+<td>RBI Digital Lending Directions paras 6(i) (every matched offer, unmatched lenders named), 6(iv) (pre-disclosed ranking metric) (withdrawn; 08-05-2025 numbering)</td>
+<td>Offer list shows every matched offer, names unmatched lenders, declares a ranking metric; nothing preselected (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-127</strong> Loan acceptance is a human action</td>
+<td>RBI Digital Lending Directions 8(i) (withdrawn; 08-05-2025 numbering) (KFS; human acceptance is BACP policy); Consumer Protection (E-Commerce) Rules r.4(9)</td>
+<td>Loan acceptance is human-present (<code>credit_acceptance</code>); agent attempts get <code>credit_acceptance_requires_hp</code> (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-128</strong> Show the cooling-off period and an exit action</td>
+<td>RBI Digital Lending Directions para 10 (withdrawn; 08-05-2025 numbering)</td>
+<td><code>cooling_off_days</code> of at least one with a penalty-free exit (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-129</strong> Repayments go directly to the lender; no pooling</td>
+<td>RBI Digital Lending Directions 9(ii)–(iii) (withdrawn; 08-05-2025 numbering)</td>
+<td>Repayments and refunds go to the lender (<code>repayment_payee_not_lender</code>) (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-130</strong> Cash COD and COD-by-UPI are distinct; no escrow for cash COD</td>
+<td>RBI PA Master Direction 4(a), 18(b)</td>
+<td>Cash COD and COD by UPI are distinct handlers; no escrow for cash COD (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-133</strong> Card disputes linked to the issuer's 30-day channel; no charges on a fraud-disputed amount meanwhile</td>
+<td>RBI Credit Card Master Direction 10(b), 10(d)</td>
+<td>Dispute channels in descriptors (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: No dispute timer or disputed-amount state</td>
+</tr>
+<tr>
+<td><strong>PAY-134</strong> PPI complaints forwarded with a 30-day timer; unauthorised-debit reports time-stamped</td>
+<td>RBI PPI Master Direction 16.2(5), 17.4(6)</td>
+<td>PPI complaints forwarded and tracked against 30 days; unauthorised-debit reports time-stamped (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-135</strong> Record PIN-less exemptions; never split a cart to stay under a threshold</td>
+<td>RBI AFA Directions Annex 1 (exemptions); the split-order rule is BACP policy</td>
+<td>AFA evaluated on the plan total; split-order detection (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-136</strong> Honour the user's chosen card or network; no steering</td>
+<td>RBI/2023-24/131 card-network choice (binds issuers; agent rule is BACP policy)</td>
+<td>Handler ordering puts the buyer's preference first, never steered for incentives (<a href="../payments/#handler-intersection-and-preference">Payments</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-201</strong> Beneficiary name look-up and PayeeBinding record before paying a new A2A payee</td>
+<td>RBI/2024-25/99</td>
+<td>Beneficiary name look-up and <code>PayeeBinding</code> record before a new payee; a name mismatch is held for human confirmation (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td><strong>Partial</strong>: No PayeeBinding JSON schema</td>
+</tr>
+<tr>
+<td><strong>PAY-203</strong> RTGS only from ₹2 lakh; IMPS up to ₹5 lakh; otherwise NEFT</td>
+<td>RBI RTGS FAQ Q6 (₹2 lakh minimum); NPCI IMPS (₹5 lakh per transaction)</td>
+<td>RTGS below ₹2 lakh and IMPS above ₹5 lakh refused; NEFT by default (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-204</strong> Agent A2A transfers need fresh 2FA or a human checker</td>
+<td>RBI AFA Directions para 6 (maker-checker is BACP policy)</td>
+<td>Approval policy primitive; maker-checker <code>pending_approval</code> (<a href="../trade-profiles/">Trade Profiles</a>, <a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-205</strong> Record the UTR; track IMPS non-credit reversal</td>
+<td>RBI TAT circular (RBI/2019-20/67) row 3a</td>
+<td>UTR recorded as settlement evidence; unconfirmed IMPS credits tracked for reversal (T+1, ₹100 per day) (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td><strong>Partial</strong>: IMPS refund-settlement signal open → <a href="../open-questions/#q-49">Q-49</a></td>
+</tr>
+<tr>
+<td><strong>PAY-209</strong> BBPS fetch, validate, then pay via an operating unit; store the references</td>
+<td>RBI BBPS Directions 2024</td>
+<td>BBPS bill handler; fetch then pay; references stored (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-210</strong> B2B invoice payments carry IRN and GSTIN; reject an amount mismatch</td>
+<td>NBBL press release, 26-02-2026 (platform description only; IRN, GSTIN and mismatch rules are BACP policy)</td>
+<td>Bharat Connect B2B invoice handler carries IRN and GSTIN; refused on an amount mismatch (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-212</strong> e-RUPI: enforce purpose, MCC, balance and expiry; multi-use</td>
+<td>RBI Statement on Developmental and Regulatory Policies, 10-02-2022 (PR 2021-2022/1694, item 6)</td>
+<td>e-RUPI voucher mirrored into the mandate; purpose, merchant, balance and expiry enforced; multi-use supported (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-38">Q-38</a>)</td>
+</tr>
+<tr>
+<td><strong>PAY-213</strong> e-RUPI caps held as configuration</td>
+<td>RBI statement of 08-06-2023 (PR 2023-2024/365, item 6; no figures stated)</td>
+<td>e-RUPI caps held as configuration (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-214</strong> Compile mandate constraints into e₹ rules; refuse conflicts</td>
+<td>RBI Digital Rupee FAQ Q22</td>
+<td>Mandate constraints compiled into e₹ programmability rules; conflicts refused (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-216</strong> AePS human-present; summary shown and spoken; ATO ID and RRN logged; agent never triggers biometrics</td>
+<td>RBI ATO Directions 2025 (RBI/2025-26/63); the summary, logging and no-agent-trigger rules are BACP policy</td>
+<td>AePS is class A; assisted session binding; agent never triggers biometrics (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-217</strong> Reject ATOs inactive for 3 months or more</td>
+<td>RBI ATO Directions 2025 para 2.2</td>
+<td>Sessions from an ATO flagged inactive for 3 months or more are rejected (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td><strong>Partial</strong>: Check applies only where the acquirer exposes the inactivity flag</td>
+</tr>
+<tr>
+<td><strong>PAY-218</strong> FASTag/NCMC top-ups under an AFA mandate; post-debit notice</td>
+<td>RBI E-mandate Framework 2026 paras 6–7</td>
+<td>FASTag and NCMC top-ups under AFA mandates with post-debit notice (<a href="../payments/rails/">Rail Bindings</a>); an NCMC top-up claims no Annexure-1 exemption and a FASTag top-up keeps row 4 as a reading</td>
+<td><strong>Partial</strong>: Annexure-1 names neither top-up → <a href="../open-questions/#q-103">Q-103</a></td>
+</tr>
+<tr>
+<td><strong>PAY-219</strong> Stored-value caps configurable (MTS ₹3,000; NCMC offline ₹500 / ₹2,000)</td>
+<td>RBI PPI Master Direction 10.2; offline framework Annex para 5 (general offline caps; NCMC not named)</td>
+<td>Stored-value caps configurable in descriptors (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-221</strong> TReDS bound to IRN and acceptance; refuse duplicate IRN</td>
+<td>RBI TReDS Directions 2026 (RBI/DPSS/2026-27/406) paras 13–15; IRN binding is BACP policy</td>
+<td>TReDS bound to IRN and acceptance; duplicate IRN refused (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-223</strong> OCEN and dealer-line offers: lender, APR, tenure, repayment mandate type, KFS; human acceptance</td>
+<td>RBI Digital Lending Directions (withdrawn; paragraph not identified); OCEN</td>
+<td>OCEN and dealer-line offers carry lender, APR, tenure, repayment mandate type and KFS; human acceptance (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-226</strong> PA-CB ≤₹25 lakh per transaction; carry export invoice or EDF reference</td>
+<td>RBI PA Master Direction 11(d)</td>
+<td>PA cross-border handler limit (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: Export invoice or EDF reference described but not a required field</td>
+</tr>
+<tr>
+<td><strong>PAY-229</strong> Multi-seller collection via PA escrow; settlement timeline from the agreement; only onboarded sellers</td>
+<td>RBI PA Master Direction 10(b), 13(f), 16, 18</td>
+<td>Collector authorisation check; settlement timeline source in descriptors (<a href="../payments/">Payments</a>); no payment spans sellers, one leg per seller (<a href="../checkout/#multi-seller-basket">Multi-seller basket</a>)</td>
+<td><strong>Partial</strong>: No settlement ETA; onboarded-seller check undefined → <a href="../open-questions/#q-51">Q-51</a></td>
+</tr>
+<tr>
+<td><strong>PAY-232</strong> A Reserve Pay block pays the seller shop that the principal chose, not another shop on the same seller app</td>
+<td>RBI PA Master Direction 2025 para 13(f) (a PA ensures a marketplace takes no payment for a seller not onboarded on it) and para 13(e) (merchant ID per merchant), as the basis of a BACP rule; the Reserve Pay block-payee match itself is BACP policy</td>
+<td><code>payee.provider_id</code> of the block equals <code>message.order.provider.id</code> of the seller's BPP-signed terms at every leg; a mismatch gets <code>403 reservepay_block_wrong_payee</code> (<a href="../mandates/#sibling-payment-mandates">Sibling Payment Mandates</a>)</td>
+<td><strong>Partial</strong>: Whether ONDC seller apps share one collection VPA across providers, and whether the signed terms carry <code>provider.id</code>, is not verified as of 18-10-2026 (a question for ONDC)</td>
+</tr>
+<tr>
+<td><strong>PAY-137</strong> Charges other than the price are distinctly displayed to the payer before the transaction</td>
+<td>RBI Payment Aggregators Master Direction 2025 (RBI/DPSS/2025-26/141) para 10(c)</td>
+<td>Payer-borne charge lines with a recipient; the Trusted Surface reads each fee line before the factor (<a href="../checkout/#fee-lines">Fees on the payer's screen</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-140</strong> Debit-card MDR is not passed on to customers</td>
+<td>RBI/2017-18/105 (06-12-2017), para 6; in force not verified as of 18-10-2026</td>
+<td>MDR is never a payer line and never in a receipt (<a href="../payments/economics/">Who pays</a>)</td>
+<td><strong>Partial</strong>: whether the circular is still in force is not verified</td>
+</tr>
+<tr>
+<td><strong>PAY-142</strong> A card convenience fee is indicated to the cardholder transparently before the transaction</td>
+<td>RBI Credit Card and Debit Card Directions 2025 para 77 (binds issuers; context only)</td>
+<td>Fee lines shown before the factor; the consistency warning covers fees across debit modes</td>
+<td><strong>Partial</strong>: the duty binds issuers, not BACP participants</td>
+</tr>
+<tr>
+<td><strong>TRADE-113</strong> Recurring payments as mandates; AFA above ₹15,000</td>
+<td>RBI E-mandate Framework 2026</td>
+<td>Recurring payments as mandates; AFA above threshold (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-116</strong> Low-capability channels with enforced limits</td>
+<td>RBI rules for 123PAY, Lite and AePS</td>
+<td>Low-capability channel handlers with enforced limits (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-119</strong> Voice never releases money; authentication validates the originating customer's credentials, with one dynamic factor unique to the transaction</td>
+<td>RBI/2025-26/79 paras 5(a), 5(f), 6(b); NPCI UPI Consolidated Circular v1.0 para 19.2.2; BACP policy for human-not-present</td>
+<td>The gateway refuses <code>voice_confirm_plus_device</code> on <code>rail_auth</code> and on a debit-releasing <code>confirm</code>; a PIN is taken only on a PSP-operated surface (<a href="../human-participants/#voice">Voice confirmation</a>, <a href="../human-participants/#ts-pin-rule">PIN rule</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-13">Q-13</a> for non-money confirmations)</td>
+</tr>
+<tr>
+<td><strong>REQ-120</strong> An authentication exemption is recorded against its RBI Annexure-1 row, never against a rail rule</td>
+<td>RBI/2025-26/79 para 6(a) and Annexure-1 (seven rows; later additions apply)</td>
+<td>Handler descriptor <code>afa.rbi_annex1_item</code>, REQUIRED for <code>exempt</code> and <code>exempt_below_threshold</code> and FORBIDDEN for <code>at_block_creation</code> and <code>at_registration_only</code>; the closed Payment Mandate's <code>afa_ref</code> (<a href="../payments/handler-registry/">Handler registry</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-88">Q-88</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-121</strong> A debit authenticated with the account holder's own PIN, but induced through another person's step-up link, would fall outside the issuer's compensation duty</td>
+<td>RBI/2025-26/79 para 9(b)</td>
+<td>TS-6: a Trusted Surface renders a step-up only to the principal or payer that the render names (<code>mandate_id</code>, <code>payer_ref</code>) (<a href="../human-participants/#ts-requirements">Requirements TS-1 to TS-6</a>)</td>
+<td><strong>Partial</strong>: Whether the induced debit is an unauthorised transaction is for counsel → <a href="../open-questions/#q-86">Q-86</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="npci">NPCI and card networks<a class="headerlink" href="#npci" title="Permanent link">&para;</a></h2>
+<p>NPCI scheme rules and circulars for UPI, NACH and Bharat Connect, and card-network programmes. Several NPCI sources are available only to members or through press reports.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PAY-103</strong> No P2P collect; collect only to a verified merchant VPA</td>
+<td>NPCI circular of 29-07-2025 (press report)</td>
+<td>UPI collect handler marked P2M only (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: No verified-merchant-VPA rule</td>
+</tr>
+<tr>
+<td><strong>PAY-104</strong> Agent carts use a dynamic QR or intent bound to the order ID; reject static QR</td>
+<td>NPCI UPI rules (static and dynamic QR); rejecting static QR for agent carts is BACP policy</td>
+<td>Dynamic QR or intent bound to the order id; static QR rejected for agent carts (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-105</strong> P2M caps by category (₹1 lakh / ₹5 lakh), configurable</td>
+<td>NPCI circular of 28-08-2025 (press report)</td>
+<td>Category P2M caps applied by the handler intersection amount filter (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-106</strong> OTM: block, then single capture, then release</td>
+<td>RBI statement of 07-12-2022 (PR 2022-2023/1321; notes UPI single-block-single-debit); vendor documentation</td>
+<td>OTM block, single capture, release (<code>released_block</code>) (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-31">Q-31</a>)</td>
+</tr>
+<tr>
+<td><strong>PAY-138</strong> A UPI convenience fee is disclosed upfront and is consistent across debit payment modes; no surcharge on UPI</td>
+<td>NPCI/UPI/CC/01 (18-09-2026) para 7.5; the duty binds the Payee PSP</td>
+<td><code>payment_mode_fee_inconsistent</code> warning (a SHOULD, never a refusal); <code>convenience_fees</code> mandate constraint in HNP (<a href="../checkout/#fee-lines">Fees on the payer's screen</a>)</td>
+<td><strong>Partial</strong>: whether disclosure through an agent is disclosure "to the User" is counsel's and NPCI's question (<a href="../open-questions/#q-78">Q-78</a>)</td>
+</tr>
+<tr>
+<td><strong>PAY-139</strong> Merchants do not pass MDR on to UPI customers; UPI apps charge no platform fee</td>
+<td>NPCI FAQ updated 15-10-2026, Q34 and Q17 (an FAQ; no circular found)</td>
+<td>MDR, PA commission and finder fee never principal-facing; an operator fee is a disclosed line that is not a licence to charge (<a href="../payments/economics/">Who pays</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-410</strong> Software on UPI Circle only where NPCI permits it, onboarded by the secondary PSP bank after due diligence and app security evaluation</td>
+<td>NPCI UPI OC 201B (NPCI/UPI/OC-201B/2025-26, 08-10-2025) general item 4 and secondary-app items</td>
+<td><code>in.upi.circle</code> is <code>pilot</code>; an open mandate on it needs a conformance attestation from a listed authority, and <code>in.upi.circle</code> stays closed to open mandates for now (<a href="../payments/rails/#upi-circle-delegate">UPI Circle</a>, <a href="../conformance/#conformance-attestation">Conformance</a>)</td>
+<td><strong>Partial</strong>: Whether software and AI profiles are within the circular's scope is not answered → <a href="../open-questions/#q-77">Q-77</a></td>
+</tr>
+<tr>
+<td><strong>REQ-411</strong> Debits using IoT on UPI Circle are initiated only by explicit user action</td>
+<td>NPCI UPI OC 201B p.1: "debit transactions using IoT shall be only initiated by explicit user action"</td>
+<td>No open (human-not-present) mandate on <code>in.upi.circle</code>; human-present Circle payments are unaffected (<a href="../payments/rails/#upi-circle-delegate">UPI Circle</a>)</td>
+<td><strong>Partial</strong>: The circular does not define "explicit user action" or mention agents → <a href="../open-questions/#q-77">Q-77</a></td>
+</tr>
+<tr>
+<td><strong>REQ-412</strong> UPI Circle first-24-hour limit</td>
+<td>NPCI UPI OC 201 (13-08-2024) item 9 (a daily transaction limit of ₹5,000 in the first 24 hours) and OC 201B (08-10-2025) item 8 (a cumulative limit of ₹5,000 for the first 24 hours); NPCI UPI Circle product page (₹2,000)</td>
+<td><code>first_24h</code> kept at ₹2,000 and graded <code>conflict</code> in the registry; the stricter value is enforced (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: The two NPCI sources conflict; which figure the rail enforces is not confirmed as of 18-10-2026</td>
+</tr>
+<tr>
+<td><strong>PAY-115</strong> Agentic-token intent object kept as dispute evidence</td>
+<td>Mastercard Agent Pay launch, 29-04-2025 (Agentic Tokens; dispute support); keeping the intent object is BACP policy</td>
+<td>Agentic token intent primitive in the descriptor (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: Intent object not kept in receipts or evidence → <a href="../open-questions/#q-39">Q-39</a></td>
+</tr>
+<tr>
+<td><strong>PAY-202</strong> Show only the bank-returned payee name; agent cannot edit it</td>
+<td>NPCI payee-name rule (secondary); RBI/2024-25/99</td>
+<td>The user sees only the bank-returned payee name; the agent cannot edit it; a name mismatch is held for human confirmation (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-206</strong> NACH mandates registered only with human AFA; eSign ≤₹1 lakh; NB/DC cap configurable</td>
+<td>NPCI/2020-21/NACH/Circular No.010, 15-07-2020 (secondary; not verified against the NPCI text as of 17-10-2026)</td>
+<td>NACH mandate caps by authentication mode (<code>nach_mandate_above_cap</code>) (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-29">Q-29</a>)</td>
+</tr>
+<tr>
+<td><strong>PAY-208</strong> No NACH presentment after cancellation; T+1 refund</td>
+<td>NPCI NACH OC 008 (not verified); RBI TAT row 7b</td>
+<td>No presentment after cancellation (<code>mandate_cancelled</code>); T+1 refund (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-211</strong> UPMS registration bound to an underlying mandate, inheriting its limits</td>
+<td>NBBL circulars NPCI/2023-24/BBPS/009 (31-08-2023) and /016 (11-10-2023); RBI E-mandate Framework 2026</td>
+<td>UPMS registration bound to an underlying mandate (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-134</strong> BBPS fetch-then-pay plus auto-pay</td>
+<td>NBBL (Bharat Connect) UPMS circulars NPCI/2023-24/BBPS/009, /016</td>
+<td>BBPS fetch-then-pay and UPMS auto-pay handlers (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-231</strong> A Reserve Pay block and a UPI OTM are authenticated when they are created; execution is validated by digital signature</td>
+<td>NPCI UPI OC 200 item 3, para (d); UPI Consolidated Circular v1.0 paras 15.2 and 15.4</td>
+<td><code>afa.source</code> of <code>in.upi.reservepay</code> and <code>in.upi.otm</code> cites these rules; neither handler carries an <code>rbi_annex1_item</code> (<a href="../payments/handler-registry/">Handler registry</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-88">Q-88</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="meity-dpdp">MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar<a class="headerlink" href="#meity-dpdp" title="Permanent link">&para;</a></h2>
+<p>The CERT-In Directions of 28-04-2022 under s.70B(6) of the Information Technology Act, 2000 (in force), the Digital Personal Data Protection Act 2023 and Rules 2025, and UIDAI regulations. Rule 4 and Act s.6(9) (Consent Manager registration) apply from 13-11-2026; Rules 3, 5–16, 22 and 23 and the Act's duties and penalties (ss.3–17 except s.6(9), and the Board's proceedings and penalties in ss.28–34) from 13-05-2027 (Rules G.S.R. 846(E) and Act commencement G.S.R. 843(E), both of 13-11-2025; see <a href="../security-and-privacy/#commencement">Security and Privacy</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REQ-107</strong> Revoke or pause at any time, including partially; propagate in ≤60 s</td>
+<td>DPDP Act s.6(4) (withdrawal at any time); RBI NBFC-AA Master Direction para 6.6 (pattern); pause, partial revocation and the 60 s target are BACP policy</td>
+<td>Revoke and pause on the Trusted Surface, propagated within 60 s; live firm offers withdrawn (<a href="../mandates/">Mandates</a>)</td>
+<td><strong>Partial</strong>: No partial revocation (narrowing scope or categories)</td>
+</tr>
+<tr>
+<td><strong>REQ-111</strong> Mandate Manager is data-blind</td>
+<td>DPDP Rules, First Schedule Part B item 2</td>
+<td>Mandate Manager stores mandates and logs only; payment leg is basket-blind (<a href="../security-and-privacy/#consent-manager">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: Fail-safe default: an MM acting as a registered Consent Manager does not also act as credential provider; co-location with the PSP open → <a href="../open-questions/#q-16">Q-16</a></td>
+</tr>
+<tr>
+<td><strong>REQ-112</strong> MM keeps records for 7 years and exports them machine-readably</td>
+<td>DPDP Rules, First Schedule Part B items 3–4</td>
+<td>Mandate Manager keeps records for 7 years (<a href="../security-and-privacy/#consent-manager">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: Machine-readable export required on the Trusted Surface; no REST export endpoint in this version → <a href="../open-questions/#q-16">Q-16</a></td>
+</tr>
+<tr>
+<td><strong>REQ-118</strong> Separate explicit consent for model training</td>
+<td>DPDP Act s.6(1) (specified-purpose consent; a separate training consent is BACP's reading)</td>
+<td>—</td>
+<td><strong>Gap</strong>: No separate consent class for model training → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-201</strong> Itemised notice before sharing: fields, purpose, recipient, withdrawal and complaint routes, language</td>
+<td>DPDP Act s.5; DPDP Rule 3</td>
+<td>ConsentReceipt records itemised fields, purpose, recipient, language, withdrawal and grievance routes (<a href="../security-and-privacy/#notice-and-consent">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: Per-seller receipt required at <code>init</code> before any release; validity of the class pre-authorisation open, with Trusted Surface confirmation as fail-safe from 13-05-2027 → <a href="../open-questions/#q-12">Q-12</a></td>
+</tr>
+<tr>
+<td><strong>REQ-202</strong> Consent only from an explicit affirmative user action</td>
+<td>DPDP Act s.6(1); Consumer Protection (E-Commerce) Rules r.4(9) for purchases</td>
+<td>Consent captured only on the Trusted Surface by an affirmative action, with a device signature (<a href="../security-and-privacy/#notice-and-consent">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-203</strong> Data to a merchant ⊆ mandate data_scopes and what the order needs</td>
+<td>DPDP Act s.6(1)</td>
+<td>Data shared ⊆ mandate <code>data_scopes</code>, covered by a ConsentReceipt; otherwise <code>mandate_scope_mismatch</code> (<a href="../security-and-privacy/#data-minimisation">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-204</strong> Selective disclosure through Aadhaar VC or DigiLocker; Aadhaar number never sent or stored</td>
+<td>Aadhaar Act; UIDAI Aadhaar Offline Verification Handbook (January 2026)</td>
+<td>Aadhaar number never collected; selective-disclosure data items (<a href="../security-and-privacy/#data-minimisation">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: No VC verification profile; no Aadhaar-number scan → <a href="../open-questions/#q-55">Q-55</a></td>
+</tr>
+<tr>
+<td><strong>REQ-205</strong> Aadhaar VC verifiers are registered OVSEs</td>
+<td>Aadhaar (Authentication and Offline Verification) Amendment Regulations 2025 (cited via the UIDAI Handbook; Gazette text not checked)</td>
+<td>—</td>
+<td><strong>Gap</strong>: OVSE registration of verifiers not captured → <a href="../open-questions/#q-55">Q-55</a></td>
+</tr>
+<tr>
+<td><strong>REQ-206</strong> Withdrawal as easy as consent; erasure at agent, processors and merchants</td>
+<td>DPDP Act s.6(4), s.6(6), s.8(7); DPDP Rule 3</td>
+<td>ConsentReceipt withdrawal URI and erasure signal; consent-withdrawn event (<a href="../security-and-privacy/#notice-and-consent">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: No downstream erasure message, acknowledgement or SLA → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-207</strong> Keep order, payment and delivery records and logs ≥1 year, then erase</td>
+<td>DPDP Rules 8(3), 6(1)(e)</td>
+<td>ConsentReceipt <code>retention.legal_minimum</code> (one year); mandate <code>dpdp.data_retention</code> (<a href="../security-and-privacy/#retention">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: No retention policy for InstructionLog, receipts, evidence or gateway logs → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-208</strong> Publish DPO contact; grievances within 90 days (e-commerce 48 h / 1 month)</td>
+<td>DPDP Rules 9, 14(3); Consumer Protection (E-Commerce) Rules r.4(5) for the 48 h / 1 month e-commerce timelines</td>
+<td>Operator grievance officer in the AgentCredential; recipient DPO contact; IGM response times (<a href="../security-and-privacy/#forward-compliance">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: DPO contact optional; no SLA metrics → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-209</strong> Breach notice to users and the Board without delay (Board report within 72 h); cross-participant breach signal</td>
+<td>DPDP Act s.8(6); DPDP Rule 7</td>
+<td>—</td>
+<td><strong>Gap</strong>: No breach-signal message (proposed <code>bacp.breach_signal</code>) → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-210</strong> Under 18: verifiable parental consent; no tracking, behavioural monitoring or targeted advertising</td>
+<td>DPDP Act s.9; DPDP Rules 10 and 12</td>
+<td>Age-over-18 data scope only (<a href="../security-and-privacy/#forward-compliance">Security and Privacy</a>)</td>
+<td><strong>Gap</strong>: No minor mode or parental-consent artefact → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-211</strong> MM acting as Consent Manager is Board-registered from Rule 4 commencement</td>
+<td>DPDP Rule 4; First Schedule</td>
+<td>ConsentReceipt <code>cm_registration_no</code> (<a href="../security-and-privacy/#consent-manager">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: From 13-11-2026, <code>cm_registration_no</code> is required when the MM acts as a Consent Manager and <code>null</code> otherwise; whether the MM must register is open → <a href="../open-questions/#q-16">Q-16</a></td>
+</tr>
+<tr>
+<td><strong>REQ-213</strong> SDFs run an annual DPIA and audit and document algorithmic due diligence</td>
+<td>DPDP Act s.10; DPDP Rule 13</td>
+<td>Operator governance; AgentCredential model family and build support the inventory (<a href="../conformance/#operator">Conformance: Operator</a>, attested, not tested)</td>
+<td>N/A: operator duty outside the protocol</td>
+</tr>
+<tr>
+<td><strong>REQ-214</strong> s.8(3) accuracy duty; correction-propagation message</td>
+<td>DPDP Act s.8(3)</td>
+<td>—</td>
+<td><strong>Gap</strong>: No correction-propagation message → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-215</strong> Processor contracts (including LLM hosts) carry DPDP security and erasure clauses</td>
+<td>DPDP Act s.8(2), s.8(7)(b); DPDP Rule 6(1)(f)</td>
+<td>Contractual duty of the operator (<a href="../conformance/#operator">Conformance: Operator</a>, attested, not tested)</td>
+<td>N/A: operator duty outside the protocol</td>
+</tr>
+<tr>
+<td><strong>REQ-216</strong> Large e-commerce: erase after 3 years inactive, with a 48 h warning</td>
+<td>DPDP Rules 8(1)–(2), Third Schedule item 1 (e-commerce entities with at least two crore registered users in India)</td>
+<td>Operator data-lifecycle duty (<a href="../conformance/#operator">Conformance: Operator</a>, attested, not tested)</td>
+<td>N/A: operator duty outside the protocol</td>
+</tr>
+<tr>
+<td><strong>REQ-217</strong> Report specified cyber incidents (including data breaches and leaks) to CERT-In within 6 hours of noticing them</td>
+<td>CERT-In Directions under IT Act, 2000 s.70B(6) (No. 20(3)/2022-CERT-In, 28-04-2022; in force) (secondary)</td>
+<td>Each participant's own report (<a href="../security-and-privacy/#breach-notice">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: Reporting is a participant duty outside the protocol; no cross-participant signal to start other participants' clocks (proposed <code>bacp.breach_signal</code>) → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-218</strong> Keep ICT system logs for a rolling 180 days within India; produce them to CERT-In on request</td>
+<td>CERT-In Directions of 28-04-2022 (secondary)</td>
+<td>Stated as a participant duty covering gateway and InstructionLog logs (<a href="../security-and-privacy/#retention">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: No protocol retention table for InstructionLog, receipts, evidence or gateway logs → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-219</strong> Synchronise ICT system clocks to the NTP servers of NIC or NPL, or servers traceable to them</td>
+<td>CERT-In Directions of 28-04-2022 (secondary)</td>
+<td>Signature <code>created</code> / <code>expires</code> with a 5 s clock-skew bound (<a href="../security-and-privacy/#replay">Security and Privacy</a>); a clock-traceability MUST for negotiation participants, which is a duty on each clock and never an ordering input (<a href="../negotiation/#signed-seller-acceptance-and-clock-skew">Negotiation</a>)</td>
+<td>N/A: operator duty outside the protocol</td>
+</tr>
+<tr>
+<td><strong>REQ-407</strong> Health purchases via UHI/NHCX; health data under an ABDM consent artefact, with separate consent</td>
+<td>ABDM (programme, not a statute); separate consent for health data is BACP policy, since the DPDP Act has no sensitive-data category</td>
+<td>Document reference type for an ABDM consent artefact (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td><strong>Gap</strong>: No health data scope or separate consent class → <a href="../open-questions/#q-17">Q-17</a></td>
+</tr>
+<tr>
+<td><strong>REQ-408</strong> Notices in English plus the chosen Eighth Schedule language; log model and version</td>
+<td>DPDP Act s.5(3), s.6(3); model logging is BACP policy</td>
+<td>Multilingual notices; notice language and translation model recorded in ConsentReceipt and InstructionLog (<a href="../security-and-privacy/#notice-and-consent">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-194</strong> When an electronic record is despatched and received, save as otherwise agreed; an unacknowledged record is deemed never sent where an acknowledgement is stipulated</td>
+<td>IT Act, 2000 s.12(2), s.13(1)</td>
+<td>Protocol terms named in every firm message (<code>protocol_terms{version, hash}</code>) (<a href="../negotiation/#indian-contract-act-timing">Negotiation</a>)</td>
+<td><strong>Partial</strong>: Whether the terms are "otherwise agreed" for a consumer, and s.11 attribution → <a href="../open-questions/#q-19">Q-19</a>, <a href="../open-questions/#q-52">Q-52</a></td>
+</tr>
+<tr>
+<td><strong>REQ-413</strong> Consent to disclose whom an agent acts for; a sole proprietor's GSTIN and name are personal data</td>
+<td>DPDP Act, 2023, s.6(1) and s.6(10) (from 13-05-2027)</td>
+<td><code>ACTING_FOR</code> in the ConsentReceipt <code>data_items[]</code>; the gateway sends <code>acting_for</code> to a seller only under a per-seller receipt that lists it (<a href="../mandates/">Data minimisation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-414</strong> Notice and consent request in English or an Eighth Schedule language</td>
+<td>DPDP Act, 2023, s.6(3) (from 13-05-2027), cited as alignment</td>
+<td>Language fail-safe: a Trusted Surface that cannot render the step-up's language renders nothing, and the gateway answers <code>503 trusted_surface_unavailable</code> with handoff routes (<a href="../human-participants/#ts-language-failsafe">Language fail-safe</a>)</td>
+<td><strong>Partial</strong>: A principal whose language no Trusted Surface serves gets a human route, not self-service</td>
+</tr>
+<tr>
+<td><strong>REQ-415</strong> An assisted operator's act attributed to the principal</td>
+<td>Information Technology Act, 2000, s.11(b) and s.11(c)</td>
+<td><code>assisted_by</code> and <code>Participant.ref</code> are attribution, never authentication; <code>ref_verification</code> is <code>asserted</code> until a registry exists (<a href="../human-participants/#assisted">Assisted channel</a>)</td>
+<td><strong>Partial</strong>: Whether the operator's act is attributable, and what proves authority, is for counsel → <a href="../open-questions/#q-86">Q-86</a> and <a href="../open-questions/#q-62">Q-62</a></td>
+</tr>
+<tr>
+<td><strong>REQ-416</strong> Verifiable consent of the lawful guardian of a person with disability who has one</td>
+<td>DPDP Act, 2023, s.9(1) (from 13-05-2027)</td>
+<td>None in this version: a Proposed participant role <code>lawful_guardian</code>, with no disability data and no <code>ACTING_FOR</code> or assisted stand-in (<a href="../human-participants/#time-bands">Legal time bands</a>)</td>
+<td><strong>Gap</strong>: No schema before a later release</td>
+</tr>
+<tr>
+<td><strong>REQ-417</strong> Marketing communication needs the principal's clear affirmative action for that purpose, and withdrawal as easy as consent</td>
+<td>DPDP Act, 2023, s.6(1) and s.6(4) (from 13-05-2027); Telecom Commercial Communications Customer Preference Regulations, 2018 (not checked against the primary text as of 18-10-2026)</td>
+<td>The fail-safe (no receipt, no grant) is normative; a standalone marketing ConsentReceipt (Proposed) carries <code>purposes[]</code> with none preselected, <code>channels[]</code>, a named seller and the withdrawal route (<a href="../mandates/#marketing-consent">Marketing consent</a>)</td>
+<td><strong>Partial</strong>: The receipt is Proposed, and its relation to the TCCCPR preferences is open (<a href="../open-questions/#q-101">Q-101</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="consumer-protection">CCPA and Consumer Protection<a class="headerlink" href="#consumer-protection" title="Permanent link">&para;</a></h2>
+<p>The Consumer Protection (E-Commerce) Rules 2020 and the Central Consumer Protection Authority (CCPA) Guidelines for Prevention and Regulation of Dark Patterns 2023. The Consumer Protection (E-Commerce) (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026) apply from 01-01-2027. They substitute r.4(2) and r.4(5)–(7), r.5(3)(a), (c) and (f), r.6(5)(d) and r.7(1)(a), and add r.4(11)(c) (no search manipulation), r.4(12)–(15) (sponsored listings, prior price, seller name on the invoice, Dark Patterns compliance and self-audit), r.5(6)–(7) and r.6(5)(j). Rows below cite the 2020 numbering and note where the amendment changes it.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REQ-311</strong> No confirm without a covering mandate or confirmation; decline pre-ticked add-ons</td>
+<td>Consumer Protection (E-Commerce) Rules 2020 r.4(9)</td>
+<td>No confirmation without a covering mandate; pre-ticked add-ons removed (<code>preticked_addon_removed</code>) (<a href="../checkout/">Checkout</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-312</strong> Agent uses none of the 13 dark patterns toward the user</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns 2023 (compliance and a yearly self-audit made mandatory by new r.4(15) of the Consumer Protection (E-Commerce) Rules, inserted by the (Amendment) Rules 2026, G.S.R. 789(E) of 09-09-2026, in force from 01-01-2027); the Guidelines text has been read: the pattern list is Annex 1)</td>
+<td>Widening only on the non-agentic Trusted Surface (<a href="../security-and-privacy/#prompt-injection">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: No rule against dark patterns in agent-to-user messages</td>
+</tr>
+<tr>
+<td><strong>REQ-313</strong> Detect merchant dark patterns: basket sneaking, drip pricing, false urgency, subscription traps</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns 2023 (compliance and a yearly self-audit made mandatory by new r.4(15) of the Consumer Protection (E-Commerce) Rules, inserted by the (Amendment) Rules 2026, G.S.R. 789(E) of 09-09-2026, in force from 01-01-2027); the Guidelines text has been read: the pattern list is Annex 1)</td>
+<td>Drip pricing, pre-ticked add-on, false-urgency and basket-sneaking checks (<a href="../checkout/">Checkout</a>)</td>
+<td><strong>Partial</strong>: No subscription-trap detection</td>
+</tr>
+<tr>
+<td><strong>REQ-314</strong> Show mandatory disclosures before commit: total with breakup, seller, origin, return terms, delivery</td>
+<td>Consumer Protection (E-Commerce) Rules r.6(5), r.5; ONDC buyer-app duty. From 01-01-2027 the (Amendment) Rules 2026 (G.S.R. 789(E)) substitute r.5(3)(a), (c) and r.6(5)(d) (the new clause lists country of origin, best-before date, return terms and return-shipping cost) and add r.6(5)(j) (GSTIN or MSME registration number)</td>
+<td>Disclosures require total with breakup, seller, origin, delivery, return and cancellation terms; missing → <code>disclosures_missing</code> (<a href="../checkout/">Checkout</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-315</strong> Expose ranking main parameters and any sponsorship</td>
+<td>Consumer Protection (E-Commerce) Rules r.5(3)(f) (ranking parameters), r.5(4) (differentiated treatment); sponsored listings distinctly identified under new r.4(12), inserted by the Consumer Protection (E-Commerce) (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027); the same amendment substitutes r.5(3)(f) (ranking parameters "in descending order") from that date</td>
+<td>Every discovery item carries a per-item <code>sponsorship</code> (<code>sponsored</code>, <code>not_sponsored</code> or <code>undeclared</code>, with the party that sold the placement); <code>ranking.main_parameters</code> is in descending order of importance; <code>ranking.sponsored</code> summarises the items (<a href="../discovery/#catalogue-disclosures">Catalogue disclosures</a>)</td>
+<td><strong>Partial</strong>: per-item sponsorship and ranking order are carried; whether an agent operator or a gateway is the e-commerce entity, and how the duty applies where no human sees the list, are open → <a href="../open-questions/#q-66">Q-66</a></td>
+</tr>
+<tr>
+<td><strong>REQ-323</strong> Show the prior price with a price reduction; the prior price is the lowest price in the 30 days before the announcement</td>
+<td>Consumer Protection (E-Commerce) Rules r.4(13), inserted by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027); Legal Metrology (Packaged Commodities) Rules r.2(m) and r.18(2) (retail sale price inclusive of all taxes; text checked as of 18-10-2026)</td>
+<td><code>prior_price{amount, basis: lowest_30d, announced_on}</code> asserted by the seller and never created by the gateway; <code>mrp</code> and <code>tax_inclusive</code> carried separately; an agent voices a reduction only as the amount pair, and no reduction, strike-through or percentage without a <code>prior_price</code> (<a href="../discovery/#catalogue-disclosures">Catalogue disclosures</a>). A discount line from a coupon is never shown as a reduced item price, a strike-through or a percentage of an item price unless the item carries a verified <code>prior_price</code> (<a href="../checkout/#discounts">Discounts</a>); whether a coupon, a bank offer or a cart-level offer is an announced reduction is not settled</td>
+<td><strong>Partial</strong>: whose lowest price counts, whether the rule binds an agent operator or a gateway, and whether a coupon is an announced reduction are open → <a href="../open-questions/#q-66">Q-66</a></td>
+</tr>
+<tr>
+<td><strong>REQ-324</strong> No manipulation of search results or search indexes against the user's query</td>
+<td>Consumer Protection (E-Commerce) Rules r.4(11)(c), added by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027)</td>
+<td>Ranking parameters and per-item sponsorship are disclosed; the default ranking does not use discount size (<a href="../discovery/#catalogue-disclosures">Catalogue disclosures</a>). No conformance case detects manipulation of the order itself</td>
+<td><strong>Gap</strong>: audit only; no conformance hook for the order of results</td>
+</tr>
+<tr>
+<td><strong>REQ-325</strong> Explain the main ranking parameters in descending order, with their relative importance, in an easily and publicly available description</td>
+<td>Consumer Protection (E-Commerce) Rules r.5(3)(f), substituted by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027)</td>
+<td><code>ranking.main_parameters</code> in descending order of importance and an optional <code>ranking.description_url</code> (<a href="../discovery/#network-discovery">Discovery</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-326</strong> Show the seller's name on the invoice in the same font size as the e-commerce entity's name</td>
+<td>Consumer Protection (E-Commerce) Rules r.4(14), inserted by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027)</td>
+<td>None: BACP carries no invoice display rule</td>
+<td><strong>Gap</strong>: no design</td>
+</tr>
+<tr>
+<td><strong>REQ-327</strong> A marketplace does not use collected information to sell goods under its own brand, or to promote a seller as associated with it, without express and affirmative consent</td>
+<td>Consumer Protection (E-Commerce) Rules r.5(6), inserted by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027)</td>
+<td>None</td>
+<td><strong>Gap</strong>: no design</td>
+</tr>
+<tr>
+<td><strong>REQ-328</strong> No bundled fee for an unrelated service (loyalty and membership programmes excepted)</td>
+<td>Consumer Protection (E-Commerce) Rules r.5(7), inserted by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027)</td>
+<td>A per-order operator fee is a disclosed <code>operator_charges[]</code> line, outside the BPP quote (<a href="../checkout/#fee-lines">Fees on the payer's screen</a>); BACP does not decide whether it is a bundled fee</td>
+<td><strong>Partial</strong>: whether a per-order operator fee is a "bundled fee" is counsel's question (<a href="../open-questions/#q-79">Q-79</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-329</strong> Show the seller's GST or MSME registration number</td>
+<td>Consumer Protection (E-Commerce) Rules r.6(5)(j), added by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027)</td>
+<td>None: the mandatory disclosures carry no registration number</td>
+<td><strong>Gap</strong>: no design</td>
+</tr>
+<tr>
+<td><strong>REQ-330</strong> Do not represent that a service has sponsorship, approval or affiliation that it lacks; a conformance attestation is not approval</td>
+<td>Consumer Protection Act 2019 s.2(47)(i)(d) and (e) (unfair trade practice)</td>
+<td>The attestation says "passed BACP protocol tests", never "certified" or "approved", and is not offered in place of any rail onboarding or certification; a profile that labels it otherwise is non-conforming (<a href="../conformance/#attestation-rules">Conformance</a>; case DISP-01)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-321</strong> Grievance officer acknowledges in 48 h and resolves in 1 month; ticket number</td>
+<td>Consumer Protection (E-Commerce) Rules r.4(5), r.5(3)(b); r.4(5) as substituted from 01-01-2027 (G.S.R. 789(E)) keeps 48 h / one month and adds giving the complainant a copy of the complaint as recorded</td>
+<td>Grievance officer in the AgentCredential; issue id; expected response times (<a href="../transports/beckn/#igm">Beckn binding</a>)</td>
+<td><strong>Partial</strong>: No SLA clocks or auto-escalation → <a href="../open-questions/#q-57">Q-57</a></td>
+</tr>
+<tr>
+<td><strong>PAY-132</strong> Payment-method fees shown before commit; compare totals</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; drip pricing)</td>
+<td>Per-option all-in totals from round 1; handler comparison logged (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-114</strong> on_init term hash must equal the accepted offer hash, otherwise NEG_TERMS_DRIFT</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; bait and switch)</td>
+<td><code>on_init</code> terms must equal the accepted offer, otherwise <code>NEG_TERMS_DRIFT</code> and BREACH_FLAGGED (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-121</strong> An accepted firm offer must be honoured; breach goes to IGM</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; bait and switch)</td>
+<td>Firm-offer breach logged to IGM; buyer cancels without penalty (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-22">Q-22</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-122</strong> quote.price equals all_in_total from round 1</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; drip pricing)</td>
+<td><code>all_in_total</code> required from round 1 and equal to the quote price (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-123</strong> Minimum offer validity (floor PT5M in every profile)</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; false urgency)</td>
+<td>Minimum offer validity (floor PT5M in every profile), <code>NEG_FALSE_URGENCY</code> (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-135</strong> Step-up when the all-in total rises</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; drip pricing)</td>
+<td>Step-up when the all-in total rises beyond the mandate tripwire (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-171</strong> Pricing basis declared; no device-based pricing</td>
+<td>CCPA notices to ride-hailing apps, Jan 2025 (press reports; no primary text)</td>
+<td>Pricing basis declared; prohibited attributes refused (<code>NEG_PERSONALISED_PRICING</code>) (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-121</strong> Total payable with all fees; later fees need re-consent</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; drip pricing)</td>
+<td>Charges carry the round they were first disclosed; later fees need re-consent (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-133</strong> Subscriptions: pause, skip, resume, change quantity, one-step cancel with proof</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 (Gazette of India Part III s.4 No. 783, 30-11-2023; subscription trap); RBI E-mandate Framework 2026</td>
+<td>Mandate pause and revoke on the Trusted Surface (<a href="../mandates/">Mandates</a>)</td>
+<td><strong>Partial</strong>: No skip, per-cycle quantity change or cancellation proof</td>
+</tr>
+<tr>
+<td><strong>TRADE-136</strong> Dispute object with SLA clocks and escalation chain</td>
+<td>Consumer Protection (E-Commerce) Rules r.4(5)</td>
+<td>IGM issue with escalation chain (<a href="../transports/beckn/#igm">Beckn binding</a>)</td>
+<td><strong>Partial</strong>: No auto-escalation on a missed 48-hour acknowledgement → <a href="../open-questions/#q-57">Q-57</a></td>
+</tr>
+<tr>
+<td><strong>TRADE-148</strong> Returns with credit note; refund to source or the COD path</td>
+<td>Consumer Protection (E-Commerce) Rules r.4(10) (refunds as prescribed by RBI); RBI PA Directions 2025 para 10(f)</td>
+<td>Return path with refund to source or the COD path (<a href="../checkout/post-order/">Post-order</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-190</strong> No consent recorded automatically; an agent's autonomous acceptance is the principal's explicit choice</td>
+<td>Consumer Protection (E-Commerce) Rules 2020 r.4(9)</td>
+<td><code>process.accept_confirmation</code>: an absent key is <code>ask</code>, never preselected, set only on the Trusted Surface; <code>autonomous</code> takes effect only with a <code>notice_route</code> (<a href="../negotiation/#the-negotiation-mandate">Negotiation</a>, <a href="../human-participants/#ts-negotiation">Trusted Surface</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-85">Q-85</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-191</strong> No nagging: repeated and persistent interactions unless the user permits them; compliance and yearly self-audit from 01-01-2027</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023 ("nagging"); Consumer Protection (E-Commerce) Rules 2020 r.4(15) (from 01-01-2027)</td>
+<td>A negotiation step-up only on an accept attempt; one pending per negotiation and one presented at a time per principal; a per-principal cap declared in <code>/.well-known/bacp</code> (<a href="../negotiation/#step-up-to-the-trusted-surface">Negotiation</a>)</td>
+<td><strong>Partial</strong>: BACP sets no cap value</td>
+</tr>
+<tr>
+<td><strong>REQ-332</strong> Decline as easy as approve; no confirm-shaming</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (3)</td>
+<td>TS-2: the decline label is neutral, with no fear or shame wording, and the Trusted Surface never asks "Are you sure?" (<a href="../human-participants/#ts-requirements">Requirements TS-1 to TS-6</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-333</strong> No nagging after a decline or by a seller's repeated revisions</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (10); Consumer Protection (E-Commerce) Rules 2020 r.4(15) (from 01-01-2027)</td>
+<td>The decline cool-off keyed on <code>(order_id, action, issue_id)</code> or, for a session step-up, <code>(root open Checkout Mandate or, without one, principal, bpp_id, kind)</code>, and the seller re-prompt cap per <code>(principal, issue_id)</code>, each published in <code>/.well-known/bacp</code> (<a href="../human-participants/#step-up-limits">Limits on step-ups</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-334</strong> No bait and switch: "out of stock", then a higher-priced product</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (7)(b)</td>
+<td>A substitute item or seller at a higher total than the last BPP-signed quote needs a <code>confirm</code> step-up in human-present and human-not-present sessions (<a href="../transports/beckn/#seller-reasons">Seller refusals and substitution</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-335</strong> A seller does not refuse to take back defective goods; cancellation charges are symmetric</td>
+<td>Consumer Protection (E-Commerce) Rules 2020 r.6(3) and r.4(8)</td>
+<td><code>return_refused</code> and <code>seller_cancelled</code> are <code>requires_buyer_review</code> with the <code>grievance_contact</code> and are never terminal (<a href="../checkout/post-order/#returns">Returns</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-338</strong> Basket sneaking: nothing, including a paid membership, is added to the basket without the buyer's explicit consent</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns 2023 (basket sneaking, Annex 1); Consumer Protection (E-Commerce) Rules 2020 r.4(9)</td>
+<td>The gateway assigns <code>added_by</code> from the signer and never from the request; the Trusted Surface reads every line that the principal did not add in full before the total and counts the rest; a paid line that a seller added needs a new quote; a <code>provisional</code> loyalty benefit never enters the total (<a href="../checkout/#line-provenance">Line provenance</a>, <a href="../checkout/#discounts">Discounts</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-339</strong> A weighed line never costs more than the buyer was quoted unless the buyer agreed to "up to ₹X"</td>
+<td>CCPA Guidelines for Prevention and Regulation of Dark Patterns 2023 (drip pricing and bait and switch, Annex 1)</td>
+<td>A post-order weight adjustment can only reduce the amount; an upward <code>adjustment_band</code> needs the Trusted Surface to read "up to ₹X", is at most one increment, is within the approved amount and the mandate caps, and is collected only from a hold (<a href="../checkout/#units">Units, quantity and weighed goods</a>, <a href="../checkout/post-order/#weight-adjustment">Weighed goods</a>)</td>
+<td><strong>Partial</strong>: Whether a one-time UPI block can be captured in part, and whether an upward adjustment is a new supply that needs fresh consent (<a href="../open-questions/#q-101">Q-101</a>, <a href="../open-questions/#q-102">Q-102</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-340</strong> Consent for marketing is not recorded automatically</td>
+<td>Consumer Protection (E-Commerce) Rules 2020 r.4(9)</td>
+<td>With no active marketing ConsentReceipt for a seller, every marketing purpose is <code>granted: false</code>; a seller default or a UCP <code>buyer.consent</code> member never grants one; marketing consent is never asked inside a payment step-up (<a href="../mandates/#marketing-consent">Marketing consent</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-336</strong> The complainant gets a copy of the complaint as recorded</td>
+<td>Consumer Protection (E-Commerce) (Amendment) Rules 2026, G.S.R. 789(E) r.4(5) (from 01-01-2027)</td>
+<td><code>GET /evidence/{transaction_id}/summary</code>, which the grievance officer can fetch for the principal in her language (<a href="../human-participants/#evidence-summary">Evidence summary</a>)</td>
+<td>Covered</td>
+</tr>
+</tbody>
+</table>
+<h2 id="ondc">ONDC network policy<a class="headerlink" href="#ondc" title="Permanent link">&para;</a></h2>
+<p>ONDC network rules that bind network participants: IGM, grievance policy and domain specifications.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REQ-316</strong> ONDC IGM 2.0 issue / on_issue (issue_status / on_issue_status are IGM 1.x)</td>
+<td>ONDC IGM 2.0</td>
+<td><code>/issues</code> mapped to IGM 2.0 issue / on_issue (<a href="../transports/beckn/#igm">Beckn binding</a>)</td>
+<td><strong>Partial</strong>: <code>AI_AGENT</code> actor type not registered; no IGM schema conformance step → <a href="../open-questions/#q-11">Q-11</a></td>
+</tr>
+<tr>
+<td><strong>REQ-318</strong> No warranties beyond the seller's unless buyer-app liability is accepted</td>
+<td>ONDC grievance redressal public note</td>
+<td>—</td>
+<td><strong>Gap</strong>: No warranty flag in buyer-app messages</td>
+</tr>
+<tr>
+<td><strong>NEG-160</strong> RFQ maps to select, quote to on_select, PO to confirm</td>
+<td>ONDC Retail B2B 2.0.2</td>
+<td>RFQ → <code>select</code>, quotation → <code>on_select</code>, PO → <code>confirm</code> (<a href="../transports/beckn/#mapping-negotiation">Beckn binding</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-161</strong> B2B bargaining through NegOffer rounds</td>
+<td>ONDC Retail B2B 2.0.2 (single-round RFQ over select / on_select; multi-round offers are a BACP extension)</td>
+<td>B2B bargaining as signed offer rounds over select / on_select (<a href="../transports/beckn/#mapping-negotiation">Beckn binding</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-163</strong> Typed RFQ rejection reasons</td>
+<td>ONDC Retail B2B 2.0.2 examples (RFQ and PO rejection with error codes)</td>
+<td>Typed rejection reasons (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-149</strong> ODR pluggable, IGM-compatible</td>
+<td>ONDC IGM 2.0</td>
+<td><code>/issues</code> IGM-compatible; ODR as an out-of-protocol reference (<a href="../transports/beckn/#igm">Beckn binding</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-06">Q-06</a>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="gst-legal-metrology">GST, Income-tax and Legal Metrology<a class="headerlink" href="#gst-legal-metrology" title="Permanent link">&para;</a></h2>
+<p>CGST rules on e-invoicing and e-way bills, Income-tax Act cash and TDS rules, and the Legal Metrology (Packaged Commodities) Rules.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REQ-319</strong> B2B: pass GSTIN; no edits to invoice data after IRN; show IRN, QR and EWB</td>
+<td>CGST Rules 48(4), 138 (text not verified)</td>
+<td>Invoice IRN, QR, e-way bill and buyer GSTIN on the order; document gates (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td><strong>Partial</strong>: Invoice fields not frozen after the IRN</td>
+</tr>
+<tr>
+<td><strong>REQ-320</strong> Carry document dates; 30-day IRP window when AATO ≥ ₹10 crore</td>
+<td>GSTN advisory of 05-11-2024 (effective 01-04-2025)</td>
+<td>Invoice document date; 30-day IRN reporting flag (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-230</strong> Positive Pay reference for cheques ≥₹5 lakh; refuse cash ≥₹2 lakh</td>
+<td>Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 s.186 equivalent); BACP policy</td>
+<td>Positive Pay reference for large cheques; cash at or above ₹2 lakh refused (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-170</strong> Negotiated price never above MRP</td>
+<td>Legal Metrology (Packaged Commodities) Rules r.18(2) (no sale above the retail sale price; text checked as of 18-10-2026)</td>
+<td>MRP ceiling validator (<code>NEG_MRP_EXCEEDED</code>) (<a href="../negotiation/">Negotiation</a>)</td>
+<td><strong>Partial</strong>: Fail-safe default: in B2C every line with an MRP is checked and mandatory packing and convenience charges count toward MRP; legal scope open → <a href="../open-questions/#q-20">Q-20</a></td>
+</tr>
+<tr>
+<td><strong>TRADE-117</strong> Block cash ≥₹2 lakh; ask for PAN on jewellery above the threshold</td>
+<td>Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 s.186 equivalent); PAN threshold not verified</td>
+<td>Cash tranche of ₹2 lakh or more refused (<code>NEG_CASH_LIMIT</code>) (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-124</strong> IRN and QR when AATO exceeds ₹5 crore; flag invoices over 30 days at ₹10 crore or more</td>
+<td>CGST e-invoicing notifications (secondary); GSTN advisory of 05-11-2024</td>
+<td>IRN and signed QR required for sellers above the turnover threshold (<code>NEG_EINVOICE_IRN_MISSING</code>) (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-125</strong> E-way bill before dispatch above ₹50,000</td>
+<td>CGST Rule 138 (text not verified)</td>
+<td>E-way bill before dispatch (<code>NEG_EWB_MISSING</code>) (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td><strong>Partial</strong>: No per-state intra-state limits</td>
+</tr>
+<tr>
+<td><strong>TRADE-127</strong> Catalogue: loose units, price ≤ MRP, tier prices, slots</td>
+<td>Legal Metrology (Packaged Commodities) Rules (text checked as of 18-10-2026)</td>
+<td>TermSheet lines carry MRP and retail-package flag (<a href="../negotiation/">Negotiation</a>)</td>
+<td><strong>Partial</strong>: <code>mrp</code> and <code>tax_inclusive</code> are now on catalogue items (<a href="../discovery/#catalogue-disclosures">Catalogue disclosures</a>); the unit basis is still absent → <a href="../open-questions/#q-20">Q-20</a></td>
+</tr>
+<tr>
+<td><strong>TRADE-147</strong> Compute and display TDS and s.43B(h) exposure</td>
+<td>Income-tax Act</td>
+<td>TermSheet TDS section; ledger tax flag (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td><strong>Partial</strong>: TDS computation and display not specified</td>
+</tr>
+<tr>
+<td><strong>REQ-331</strong> No time reference other than IST for any purpose, once the Rules commence</td>
+<td>Legal Metrology (Indian Standard Time) Rules, 2026 (G.S.R. 761(E)) r.7; r.6(4)–(5) and r.8(4) traceability (notified; not in force as of 18-10-2026; commencement 180 days after publication, about 24-02-2027, exact day not verified)</td>
+<td>Comparisons on instants; BACP-owned times SHOULD carry <code>+05:30</code>; every time shown or told to a person on the Trusted Surface is in IST; Beckn <code>context.timestamp</code> follows ONDC (<a href="../negotiation/#signed-seller-acceptance-and-clock-skew">Negotiation</a>, <a href="../overview/#data-conventions">Overview</a>)</td>
+<td><strong>Partial</strong>: Whether r.7 reaches machine timestamps, and the <code>Z</code> that ONDC requires → <a href="../open-questions/#q-84">Q-84</a></td>
+</tr>
+</tbody>
+</table>
+<h2 id="msmed-competition">MSMED and Competition<a class="headerlink" href="#msmed-competition" title="Permanent link">&para;</a></h2>
+<p>The MSMED Act payment-term rules and the Competition Act prohibitions on bid rigging and collusion.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PAY-220</strong> MSMED due date (≤45 days; 15-day default), T-5 alert, tax flag</td>
+<td>MSMED Act ss.2(b), 15–16</td>
+<td>Ledger statutory due date, alert 5 days before it, and tax flag. The acceptance date is the delivery date (s.2(b) Explanation (ii)), evidenced by a buyer-signed GRN or attested seller delivery evidence, with <code>acceptance_basis</code> recorded; a recorded-not-sent objection never moves it (<a href="../payments/credit-and-split-tender/#msme-late-payment-interest">Credit and Split Tender</a>)</td>
+<td><strong>Partial</strong>: Trader scope unresolved → <a href="../open-questions/#q-21">Q-21</a>; the delivery-date basis is pending counsel → <a href="../open-questions/#q-83">Q-83</a></td>
+</tr>
+<tr>
+<td><strong>PAY-222</strong> Buyers above ₹250 crore: offer TReDS and record onboarding status</td>
+<td>MSME Ministry S.O. 4845(E) (secondary)</td>
+<td>Buyer's TReDS onboarding status recorded; TReDS offered on MSME invoices (<a href="../payments/credit-and-split-tender/#treds">Credit and Split Tender</a>)</td>
+<td><strong>Partial</strong>: No field carries the onboarding status</td>
+</tr>
+<tr>
+<td><strong>NEG-151</strong> Sealed bids use commit-reveal with a deposit</td>
+<td>Competition Act s.3(3)(d)</td>
+<td>Sealed bids use commit–reveal with a deposit; early reveal refused (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-154</strong> Shill bidding prohibited</td>
+<td>Competition Act s.3 (analysis); CCPA</td>
+<td>Neutral auctioneer; shill bids refused (<code>NEG_SHILL_BID</code>) (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-25">Q-25</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-162</strong> MSE credit terms ≤45 days</td>
+<td>MSMED Act s.15</td>
+<td>MSMED credit-day validator (<code>NEG_MSMED_CREDIT_CAP</code>) (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-21">Q-21</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-180</strong> No seller sees another seller's quote</td>
+<td>Competition Act (CCI market study, secondary)</td>
+<td>No seller sees another seller's quote or bid (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-181</strong> Third-party pricing-AI vendors declared</td>
+<td>Competition Act s.3(3) second proviso (inserted 2023; hub-and-spoke); the disclosure duty is BACP policy</td>
+<td>Pricing-AI vendor declared in capability adverts and the registry (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-182</strong> Network SHOULD run collusion screens</td>
+<td>Competition Act s.3(3)(d); CCI market study on AI (secondary)</td>
+<td>Collusion screens (identical prices, bids within 0.5%, bid rotation) flag and never block (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-108</strong> MSE 45-day cap, 15-day default, warning</td>
+<td>MSMED Act ss.2(b), 15</td>
+<td>45-day cap, 15-day default, warning for buyer drafts (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-21">Q-21</a>)</td>
+</tr>
+<tr>
+<td><strong>TRADE-109</strong> MSE statutory interest (3× bank rate, compounded monthly)</td>
+<td>MSMED Act s.16</td>
+<td>Ledger computes statutory interest (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-110</strong> TReDS handoff; financier becomes payee</td>
+<td>MSMED Act; RBI TReDS Directions 2026</td>
+<td>TReDS hand-off: financier becomes payee (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+</tbody>
+</table>
+<h2 id="fema">FEMA and cross-border trade<a class="headerlink" href="#fema" title="Permanent link">&para;</a></h2>
+<p>Foreign exchange, export realisation and cross-border trade rules.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PAY-225</strong> Export realisation due date (9 or 12 months) with alerts</td>
+<td>FEMA 23(R)/2026-RB (Export and Import of Goods and Services) Regulations 2026, Reg 5(1), as amended by FEMA 23(R)/(1)/2026-RB of 22-09-2026</td>
+<td>Export realisation tracker handler (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-119</strong> Track export realisation deadline</td>
+<td>FEMA 23(R)/2026-RB Reg 5(1)</td>
+<td>Export realisation deadline tracked (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-144</strong> Cross-border: Incoterm, currency, instrument, document set</td>
+<td>FEMA; UCP 600 (not checked)</td>
+<td>Every cross-border offer carries an Incoterm, currency, payment instrument and the required document set; FX disclosure view (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-145</strong> Export-channel limits (courier value cap removed 31-03-2026)</td>
+<td>CBIC Circular 17/2026-Customs; Notifications 33/2026 and 34/2026-Customs (N.T.), 31-03-2026</td>
+<td>Registry tag on the PA cross-border handler (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>N/A: the ₹10 lakh courier export cap was removed; nothing to enforce</td>
+</tr>
+</tbody>
+</table>
+<h2 id="other-law">Other statutes and government procurement<a class="headerlink" href="#other-law" title="Permanent link">&para;</a></h2>
+<p>The Indian Contract Act, government procurement rules (GFR, DoE, GeM), and sector statutes (RERA, BIS, WDRA, APMC, Model Tenancy, NeSL).</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>PAY-224</strong> Verify an LC or e-BG before treating it as security; track expiry</td>
+<td>NeSL circular (secondary)</td>
+<td>Letter of credit and e-BG verify-and-track handlers (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td><strong>Partial</strong>: No verification rule before release</td>
+</tr>
+<tr>
+<td><strong>PAY-227</strong> GeM payment within 10 days of CRAC; 1%/month interest disclosed as kept by GeM</td>
+<td>DoE Office Memorandum F.6/18/2019-PPD of 03-07-2020; GeM GTC</td>
+<td>Payment tracked against 10 days of CRAC, with interest disclosure (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-228</strong> Record the GPA fund-block reference for NPAE buyers</td>
+<td>GeM GPA SOP</td>
+<td>GPA fund-block reference recorded (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-141</strong> No bank or system provider imposes a charge on RuPay debit and UPI up to ₹2,000</td>
+<td>Gazette S.O. 5067(E), 14-09-2026 (Payment and Settlement Systems Act s.10A); binds banks and system providers</td>
+<td>Not cited against merchants (<a href="../payments/rails/#upi-charges">Rail Bindings</a>)</td>
+<td>N/A: binds banks and system providers, not BACP participants</td>
+</tr>
+<tr>
+<td><strong>NEG-110</strong> One live offer; a COUNTER must cite it in <code>in_reply_to</code></td>
+<td>Indian Contract Act s.7 (unverified citation)</td>
+<td>One live offer; a counter cites it (<code>NEG_STALE_OFFER</code>) (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-52">Q-52</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-111</strong> ACCEPT is explicit and signed; silence means EXPIRED</td>
+<td>Indian Contract Act ss.4, 6(2), 7(2) (unverified citation)</td>
+<td>ACCEPT is explicit and signed; silence ends EXPIRED (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-52">Q-52</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-112</strong> WITHDRAW allowed only until ACCEPT is dispatched; crossing rule</td>
+<td>Indian Contract Act, 1872, ss.4–5 (text checked 17-10-2026, India Code)</td>
+<td>WITHDRAW only until ACCEPT is dispatched; a crossing is decided by transcript positions, otherwise it is <code>crossing_contested</code> with no breach event (<a href="../negotiation/#contested-crossings">Negotiation</a>)</td>
+<td>Covered; a deal decided by the crossing rule, or contested, escalates to each principal until <a href="../open-questions/#q-52">Q-52</a> is settled</td>
+</tr>
+<tr>
+<td><strong>TRADE-103</strong> Negotiation protocols declared up front</td>
+<td>GeM practice (no primary instrument cited)</td>
+<td>Negotiation mode declared up front (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-105</strong> Validity and firmness flag; accepting an expired offer fails</td>
+<td>GeM practice (no primary instrument cited)</td>
+<td>Absolute expiry and firmness flag on every offer; accepting an expired offer fails (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-112</strong> GeM 10-day CRAC window and 1%/month interest</td>
+<td>DoE Office Memorandum F.6/18/2019-PPD of 03-07-2020</td>
+<td>10-day CRAC window and interest tracked in the ledger (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-118</strong> Property token ≤10% without a registered agreement</td>
+<td>RERA s.13</td>
+<td>Token above 10% needs a linked agreement (<code>NEG_RERA_TOKEN_CAP</code>) (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-126</strong> Domain credentials: e-NWR, HUID, RERA, assay, inspection, ABDM, PNR</td>
+<td>BIS hallmarking (HUID) and RERA rules; WDRA (e-NWR rules not checked)</td>
+<td>Typed domain credentials (HUID, e-NWR, RERA, assay, inspection) (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-129</strong> Procurement-mode thresholds with recorded reason</td>
+<td>General Financial Rules 2017 r.149 (GeM value tiers; checked against a secondary reproduction)</td>
+<td>Procurement-mode reason recorded (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-130</strong> Produce auction with farmer acceptance, weighment and itemised charges by payer</td>
+<td>eNAM and state APMC rules (not checked against a primary text)</td>
+<td>English auction with the farmer's explicit acceptance; itemised charges by payer (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-131</strong> Compare "sell now" with "store and pledge"</td>
+<td>WDRA (not checked against a primary text)</td>
+<td>Mentioned in the agri profile only (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td><strong>Partial</strong>: No sell-versus-store comparison</td>
+</tr>
+<tr>
+<td><strong>TRADE-137</strong> Graded incident record; exclude suspended sellers</td>
+<td>GeM Incident Management Policy</td>
+<td>Suspended sellers excluded from RFQs and auctions (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td><strong>Partial</strong>: No graded incident record</td>
+</tr>
+<tr>
+<td><strong>TRADE-138</strong> Refundable deposits with release conditions and itemised deductions</td>
+<td>Model Tenancy Act</td>
+<td>Deposit terms with refundability and deductions (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-146</strong> Immutable public-procurement audit trail with comparison set</td>
+<td>General Financial Rules 2017 (not checked against a primary text)</td>
+<td>InstructionLog and RFQ comparison set kept for audit (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-192</strong> A Dutch tick acceptance is a bid and the award completes the sale</td>
+<td>Sale of Goods Act, 1930 s.64(2)</td>
+<td>The award follows the auctioneer's chain order with a signed <code>tick_close</code> (<a href="../negotiation/rfq-and-auctions/#dutch-auctions-perishables">RFQ and Auctions</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-85">Q-85</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-193</strong> A proposal may be revoked until the communication of its acceptance is complete as against the proposer</td>
+<td>Indian Contract Act s.5</td>
+<td>A buyer's <code>withdraw</code> naming <code>accept_msg_hash</code>, until the seller's <code>on_init</code> receipt; free, not a cancellation (<a href="../negotiation/#withdrawal-rejection-and-termination">Negotiation</a>)</td>
+<td><strong>Partial</strong>: No Beckn carrier for the withdrawal → <a href="../open-questions/#q-22">Q-22</a></td>
+</tr>
+<tr>
+<td><strong>REQ-337</strong> Private service providers provide services in line with the accessibility rules made under s.40</td>
+<td>Rights of Persons with Disabilities Act, 2016, s.46 and s.89; Rajive Raturi v Union of India, 2024 INSC 858 (08-11-2024)</td>
+<td>TS-3 (<code>modality</code>) is the BACP floor; accessibility beyond it stays a SHOULD with a conformance case (<a href="../human-participants/#time-bands">Legal time bands</a>)</td>
+<td><strong>Partial</strong>: The mandatory accessibility standard is unsettled (not verified as of 18-10-2026)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="bacp-policy">BACP policy and DPI design patterns<a class="headerlink" href="#bacp-policy" title="Permanent link">&para;</a></h2>
+<p>Rules BACP sets for itself, many modelled on Account Aggregator and DEPA consent patterns. They are not external legal obligations, but conformance checks them like any other rule.</p>
+<table>
+<thead>
+<tr>
+<th>Requirement</th>
+<th>Source</th>
+<th>BACP control</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>REQ-101</strong> Every committing action references a valid mandate</td>
+<td>RBI NBFC-AA Master Direction (consent bound to each request; adopted as a pattern)</td>
+<td><code>context.bacp.mandate_ref</code> required on init, confirm, update, cancel and IGM issue; checked by mandate evaluation (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-102</strong> Mandate carries mandatory fields: principal, agent/operator, purpose, scopes, validity, frequency, money limits, retention, audit URI, issuer, signature</td>
+<td>RBI NBFC-AA Master Direction para 6.3; ReBIT consent artefact (pattern)</td>
+<td>Open mandates require principal, operator, purpose, scopes, validity, a frequency bound, money limits, retention, audit URI, issuer and signatures (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-103</strong> Signed part is immutable; any change needs a new id</td>
+<td>ReBIT consent artefact signed as JWS (pattern; immutability is BACP's inference)</td>
+<td>Signed mandate body is immutable (JWS over JCS); status and usage sit outside the signed body (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-104</strong> Mandate is a JWS verified against a registry key</td>
+<td>BACP policy</td>
+<td>Mandates are JWS verified against registry keys; ES256 and EdDSA both mandatory to verify (<a href="../identity-and-signing/#signature-algorithms">Identity</a>)</td>
+<td>Covered (settled in <a href="../open-questions/#q-42">Q-42</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-105</strong> Detached signature over raw body, verified before parsing</td>
+<td>Sahamati detached-signature practice (pattern)</td>
+<td>RFC 9421 + RFC 9530 over raw bytes, verified before parsing (<a href="../identity-and-signing/">Identity</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-106</strong> Status set includes EXHAUSTED; only ACTIVE executes</td>
+<td>ReBIT consent states, extended by BACP</td>
+<td>Mandate states include EXHAUSTED; only ACTIVE executes (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-108</strong> Each use increments a counter and emits an audit event</td>
+<td>RBI NBFC-AA Master Direction para 6.3(5); ReBIT ConsentUse (pattern)</td>
+<td><code>usage.count</code> and an audit event to <code>audit_uri</code> on every use (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-109</strong> Registry purpose code with per-purpose bounds; accept, reject or report</td>
+<td>Sahamati Fair Use (pattern; page marked "no longer relevant")</td>
+<td>Purpose codes with per-purpose bounds checked at mandate request; registry governed by the BACP WG (<a href="../mandates/#purpose-bounds">Mandates</a>)</td>
+<td><strong>Partial</strong>: No "report" outcome (governance settled in <a href="../open-questions/#q-47">Q-47</a>)</td>
+</tr>
+<tr>
+<td><strong>REQ-110</strong> Mandate captured only on a user-controlled surface</td>
+<td>ReBIT: consent generated on the consent manager's own application (pattern)</td>
+<td>Mandates are activated only by signed Trusted Surface events; agents get <code>trusted_surface_only</code> (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-114</strong> PII relayed through intermediaries SHOULD use X25519 ECDH plus a nonce</td>
+<td>ReBIT key material (pattern)</td>
+<td>Nonce replay cache; InstructionLog content encrypted at the operator (<a href="../security-and-privacy/">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: No payload-encryption profile for personal data relayed through intermediaries</td>
+</tr>
+<tr>
+<td><strong>REQ-115</strong> One transaction ID end to end</td>
+<td>BACP policy</td>
+<td>One Beckn <code>transaction_id</code> end to end in receipts, InstructionLog and evidence (<a href="../evidence/">Evidence</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-116</strong> All participants registered; credentials rotated at least every 180 days</td>
+<td>Sahamati 180-day secret rotation (pattern)</td>
+<td>AgentCredential <code>exp</code> at most 180 days after issue; registry keys of every role rotated at least every 180 days (<a href="../identity-and-signing/">Identity</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-317</strong> Signed logs identify the party at fault</td>
+<td>BACP policy</td>
+<td>InstructionLog hash chain, receipts and evidence bundle identify the party at fault (<a href="../evidence/">Evidence</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>REQ-322</strong> Operator refunds out-of-mandate actions at its own cost</td>
+<td>BACP policy</td>
+<td>Proposed network policy: operator remediates out-of-mandate actions (<a href="../evidence/">Evidence</a>)</td>
+<td><strong>Partial</strong>: No remediation flow → <a href="../open-questions/#q-01">Q-01</a></td>
+</tr>
+<tr>
+<td><strong>REQ-409</strong> Voice consent keeps audio hash, transcript and translation; voice is never a payment factor</td>
+<td>BACP policy</td>
+<td>Voice evidence (audio and transcript hashes); voice never a payment factor (<a href="../security-and-privacy/#notice-and-consent">Security and Privacy</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-13">Q-13</a>)</td>
+</tr>
+<tr>
+<td><strong>PAY-101</strong> Handler registry declaring regulator, limits, AFA, tokenisation, mandate primitive, refund, TAT, dispute, human presence</td>
+<td>BACP policy</td>
+<td>Handler descriptor schema and registry (<a href="../payments/handler-registry/">Handler Registry</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-131</strong> COD only if the mandate allows it; cap open COD orders</td>
+<td>BACP policy</td>
+<td><code>cod_allowed</code> and <code>cod_max_open_orders</code> on the checkout mandate (<code>cod_open_orders_cap</code>) (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-207</strong> BACP's own 24 h pre-debit notice for NACH</td>
+<td>BACP policy (modelled on the E-mandate Framework para 6)</td>
+<td>BACP 24-hour notice with opt-out for NACH (<code>bacp_policy_24h</code>) (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>PAY-215</strong> Offline e₹ marked offline; agents cannot start it</td>
+<td>BACP policy</td>
+<td>Offline e₹ marked <code>offline=true</code> with a deferred-sync state; never initiated autonomously by an agent (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-101</strong> BPP advertises negotiation capability; the session uses the intersection</td>
+<td>BACP policy (capability negotiation pattern)</td>
+<td>Capability adverts; sessions use the intersection (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-102</strong> Every offer is a multi-issue term sheet with per-issue status</td>
+<td>BACP policy (ONDC per-term status pattern)</td>
+<td>Multi-issue TermSheet with per-issue status (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-103</strong> Free text is <code>binding:false</code> and cannot change terms</td>
+<td>BACP policy</td>
+<td>Free text is non-binding and kept only as a hash (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-113</strong> Negotiation ends at max_rounds or the deadline</td>
+<td>BACP policy</td>
+<td>Negotiation ends at <code>max_rounds</code> or the deadline (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-120</strong> Offers carry an absolute <code>expires_at</code> and a JWS from the NP key, plus the agent key when an agent acted</td>
+<td>BACP policy</td>
+<td>Absolute <code>expires_at</code>; network participant signature; agent act under <code>bacp-negotiate</code> (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-124</strong> CounterSignature on receipt</td>
+<td>BACP policy (Beckn 2.0 CounterSignature)</td>
+<td>Receipt timestamp from the receiver's CounterSignature (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (settled in <a href="../open-questions/#q-43">Q-43</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-130</strong> Register negotiation constraints as AP2/VI open-mandate constraints</td>
+<td>BACP policy</td>
+<td>Superseded by the separate negotiation mandate (<a href="../mandates/">Mandates</a>)</td>
+<td><strong>Partial</strong>: Conflicts with NEG-138; to be retired</td>
+</tr>
+<tr>
+<td><strong>NEG-131</strong> No ACCEPT or firm COUNTER outside the mandate; deterministic guard</td>
+<td>BACP policy</td>
+<td>Deterministic guard on every firm COUNTER, ACCEPT and bid (<a href="../security-and-privacy/#prompt-injection">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-132</strong> Unknown constraints fail closed</td>
+<td>BACP policy</td>
+<td>Unknown constraints and unevaluable extensions fail closed (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-133</strong> Credential provider re-verifies; seller verifies only <code>within_bounds</code></td>
+<td>BACP policy</td>
+<td>Credential provider re-verifies; seller sees only <code>within_bounds</code> (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-24">Q-24</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-134</strong> Escalate with a diff; fresh closed approval with an RBI-compliant factor</td>
+<td>BACP policy</td>
+<td>Escalation with a diff on the Trusted Surface; fresh approval with an RBI-compliant factor (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-136</strong> Periodic budget windows</td>
+<td>BACP policy</td>
+<td>Periodic budget windows P1D, P7D, P1M (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-137</strong> Count exposure across concurrent negotiations</td>
+<td>BACP policy</td>
+<td>Cross-session exposure counted atomically within one gateway (<a href="../security-and-privacy/#atomic-reservation">Security and Privacy</a>)</td>
+<td><strong>Partial</strong>: Not counted across gateways; an open mandate belongs to one gateway → <a href="../open-questions/#q-36">Q-36</a></td>
+</tr>
+<tr>
+<td><strong>NEG-138</strong> Negotiation constraints travel in a separate mandate</td>
+<td>BACP policy</td>
+<td>Separate negotiation mandate (<a href="../mandates/">Mandates</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-140</strong> No reservation-value leak</td>
+<td>BACP policy</td>
+<td>Reservation value never disclosed; closed TermSheet; provenance-aware DLP (<a href="../security-and-privacy/#reservation-dlp">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-141</strong> Counterparties verify a <code>within_bounds</code> attestation</td>
+<td>BACP policy</td>
+<td>Counterparties verify the <code>within_bounds</code> attestation (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-24">Q-24</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-142</strong> Reservation value kept out of the LLM context</td>
+<td>BACP policy</td>
+<td>Only guard verdicts reach the model (<a href="../security-and-privacy/#prompt-injection">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-143</strong> Counterparty text treated as untrusted</td>
+<td>BACP policy</td>
+<td>Counterparty text is untrusted (<code>untrusted_counterparty_text</code>) (<a href="../security-and-privacy/#prompt-injection">Security and Privacy</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-150</strong> Signed AuctionSpec that cannot change</td>
+<td>BACP policy</td>
+<td>Signed AuctionSpec frozen before the first bid (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-152</strong> <code>response_by</code> declared; no early award</td>
+<td>BACP policy</td>
+<td><code>response_by</code> and <code>min_responses</code> required; no early award (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-153</strong> Dutch-auction prices never increase</td>
+<td>BACP policy</td>
+<td>Dutch ticks never increase (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>NEG-183</strong> Hash-chained, signed transcript kept for the limitation period</td>
+<td>BACP policy</td>
+<td>Hash-chained, signed transcript in the InstructionLog (<a href="../evidence/">Evidence</a>)</td>
+<td>Covered (see <a href="../open-questions/#q-56">Q-56</a>)</td>
+</tr>
+<tr>
+<td><strong>NEG-184</strong> <code>offeror_kind</code> declared and shown to the principal</td>
+<td>BACP policy</td>
+<td><code>offeror_kind</code> on every message, shown to the principal (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-101</strong> Party roles; orderer, consignee and payer can differ</td>
+<td>BACP policy (GeM practice)</td>
+<td>Party roles: orderer, consignee and payer may differ (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-102</strong> Delegation mandate with caps, counterparties, expiry, consent-proof type and fee disclosure; reject out-of-mandate actions</td>
+<td>BACP policy</td>
+<td>Mandates with caps, counterparties, expiry and consent proof (<a href="../mandates/">Mandates</a>); operator compensation in the notice, and per-order <code>operator_charges[]</code> (<a href="../mandates/#operator-compensation">Operator compensation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-104</strong> Typed, unit-tagged multi-issue offers</td>
+<td>BACP policy</td>
+<td>Typed, unit-tagged multi-issue offers (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-106</strong> Human confirmation for high-value commitments</td>
+<td>BACP policy</td>
+<td>High-value commitments are human-present (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-107</strong> Payment-term structures</td>
+<td>BACP policy</td>
+<td>Payment-term tranches (advance, net-N from GRN) (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-111</strong> Bilateral khata ledger with acknowledgements</td>
+<td>BACP policy</td>
+<td>Bilateral, hash-chained credit ledger with acknowledgements (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-114</strong> Seller accepts or refuses COD per order; final payment mode recorded</td>
+<td>BACP policy</td>
+<td>Seller accepts or refuses COD per order; COD state machine (<a href="../payments/rails/">Rail Bindings</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-115</strong> Payment proof only from a rail reference, never a screenshot</td>
+<td>BACP policy</td>
+<td>Ledger payments only with a rail receipt, never a screenshot (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-120</strong> Machine-readable scheme and offer object</td>
+<td>BACP policy</td>
+<td>Machine-readable scheme and offer object (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-122</strong> Scheme lifecycle: accrual, claim, credit note</td>
+<td>BACP policy</td>
+<td>Scheme claim lifecycle and credit note (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-123</strong> Typed, linked trade documents</td>
+<td>BACP policy</td>
+<td>Typed, linked trade documents (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-128</strong> RFQ broadcast with quotes normalised to landed cost</td>
+<td>BACP policy</td>
+<td>RFQ quotes compared on landed cost (<a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-132</strong> Service slot holds, scope, inspect-then-quote, no-show policy</td>
+<td>BACP policy</td>
+<td>Service slot holds, scope, inspect-then-quote, no-show policy (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-135</strong> Posted dynamic price honoured within its validity</td>
+<td>BACP policy</td>
+<td>Posted dynamic price honoured within its validity (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-139</strong> Inspection and condition evidence</td>
+<td>BACP policy</td>
+<td>Inspection and condition evidence as documents (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-140</strong> Assisted transactions: principal consent, operator ID and fee, receipt in language</td>
+<td>BACP policy</td>
+<td>Assisted sessions record operator id and fee; receipt in language (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-141</strong> Indian languages and voice/IVR; intents from voice notes and images</td>
+<td>BACP policy</td>
+<td>Multilingual text; voice and IVR channels (<a href="../discovery/">Discovery</a>)</td>
+<td><strong>Partial</strong>: Intent extraction from voice notes and images not specified</td>
+</tr>
+<tr>
+<td><strong>TRADE-142</strong> Reseller margin recorded separately</td>
+<td>BACP policy</td>
+<td>Reseller margin recorded separately (<a href="../trade-profiles/">Trade Profiles</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-143</strong> Chat acceptance mapped to a signed ACCEPT</td>
+<td>BACP policy</td>
+<td>Chat acceptance is non-conforming; only a signed ACCEPT binds (<a href="../negotiation/">Negotiation</a>)</td>
+<td>Covered</td>
+</tr>
+<tr>
+<td><strong>TRADE-150</strong> Interlocked credit shown explicitly</td>
+<td>BACP policy</td>
+<td>Interlocked credit shown explicitly (<a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>)</td>
+<td>Covered</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../security-and-privacy/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Security and Privacy">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Security and Privacy
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../conformance/" class="md-footer__link md-footer__link--next" aria-label="Next: Conformance">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Conformance
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

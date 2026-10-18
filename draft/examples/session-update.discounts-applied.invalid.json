@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "id": "I-ATTA-2KG",
+      "quantity": 1
+    },
+    {
+      "id": "I-MILK-1L",
+      "quantity": 1
+    }
+  ],
+  "discounts": {
+    "codes": [
+      "SAVE50"
+    ],
+    "applied": [
+      {
+        "title": "x",
+        "amount": {
+          "value": 5000,
+          "currency": "INR"
+        },
+        "automatic": false,
+        "code": "SAVE50"
+      }
+    ]
+  }
+}

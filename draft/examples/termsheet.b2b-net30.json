@@ -1,0 +1,234 @@
+{
+  "term_sheet_id": "ts_annapurna_oil_r3",
+  "version": "1",
+  "currency": "INR",
+  "pricing_basis": "negotiated",
+  "parties": {
+    "buyer": {
+      "role": "buyer",
+      "id": "bap.annapurna.example.in",
+      "legal_name": "Annapurna Foods Pvt Ltd",
+      "gstin": "29AABCA1234F1Z5",
+      "kind": "agent"
+    },
+    "seller": {
+      "role": "seller",
+      "id": "bpp.tilhan.example.in|P7",
+      "legal_name": "Tilhan Oils",
+      "gstin": "29AAFFT5678K1ZD",
+      "udyam": {
+        "number": "UDYAM-KR-03-0012345",
+        "category": "small",
+        "activity": "manufacturing",
+        "declared_at": "2026-10-12T09:00:00+05:30"
+      },
+      "aato_band": "5cr_to_10cr",
+      "kind": "agent"
+    },
+    "consignee": {
+      "role": "consignee",
+      "id": "loc:annapurna-ck-whitefield"
+    }
+  },
+  "lines": [
+    {
+      "line_id": "L1",
+      "item_id": "SFO-15L-TIN",
+      "name": {
+        "en-IN": "Refined sunflower oil, 15 L tin"
+      },
+      "hsn": "1512",
+      "unit": "each",
+      "quantity": {
+        "value": 200,
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "moq": {
+        "value": 100,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "unit_price": {
+        "value": {
+          "value": 198500,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "seller"
+      },
+      "tax_inclusive": false,
+      "gst_rate_pct": 5,
+      "retail_package_mrp_required": false,
+      "line_total": {
+        "value": 39700000,
+        "currency": "INR"
+      },
+      "price_breaks": [
+        {
+          "min_qty": 100,
+          "unit_price": {
+            "value": 201000,
+            "currency": "INR"
+          }
+        },
+        {
+          "min_qty": 200,
+          "unit_price": {
+            "value": 198500,
+            "currency": "INR"
+          }
+        }
+      ],
+      "asserted_by_buyer": true
+    }
+  ],
+  "charges": [
+    {
+      "code": "delivery",
+      "recipient": "seller",
+      "amount": {
+        "value": {
+          "value": 400000,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": false
+      },
+      "mandatory": true,
+      "first_disclosed_round": 1
+    }
+  ],
+  "all_in_total": {
+    "value": 42105000,
+    "currency": "INR"
+  },
+  "delivery": {
+    "fulfilment_type": {
+      "value": "delivery",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "deliver_by": {
+      "value": "2026-10-20T18:00:00+05:30",
+      "status": "Agree",
+      "negotiable": true
+    },
+    "incoterm": {
+      "value": "FOR_DESTINATION",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "partial_allowed": {
+      "value": false,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "late_delivery_penalty": {
+      "value": {
+        "pct_per_week": 0.5,
+        "cap_pct": 5
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "payment": {
+    "schedule": [
+      {
+        "tranche_id": "T1",
+        "pct": 100,
+        "due": {
+          "event": "on_acceptance",
+          "offset_days": 30
+        },
+        "handlers_allowed": [
+          "in.a2a.neft",
+          "in.a2a.rtgs",
+          "bacp.credit_ledger"
+        ],
+        "is_credit": true
+      }
+    ],
+    "credit_days": {
+      "value": 30,
+      "status": "Agree",
+      "negotiable": true,
+      "proposed_by": "buyer"
+    },
+    "credit_reference_event": {
+      "value": "on_acceptance",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "early_pay_discount": {
+      "value": {
+        "pct": 1,
+        "within_days": 10
+      },
+      "status": "Agree",
+      "negotiable": true
+    },
+    "delay_interest_pa_pct": {
+      "value": 18,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "collected_by": {
+      "value": "BPP",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "credit_ledger": {
+      "value": {
+        "ledger_id": "ldg_ANNAxTILH0001",
+        "credit_limit": {
+          "value": 100000000,
+          "currency": "INR"
+        }
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "returns": {
+    "return_type": {
+      "value": "replace",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "warranty_penalty": {
+    "arbitration": {
+      "value": true,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "court_jurisdiction": {
+      "value": "Bengaluru",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "quality": {
+    "spec_ref": "FSSAI refined sunflower oil",
+    "inspection": {
+      "value": {
+        "by": "buyer",
+        "at": "on_receipt"
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "tax_docs": {
+    "gst_credit_invoice": true,
+    "e_invoice_required": true,
+    "e_way_bill_required": true
+  },
+  "conditions_precedent": [
+    "credit_approval"
+  ]
+}

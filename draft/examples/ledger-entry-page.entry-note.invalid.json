@@ -1,0 +1,50 @@
+{
+  "entries": [
+    {
+      "entry_id": "lde_KHATA00000001",
+      "seq": 1,
+      "type": "sale",
+      "amount": {
+        "value": 101000,
+        "currency": "INR"
+      },
+      "effect": "increase_receivable",
+      "at": "2026-10-02T11:00:00+05:30",
+      "due_date": "2026-11-02",
+      "status": "acknowledged",
+      "entry_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc",
+      "note": "free text from the counterparty"
+    },
+    {
+      "entry_id": "lde_KHATA00000002",
+      "seq": 2,
+      "type": "sale",
+      "amount": {
+        "value": 102000,
+        "currency": "INR"
+      },
+      "effect": "increase_receivable",
+      "at": "2026-10-03T11:00:00+05:30",
+      "due_date": "2026-11-03",
+      "status": "acknowledged",
+      "entry_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc"
+    },
+    {
+      "entry_id": "lde_KHATA00000003",
+      "seq": 3,
+      "type": "sale",
+      "amount": {
+        "value": 103000,
+        "currency": "INR"
+      },
+      "effect": "increase_receivable",
+      "at": "2026-10-04T11:00:00+05:30",
+      "due_date": "2026-11-04",
+      "status": "acknowledged",
+      "entry_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc"
+    }
+  ],
+  "next_after_seq": 3,
+  "head_seq": 120,
+  "head_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc"
+}

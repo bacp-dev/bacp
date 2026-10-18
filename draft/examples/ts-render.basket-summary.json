@@ -1,0 +1,98 @@
+{
+  "step_up_id": "stp_01HZXKq8W3nK5vRt7YcLm2",
+  "session_id": "ses_01HZXB",
+  "kind": "confirm",
+  "reason": "rail_fallback",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "total": {
+    "value": 93200,
+    "currency": "INR"
+  },
+  "basket": [
+    {
+      "bpp_id": "bpp.kirana.example.in",
+      "payee_name": "SHREE GANESH KIRANA",
+      "amount": {
+        "value": 30200,
+        "currency": "INR"
+      },
+      "handler": "in.upi.reservepay",
+      "needs_pin": false,
+      "funds_locked": {
+        "value": 300000,
+        "currency": "INR"
+      },
+      "expires_at": "2026-11-11T10:00:00+05:30",
+      "funding": "deposit"
+    },
+    {
+      "bpp_id": "bpp.dairy.example.in",
+      "payee_name": "NANDINI DAIRY STORE",
+      "amount": {
+        "value": 45000,
+        "currency": "INR"
+      },
+      "handler": "in.upi.intent",
+      "needs_pin": true,
+      "funding": "deposit"
+    },
+    {
+      "bpp_id": "bpp.sabzi.example.in",
+      "payee_name": "RAMESH SABZI BHANDAR",
+      "amount": {
+        "value": 18000,
+        "currency": "INR"
+      },
+      "handler": "in.upi.intent",
+      "needs_pin": true,
+      "funding": "deposit"
+    }
+  ],
+  "covers": [
+    {
+      "session_id": "ses_01HZXB",
+      "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+      "payee": {
+        "vpa": "ganeshkirana@examplebank",
+        "bpp_id": "bpp.kirana.example.in"
+      },
+      "amount": {
+        "value": 30200,
+        "currency": "INR"
+      }
+    },
+    {
+      "session_id": "ses_01HZXD",
+      "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+      "payee": {
+        "vpa": "dairy@examplebank",
+        "bpp_id": "bpp.dairy.example.in"
+      },
+      "amount": {
+        "value": 45000,
+        "currency": "INR"
+      }
+    },
+    {
+      "session_id": "ses_01HZXF",
+      "checkout_hash": "sha-256:spdIh_IlShNd2jhCwajzmOrqcCYN5_y6BOmBN3j8aSA",
+      "payee": {
+        "vpa": "sabzi@examplebank",
+        "bpp_id": "bpp.sabzi.example.in"
+      },
+      "amount": {
+        "value": 18000,
+        "currency": "INR"
+      }
+    }
+  ],
+  "summary": {
+    "hi-IN": "3 दुकानें, कुल ₹932। एक दुकान आपके रिज़र्व से ₹302 लेगी; बाक़ी 2 भुगतानों के लिए UPI PIN चाहिए। वह दुकान BACP के देखे बिना ₹3,000 तक निकाल सकती है।",
+    "en-IN": "3 sellers, ₹932 in all. One seller takes ₹302 from your reserve; the other 2 payments need your UPI PIN. That seller can draw up to ₹3,000 unseen by BACP."
+  },
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T18:45:00+05:30"
+}

@@ -1,0 +1,3721 @@
+# Negotiation
+
+Version 2026-10-18
+
+This page is part of BACP version `2026-10-18`. Rules marked **Proposed** depend on an open question and may change in a later dated release.
+
+The negotiation module lets an agent bargain, request quotations and bid on behalf of a principal, the way trade happens in India today: mol-bhav at a kirana or a weaver's shop, DM bargaining on social commerce, RFQ → quotation → PO in B2B procurement, and reverse auctions on government platforms. It sits **before** checkout. A negotiation ends in an agreed term sheet that the seller then binds in its signed `on_init` quote, and only that signed quote enters the [checkout session](https://spec.bacp.dev/draft/specification/checkout/index.md) and the [payment flow](https://spec.bacp.dev/draft/specification/payments/index.md).
+
+RFQs and auctions build on this page and are specified in [RFQ and Auctions](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/index.md). Which modes, payment handlers and validators apply to each kind of trade is set by the [trade profiles](https://spec.bacp.dev/draft/specification/trade-profiles/index.md).
+
+## Principles
+
+1. **Only structured, signed and expiring messages bind.** Chat, voice, counterparty free text and LLM rationale are advisory. They carry `binding: false`, are logged as hashes, and never change a term sheet.
+1. **The model proposes and a deterministic engine decides.** A guard outside the LLM evaluates every outgoing firm counter-offer, acceptance, bid and award, and every incoming offer, against the principal's negotiation mandate. The model sees only a verdict.
+1. **The reservation price never leaves the principal's side.** The seller verifies only a signed `within_bounds` attestation. No message, error, webhook or log line sent to anyone else carries the reservation price or the ceiling.
+1. **Indian law is enforced as validators, not left as guidance.** MRP ceilings, the MSMED credit cap, the dark-pattern rules of the Central Consumer Protection Authority (CCPA), cash limits and bid-rigging screens are checks that block, escalate or flag.
+1. **Contract-law alignment.** Offer, revocation, lapse and acceptance follow the Indian Contract Act, 1872, ss.4–7 (see [Indian Contract Act timing](#indian-contract-act-timing)).
+1. **Silence is never acceptance.** A negotiation that receives no reply ends `TERMINATED` at its deadline, never `AGREED`.
+
+## Negotiation modes
+
+Every session declares its mode up front. The enum is `negotiation-session.json#/$defs/Mode`.
+
+| `mode`           | How trade does it today                                           | Mechanics in BACP                                                                                                                                       | Acceptance or award                                                                                                                                              |
+| ---------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `fixed`          | Catalogue checkout, MRP goods                                     | One firm offer (the `on_select` quote). The buyer may only accept, reject or let it lapse.                                                              | Buyer `accept`                                                                                                                                                   |
+| `posted_dynamic` | Rail flexi-fare, airline buckets, Tatkal                          | A firm offer with short validity and a quota or class. A price change after expiry is a new offer, never a silent charge.                               | Buyer `accept` within validity                                                                                                                                   |
+| `alternating`    | Mol-bhav, DM bargaining, car dealers, B2B price rounds            | Alternating firm or indicative offers. One live offer at a time, `max_rounds`, absolute deadline.                                                       | Either side accepts the live offer                                                                                                                               |
+| `rfq_sealed`     | B2B RFQ, GeM e-bid, sealed tenders                                | Structured RFQ to N sellers, sealed commit–reveal quotations with a deposit, landed-cost comparison                                                     | Award after `response_by` ([RFQ](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#rfq))                                                   |
+| `rfq_iterated`   | Shortlist and "best and final"                                    | `rfq_sealed`, then alternating rounds with a shortlist. Each shortlisted seller is its own bilateral session under the parent `rfq_id`.                 | As above                                                                                                                                                         |
+| `english`        | Mandi open outcry, eNAM, disposal auctions                        | Ascending price-only bids on a neutral auctioneer's clock with anti-sniping                                                                             | Highest valid bid at close, then the seller's explicit acceptance ([Auctions](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#auctions)) |
+| `reverse_l1`     | GeM reverse auction after technical evaluation                    | Descending bids. Bidders see the current L1 price only, never who bid it.                                                                               | Lowest bid at close                                                                                                                                              |
+| `dutch`          | Perishables, end-of-day clearance                                 | Published non-increasing price ticks                                                                                                                    | First conforming acceptance in the auctioneer's chain order                                                                                                      |
+| `scheme`         | Bank offers, coupons, QPS "buy 10 get 1", slab and target schemes | No bargaining. The buyer asserts machine-readable schemes with eligibility proofs. The seller agrees or disagrees per scheme, and stacking rules apply. | Seller `Agree` per scheme, then a normal `accept`                                                                                                                |
+
+A coupon code on a plain checkout session is not `scheme` mode: it is a code that the seller applies or rejects ([Discounts](https://spec.bacp.dev/draft/specification/checkout/#discounts)). Discounts that depend on the payment instrument or on a buyer assertion stay in `scheme` mode.
+
+A `sealed_first_price` auction is negotiated under mode `rfq_sealed`, and a mandate that allows sealed auctions MUST list `rfq_sealed` in `modes_allowed`.
+
+## Capability advertisement
+
+A BPP advertises `bacp.negotiation` as a provider tag in `on_search`, mirrored into its profile. The BAP declares its own set in `/.well-known/bacp` (see [Discovery and Profiles](https://spec.bacp.dev/draft/specification/discovery/index.md)). The schema is `negotiation-session.json#/$defs/Capability`:
+
+| Field                                | Meaning                                                                                                                                                  |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `negotiable_issues[]`                | JSON Pointers into the term sheet, e.g. `/lines/*/unit_price`, `/payment/credit_days`                                                                    |
+| `modes[]`                            | Supported modes                                                                                                                                          |
+| `max_rounds`, `round_timeout`        | Round limits                                                                                                                                             |
+| `min_offer_validity`                 | Shortest validity the advertiser will issue                                                                                                              |
+| `sig_algs[]`, `firm_quote_supported` | Signing algorithms; whether firm quotes are offered                                                                                                      |
+| `accepted_handlers[]`                | Payment handlers the seller accepts, which feed the [handler intersection](https://spec.bacp.dev/draft/specification/payments/handler-registry/index.md) |
+| `pricing_ai_vendor`                  | Any third-party pricing or negotiation AI the participant uses                                                                                           |
+
+Rules:
+
+- A session MUST use the **intersection** of the two adverts.
+- Any issue not in the intersected `negotiable_issues` is **fixed**. A counter-offer that changes a fixed issue MUST be refused with `NEG_ISSUE_NOT_NEGOTIABLE`.
+- `max_rounds` defaults to 10 for B2C and 30 for B2B.
+- `min_offer_validity` has a floor of `PT5M` in **every** profile. A counterparty's advert MAY lengthen it and MUST NOT shorten it: the effective value is the larger of `PT5M` and the declared value.
+- An empty mode intersection returns `capabilities_incompatible`, and the agent falls back to `fixed`.
+
+## The negotiation mandate
+
+A negotiation is bounded by a **negotiation mandate** that is separate from the checkout mandate described in [Mandates and Consent](https://spec.bacp.dev/draft/specification/mandates/index.md).
+
+**Why separate.** AP2- and Verifiable-Intent-compatible verifiers fail closed on constraint types they do not know. Adding negotiation constraints to the checkout or payment mandate would make those verifiers reject it. BACP therefore carries the `bacp.neg.*` constraints in their own mandate:
+
+- `vct: in.bacp.mandate.negotiation.1`, `kind: negotiation`, schema [`mandate-negotiation.json`](https://bacp.dev/schemas/mandate-negotiation.json);
+- signed by the principal on the Trusted Surface and countersigned by the Mandate Manager, like every other mandate;
+- for `role: buyer`, linked to the open checkout mandate by `checkout_mandate_ref`, which MUST be present. For `role: seller` (a reverse-auction bidder, a farmer selling a lot), `checkout_mandate_ref` MUST be absent, because a seller has no checkout mandate.
+
+Both mandates are evaluated, and **the stricter bound wins**: the checkout mandate's budgets, allow-lists and step-up rules still apply to a negotiated deal.
+
+**Autonomous acceptance.** `process.accept_confirmation` says what happens when the guard returns `acceptable` and the agent calls accept.
+
+- **`ask`** is the meaning of an absent key. The gateway raises a `confirm` step-up with reason `accept_confirmation`, whose `ts_render` carries `offer_hash`, and sends nothing seller-visible before `negotiation.step_up.approved`.
+- **`autonomous`** lets the gateway send the accept without the principal. It takes effect only if the mandate also carries a usable `process.notice_route` (`type` `mm_event`, `tel` or `sms`, and `ref`) that the Mandate Manager writes from a number or reference it has verified as the principal's own (for `tel` and `sms`, the number the Trusted Surface holds for the principal, as for [voice](https://spec.bacp.dev/draft/specification/human-participants/#voice)), and never from a request. A `MandateRequest` whose proposed constraints carry `notice_route` is refused with `400 invalid_request` at that path (`mandate-request.notice-route.invalid.json`). `mm_event` is not usable until BACP defines the event. Otherwise the gateway treats the mandate as `ask` and records `autonomous_unavailable_no_notice_route` (`info`). The only gateway-to-Trusted-Surface channel that BACP defines is the content-free `app_push` of a step-up (`ts_notify_url`), which carries a `step_up_id` and an expiry and never the text of a notice, so it is not a `notice_route`. BACP defines no gateway-to-Trusted-Surface *notice* event ([Q-61](https://spec.bacp.dev/draft/specification/open-questions/#q-61)), so a route the gateway itself uses (`tel` or `sms`) is the way to meet the condition until one is defined; if one is defined, it becomes an allowed `mm_event` value and the fallback fires less often.
+- **Never preselected.** The Mandate Manager MUST write the key on every mandate it issues from the effective date of this version. The notice that the principal approves on the Trusted Surface at set-up MUST present `ask` and `autonomous` with equal weight and preselect neither, MUST say that under `autonomous` the agent may accept a firm offer without the principal when the guard returns `acceptable`, and MUST give the fixed consequence sentence of each [`acceptance_revocation`](#acceptance-revocation) value ([Render input](https://spec.bacp.dev/draft/specification/human-participants/#ts-render)), so that the principal knows what such an acceptance means before any is sent. In a consumer session this is also the explicit and affirmative action that Rule 4(9) of the Consumer Protection (E-Commerce) Rules, 2020 asks for ("no such entity shall record such consent automatically"). Whether one Trusted-Surface-signed mandate is consent for each later purchase is open ([Q-52](https://spec.bacp.dev/draft/specification/open-questions/#q-52)).
+- **`agri` seller.** In an `agri` session a seller gateway treats the key as `ask` whatever the mandate says, so that a farmer always taps their own acceptance. This is a BACP gateway rule, not a legal requirement.
+- **Legacy mandates.** A mandate with no `accept_confirmation` is read as `ask`. A verifier that fails closed on unknown constraint keys refuses a mandate that carries the key until it supports it.
+- **No hold.** BACP has no `accept_hold`. The stops are the withdrawal of a purchase offer ([Withdrawal](#withdrawal-rejection-and-termination)) and the principal's decline of an `AGREED` or `BOUND` deal ([Decline](#decline-of-an-agreed-or-bound-deal)).
+
+The negotiation mandate is verified only by the principal's own guard and credential provider. It is **never** disclosed to the counterparty. It travels to the seller only as a `within_bounds` attestation (see [Binding to checkout](#binding-to-checkout)).
+
+mandate-negotiation.buyer.json
+
+```
+{
+  "vct": "in.bacp.mandate.negotiation.1",
+  "mandate_id": "mdt_NEG7Q2W9X4K1M3",
+  "kind": "negotiation",
+  "parent_mandate_id": null,
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "iss": "mm.psp.example.in",
+  "iat": 1791763200,
+  "valid_from": "2026-10-12T10:00:00+05:30",
+  "valid_until": "2026-11-11T10:00:00+05:30",
+  "principal": {
+    "ref": "pp_9f2c1e"
+  },
+  "agent": {
+    "id": "did:web:agents.vaani.example.in:sakhi",
+    "credential_hash": "sha-256:q8NQRLTGcDbR5z2oSauD00TbDbbSvZLw41AXtbgrIJY"
+  },
+  "presence_allowed": [
+    "HNP",
+    "HP"
+  ],
+  "constraints": {
+    "negotiation": {
+      "role": "buyer",
+      "modes_allowed": [
+        "fixed",
+        "alternating",
+        "dutch",
+        "scheme"
+      ],
+      "price": {
+        "total_max": {
+          "value": 250000,
+          "currency": "INR"
+        },
+        "reservation": {
+          "sd": true,
+          "value": {
+            "value": 220000,
+            "currency": "INR"
+          },
+          "disclosure": "never",
+          "held_by": "policy_engine"
+        },
+        "max_increase_pct_after_first_quote": 0
+      },
+      "delivery": {
+        "deliver_by_latest": "2026-10-25T20:00:00+05:30"
+      },
+      "payment": {
+        "handlers_allowed": [
+          "in.upi.circle",
+          "in.upi.intent",
+          "in.card.token"
+        ],
+        "max_advance_pct": 100,
+        "emi_allowed": false,
+        "credit_funding_allowed": false,
+        "cod_allowed": false,
+        "cod_max_open_orders": 0
+      },
+      "after_sales": {
+        "min_return_window": "P7D"
+      },
+      "process": {
+        "max_rounds": 10,
+        "deadline": "2026-10-13T20:00:00+05:30",
+        "firm_counter_allowed": true,
+        "accept_confirmation": "ask"
+      },
+      "step_up": {
+        "any_violation": true,
+        "between_reservation_and_max": true,
+        "new_counterparty_above": {
+          "value": 250000,
+          "currency": "INR"
+        },
+        "drip_pct": 0,
+        "agreed_issue_reopened": true
+      }
+    }
+  },
+  "revocation": {
+    "status_uri": "https://mm.psp.example.in/status/mdt_NEG7Q2W9X4K1M3",
+    "notify_sla_seconds": 60,
+    "on_revoke": "withdraw_live_firm_offers"
+  },
+  "cnf": {
+    "jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+      "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+      "kid": "sakhi-2026-10"
+    }
+  },
+  "signatures": [
+    {
+      "role": "principal",
+      "kid": "pp_9f2c1e#dev1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "status": "ACTIVE"
+}
+```
+
+### Constraints
+
+`constraints.negotiation` (`$defs/NegotiationConstraints`) holds every bound. Unknown keys fail closed.
+
+| Key                                        | Meaning                                                                                                                                                                                                                                                           |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `role`                                     | `buyer` or `seller`                                                                                                                                                                                                                                               |
+| `modes_allowed[]`                          | The modes this mandate permits                                                                                                                                                                                                                                    |
+| `price.total_max`                          | Buyer ceiling on `all_in_total`. Required for buyers.                                                                                                                                                                                                             |
+| `price.total_min`                          | Seller floor on `all_in_total`. Required for sellers.                                                                                                                                                                                                             |
+| `price.unit_max[]`, `price.unit_min[]`     | Per-item bounds                                                                                                                                                                                                                                                   |
+| `price.reservation`                        | The walk-away price. See [Reservation price](#reservation-price). Required for buyers.                                                                                                                                                                            |
+| `price.max_increase_pct_after_first_quote` | Drip-pricing tripwire. Default 0 for B2C.                                                                                                                                                                                                                         |
+| `quantity[]`                               | Minimum, maximum and largest acceptable MOQ per item                                                                                                                                                                                                              |
+| `delivery.*`                               | `deliver_by_latest`, allowed slots and Incoterms, whether partial delivery is allowed, maximum delivery charge                                                                                                                                                    |
+| `payment.*`                                | `handlers_allowed[]`, `max_advance_pct`, `credit_days_min` / `credit_days_max`, `max_delay_interest_pa_pct`, `emi_allowed`, `credit_funding_allowed`, `cod_allowed`, `cod_max_open_orders`, `collected_by_allowed[]`, `credit_ledger{ledger_id, max_outstanding}` |
+| `after_sales.*`                            | Minimum return window, minimum warranty, installation, allowed return types                                                                                                                                                                                       |
+| `quality.*`                                | Allowed grades; whether inspection or hallmarking is required                                                                                                                                                                                                     |
+| `commission.*`, `deposit.*`, `schemes.*`   | Commission cap and who may pay it; deposit cap and refundability; allowed scheme funders. `schemes.count_conditional_cashback` is the constant `false`.                                                                                                           |
+| `process.*`                                | `max_rounds`, `deadline`, `counterparty_allowlist`, `auction_max_bid`, `rfq_min_responses`, `rfq_min_window`, `award_rule`, `firm_counter_allowed`, `accept_confirmation`, `notice_route`                                                                         |
+| `step_up.*`                                | `any_violation`, `between_reservation_and_max` and `agreed_issue_reopened` are the constant `true`. `new_counterparty_above` and `drip_pct` are set per mandate.                                                                                                  |
+
+`revocation.on_revoke` is the constant `withdraw_live_firm_offers`: when the mandate is revoked, the gateway MUST send `withdraw` for every live firm offer of that principal (see [Mandate revocation](#mandate-revocation)).
+
+### Reservation price
+
+The reservation price is the principal's private walk-away value.
+
+- `price.reservation` is an SD-JWT selectively disclosable claim with `sd: true`, `disclosure: "never"` (a constant) and `held_by` ∈ `policy_engine` | `trusted_surface`.
+- It MUST NOT be disclosed to the counterparty, to any seller-side verifier, to a payment processor or to the LLM. The model receives only the guard verdict.
+- Its relation to `total_max` is:
+
+| Offered `all_in_total` (buyer)        | Guard outcome                                                                                                                                                                                                  |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| At or better than `reservation`       | `acceptable`. The agent may accept without the principal.                                                                                                                                                      |
+| Between `reservation` and `total_max` | `needs_escalation`, reason `negotiation_between_reservation_and_max`. The principal decides on the Trusted Surface.                                                                                            |
+| Beyond `total_max`                    | `needs_escalation`, reason `negotiation_out_of_mandate`. The agent MUST NOT emit a firm counter-offer or bid at this value. A principal approval here is a fresh closed approval with an RBI-compliant factor. |
+
+For a seller mandate the directions are reversed (`total_min` is the floor).
+
+A mandate that sets `disclosure` to anything other than `never`, or a buyer mandate without a reservation, is invalid:
+
+Invalid: disclosed reservation (`mandate-negotiation.disclosed.invalid.json`)
+
+```
+{
+  "vct": "in.bacp.mandate.negotiation.1",
+  "mandate_id": "mdt_NEG7Q2W9X4K1M3",
+  "kind": "negotiation",
+  "parent_mandate_id": null,
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "iss": "mm.psp.example.in",
+  "iat": 1791763200,
+  "valid_from": "2026-10-12T10:00:00+05:30",
+  "valid_until": "2026-11-11T10:00:00+05:30",
+  "principal": {
+    "ref": "pp_9f2c1e"
+  },
+  "agent": {
+    "id": "did:web:agents.vaani.example.in:sakhi",
+    "credential_hash": "sha-256:q8NQRLTGcDbR5z2oSauD00TbDbbSvZLw41AXtbgrIJY"
+  },
+  "presence_allowed": [
+    "HNP",
+    "HP"
+  ],
+  "constraints": {
+    "negotiation": {
+      "role": "buyer",
+      "modes_allowed": [
+        "fixed",
+        "alternating",
+        "dutch",
+        "scheme"
+      ],
+      "price": {
+        "total_max": {
+          "value": 250000,
+          "currency": "INR"
+        },
+        "reservation": {
+          "sd": true,
+          "value": {
+            "value": 220000,
+            "currency": "INR"
+          },
+          "disclosure": "to_seller",
+          "held_by": "policy_engine"
+        },
+        "max_increase_pct_after_first_quote": 0
+      },
+      "delivery": {
+        "deliver_by_latest": "2026-10-25T20:00:00+05:30"
+      },
+      "payment": {
+        "handlers_allowed": [
+          "in.upi.circle",
+          "in.upi.intent",
+          "in.card.token"
+        ],
+        "max_advance_pct": 100,
+        "emi_allowed": false,
+        "credit_funding_allowed": false,
+        "cod_allowed": false,
+        "cod_max_open_orders": 0
+      },
+      "after_sales": {
+        "min_return_window": "P7D"
+      },
+      "process": {
+        "max_rounds": 10,
+        "deadline": "2026-10-13T20:00:00+05:30",
+        "firm_counter_allowed": true
+      },
+      "step_up": {
+        "any_violation": true,
+        "between_reservation_and_max": true,
+        "new_counterparty_above": {
+          "value": 250000,
+          "currency": "INR"
+        },
+        "drip_pct": 0,
+        "agreed_issue_reopened": true
+      }
+    }
+  },
+  "revocation": {
+    "status_uri": "https://mm.psp.example.in/status/mdt_NEG7Q2W9X4K1M3",
+    "notify_sla_seconds": 60,
+    "on_revoke": "withdraw_live_firm_offers"
+  },
+  "cnf": {
+    "jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+      "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+      "kid": "sakhi-2026-10"
+    }
+  },
+  "signatures": [
+    {
+      "role": "principal",
+      "kid": "pp_9f2c1e#dev1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "status": "ACTIVE"
+}
+```
+
+### Presence of a negotiation
+
+The gateway derives the presence of a negotiation from the session in which the principal reached the agent, or from an `hp_proof` ([Presence proof](https://spec.bacp.dev/draft/specification/human-participants/#hp-proof)); it does not take it from the `presence` field of `NegotiationCreate` as the agent states it. A `NegotiationCreate` that asserts `presence: HP` without a valid `hp_proof` is refused with `403 presence_not_proven` (`requires_buyer_review`), and nothing is sent to the seller. `HNP` needs no proof.
+
+## Term sheet
+
+Every binding offer carries a multi-issue **term sheet**, schema [`termsheet.json`](https://bacp.dev/schemas/termsheet.json). Amounts are integer paise in INR.
+
+**Issue envelope.** Every negotiable issue is wrapped as `{value, negotiable, status, proposed_by}`, where `status` ∈ `Assert | Agree | Disagree | Terminate`. This generalises ONDC's per-term status handshake for payment terms to every issue. The envelope and the groups are closed (`additionalProperties: false`), so a reservation value, a utility weight or any undeclared field cannot ride inside a term sheet. Extra issues go only under namespaced `extensions`, and the guard fails closed on any extension issue that is not in `Agree`.
+
+| Group                                            | Issues                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Price** `lines[]`, `charges[]`, `all_in_total` | `unit_price`; `tax_inclusive`; `gst_rate_pct`; read-only `mrp`; `retail_package_mrp_required`; `price_breaks[]`; `line_total`; every charge with `mandatory` and `first_disclosed_round`. `all_in_total` is required from round 1 and MUST equal Beckn `quote.price`. `pricing_basis` ∈ `list`, `volume`, `negotiated`, `personalised`, `auction`, `scheme`, `posted_dynamic`.                                                                        |
+| **Quantity** `lines[]`                           | `quantity`, `unit` (`each`, `kg`, `quintal`, `set`, `hour`, …), `moq`, `tolerance_pct`, `option_clause_pct` (GeM-style ± quantity option), `price_breaks[]`                                                                                                                                                                                                                                                                                           |
+| **Fulfilment** `delivery.*`                      | `fulfilment_type`; `deliver_by` or `slot{start, end, hold_until}`; `tat`; `incoterm` (plus `FOR_DESTINATION`, Indian domestic practice and not an Incoterm); `named_place`; `partial_allowed`; `delivery_charge`; `late_delivery_penalty`                                                                                                                                                                                                             |
+| **Payment** `payment.*`                          | `options[]`, each with its own `all_in_total` (e.g. prepaid against COD); `selected_option_id`; `schedule[]` tranches with an amount or `pct` and `due{event, offset_days}`; `advance_pct`; `credit_days`; `credit_reference_event`; `early_pay_discount`; `delay_interest_pa_pct`; `emi`; `collected_by`; `settlement_basis` and `settlement_window`; `withholding_amount`; `cod{allowed, fee, rto_fee}`; `cross_border_instrument`; `credit_ledger` |
+| **Returns** `returns.*`                          | Window, type (refund, replace, credit note, exchange only), restocking fee, return-shipping payer, open-box delivery                                                                                                                                                                                                                                                                                                                                  |
+| **Warranty and penalties** `warranty_penalty.*`  | Warranty months and type, extended-warranty price, liquidated damages (% per week, cap), PBG %, retention %, maximum liability, arbitration, jurisdiction                                                                                                                                                                                                                                                                                             |
+| **Quality** `quality`, `lines[].quality`         | Spec reference, grade, assay, inspection, rejection terms, HUID required                                                                                                                                                                                                                                                                                                                                                                              |
+| **Scope** `scope.*`                              | Deliverables, milestones, inspect-then-quote, inspection fee, revisions, change-order policy, no-show policy                                                                                                                                                                                                                                                                                                                                          |
+| **Schemes** `schemes.applied[]`                  | Funder, benefit type, eligibility proof (as a hash), stacking group, exclusivity, `conditional` (conditional cashback never counts in `all_in_total`), claim lifecycle                                                                                                                                                                                                                                                                                |
+| **Commission** `commission[]`                    | Broker, arhtiya, VLE or reseller commission: basis, value, who pays, `deducted_at_source`                                                                                                                                                                                                                                                                                                                                                             |
+| **Deposit** `deposit`                            | Token, booking, security, EMD, refundable deposit or caution money; refundability; deduction policy; holder; `linked_agreement_ref`                                                                                                                                                                                                                                                                                                                   |
+| **Cancellation, tax and documents, conditions**  | ONDC-style `cancellation.terms`; `tax_docs` (e-invoice, e-way bill, TDS section); `conditions_precedent[]`; optional `fx` disclosure view (settlement stays INR)                                                                                                                                                                                                                                                                                      |
+| **Parties** `parties.*`                          | `buyer`, `seller` and, where they differ, `ordering_entity`, `consignee`, `paying_authority`, `intermediaries[]`                                                                                                                                                                                                                                                                                                                                      |
+
+A tranche structure such as "30% advance, 70% net-45 from GRN" is two `schedule[]` entries: one `on_order`, one `on_acceptance` with `offset_days: 45`.
+
+termsheet.b2c-saree.json
+
+```
+{
+  "term_sheet_id": "ts_saree_r2",
+  "version": "1",
+  "currency": "INR",
+  "pricing_basis": "negotiated",
+  "parties": {
+    "buyer": {
+      "role": "buyer",
+      "id": "pp_9f2c1e",
+      "kind": "agent"
+    },
+    "seller": {
+      "role": "seller",
+      "id": "bpp.bunkar.example.in|P2",
+      "kind": "agent",
+      "udyam": {
+        "category": "micro",
+        "activity": "manufacturing"
+      }
+    }
+  },
+  "lines": [
+    {
+      "line_id": "L1",
+      "item_id": "CHND-SILK-112",
+      "name": {
+        "hi-IN": "चंदेरी सिल्क साड़ी",
+        "en-IN": "Chanderi silk saree"
+      },
+      "hsn": "5007",
+      "unit": "each",
+      "quantity": {
+        "value": 1,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "unit_price": {
+        "value": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "seller"
+      },
+      "tax_inclusive": true,
+      "gst_rate_pct": 5,
+      "retail_package_mrp_required": false,
+      "line_total": {
+        "value": 210000,
+        "currency": "INR"
+      },
+      "asserted_by_buyer": true
+    }
+  ],
+  "charges": [
+    {
+      "code": "delivery",
+      "recipient": "seller",
+      "amount": {
+        "value": {
+          "value": 6000,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": false
+      },
+      "mandatory": true,
+      "first_disclosed_round": 1
+    }
+  ],
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "delivery": {
+    "fulfilment_type": {
+      "value": "delivery",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "deliver_by": {
+      "value": "2026-10-18T20:00:00+05:30",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "payment": {
+    "options": [
+      {
+        "option_id": "prepaid",
+        "handlers": [
+          "in.upi.circle",
+          "in.upi.intent"
+        ],
+        "timing": "ON-ORDER",
+        "all_in_total": {
+          "value": 216000,
+          "currency": "INR"
+        }
+      },
+      {
+        "option_id": "cod",
+        "handlers": [
+          "in.cod",
+          "in.cod.upi"
+        ],
+        "timing": "ON-FULFILLMENT",
+        "method_fee": {
+          "value": 4000,
+          "currency": "INR"
+        },
+        "all_in_total": {
+          "value": 220000,
+          "currency": "INR"
+        }
+      }
+    ],
+    "selected_option_id": {
+      "value": "prepaid",
+      "status": "Assert",
+      "negotiable": true,
+      "proposed_by": "buyer"
+    },
+    "schedule": [
+      {
+        "tranche_id": "T1",
+        "pct": 100,
+        "due": {
+          "event": "on_order"
+        },
+        "handlers_allowed": [
+          "in.upi.circle",
+          "in.upi.intent"
+        ]
+      }
+    ],
+    "collected_by": {
+      "value": "BPP",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "returns": {
+    "return_window": {
+      "value": "P7D",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "return_type": {
+      "value": "exchange_only",
+      "status": "Agree",
+      "negotiable": true
+    }
+  },
+  "conditions_precedent": [
+    "payment_on_order"
+  ]
+}
+```
+
+### Credit terms and MSMED limits
+
+If the seller is a Udyam **micro or small** enterprise in **manufacturing or services**, every credit offset (`credit_days` and every tranche `offset_days`) MUST be at most **45 days** from acceptance or deemed acceptance. MSMED Act, 2006, s.15 says the period agreed in writing "in no case … shall exceed forty-five days from the day of acceptance or the day of deemed acceptance". The term-sheet schema encodes this rule, and the validator also runs in code.
+
+- Where no written agreement exists, payment is due within 15 days of acceptance: before the "appointed day" of s.2(b).
+- The day of acceptance is the day of actual delivery, or, if the buyer objects in writing within 15 days of delivery, the day the supplier removes the objection. With no written objection within 15 days, the day of deemed acceptance is the day of actual delivery (s.2(b), Explanation).
+- Medium enterprises are never covered: the Act's "supplier" is a micro or small enterprise (s.2(n)).
+- **Traders.** The Ministry of MSME Office Memorandum of 02-07-2021 lets retail and wholesale traders register on Udyam but says their benefits "are to be restricted to Priority Sector Lending only". BACP therefore does not apply the cap to a trader seller, and the validator only warns. Whether that memorandum excludes traders from s.15 as a matter of law is open ([Q-21](https://spec.bacp.dev/draft/specification/open-questions/#q-21)).
+- A firm offer that breaches the cap is blocked with `NEG_MSMED_CREDIT_CAP`. A buyer's own draft only warns.
+- A buyer-signed GRN, or seller-posted delivery evidence that the buyer counter-signed or that carries a third-party reference the buyer can check, dates acceptance for the `on_acceptance` event and for every MSMED-applicable sale; seller-only evidence dates nothing ([MSME late-payment interest](https://spec.bacp.dev/draft/specification/payments/credit-and-split-tender/#msme-late-payment-interest)). The acceptance date that starts the clock is the delivery date, or the date an objection recorded within 15 days of delivery was removed. How an objection travels on the network is open ([Q-21](https://spec.bacp.dev/draft/specification/open-questions/#q-21)); the rule is pending counsel ([Q-83](https://spec.bacp.dev/draft/specification/open-questions/#q-83)).
+- The credit ledger computes the statutory due date, compound interest at three times the bank rate on overdue amounts (s.16), and the income-tax deduction flag for late payments to micro and small enterprises. See [Credit and Split Tender](https://spec.bacp.dev/draft/specification/payments/credit-and-split-tender/index.md).
+
+termsheet.b2b-net30.json (small manufacturer, net-30 from GRN)
+
+```
+{
+  "term_sheet_id": "ts_annapurna_oil_r3",
+  "version": "1",
+  "currency": "INR",
+  "pricing_basis": "negotiated",
+  "parties": {
+    "buyer": {
+      "role": "buyer",
+      "id": "bap.annapurna.example.in",
+      "legal_name": "Annapurna Foods Pvt Ltd",
+      "gstin": "29AABCA1234F1Z5",
+      "kind": "agent"
+    },
+    "seller": {
+      "role": "seller",
+      "id": "bpp.tilhan.example.in|P7",
+      "legal_name": "Tilhan Oils",
+      "gstin": "29AAFFT5678K1ZD",
+      "udyam": {
+        "number": "UDYAM-KR-03-0012345",
+        "category": "small",
+        "activity": "manufacturing",
+        "declared_at": "2026-10-12T09:00:00+05:30"
+      },
+      "aato_band": "5cr_to_10cr",
+      "kind": "agent"
+    },
+    "consignee": {
+      "role": "consignee",
+      "id": "loc:annapurna-ck-whitefield"
+    }
+  },
+  "lines": [
+    {
+      "line_id": "L1",
+      "item_id": "SFO-15L-TIN",
+      "name": {
+        "en-IN": "Refined sunflower oil, 15 L tin"
+      },
+      "hsn": "1512",
+      "unit": "each",
+      "quantity": {
+        "value": 200,
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "moq": {
+        "value": 100,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "unit_price": {
+        "value": {
+          "value": 198500,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "seller"
+      },
+      "tax_inclusive": false,
+      "gst_rate_pct": 5,
+      "retail_package_mrp_required": false,
+      "line_total": {
+        "value": 39700000,
+        "currency": "INR"
+      },
+      "price_breaks": [
+        {
+          "min_qty": 100,
+          "unit_price": {
+            "value": 201000,
+            "currency": "INR"
+          }
+        },
+        {
+          "min_qty": 200,
+          "unit_price": {
+            "value": 198500,
+            "currency": "INR"
+          }
+        }
+      ],
+      "asserted_by_buyer": true
+    }
+  ],
+  "charges": [
+    {
+      "code": "delivery",
+      "recipient": "seller",
+      "amount": {
+        "value": {
+          "value": 400000,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": false
+      },
+      "mandatory": true,
+      "first_disclosed_round": 1
+    }
+  ],
+  "all_in_total": {
+    "value": 42105000,
+    "currency": "INR"
+  },
+  "delivery": {
+    "fulfilment_type": {
+      "value": "delivery",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "deliver_by": {
+      "value": "2026-10-20T18:00:00+05:30",
+      "status": "Agree",
+      "negotiable": true
+    },
+    "incoterm": {
+      "value": "FOR_DESTINATION",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "partial_allowed": {
+      "value": false,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "late_delivery_penalty": {
+      "value": {
+        "pct_per_week": 0.5,
+        "cap_pct": 5
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "payment": {
+    "schedule": [
+      {
+        "tranche_id": "T1",
+        "pct": 100,
+        "due": {
+          "event": "on_acceptance",
+          "offset_days": 30
+        },
+        "handlers_allowed": [
+          "in.a2a.neft",
+          "in.a2a.rtgs",
+          "bacp.credit_ledger"
+        ],
+        "is_credit": true
+      }
+    ],
+    "credit_days": {
+      "value": 30,
+      "status": "Agree",
+      "negotiable": true,
+      "proposed_by": "buyer"
+    },
+    "credit_reference_event": {
+      "value": "on_acceptance",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "early_pay_discount": {
+      "value": {
+        "pct": 1,
+        "within_days": 10
+      },
+      "status": "Agree",
+      "negotiable": true
+    },
+    "delay_interest_pa_pct": {
+      "value": 18,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "collected_by": {
+      "value": "BPP",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "credit_ledger": {
+      "value": {
+        "ledger_id": "ldg_ANNAxTILH0001",
+        "credit_limit": {
+          "value": 100000000,
+          "currency": "INR"
+        }
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "returns": {
+    "return_type": {
+      "value": "replace",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "warranty_penalty": {
+    "arbitration": {
+      "value": true,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "court_jurisdiction": {
+      "value": "Bengaluru",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "quality": {
+    "spec_ref": "FSSAI refined sunflower oil",
+    "inspection": {
+      "value": {
+        "by": "buyer",
+        "at": "on_receipt"
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "tax_docs": {
+    "gst_credit_invoice": true,
+    "e_invoice_required": true,
+    "e_way_bill_required": true
+  },
+  "conditions_precedent": [
+    "credit_approval"
+  ]
+}
+```
+
+Invalid: net-60 to a micro manufacturer (`termsheet.net60-micro.invalid.json`)
+
+```
+{
+  "term_sheet_id": "ts_annapurna_oil_r3",
+  "version": "1",
+  "currency": "INR",
+  "pricing_basis": "negotiated",
+  "parties": {
+    "buyer": {
+      "role": "buyer",
+      "id": "bap.annapurna.example.in",
+      "legal_name": "Annapurna Foods Pvt Ltd",
+      "gstin": "29AABCA1234F1Z5",
+      "kind": "agent"
+    },
+    "seller": {
+      "role": "seller",
+      "id": "bpp.tilhan.example.in|P7",
+      "legal_name": "Tilhan Oils",
+      "gstin": "29AAFFT5678K1ZD",
+      "udyam": {
+        "number": "UDYAM-KR-03-0012345",
+        "category": "micro",
+        "activity": "manufacturing",
+        "declared_at": "2026-10-12T09:00:00+05:30"
+      },
+      "aato_band": "5cr_to_10cr",
+      "kind": "agent"
+    },
+    "consignee": {
+      "role": "consignee",
+      "id": "loc:annapurna-ck-whitefield"
+    }
+  },
+  "lines": [
+    {
+      "line_id": "L1",
+      "item_id": "SFO-15L-TIN",
+      "name": {
+        "en-IN": "Refined sunflower oil, 15 L tin"
+      },
+      "hsn": "1512",
+      "unit": "each",
+      "quantity": {
+        "value": 200,
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "moq": {
+        "value": 100,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "unit_price": {
+        "value": {
+          "value": 198500,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "seller"
+      },
+      "tax_inclusive": false,
+      "gst_rate_pct": 5,
+      "retail_package_mrp_required": false,
+      "line_total": {
+        "value": 39700000,
+        "currency": "INR"
+      },
+      "price_breaks": [
+        {
+          "min_qty": 100,
+          "unit_price": {
+            "value": 201000,
+            "currency": "INR"
+          }
+        },
+        {
+          "min_qty": 200,
+          "unit_price": {
+            "value": 198500,
+            "currency": "INR"
+          }
+        }
+      ],
+      "asserted_by_buyer": true
+    }
+  ],
+  "charges": [
+    {
+      "code": "delivery",
+      "recipient": "seller",
+      "amount": {
+        "value": {
+          "value": 400000,
+          "currency": "INR"
+        },
+        "status": "Agree",
+        "negotiable": false
+      },
+      "mandatory": true,
+      "first_disclosed_round": 1
+    }
+  ],
+  "all_in_total": {
+    "value": 42105000,
+    "currency": "INR"
+  },
+  "delivery": {
+    "fulfilment_type": {
+      "value": "delivery",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "deliver_by": {
+      "value": "2026-10-20T18:00:00+05:30",
+      "status": "Agree",
+      "negotiable": true
+    },
+    "incoterm": {
+      "value": "FOR_DESTINATION",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "partial_allowed": {
+      "value": false,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "late_delivery_penalty": {
+      "value": {
+        "pct_per_week": 0.5,
+        "cap_pct": 5
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "payment": {
+    "schedule": [
+      {
+        "tranche_id": "T1",
+        "pct": 100,
+        "due": {
+          "event": "on_acceptance",
+          "offset_days": 60
+        },
+        "handlers_allowed": [
+          "in.a2a.neft",
+          "in.a2a.rtgs",
+          "bacp.credit_ledger"
+        ],
+        "is_credit": true
+      }
+    ],
+    "credit_days": {
+      "value": 60,
+      "status": "Assert",
+      "negotiable": true,
+      "proposed_by": "buyer"
+    },
+    "credit_reference_event": {
+      "value": "on_acceptance",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "early_pay_discount": {
+      "value": {
+        "pct": 1,
+        "within_days": 10
+      },
+      "status": "Agree",
+      "negotiable": true
+    },
+    "delay_interest_pa_pct": {
+      "value": 18,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "collected_by": {
+      "value": "BPP",
+      "status": "Agree",
+      "negotiable": false
+    },
+    "credit_ledger": {
+      "value": {
+        "ledger_id": "ldg_ANNAxTILH0001",
+        "credit_limit": {
+          "value": 100000000,
+          "currency": "INR"
+        }
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "returns": {
+    "return_type": {
+      "value": "replace",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "warranty_penalty": {
+    "arbitration": {
+      "value": true,
+      "status": "Agree",
+      "negotiable": false
+    },
+    "court_jurisdiction": {
+      "value": "Bengaluru",
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "quality": {
+    "spec_ref": "FSSAI refined sunflower oil",
+    "inspection": {
+      "value": {
+        "by": "buyer",
+        "at": "on_receipt"
+      },
+      "status": "Agree",
+      "negotiable": false
+    }
+  },
+  "tax_docs": {
+    "gst_credit_invoice": true,
+    "e_invoice_required": true,
+    "e_way_bill_required": true
+  },
+  "conditions_precedent": [
+    "credit_approval"
+  ]
+}
+```
+
+An interest-bearing EMI MUST carry `no_cost: false`, and EMI, BNPL and credit-funded options MUST carry the lender, APR and KFS reference (`termsheet.emi-nocost.invalid.json` fails the schema). Loan acceptance itself is always human-present (see [Credit and Split Tender](https://spec.bacp.dev/draft/specification/payments/credit-and-split-tender/index.md)).
+
+## Messages
+
+All negotiation messages are defined by [`offer.json`](https://bacp.dev/schemas/offer.json), a `oneOf` discriminated by `type`.
+
+| `type`                                    | Sent by                   | Purpose                                                                                                                                                   |
+| ----------------------------------------- | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `offer`                                   | Either side               | A fresh offer (no `in_reply_to`)                                                                                                                          |
+| `counter_offer`                           | Either side               | Rejects the live offer and makes a new one. MUST cite the live offer in `in_reply_to`.                                                                    |
+| `bid`                                     | Bidder                    | An auction bid (`auction_id` required)                                                                                                                    |
+| `accept`                                  | Offeree                   | Absolute acceptance of exactly one live offer. Carries no terms.                                                                                          |
+| `reject`                                  | Offeree                   | Rejects the live offer with a typed `reason_code`. `final: true` ends the negotiation.                                                                    |
+| `withdraw`                                | Offeror                   | Revokes the offeror's own offer before acceptance is complete                                                                                             |
+| `terminate`                               | Either side or auctioneer | Ends the negotiation (`max_rounds`, `deadline`, `principal_instruction`, `mandate_revoked`, `no_agreement`, `auction_closed_no_award`, `rfq_not_awarded`) |
+| `request_extension`                       | Offeree                   | Asks the offeror to extend `expires_at`. Silence means no extension.                                                                                      |
+| `accept_revoke`                           | Acceptor                  | Revokes an acceptance before it reaches the proposer, only where the offer allows it                                                                      |
+| `bid_commit`, `bid_reveal`, `bid_retract` | Bidder                    | Sealed-bid commitment and reveal; open-outcry retraction ([Auctions](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#auctions))   |
+
+### Common envelope
+
+Every message carries `msg_id`, `negotiation_id`, `transaction_id` (the Beckn `context.transaction_id`), `round`, `dispatched_at`, `received_at` (filled by the receiver), `from{role, np_id, agent_id, offeror_kind}`, `signatures[]` and, once received, `counter_signature`. Every firm offer, bid, `accept`, `withdraw`, `accept_revoke`, `bid_commit` and `bid_reveal` also carries `sender_log_seq`, `sender_log_prev` and `protocol_terms{version, hash}` inside its signed bytes ([Signed seller acceptance and clock skew](#signed-seller-acceptance-and-clock-skew)). The gateway fills them; a model never supplies them. An "offer" for these rules includes a `bid` and an RFQ quotation, on receipt as well as on draft.
+
+- **Signing.** A message MUST carry the sending network participant's registry signature (`role: bap` or `bpp`): a detached JWS over the JCS of the message without `signatures`, `counter_signature` and `received_at`. The gateway MUST NOT hold or use an agent's key. The agent's own act is evidenced by its RFC 9421 request signature under the tag `bacp-negotiate`, which the gateway verifies before parsing and records in the transcript (see [Identity and Request Signing](https://spec.bacp.dev/draft/specification/identity-and-signing/index.md)). A message MAY also carry an agent signature entry. Whether agents SHOULD sign message bodies is open ([Q-48](https://spec.bacp.dev/draft/specification/open-questions/#q-48)).
+- **Hashes.** `msg_hash` and `offer_hash` are `sha-256` over JCS of the message **minus** `signatures`, `counter_signature` and `received_at`, so the hash does not change on receipt. `dispatched_at`, `sender_log_seq`, `sender_log_prev` and `protocol_terms` are inside the hashed bytes.
+- **Receipt.** The receiver returns a CounterSignature, a compact JWS by its registry key whose payload is a `CounterSignaturePayload` (`msg_hash`, `negotiation_id`, `received_at`, `log_seq`, `log_entry_hash`, `prev_entry_hash`, all REQUIRED), in the synchronous response to the exchange. The CounterSignature is a BACP artefact, not a Beckn signed acknowledgement, and BACP does not require Beckn 2.0 signed acknowledgements on the network leg (settled in [Q-43](https://spec.bacp.dev/draft/specification/open-questions/#q-43)). A counterparty that does not return valid CounterSignatures is treated as not supporting firm negotiation: the gateway MUST send it only non-firm offers (`firm: false`).
+- **Agent disclosure.** `from.offeror_kind` ∈ `agent | human` MUST be present on every message and MUST be shown to the principal.
+- **Advisory text.** Free text travels only in `advisory{binding: false, text_hash, chat_ref}`. Counterparty free text reaches the agent only as a `messages[]` entry with code `untrusted_counterparty_text`, which the agent framework MUST treat as data. It MUST NOT invoke tools, change mandates or trigger an acceptance.
+
+### Offers: firm and non-firm, expiry
+
+| Field                                                 | Rule                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `firm`                                                | `true`: the offeror is bound if the offer is accepted before `expires_at`. `false`: an indicative quote, which is an invitation to treat.                                                                                                                                                                    |
+| `subject_to_principal_approval`                       | MUST be `true` when the emitting agent's guard returned `needs_escalation`. The schema then forces `firm: false`.                                                                                                                                                                                            |
+| `term_sheet`, `all_in_total`                          | `all_in_total` MUST equal `term_sheet.all_in_total`.                                                                                                                                                                                                                                                         |
+| `valid_from`, `expires_at`                            | `expires_at` is **absolute**, never a relative TTL. `expires_at − valid_from` MUST be at least the effective `min_offer_validity` (floor `PT5M`). Otherwise `NEG_FALSE_URGENCY`.                                                                                                                             |
+| `inventory_hold_until`                                | How long stock is held for this offer                                                                                                                                                                                                                                                                        |
+| `acceptance_manner`                                   | The constant `bacp.neg.accept`. Every other form of acceptance is non-conforming.                                                                                                                                                                                                                            |
+| `acceptance_revocation`                               | REQUIRED when `firm` is `true`, with no default: `allowed_until_receipt` or `waived`. A gateway MUST NOT insert or normalise the value before hashing. In this version every receiver refuses `allowed_until_receipt` with `capabilities_incompatible`. See [Acceptance revocation](#acceptance-revocation). |
+| `waiver_basis`                                        | REQUIRED when `acceptance_revocation` is `waived`: a `DocumentRef` with `doc_type` `contract` or `rfq` and a `hash`.                                                                                                                                                                                         |
+| `extends`                                             | The hash of an earlier offer by the same offeror that this offer re-issues with a later `expires_at`. Terms MUST be identical.                                                                                                                                                                               |
+| `agreed_issues[]`                                     | JSON Pointers already in `Agree`. They narrow the open set and do not bind.                                                                                                                                                                                                                                  |
+| `rfq_parent_id`, `bid_deposit_ref`, `auction_id`      | RFQ and auction links                                                                                                                                                                                                                                                                                        |
+| `sender_log_seq`, `sender_log_prev`, `protocol_terms` | REQUIRED when `firm` is `true` and on every bid: the offer's position in the sender's own chain, the previous entry's hash, and the protocol terms that govern it. `expires_at` is a receipt deadline at the offeror (see [Expiry](#expiry-and-the-acceptors-margin)).                                       |
+
+offer.b2c-counter.json (seller's firm counter-offer, round 2; valid shape; receivers refuse allowed_until_receipt in this version)
+
+```
+{
+  "type": "counter_offer",
+  "msg_id": "nmsg_S2r2a8Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 2,
+  "dispatched_at": "2026-10-13T11:02:00+05:30",
+  "sender_log_seq": 10,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz6",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in",
+    "agent_id": "did:web:bunkar.example.in:agent",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:bunkar.example.in:agent#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "in_reply_to": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+  "mode": "alternating",
+  "firm": true,
+  "term_sheet": {
+    "term_sheet_id": "ts_saree_r2",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "pp_9f2c1e",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.bunkar.example.in|P2",
+        "kind": "agent",
+        "udyam": {
+          "category": "micro",
+          "activity": "manufacturing"
+        }
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "CHND-SILK-112",
+        "name": {
+          "hi-IN": "चंदेरी सिल्क साड़ी",
+          "en-IN": "Chanderi silk saree"
+        },
+        "hsn": "5007",
+        "unit": "each",
+        "quantity": {
+          "value": 1,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 210000,
+            "currency": "INR"
+          },
+          "status": "Assert",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": true,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 6000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-18T20:00:00+05:30",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "options": [
+        {
+          "option_id": "prepaid",
+          "handlers": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ],
+          "timing": "ON-ORDER",
+          "all_in_total": {
+            "value": 216000,
+            "currency": "INR"
+          }
+        },
+        {
+          "option_id": "cod",
+          "handlers": [
+            "in.cod",
+            "in.cod.upi"
+          ],
+          "timing": "ON-FULFILLMENT",
+          "method_fee": {
+            "value": 4000,
+            "currency": "INR"
+          },
+          "all_in_total": {
+            "value": 220000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "selected_option_id": {
+        "value": "prepaid",
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_order"
+          },
+          "handlers_allowed": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ]
+        }
+      ],
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_window": {
+        "value": "P7D",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "return_type": {
+        "value": "exchange_only",
+        "status": "Agree",
+        "negotiable": true
+      }
+    },
+    "conditions_precedent": [
+      "payment_on_order"
+    ]
+  },
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "valid_from": "2026-10-13T11:02:00+05:30",
+  "expires_at": "2026-10-13T11:32:00+05:30",
+  "inventory_hold_until": "2026-10-13T11:32:00+05:30",
+  "acceptance_manner": "bacp.neg.accept",
+  "acceptance_revocation": "allowed_until_receipt",
+  "agreed_issues": [
+    "/lines/0/quantity",
+    "/delivery/deliver_by"
+  ],
+  "jurisdictional": {
+    "mrp_checked": true,
+    "msme_seller": true
+  },
+  "advisory": {
+    "binding": false,
+    "text_hash": "sha-256:6iak2WON2JhiFipD_0-eRnjeMbrfux8b9kSh87RJ-Oc"
+  }
+}
+```
+
+Invalid: firm offer without `acceptance_revocation` (`offer.firm-no-acceptance-revocation.invalid.json`)
+
+A firm offer states its acceptance-revocation term in the signed bytes. There is no default.
+
+```
+{
+  "type": "offer",
+  "msg_id": "nmsg_S1off7Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 1,
+  "dispatched_at": "2026-10-13T10:58:00+05:30",
+  "sender_log_seq": 13,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz9",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in",
+    "agent_id": "did:web:bunkar.example.in:agent",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:bunkar.example.in:agent#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "mode": "alternating",
+  "firm": true,
+  "term_sheet": {
+    "term_sheet_id": "ts_saree_r2",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "pp_9f2c1e",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.bunkar.example.in|P2",
+        "kind": "agent",
+        "udyam": {
+          "category": "micro",
+          "activity": "manufacturing"
+        }
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "CHND-SILK-112",
+        "name": {
+          "hi-IN": "चंदेरी सिल्क साड़ी",
+          "en-IN": "Chanderi silk saree"
+        },
+        "hsn": "5007",
+        "unit": "each",
+        "quantity": {
+          "value": 1,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 210000,
+            "currency": "INR"
+          },
+          "status": "Assert",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": true,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 6000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-18T20:00:00+05:30",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "options": [
+        {
+          "option_id": "prepaid",
+          "handlers": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ],
+          "timing": "ON-ORDER",
+          "all_in_total": {
+            "value": 216000,
+            "currency": "INR"
+          }
+        },
+        {
+          "option_id": "cod",
+          "handlers": [
+            "in.cod",
+            "in.cod.upi"
+          ],
+          "timing": "ON-FULFILLMENT",
+          "method_fee": {
+            "value": 4000,
+            "currency": "INR"
+          },
+          "all_in_total": {
+            "value": 220000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "selected_option_id": {
+        "value": "prepaid",
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_order"
+          },
+          "handlers_allowed": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ]
+        }
+      ],
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_window": {
+        "value": "P7D",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "return_type": {
+        "value": "exchange_only",
+        "status": "Agree",
+        "negotiable": true
+      }
+    },
+    "conditions_precedent": [
+      "payment_on_order"
+    ]
+  },
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "valid_from": "2026-10-13T10:58:00+05:30",
+  "expires_at": "2026-10-13T11:28:00+05:30",
+  "inventory_hold_until": "2026-10-13T11:28:00+05:30",
+  "acceptance_manner": "bacp.neg.accept",
+  "jurisdictional": {
+    "mrp_checked": true,
+    "msme_seller": true
+  },
+  "advisory": {
+    "binding": false,
+    "text_hash": "sha-256:6iak2WON2JhiFipD_0-eRnjeMbrfux8b9kSh87RJ-Oc"
+  }
+}
+```
+
+Invalid: escalated counter marked firm (`offer.escalate-but-firm.invalid.json`)
+
+The guard returned `needs_escalation`, so the counter-offer carries `subject_to_principal_approval: true`, which forbids `firm: true`.
+
+```
+{
+  "type": "counter_offer",
+  "msg_id": "nmsg_S2r2a8Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 2,
+  "dispatched_at": "2026-10-13T11:02:00+05:30",
+  "sender_log_seq": 11,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz7",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in",
+    "agent_id": "did:web:bunkar.example.in:agent",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:bunkar.example.in:agent#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "in_reply_to": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+  "mode": "alternating",
+  "firm": true,
+  "term_sheet": {
+    "term_sheet_id": "ts_saree_r2",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "pp_9f2c1e",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.bunkar.example.in|P2",
+        "kind": "agent",
+        "udyam": {
+          "category": "micro",
+          "activity": "manufacturing"
+        }
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "CHND-SILK-112",
+        "name": {
+          "hi-IN": "चंदेरी सिल्क साड़ी",
+          "en-IN": "Chanderi silk saree"
+        },
+        "hsn": "5007",
+        "unit": "each",
+        "quantity": {
+          "value": 1,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 210000,
+            "currency": "INR"
+          },
+          "status": "Assert",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": true,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 6000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-18T20:00:00+05:30",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "options": [
+        {
+          "option_id": "prepaid",
+          "handlers": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ],
+          "timing": "ON-ORDER",
+          "all_in_total": {
+            "value": 216000,
+            "currency": "INR"
+          }
+        },
+        {
+          "option_id": "cod",
+          "handlers": [
+            "in.cod",
+            "in.cod.upi"
+          ],
+          "timing": "ON-FULFILLMENT",
+          "method_fee": {
+            "value": 4000,
+            "currency": "INR"
+          },
+          "all_in_total": {
+            "value": 220000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "selected_option_id": {
+        "value": "prepaid",
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_order"
+          },
+          "handlers_allowed": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ]
+        }
+      ],
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_window": {
+        "value": "P7D",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "return_type": {
+        "value": "exchange_only",
+        "status": "Agree",
+        "negotiable": true
+      }
+    },
+    "conditions_precedent": [
+      "payment_on_order"
+    ]
+  },
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "valid_from": "2026-10-13T11:02:00+05:30",
+  "expires_at": "2026-10-13T11:32:00+05:30",
+  "inventory_hold_until": "2026-10-13T11:32:00+05:30",
+  "acceptance_manner": "bacp.neg.accept",
+  "acceptance_revocation": "allowed_until_receipt",
+  "agreed_issues": [
+    "/lines/0/quantity",
+    "/delivery/deliver_by"
+  ],
+  "jurisdictional": {
+    "mrp_checked": true,
+    "msme_seller": true
+  },
+  "advisory": {
+    "binding": false,
+    "text_hash": "sha-256:6iak2WON2JhiFipD_0-eRnjeMbrfux8b9kSh87RJ-Oc"
+  },
+  "subject_to_principal_approval": true
+}
+```
+
+### Acceptance
+
+An `accept` carries **no terms**: the schema forbids `term_sheet` and `in_reply_to`. It carries:
+
+- `offer_hash`, which MUST equal the hash of the live offer exactly;
+- `negotiation_mandate_ref{id, hash}`, whose content is never disclosed;
+- `legal_effect` ∈ `acceptance` (the accepted offer was firm) | `purchase_offer` (it was non-firm);
+- `bound_attestation`, the `within_bounds` attestation (see [Binding to checkout](#binding-to-checkout)).
+
+An `accept` MUST NOT carry a `step_up_id` or any other field that reveals that the deal needed the principal's approval.
+
+**Notice of an autonomous act.** After every `accept` that the gateway dispatches without a step-up, for buyer and seller roles alike, the gateway emits to the principal the message `agreed_by_agent` (`type: info`, `resolution: recoverable`). For a consumer purchase offer, where the accept is of a non-firm offer, the message is `purchase_offered_by_agent`. These are `info` and not `requires_buyer_review` so that a model does not read them as an instruction to stop and turn `autonomous` back into `ask` by its own branching. The notice:
+
+- is built from gateway templates in the principal's language, never from agent prose, and reaches the principal by the mandate's `notice_route`, never through the agent's own output;
+- states the seller or buyer name, `offeror_kind`, the all-in total (in ₹ with Indian grouping, and spoken in words on a voice surface), the quantity and unit, the current-stage cancellation charge, the stop route available in that state, `revoke_route`, `grievance_contact` and a `content_hash`;
+- carries no URI other than those routes and no urgency text ([Render input](https://spec.bacp.dev/draft/specification/human-participants/#ts-render));
+- is recorded in the evidence bundle as `notice_renders[]`, the gateway-signed render with the receipt of its delivery ([Evidence](https://spec.bacp.dev/draft/specification/evidence/#contents)).
+
+The stop button of a `purchase_offered_by_agent` notice appears only where a carrier exists that can honour it. On a Beckn leg no carrier exists in this version ([Beckn / ONDC Binding](https://spec.bacp.dev/draft/specification/transports/beckn/#mapping-negotiation)), so the notice there MUST NOT show a stop control, because a control that cannot work is a misleading interface.
+
+offer.accept.json
+
+```
+{
+  "type": "accept",
+  "msg_id": "nmsg_B3acc9Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:10+05:30",
+  "sender_log_seq": 8,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz4",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "received_at": "2026-10-13T11:05:11+05:30",
+  "from": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in",
+    "agent_id": "did:web:agents.vaani.example.in:sakhi",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bap",
+      "kid": "bap.vaani.example.in|ukid-7|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:agents.vaani.example.in:sakhi#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "counter_signature": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl",
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "negotiation_mandate_ref": {
+    "id": "mdt_NEG7Q2W9X4K1M3",
+    "hash": "sha-256:NuNND_z4qhA_CZaDGKdqX_9Qm3p9V5VXzrM7DoSWYd8"
+  },
+  "legal_effect": "acceptance",
+  "bound_attestation": {
+    "type": "bacp.neg.bound_attestation",
+    "mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+    "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+    "result": true,
+    "iss": "mm.psp.example.in",
+    "iat": 1791873310,
+    "signature": {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  }
+}
+```
+
+Invalid: acceptance with terms (`offer.accept-with-terms.invalid.json`)
+
+A changed term is a counter-offer, not an acceptance.
+
+```
+{
+  "type": "accept",
+  "msg_id": "nmsg_B3acc9Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:10+05:30",
+  "sender_log_seq": 7,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz3",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "received_at": "2026-10-13T11:05:11+05:30",
+  "from": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in",
+    "agent_id": "did:web:agents.vaani.example.in:sakhi",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bap",
+      "kid": "bap.vaani.example.in|ukid-7|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:agents.vaani.example.in:sakhi#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "counter_signature": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl",
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "negotiation_mandate_ref": {
+    "id": "mdt_NEG7Q2W9X4K1M3",
+    "hash": "sha-256:NuNND_z4qhA_CZaDGKdqX_9Qm3p9V5VXzrM7DoSWYd8"
+  },
+  "legal_effect": "acceptance",
+  "bound_attestation": {
+    "type": "bacp.neg.bound_attestation",
+    "mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+    "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+    "result": true,
+    "iss": "mm.psp.example.in",
+    "iat": 1791873310,
+    "signature": {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  },
+  "term_sheet": {
+    "term_sheet_id": "ts_saree_r2",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "pp_9f2c1e",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.bunkar.example.in|P2",
+        "kind": "agent",
+        "udyam": {
+          "category": "micro",
+          "activity": "manufacturing"
+        }
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "CHND-SILK-112",
+        "name": {
+          "hi-IN": "चंदेरी सिल्क साड़ी",
+          "en-IN": "Chanderi silk saree"
+        },
+        "hsn": "5007",
+        "unit": "each",
+        "quantity": {
+          "value": 1,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 210000,
+            "currency": "INR"
+          },
+          "status": "Assert",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": true,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 6000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-18T20:00:00+05:30",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "options": [
+        {
+          "option_id": "prepaid",
+          "handlers": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ],
+          "timing": "ON-ORDER",
+          "all_in_total": {
+            "value": 216000,
+            "currency": "INR"
+          }
+        },
+        {
+          "option_id": "cod",
+          "handlers": [
+            "in.cod",
+            "in.cod.upi"
+          ],
+          "timing": "ON-FULFILLMENT",
+          "method_fee": {
+            "value": 4000,
+            "currency": "INR"
+          },
+          "all_in_total": {
+            "value": 220000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "selected_option_id": {
+        "value": "prepaid",
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_order"
+          },
+          "handlers_allowed": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ]
+        }
+      ],
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_window": {
+        "value": "P7D",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "return_type": {
+        "value": "exchange_only",
+        "status": "Agree",
+        "negotiable": true
+      }
+    },
+    "conditions_precedent": [
+      "payment_on_order"
+    ]
+  }
+}
+```
+
+A chat message, a voice reply, a payment, an `init` without `bacp.neg.accept`, or an unsigned acceptance is non-conforming. The receiver MUST reject it promptly with `NEG_ACCEPT_NONCONFORMING`.
+
+### Withdrawal, rejection and termination
+
+offer.withdraw.json
+
+```
+{
+  "type": "withdraw",
+  "msg_id": "nmsg_S4wdr1Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:12+05:30",
+  "sender_log_seq": 20,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz6",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in",
+    "offeror_kind": "agent"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "reason": "stock_change"
+}
+```
+
+**Withdrawal of a purchase offer (ICA s.5).** In a consumer session every autonomous act is a purchase offer, and s.5 lets the buyer revoke a proposal "at any time before the communication of its acceptance is complete as against the proposer". The buyer therefore MAY send a `withdraw` that carries `accept_msg_hash`, the `msg_hash` of its own `accept` with `legal_effect: purchase_offer`, until the seller's `on_init` receipt. The session moves `PURCHASE_OFFERED → NEGOTIATING`.
+
+- It is allowed only when the named `accept` has `legal_effect: purchase_offer`. A `withdraw` that names an `accept` with `legal_effect: acceptance` is refused with `accept_revoke_not_allowed`.
+- The agent MAY send it without a presence proof, because it is the buyer-favourable direction. The principal MAY also trigger it by the Trusted Surface event `negotiation.purchase_offer.withdrawn`.
+- It is free: it is a revocation and not a cancellation, so no stage charge attaches. The seller's application shows "buyer withdrew before you confirmed".
+- A crossing with the seller's `on_init` is decided by the [committed-order rule](#indian-contract-act-timing).
+- On Beckn the carrier (an `init` withdrawn before `on_init`) is not yet defined ([Q-22](https://spec.bacp.dev/draft/specification/open-questions/#q-22)). Until it is, the principal's only exit on that leg is the decline below.
+
+### Decline of an `AGREED` or `BOUND` deal
+
+No exit from `AGREED` or `BOUND` exists on the agent's instruction, and none is added: an agent path would let an agent cancel many formed contracts and leave the charges with the principal. The principal declines on the Trusted Surface with the distinct event `negotiation.agreed.declined`, signed with its `Presentation` ([Presentation record](https://spec.bacp.dev/draft/specification/human-participants/#presentation)). The event name differs from `negotiation.step_up.declined`, because one verb with two consequences cannot be told apart on a voice channel or in the bundle. An agent `terminate` after `AGREED` without that event is refused with `403 presence_not_proven`.
+
+- The render MUST show the current-stage charge under the term sheet's `cancellation.terms` before the factor is taken.
+- The edges are `AGREED → CANCELLED` and `BOUND → CANCELLED`, reason `principal_declined`.
+- It is **not a breach** when the terms permit cancellation at that stage: it is performance of a term. A breach is flagged, as a claim only and never as a finding, when the terms make that stage non-cancellable or the charge goes unpaid. If the terms are silent on the stage before `CONTRACTED`, the record carries `principal_declined` with the flag `no_stage_term` and no fee is computed.
+- A session already in `BREACH_FLAGGED` keeps its no-penalty buyer cancel.
+- For a consumer, Rule 4(8) of the Consumer Protection (E-Commerce) Rules, 2020 (parity) bears on any charge; whether it limits a charge before `CONTRACTED` is open ([Q-52](https://spec.bacp.dev/draft/specification/open-questions/#q-52)). The Rules give no cooling-off right.
+
+A `reject` carries a typed `reason_code` (`price`, `delivery`, `payment_terms`, `quality`, `not_negotiable`, `mrp_exceeded`, `msmed_credit_cap`, `terms_drift`, `out_of_mandate`, `incoterm_not_supported`, `other`) and MAY carry an ONDC error code such as `50005`. It MUST NOT carry the reservation value.
+
+### Extension requests
+
+Expiry is a signed term, so an extension is a **new** offer: the offeror re-issues identical terms with a later `expires_at` and `extends: <old hash>`, and the old offer becomes `SUPERSEDED`. If the offeror does not answer, there is no extension.
+
+`request_extension` is sent only on the principal's or agent's explicit instruction: a Trusted Surface `negotiation.request_extension` event, or an explicit agent message. The gateway MUST NOT send it automatically when a negotiation is escalated (see [Anti-leak rules](#anti-leak-rules)). Whether a seller can answer within ONDC's `PT30S` TTL is open ([Q-34](https://spec.bacp.dev/draft/specification/open-questions/#q-34)).
+
+## State machines
+
+BACP tracks the state of each **offer** and the state of the **negotiation** separately. Each offer has its own lifecycle in `NegotiationSession.offers[].state`. The schema is [`negotiation-session.json`](https://bacp.dev/schemas/negotiation-session.json).
+
+### Offer state
+
+```
+stateDiagram-v2
+    [*] --> LIVE: signed offer countersigned by receiver
+    LIVE --> SUPERSEDED: counter-offer received or extension re-issued
+    LIVE --> ACCEPTED: conforming accept dispatched before expires_at
+    LIVE --> WITHDRAWN: withdraw received before accept dispatched
+    LIVE --> REJECTED: reject received
+    LIVE --> EXPIRED: expires_at passed with no accept
+    LIVE --> LAPSED_CONDITION: condition precedent failed
+    LIVE --> ACCEPT_REVOKED: sunset only, matched accept_revoke and accept
+    ACCEPTED --> ACCEPT_REVOKED: sunset only, proposer countersigns accept_revoke_honoured
+    ACCEPTED --> WITHDRAWN: earlier-received withdraw processed late
+    WITHDRAWN --> LIVE: our withdraw lost the crossing to an earlier accept
+    ACCEPTED --> [*]
+    SUPERSEDED --> [*]
+    WITHDRAWN --> [*]
+    REJECTED --> [*]
+    EXPIRED --> [*]
+    LAPSED_CONDITION --> [*]
+    ACCEPT_REVOKED --> [*]
+```
+
+- **One live offer.** At most one offer is `LIVE` per negotiation. A counter-offer MUST cite the live hash in `in_reply_to`, otherwise it is refused with `NEG_STALE_OFFER` (409). Accepting a superseded offer is also `NEG_STALE_OFFER`.
+- The two crossing edges (`ACCEPTED → WITHDRAWN`, `WITHDRAWN → LIVE`) follow the committed-order rule of [Contested crossings](#contested-crossings) and are annotated in the offer's history. A contested crossing takes neither edge: the offer stays as it was and the session is `ESCALATED`.
+- **`ACCEPT_REVOKED` is dormant in this version.** Both edges into it exist only under `acceptance_revocation: allowed_until_receipt`, which every receiver refuses, so no offer reaches `ACCEPT_REVOKED`. The edges are defined by the [sunset text](#acceptance-revocation-sunset): the matched pair (`LIVE → ACCEPT_REVOKED`, the proposer's view) and the proposer's countersigned `accept_revoke_honoured` (`ACCEPTED → ACCEPT_REVOKED`, the acceptor's view).
+
+### Negotiation state
+
+```
+stateDiagram-v2
+    [*] --> OPEN: capability intersection OK
+    OPEN --> AWAITING_OFFER: RFQ or select sent
+    OPEN --> NEGOTIATING: first offer sent or received
+    AWAITING_OFFER --> NEGOTIATING: quotation received
+    AWAITING_OFFER --> TERMINATED: response_by passed with no quotation
+    NEGOTIATING --> NEGOTIATING: counter or fresh offer or extension
+    NEGOTIATING --> ESCALATED: guard verdict needs_escalation
+    ESCALATED --> NEGOTIATING: principal declines or link or offer expires
+    ESCALATED --> ACCEPT_PENDING: principal approves and accept dispatched
+    NEGOTIATING --> ACCEPT_PENDING: accept dispatched on live firm offer
+    NEGOTIATING --> AGREED: counterparty accepts our live firm offer
+    NEGOTIATING --> PURCHASE_OFFERED: accept dispatched on non-firm offer
+    ACCEPT_PENDING --> AGREED: receipt countersigned and no earlier withdraw
+    ACCEPT_PENDING --> NEGOTIATING: earlier withdraw wins or accept revoked
+    PURCHASE_OFFERED --> BOUND: seller on_init echoes the accepted terms
+    PURCHASE_OFFERED --> NEGOTIATING: seller on_init differs and is a counter-offer
+    PURCHASE_OFFERED --> REJECTED: seller declines with typed reason
+    PURCHASE_OFFERED --> NEGOTIATING: buyer withdraw before on_init
+    AGREED --> BOUND: on_init terms equal accepted terms
+    AGREED --> BREACH_FLAGGED: on_init drift
+    BOUND --> CONTRACTED: confirm then on_confirm
+    BOUND --> BREACH_FLAGGED: confirm or on_confirm drift
+    AGREED --> CANCELLED: principal_declined (TS event and hp_proof)
+    BOUND --> CANCELLED: principal_declined (TS event and hp_proof)
+    BREACH_FLAGGED --> CANCELLED: buyer cancels without penalty
+    BREACH_FLAGGED --> NEGOTIATING: buyer treats drifted terms as a new seller offer
+    NEGOTIATING --> REJECTED: final reject
+    NEGOTIATING --> TERMINATED: max_rounds or deadline or mandate revoked or terminate
+    ESCALATED --> TERMINATED: deadline or mandate revoked
+    ESCALATED --> AGREED: contested, both principals confirm
+    ESCALATED --> CANCELLED: crossing_unconfirmed or formation_disputed
+    CONTRACTED --> [*]
+    CANCELLED --> [*]
+    REJECTED --> [*]
+    TERMINATED --> [*]
+```
+
+- **`ESCALATED` has two causes**: a guard verdict (`needs_escalation`, or an acceptance that needs the principal's confirmation under `accept_confirmation`) and a contested crossing (reason `crossing_contested`, see [Contested crossings](#contested-crossings)). The edges `ESCALATED → AGREED` and `ESCALATED → CANCELLED` belong to the second.
+- `NEGOTIATING` with no live offer is legal (every offer expired). A fresh offer may follow while `round < max_rounds` and `now < negotiation_deadline`. A message for round `max_rounds + 1`, or after the deadline, ends the negotiation `TERMINATED`.
+- Silence ends at the deadline as `TERMINATED`, never `AGREED`.
+- From `BREACH_FLAGGED`, a buyer who treats the drifted terms as a new seller offer sends them through the guard and validators like any incoming offer. The breach record stays either way.
+- Cancelling after `CONTRACTED` is not a negotiation transition. It is the order cancel path under the agreed `cancellation.terms` (see [Orders and Post-order](https://spec.bacp.dev/draft/specification/checkout/post-order/index.md)). A seller-side cancel of a firm contract is a firm-offer breach event.
+- `BOUND` opens the checkout session in `ready_for_complete` with the BPP-signed quote. `CONTRACTED` corresponds to the checkout session's `completed`.
+
+negotiation-session.agreed.json
+
+```
+{
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "mode": "alternating",
+  "role": "buyer",
+  "acting_for_kind": "individual",
+  "state": "AGREED",
+  "counterparty": {
+    "bpp_id": "bpp.bunkar.example.in",
+    "provider_id": "P2",
+    "offeror_kind": "agent",
+    "udyam_category": "micro"
+  },
+  "capability": {
+    "negotiable_issues": [
+      "/lines/*/unit_price",
+      "/returns/return_type",
+      "/payment/selected_option_id"
+    ],
+    "modes": [
+      "fixed",
+      "alternating"
+    ],
+    "max_rounds": 10,
+    "round_timeout": "PT10M",
+    "min_offer_validity": "PT5M",
+    "sig_algs": [
+      "ES256",
+      "EdDSA"
+    ],
+    "firm_quote_supported": true,
+    "accepted_handlers": [
+      "in.upi.reservepay",
+      "in.upi.intent",
+      "in.cod",
+      "in.cod.upi"
+    ]
+  },
+  "mandate_ref": {
+    "id": "mdt_NEG7Q2W9X4K1M3",
+    "hash": "sha-256:NuNND_z4qhA_CZaDGKdqX_9Qm3p9V5VXzrM7DoSWYd8"
+  },
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "presence": "HNP",
+  "round": 3,
+  "max_rounds": 10,
+  "negotiation_deadline": "2026-10-13T20:00:00+05:30",
+  "offers": [
+    {
+      "offer_hash": "sha-256:WhY4bhJm9wXJk-7XHcqeRbQ3WSA4DqlPAhF9Djosj54",
+      "by": "seller",
+      "round": 0,
+      "firm": false,
+      "state": "SUPERSEDED",
+      "expires_at": "2026-10-13T12:00:00+05:30"
+    },
+    {
+      "offer_hash": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+      "by": "buyer",
+      "round": 1,
+      "firm": true,
+      "state": "REJECTED",
+      "expires_at": "2026-10-13T11:30:00+05:30"
+    },
+    {
+      "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+      "by": "seller",
+      "round": 2,
+      "firm": true,
+      "state": "ACCEPTED",
+      "expires_at": "2026-10-13T11:32:00+05:30",
+      "dispatched_at": "2026-10-13T11:02:00+05:30",
+      "received_at": "2026-10-13T11:02:01+05:30"
+    }
+  ],
+  "exposure": {
+    "principal_outstanding_firm": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "counted_against": [
+      "total_max",
+      "budget_P1M"
+    ],
+    "concurrent_negotiations": 1
+  },
+  "transcript": [
+    {
+      "seq": 0,
+      "msg_type": "offer",
+      "msg_hash": "sha-256:WhY4bhJm9wXJk-7XHcqeRbQ3WSA4DqlPAhF9Djosj54",
+      "by": "seller",
+      "at": "2026-10-13T10:58:00+05:30"
+    },
+    {
+      "seq": 1,
+      "msg_type": "counter_offer",
+      "msg_hash": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+      "by": "buyer",
+      "at": "2026-10-13T11:00:00+05:30"
+    },
+    {
+      "seq": 2,
+      "msg_type": "counter_offer",
+      "msg_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+      "by": "seller",
+      "at": "2026-10-13T11:02:00+05:30"
+    },
+    {
+      "seq": 3,
+      "msg_type": "accept",
+      "msg_hash": "sha-256:lJRtoHUIQckYFk7BASGC6sKjJ-XUVuGwnPAf-YDVEAs",
+      "by": "buyer",
+      "at": "2026-10-13T11:05:10+05:30",
+      "counter_signature": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "guard_verdicts": [
+    {
+      "at": "2026-10-13T11:00:00+05:30",
+      "msg_hash": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+      "direction": "outgoing",
+      "verdict": "pass",
+      "constraint_ids": [
+        "neg.price.total_max",
+        "neg.process.max_rounds"
+      ]
+    },
+    {
+      "at": "2026-10-13T11:05:09+05:30",
+      "msg_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+      "direction": "incoming",
+      "verdict": "pass",
+      "constraint_ids": [
+        "neg.price.reservation",
+        "neg.after_sales.min_return_window",
+        "neg.payment.handlers_allowed"
+      ]
+    }
+  ],
+  "validator_flags": [],
+  "accepted_offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "log_head": "sha-256:puM6b3R7BrQTlpr9p56R-_uigPyPOQaTc6_KCeiDQRU",
+  "messages": [],
+  "created_at": "2026-10-13T10:58:00+05:30",
+  "updated_at": "2026-10-13T11:05:11+05:30",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  }
+}
+```
+
+## The guard
+
+The guard is a deterministic, non-LLM policy engine inside the gateway's trust zone. **The model proposes and the guard decides.** It runs on every outgoing firm counter-offer, acceptance, bid and award, and on every incoming offer, where it computes the verdict shown to the model. It fails closed, and the first failing step wins. Step-ups are collected so that the principal's diff card shows every out-of-bound issue.
+
+| Step | Check                                                                                                                                                                       | On failure                                                                                                                                                                                    |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| N-1  | Request signature with tag `bacp-negotiate`, agent credential, both mandates `ACTIVE`, presence allowed                                                                     | 401 / 403 as for checkout                                                                                                                                                                     |
+| N-2  | Schema validation of the message and the term sheet. Unknown constraint keys and extension issues not in `Agree` fail.                                                      | `NEG_SCHEMA_INVALID`. Where the failing schema rule encodes a validator (MSMED cap, no-cost EMI), the validator's code is reported instead (`NEG_MSMED_CREDIT_CAP`, `NEG_EMI_NO_COST_FALSE`). |
+| N-3  | Capability: mode in the intersection and in `modes_allowed`; changed issues within `negotiable_issues`; `round ≤ max_rounds`; `now < deadline`                              | `capabilities_incompatible`, `NEG_ISSUE_NOT_NEGOTIABLE`, or `TERMINATED`                                                                                                                      |
+| N-4  | Offer liveness: `in_reply_to` or `offer_hash` is the live hash; the offer has not expired                                                                                   | `NEG_STALE_OFFER`, `NEG_OFFER_EXPIRED`                                                                                                                                                        |
+| N-5  | [Validators](#validators)                                                                                                                                                   | Per validator: block, step-up or flag                                                                                                                                                         |
+| N-6  | Every per-issue bound in `constraints.negotiation`; counterparty allow-list                                                                                                 | `needs_escalation`; `mandate_scope_mismatch` for a counterparty outside the allow-list                                                                                                        |
+| N-7  | [Exposure](#per-principal-exposure) across all of the principal's concurrent negotiations                                                                                   | `needs_escalation` with `NEG_EXPOSURE_EXCEEDED`                                                                                                                                               |
+| N-8  | Price against the reservation                                                                                                                                               | `needs_escalation`                                                                                                                                                                            |
+| N-9  | Checkout-mandate rules: category, merchant and PIN code allow-lists, `step_up.above_amount`, `step_up.new_merchant`, and the negotiation mandate's `new_counterparty_above` | `needs_escalation`                                                                                                                                                                            |
+| N-10 | Payment feasibility: the handler intersection is non-empty for the selected payment option at this presence                                                                 | `handlers_incompatible`                                                                                                                                                                       |
+| N-11 | Write a `guard` entry to the instruction log with constraint IDs only, never values. Request the `within_bounds` attestation.                                               | n/a                                                                                                                                                                                           |
+
+### Outcomes
+
+The guard produces one of three verdicts, and the verdict is the **only** signal about the mandate that reaches the model (`live_offer.guard`):
+
+| Guard result | Verdict shown to the model | Meaning                                                                                                                           |
+| ------------ | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `pass`       | `acceptable`               | Within every bound and at or better than the reservation. The agent may act without the principal.                                |
+| `escalate`   | `needs_escalation`         | Outside a bound, between the reservation and the ceiling, over exposure, or a step-up rule fired. Only the principal can approve. |
+| `fail`       | `not_acceptable`           | A validator blocked, or a hard rule failed. The agent MUST NOT accept.                                                            |
+
+Counter-offers follow two rules:
+
+- An agent MUST NOT emit a firm counter-offer outside the mandate, because the counterparty could accept it.
+- If the guard returns `needs_escalation`, the agent MAY still send the counter-offer, but only with `subject_to_principal_approval: true`, which forces `firm: false`. If `process.firm_counter_allowed` is `false`, every outgoing counter-offer is non-firm.
+
+### Step-up to the Trusted Surface
+
+A negotiation step-up is created **only on an outgoing accept or firm-counter attempt**. An incoming verdict only sets `live_offer.guard`; it creates no step-up, so that fifty incoming offers cannot send the principal fifty prompts. On `needs_escalation` for such an attempt, or on `acceptable` under `accept_confirmation: ask`, the session moves to `ESCALATED` and carries a `step_up` object with `kind: confirm` and `reason` ∈ `negotiation_out_of_mandate` | `negotiation_between_reservation_and_max` | `accept_confirmation`. In the A2A binding this maps to the task state `TASK_STATE_AUTH_REQUIRED` (A2A 1.0), and in MCP to `insufficient_scope` (see [MCP and A2A](https://spec.bacp.dev/draft/specification/transports/mcp-a2a/index.md)).
+
+- The **diff card** (issue, offered value, the principal's own bound, all-in total, offer expiry) is rendered **only on the Trusted Surface**. The agent and the counterparty never receive the bound. In the REST view, `step_up.diff[]` carries only `issue_path`, `offered` and `within_bounds`.
+- The step-up's `ts_render` carries the `offer_hash` of the offer to approve and, for a firm offer, its `acceptance_revocation` value, which the Trusted Surface shows only as a fixed consequence sentence followed by the cancellation terms ([Render input](https://spec.bacp.dev/draft/specification/human-participants/#ts-render)).
+- The Trusted Surface posts the principal's approval as a `negotiation.step_up.approved` event, never `step_up.approved`. Its `presentation` MUST carry `offer_hash` and MUST NOT carry `checkout_hash`, because no quote exists yet. The gateway refuses the event with `403 ts_render_mismatch` unless `presentation.offer_hash` equals the `ts_render`'s `offer_hash` and the offer the step-up names ([Presentation record](https://spec.bacp.dev/draft/specification/human-participants/#presentation)).
+- The principal approves with an RBI-compliant factor such as the UPI PIN or a device biometric. The Mandate Manager then issues a one-off `within_bounds` attestation bound to that exact `offer_hash`.
+- The step-up link lives for `min(15 minutes, expires_at − now)`. An offer that expires while the negotiation is `ESCALATED` cannot be revived by the approval. The approval can then be used only for a fresh offer, and an acceptance attempt returns `NEG_OFFER_EXPIRED`.
+- **Fatigue limits.**
+  - At most one pending negotiation step-up exists per `negotiation_id`. It is marked `superseded` when its offer is superseded, and an event for it gets `409 NEG_STALE_OFFER`.
+  - At most one step-up is *presented* at a time per principal. Others queue and expire with their offers.
+  - The gateway caps the step-ups it creates per principal. The cap, a count over a window, is declared in `/.well-known/bacp` (`negotiation.step_up_cap`); BACP sets no number. Beyond it the gateway answers the agent `429` with `Retry-After`, and nothing is visible to the seller: a capped offer lapses by silence. The cap also counts the fee-line review prompts of [TS-3](https://spec.bacp.dev/draft/specification/human-participants/#ts-requirements) and a BACP step-up for the convenience-fee disclosure that NPCI/UPI/CC/01 para 7.5 requires ([Mandates and Consent](https://spec.bacp.dev/draft/specification/mandates/index.md)).
+  - `negotiation.step_up.declined` MAY carry `end_negotiation: true`, which sends `terminate` with reason `principal_instruction`, so that declining stays as easy as approving.
+  - The Central Consumer Protection Authority's Dark Patterns Guidelines name "nagging" as "repeated and persistent interactions … unless specifically permitted by the user", and from 01-01-2027 Rule 4(15) of the E-Commerce Rules makes compliance and a yearly self-audit a duty of the entity.
+- An offer that lapses while the principal approves produces `offer_expired_during_approval` in the `ts_render` language ("the offer ran out while you were approving"), never "you declined".
+- A negotiation approval that names a checkout step-up is refused with `403 ts_render_mismatch`, and the session is unchanged.
+- A **seller's acceptance of the buyer's non-firm offer** is the seller's purchase offer, not a contract. It escalates, and it binds only after the principal approves on the Trusted Surface and the terms are within the mandate's bounds.
+
+## Anti-leak rules
+
+The principal's bounds MUST NOT leak through any channel:
+
+1. **No seller-visible escalation signal.** Escalation MUST NOT emit anything the seller can see. In particular the gateway MUST NOT send an automatic `request_extension` when it escalates, and an `accept` MUST NOT carry a `step_up_id` or any approval reference. An extension is requested only on an explicit principal or agent instruction.
+1. **Nothing seller-facing carries a bound.** No offer, reject reason, error, webhook, Beckn message or evidence bundle shared with the counterparty carries `reservation`, `total_max`, `total_min`, utility weights, or an AP2 `amount_range.max`. The seller verifies only the `within_bounds` attestation.
+1. **The model does not see the bound.** The reservation lives in the policy engine or on the Trusted Surface. The model receives only `acceptable`, `not_acceptable` or `needs_escalation`.
+1. **Logs carry IDs, not values.** Guard entries carry constraint IDs only. Gateways and registries MUST NOT log term-sheet contents in the clear.
+1. **Data-loss prevention.** Participants SHOULD scan every buyer-originated outgoing message, response, webhook and log line for the reservation and ceiling values. The scan MUST be provenance-aware: a number that the counterparty sent first and that the buyer side merely echoes (for example, a seller's COD total that happens to equal the reservation) is not a leak. Only buyer-originated content is judged. Conformance runs apply this scan after every case (see [Conformance](https://spec.bacp.dev/draft/specification/conformance/index.md)).
+
+## Validators
+
+Validators run at three places: at the BPP before it sends, at the BAP gateway on receipt (guard step N-5), and at the network's log-validation layer, which extends ONDC's search-time MRP check to `select`, `init`, `confirm` and `update`. Error codes follow the [two-channel rule](#error-codes).
+
+| ID   | Validator                  | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Outcome and code                                                                                                                          |
+| ---- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| V-01 | MRP ceiling                | For a line with `retail_package_mrp_required: true`, the unit price including tax MUST NOT exceed `mrp` per sale unit, at every offer, bid, `on_select`, `on_init`, `confirm` and `update`, in B2B and B2C. Legal Metrology (Packaged Commodities) Rules, 2011, Rule 18(2) bars any retail dealer or other person, including a manufacturer, packer, importer or wholesale dealer, from selling a packaged commodity above its retail sale price (as confirmed in a Lok Sabha answer of 26-03-2025). English auctions are capped at MRP. Not applied to loose goods or to packs exempt under Rule 3, which per a consolidated text are: packages of more than 25 kg or 25 L; cement, fertiliser and agricultural farm produce in bags above 50 kg; and packs meant for industrial or institutional consumers. The Rule 3 wording is from a secondary consolidation and was not checked against the Gazette. The rules define the retail sale price as the maximum price "inclusive of all taxes" and say nothing about fees; whether fees count toward MRP, and the current Rule 3 text, are open ([Q-20](https://spec.bacp.dev/draft/specification/open-questions/#q-20)). **Fail-safe default until Q-20 is settled:** (1) in B2C, every line that carries an `mrp` is checked, whatever its `retail_package_mrp_required` value; the Rule 3 exemption (`retail_package_mrp_required: false`) is honoured only in B2B; (2) for the lines checked, the sum of unit price including tax times quantity, plus every mandatory `packing` and `convenience` charge, MUST NOT exceed the sum of `mrp` times quantity; `delivery` and other charges stay separate disclosed charges. | block, `NEG_MRP_EXCEEDED`                                                                                                                 |
+| V-02 | MSMED credit cap           | See [Credit terms and MSMED limits](#credit-terms-and-msmed-limits)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | block for a firm offer, warn otherwise; `NEG_MSMED_CREDIT_CAP`                                                                            |
+| V-03 | Drip pricing               | `all_in_total` present from round 1 and equal to `quote.price`. A charge with `first_disclosed_round > 1` forces re-consent. A rise above `max_increase_pct_after_first_quote` between `on_select` and `on_init` or `confirm` triggers step-up. Payment-method fees appear in `payment.options[]` from round 1.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | step-up, `NEG_DRIP_PRICING`                                                                                                               |
+| V-04 | Terms drift                | See [Drift detection](#drift-detection)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | breach, `NEG_TERMS_DRIFT`                                                                                                                 |
+| V-05 | False urgency              | `expires_at − valid_from ≥` effective `min_offer_validity` (floor `PT5M`)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | block, `NEG_FALSE_URGENCY`                                                                                                                |
+| V-06 | Basket sneaking            | A counter-offer MUST NOT add lines or charges the buyer did not assert, unless they are put to the buyer as `Assert` and the buyer agrees                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | block, `NEG_BASKET_SNEAK`                                                                                                                 |
+| V-07 | Personalised pricing       | `pricing_basis` declared. If `personalised`, the factors are listed. Device, OS and other irrelevant attributes are prohibited.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | block, `NEG_PERSONALISED_PRICING`                                                                                                         |
+| V-08 | Collusion screen           | No seller sees another seller's quote or bid. Third-party pricing AI is declared. Network screens look for identical and near-identical bids and bid rotation.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | flag, `NEG_COLLUSION_SCREEN` ([details](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#collusion-screens))       |
+| V-09 | Shill bidding              | No bids by the seller or its affiliates; neutral auctioneer                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | block, `NEG_SHILL_BID` ([details](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#shill-and-affiliate-detection)) |
+| V-10 | Agent disclosure           | `offeror_kind` on every message                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | block                                                                                                                                     |
+| V-11 | Prompt-injection isolation | Counterparty free text is untrusted data. Only structured messages reach the guard.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | flag, `NEG_INJECTION_SUSPECTED`                                                                                                           |
+| V-12 | Cash and high-value gates  | A cash tranche of ₹2 lakh or more is refused (Income-tax Act, 1961 s.269ST; Income-tax Act, 2025 equivalent: s.186 per secondary sources, not verified as of 17-10-2026). PAN is required for jewellery above the statutory threshold. A RERA token or booking amount above 10% needs a `linked_agreement_ref`. High-value categories always need a human-present commitment.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | block, `NEG_CASH_LIMIT`, `NEG_RERA_TOKEN_CAP`                                                                                             |
+| V-13 | Credit disclosure          | EMI, BNPL and credit-funded options carry the lender, APR, KFS reference, and `no_cost: false` when interest is above zero                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | block, `NEG_CREDIT_DISCLOSURE_MISSING`, `NEG_EMI_NO_COST_FALSE`                                                                           |
+| V-14 | Document gates             | IRN for B2B invoices from sellers whose aggregate turnover exceeded ₹5 crore in any financial year since 2017-18; e-way bill before dispatch above ₹50,000; the 30-day IRN reporting flag where AATO is ₹10 crore or more                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | block at dispatch, `NEG_EINVOICE_IRN_MISSING`, `NEG_EWB_MISSING`                                                                          |
+
+## Drift detection
+
+After acceptance, the seller's BPP-signed `on_init` (and later `confirm` / `on_confirm`) MUST carry exactly the accepted terms, apart from payment-rail endpoints. The receiving gateway MUST check this **from content**, not from claims:
+
+1. Recompute the term-sheet hash from the term sheet carried in `on_init` and compare it with the hash of the accepted offer's term sheet. A claimed hash is checked too, but a matching claim is never sufficient.
+1. Compare **every line** of the bound term sheet with the accepted one on `(item_id, unit, quantity, unit_price, currency)`.
+1. Compare **every line item** of the BPP-signed quote with the accepted lines on `(item, quantity, unit_price, line total)`.
+1. Compare the quote total with the accepted `all_in_total`.
+
+A difference in any one of these is drift, even when the totals still match: a seller that halves the quantity and doubles the unit price, or switches `kg` for `quintal`, has drifted.
+
+| Accepted offer            | On drift                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Firm                      | The accepted firm offer is a contract, so drift is a **breach**, not a return to negotiation. The session moves to `BREACH_FLAGGED` with message `NEG_TERMS_DRIFT` (`requires_buyer_review`). The gateway raises an IGM 2.0 issue with the agent as an `AI_AGENT` actor (Proposed, [Q-11](https://spec.bacp.dev/draft/specification/open-questions/#q-11)) and the evidence (accepted hash, claimed and recomputed hashes, the list of differences, both totals). The buyer MAY cancel without penalty (`cancelled_no_penalty`). A post-acceptance "out of stock" on a firm offer is also a breach. Whether a breach carries a network penalty is open ([Q-22](https://spec.bacp.dev/draft/specification/open-questions/#q-22)). |
+| Non-firm (purchase offer) | The differing `on_init` is the seller's counter-offer. The accepted offer becomes `SUPERSEDED`, the session returns to `NEGOTIATING`, and the buyer gets `seller_counter_at_init` (`requires_buyer_input`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+
+The gateway records `bound_term_sheet_hash` as the hash it **computed** from the bound content, never the hash the seller claimed.
+
+## Signed seller acceptance and clock skew
+
+Transcript positions decide contract formation. Times are recorded, and never decide it.
+
+A rule that compared timestamps stamped by the offeree itself would leave the offeree a free option inside the 5-second band: it could sign an acceptance, hold it, watch the market, and send it late. BACP therefore decides a crossing only on a signed admission by the party that loses by it, read inside that party's own chain, so no comparison of two parties' clocks decides anything.
+
+- **One chain per participant.** Each participant keeps **one linearisable hash chain per `negotiation_id`**, like the exposure store. A gateway that runs as several instances MUST share a linearisable chain. Two receipts at one `log_seq` that name different entries are equivocation: `evidence_unverifiable`, treated as contested and reported to `NEG_COLLUSION_SCREEN`.
+- **Positions in the signed bytes.** A sender logs a firm message and takes its position before it dispatches it. The message carries `sender_log_seq` (its position in the sender's own chain) and `sender_log_prev` (the hash of the entry before it) inside its signed bytes. **Genesis.** At position 1 of either chain, `sender_log_prev` and the receipt's `prev_entry_hash` are the genesis hash, `sha-256` of the `negotiation_id` as UTF-8 bytes, written `sha-256:<base64url>`; this mirrors the [InstructionLog genesis](https://spec.bacp.dev/draft/specification/evidence/#hash-chain). Both chains use the same value, so a verifier recomputes it from the `negotiation_id` alone.
+- **The receipt.** Every receiver returns, in the synchronous response to the exchange, a CounterSignature whose payload is a `CounterSignaturePayload`: `{msg_hash, negotiation_id, received_at, log_seq, log_entry_hash, prev_entry_hash}`, every field REQUIRED. `prev_entry_hash` lets a fork be proved from two receipts alone. `log_entry_hash` changes from MAY to REQUIRED.
+
+counter-signature-payload.json
+
+```
+{
+  "msg_hash": "sha-256:udhTqGUfMOyYjXn08oDUyndhNq27sfBt7HeM4FPXa1c",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "received_at": "2026-10-13T11:05:11+05:30",
+  "log_seq": 42,
+  "log_entry_hash": "sha-256:cWq_rdLVyoidbmszti6flYZ196mpjNjLChZH4gkdQcI",
+  "prev_entry_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4"
+}
+```
+
+Invalid: receipt without `log_seq` (`counter-signature-payload.no-log-seq.invalid.json`)
+
+```
+{
+  "msg_hash": "sha-256:lJRtoHUIQckYFk7BASGC6sKjJ-XUVuGwnPAf-YDVEAs",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "received_at": "2026-10-13T11:05:11+05:30",
+  "log_entry_hash": "sha-256:puM6b3R7BrQTlpr9p56R-_uigPyPOQaTc6_KCeiDQRU",
+  "prev_entry_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4"
+}
+```
+
+- **The negotiation chain and `log_entry_hash`.** The chain of a participant for one `negotiation_id` is its own chain. It is not the InstructionLog of any session: the InstructionLog is keyed on a `session_id` and numbers `seq` from 0, whereas this chain is keyed on the `negotiation_id` and numbers `log_seq` from 1. It holds, in the order in which the participant logged them, both the firm messages that it sent and the messages that it received. Its genesis hash is the `sha-256` of the `negotiation_id` as UTF-8 bytes. An entry is the JSON object `{msg_hash, negotiation_id, received_at, log_seq, prev_entry_hash}` for a message that the participant received (the `CounterSignaturePayload` without `log_entry_hash`), and `{msg_hash, negotiation_id, dispatched_at, log_seq, prev_entry_hash}` for a message that it sent, with the message's own `dispatched_at`. `prev_entry_hash` is the `log_entry_hash` of the entry at `log_seq − 1`, and the genesis hash at `log_seq` 1. `log_entry_hash` is `sha-256:` followed by the unpadded base64url SHA-256 of the RFC 8785 (JCS) form of the entry, those five members and nothing else, so that it covers neither itself nor any signature.
+
+  Worked example, the receipt of `offer.accept-genesis.json` at position 1 of the receiver's chain for `neg_SAREE7Q2W9`. The JCS form of the entry is `{"log_seq":1,"msg_hash":"sha-256:udhTqGUfMOyYjXn08oDUyndhNq27sfBt7HeM4FPXa1c","negotiation_id":"neg_SAREE7Q2W9","prev_entry_hash":"sha-256:pviiX-jSkdM0fNAvXPzGSPN94ZCAIVDowcD6eqGUGlM","received_at":"2026-10-13T11:05:11+05:30"}` and its `sha-256` is `sha-256:1qt_DRfJWFUxIc0WGpwXSRXacc5T0wMnTeTNpy-toHk`, the `log_entry_hash` of `counter-signature-payload.genesis.json`. The `msg_hash` there is the `sha-256` over the JCS form of `offer.accept-genesis.json` without `signatures`, `counter_signature` and `received_at`. `scripts/validate.py` recomputes both.
+
+  - **When a receipt counts as an order proof.** A receipt counts only if it (i) is a CounterSignature by the counterparty participant's registry key, which verifies as a JWS on its own, (ii) comes in the synchronous response of the same exchange (a REST response, an MCP JSON-RPC result, a blocking A2A response, or on Beckn a `bacp.receipt` TagGroup in the `Ack`; see [Beckn / ONDC Binding](https://spec.bacp.dev/draft/specification/transports/beckn/#mapping-negotiation)), and (iii) arrives within 5 seconds of the sender's dispatch, measured on the sender's own monotonic clock. The 5 seconds reuse the freshness bound below and are not a new limit. Because it reads one clock, this passes the clock-invariance property in [Conformance](https://spec.bacp.dev/draft/specification/conformance/#negotiation-timing-cases). A receipt that is slower, missing or unverifiable is recorded but does not prove order, and a crossing that depends on it is contested.
+  - **Idempotent re-delivery.** A receiver that has already countersigned a `msg_hash` MUST return the byte-identical CounterSignature, with the same `log_seq`, and MUST NOT re-run the freshness or expiry checks on that message. A different CounterSignature for the same `msg_hash` is equivocation. An honest retry (for example a Beckn `confirm` re-sent with the same `message_id`) therefore needs no looser freshness.
+  - **Freshness only.** For every inbound message, `|received_at − dispatched_at|` MUST be at most **5 seconds**, or the message is refused with `NEG_CLOCK_SKEW` (422) and is not processed. This is a freshness bound and a BACP choice; no Indian instrument gives a tolerance. It never decides order. A refused message is not re-signed and retried, because a new signature is a new message.
+  - **`dispatched_at`.** It MUST equal the `created` parameter of the sender's RFC 9421 signature exactly. RFC 9421 `created` is an integer with no sub-second precision, so `dispatched_at` carries no fraction (`offer.dispatched-at-fraction.invalid.json` fails the schema). Retries re-send identical bytes, so `msg_hash` removes duplicates. Under the committed-order rule `dispatched_at` is evidence only.
+
+Invalid: `dispatched_at` with a fraction (`offer.dispatched-at-fraction.invalid.json`)
+
+```
+{
+  "type": "accept",
+  "msg_id": "nmsg_B3acc9Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:10.400+05:30",
+  "sender_log_seq": 8,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz4",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "received_at": "2026-10-13T11:05:11+05:30",
+  "from": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in",
+    "agent_id": "did:web:agents.vaani.example.in:sakhi",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bap",
+      "kid": "bap.vaani.example.in|ukid-7|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:agents.vaani.example.in:sakhi#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "counter_signature": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl",
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "negotiation_mandate_ref": {
+    "id": "mdt_NEG7Q2W9X4K1M3",
+    "hash": "sha-256:NuNND_z4qhA_CZaDGKdqX_9Qm3p9V5VXzrM7DoSWYd8"
+  },
+  "legal_effect": "acceptance",
+  "bound_attestation": {
+    "type": "bacp.neg.bound_attestation",
+    "mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+    "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+    "result": true,
+    "iss": "mm.psp.example.in",
+    "iat": 1791873310,
+    "signature": {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  }
+}
+```
+
+- **Instants, not strings.** Every comparison of times is a comparison of instants: `…T10:00:05+05:30` equals `…T04:30:05Z`, and any rewrite between the two happens outside signed bytes.
+- **Monotonic `received_at`.** A participant records the clock reading it truly saw. A decrease of `received_at` along a chain MUST carry `clock_step_observed` on the transcript entry. A verifier treats an unflagged decrease as `evidence_unverifiable`. Order is by `log_seq` only, so a flag costs nothing.
+- **Clock traceability.** Participants MUST keep clocks traceable to NIC or NPL time sources (CERT-In Directions of 28-04-2022, direction (i)) and, from the commencement of the Legal Metrology (Indian Standard Time) Rules, 2026 (G.S.R. 761(E), r.6(4)-(5) and r.8(4)), to IST from an authorised source. As of 18-10-2026 those Rules are notified and not in force; they commence 180 days after publication, which is about 24-02-2027 (the exact day is not verified). This is a duty on each clock and never an ordering input.
+- **IST in BACP-owned times.** BACP-owned wall-clock values in negotiation messages and evidence (`received_at`, `expires_at`, `dispatched_at` as rendered, transcript entries) SHOULD carry the offset `+05:30`. Beckn `context.timestamp` follows ONDC and keeps `Z`. Every time shown or told to a person on the Trusted Surface is in IST, in the person's language ([Render input](https://spec.bacp.dev/draft/specification/human-participants/#ts-render)). Whether Rule 7 of those Rules reaches machine timestamps is open ([Q-84](https://spec.bacp.dev/draft/specification/open-questions/#q-84)).
+- **A seller's acceptance** of a buyer offer counts only if the buyer gateway countersigned it, and is subject to the same expiry rules below.
+
+### Contested crossings
+
+Write W for the offeror's `withdraw` and A for the offeree's `accept`. Each comparison sits inside one party's own chain.
+
+| Outcome       | Condition                                                                                                                   | Code                                                                                 | Who proved it          |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ---------------------- |
+| Withdraw wins | The offeree's CounterSignature for W has `log_seq` below A's `sender_log_seq` (the offeree logged W before it dispatched A) | `accept_void_withdrawn` (seller acceptor: `seller_accept_void`)                      | The offeree, the loser |
+| Accept wins   | The offeror's CounterSignature for A has `log_seq` below W's `sender_log_seq` (the offeror received A before it sent W)     | `withdraw_lost_crossing`                                                             | The offeror, the loser |
+| Contested     | Neither holds (each sent before it received), or a needed receipt is missing, late or unverifiable                          | `crossing_contested`                                                                 | Nobody; humans decide  |
+| Impossible    | Both hold                                                                                                                   | `evidence_unverifiable`, treated as contested and reported to `NEG_COLLUSION_SCREEN` | Equivocation           |
+
+**Why contested is the only rule that does not reward holding.** A genuine crossing (A sent at position 5, W sent at position 10 a moment before A arrives) produces the same four integers as an acceptance that the offeree signed and logged, did not send, and sent later after seeing W: no signed artefact tells them apart. Any rule that decides the genuine case for one side therefore also rewards the hold. A contested outcome gives the holder a review and never a contract.
+
+**Residual risk, disclosed.** An offeror that holds the CounterSignature for A, sends W, and only then logs A turns a contract it owed into a contested review. The payoff is "no deal, no breach", the window is the 5-second receipt bound, and it cannot be prevented without a third-party sequencer. Every contested record carries `late_receipt_party`, and gateways report per-participant contested counts to the collusion screen. BACP sets no threshold.
+
+**What a contested crossing does.** BACP evidence does not settle formation; neither gateway proceeds; the protocol records no breach event. BACP does not say "no contract", because a protocol term under the Information Technology Act, 2000, s.13 can fix when a record is despatched and received but cannot declare that no contract exists; whether one formed is a question of fact under ICA ss.4-5.
+
+- Each side's session goes to `ESCALATED` with reason `crossing_contested`, and both principals are asked on their own surfaces. The seller gateway MUST raise the case to its principal and MUST NOT auto-confirm (the fail-safe of [Indian Contract Act timing](#indian-contract-act-timing) is two-sided).
+- **Both confirm** → `AGREED`, and the deal proceeds.
+- **Neither confirms** (declined or silent) by the earlier of the offer's `expires_at` and the end of the step-up link → `CANCELLED`, reason `crossing_unconfirmed`. No breach event, no protocol-computed charge, and the exposure reservation is released once (Principle 6; TS-2, "expiry means decline").
+- **One confirms, the other declines or is silent** → `CANCELLED`, reason `formation_disputed`, carrying the `grievance_contact` of both sides. No breach event and no protocol-computed charge. Whether a contract formed is for ODR or the courts. Silence is a decline, so a deal never proceeds on one confirmation.
+- The message is `crossing_contested` with resolution `requires_buyer_review` on a buyer-side gateway and `requires_seller_review` on a seller-side gateway ([Errors](https://spec.bacp.dev/draft/specification/errors/#resolution)). The agent MUST stop and MUST NOT resend.
+- On Beckn a message is **ordered** only when its `Ack` carries a verifying receipt, so every crossing that depends on an unreceipted Beckn message is contested. Non-crossing deals are unaffected.
+
+### Expiry and the acceptor's margin
+
+`expires_at` is a **receipt deadline at the offeror**, stated in the protocol terms and in the offer semantics. An `accept` received after `expires_at` returns `NEG_OFFER_EXPIRED`. Two guards stop an offeror from escaping its own offer at the expiry edge:
+
+- **Acceptor's margin.** The acceptor's gateway MUST NOT dispatch an `accept` when `expires_at − now` is under 5 seconds on its own clock. It refuses locally with `NEG_OFFER_EXPIRED` and sends nothing, and the principal sees `offer_expired_during_approval`. An honest acceptor loses the last 5 seconds of each offer's validity. This margin is the acceptor's own, not an extra check at the offeror.
+- **Dispatch before expiry.** An `accept` that is refused as expired, whose `dispatched_at` is not after `expires_at`, and which passed freshness, is `crossing_contested`, not expired. A self-asserted time can move this case only to contested, never to bound. An `accept` received with `dispatched_at` after `expires_at` is `NEG_OFFER_EXPIRED`.
+
+Whether a court reads an acceptance dispatched before `expires_at` but received after it as in time (ICA s.4, s.6(2)) is open ([Q-52](https://spec.bacp.dev/draft/specification/open-questions/#q-52)).
+
+## Per-principal exposure
+
+An agent that sends firm counter-offers to several sellers at once could commit the principal several times over. The guard therefore counts **exposure** (step N-7):
+
+- Exposure is the sum of `all_in_total` over the principal's outstanding firm counter-offers, `ACCEPT_PENDING` acceptances, `AGREED`-but-unpaid deals and lodged [standing accepts](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#dutch-auctions-perishables) (each at `max_price × qty`), across **all** of that principal's negotiation mandates and concurrent negotiations, including every session under the same `rfq_parent_id`, plus the message being guarded.
+- Exposure MUST be at most `total_max` **and** at most every remaining checkout-mandate budget period, whatever the payment handler. A credit-ledger deal counts against the budgets and against `credit_ledger.max_outstanding` only when a gateway `complete` books it ([Q-46](https://spec.bacp.dev/draft/specification/open-questions/#q-46), settled).
+- Over the limit, the verdict is `needs_escalation` with `NEG_EXPOSURE_EXCEEDED`.
+- **Atomicity.** Computing exposure and emitting the firm message it guards MUST run as one atomic, linearisable operation keyed on the **principal**. Each outstanding commitment holds an exposure reservation. A standing accept's reservation is keyed on its `standing_accept_id` (it has no `offer_hash`) and is released when its auction closes or the standing accept is used or withdrawn. Any other reservation is released when its offer reaches `REJECTED`, `EXPIRED`, `WITHDRAWN`, `SUPERSEDED`, `TERMINATED` or `LAPSED_CONDITION`, or `ACCEPT_REVOKED` on the proposer's countersigned `accept_revoke_honoured`, and converted when the deal is paid. Release is idempotent: it is keyed on the offer's `offer_hash` (a standing accept's, on its `standing_accept_id`) and happens at most once per reservation, however often the event that releases it is delivered or replayed. While the outcome of an `accept_revoke` is contested (the proposer has not countersigned an outcome), the reservation is held. If the outcome is still contested when the offer's `expires_at` passes, the gateway surfaces it to the principal (`requires_buyer_review`) and the reservation stays counted. A gateway that runs as several instances MUST share a linearisable exposure store. Exposure across two different gateways serving one principal is not counted: each open mandate belongs to one gateway (`agent.bap_id`), and a move to another gateway is a successor root ([Q-36](https://spec.bacp.dev/draft/specification/open-questions/#q-36), settled).
+- The session view reports only amounts (`exposure.principal_outstanding_firm`, `counted_against[]`), never the bound.
+
+## Binding to checkout
+
+Negotiation hands over to checkout through a chain of hashes. BACP does **not** treat the accepted offer as the checkout:
+
+1. The buyer accepts `offer_hash`. The `accept` carries the `within_bounds` attestation.
+1. The seller's BPP-signed `on_init` echoes the identical term sheet, and the gateway's recomputed hash becomes `bound_term_sheet_hash`. The session is `BOUND`.
+1. The checkout session opens in `ready_for_complete` with the BPP-signed quote. Its `checkout_hash` is the hash of that **signed quote**.
+1. The closed checkout and payment mandates bind to `checkout_hash`, as in [Sessions and Checkout](https://spec.bacp.dev/draft/specification/checkout/index.md).
+
+`checkout_hash` MUST NOT be asserted to equal `offer_hash` or `bound_term_sheet_hash`: they are hashes of different objects (the quote, the offer and the term sheet).
+
+**The `within_bounds` attestation** (`offer.json#/$defs/BoundAttestation`) is `{type: bacp.neg.bound_attestation, mandate_ref, offer_hash, result: true, iss, iat, signature}`, issued by the buyer's credential provider (the Mandate Manager). Before issuing it, the credential provider MUST re-verify the deal against the open checkout mandate **and** the negotiation mandate. The seller BPP MUST verify only this attestation against the issuer's registry key. If the credential provider refuses, the acceptance is not sent and the agent gets `NEG_ATTESTATION_REFUSED`. Whether a zero-knowledge range proof should replace the attestation is open ([Q-24](https://spec.bacp.dev/draft/specification/open-questions/#q-24)).
+
+On Beckn, the acceptance is an `init` carrying `bacp.neg.accept`, `BOUND` is the `on_init` echo, the PO is `confirm` referencing `offer_hash`, and PO acceptance is `on_confirm` (`CONTRACTED`). The PO MUST NOT alter accepted terms. See [Beckn / ONDC Binding](https://spec.bacp.dev/draft/specification/transports/beckn/index.md).
+
+## Indian Contract Act timing
+
+Legal basis pending review
+
+The statutory rules cited below are taken from the text of the Indian Contract Act, 1872, ss.2 and 4–7. The timing rules in this section are normative as protocol terms that participants agree to, in the sense of the Information Technology Act, 2000, s.13, and every firm message names them through `protocol_terms`. Whether courts would treat them, and the crossing rule, which is a BACP design choice, as the time of dispatch and receipt is open ([Q-52](https://spec.bacp.dev/draft/specification/open-questions/#q-52)). **Fail-safe default until Q-52 is settled:** when a deal's formation is decided by the crossing rule, neither gateway proceeds to `init`, `complete` or `confirm` on it automatically. The buyer gateway escalates to the buyer principal on the Trusted Surface (`requires_buyer_review`), the seller gateway escalates to the seller principal (`requires_seller_review`) and MUST NOT auto-confirm, and each proceeds only on its principal's confirmation ([Contested crossings](#contested-crossings)). The crossing outcome is still recorded in the transcript.
+
+| Rule                                                 | Statute                                                                                                                                                                                                                                                                                                                         | BACP behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Proposal (s.2(a), (b))                               | A person who signifies willingness to do or abstain from something, "with a view to obtaining the assent of that other", makes a proposal. A proposal, when accepted, becomes a promise.                                                                                                                                        | `firm: true` is a proposal. `firm: false` is an invitation to treat. That term is not in the Act; it comes from case law. Accepting a non-firm offer has `legal_effect: purchase_offer`: it is the buyer's proposal, and the seller's echoing `on_init` or `on_confirm` is the acceptance.                                                                                                                                                                                                                                                                    |
+| Communication (s.4)                                  | A proposal is communicated "when it comes to the knowledge of the person to whom it is made". An acceptance is complete against the proposer "when it is put in a course of transmission to him, so as to be out of the power of the acceptor", and against the acceptor "when it comes to the knowledge of the proposer".      | A proposal is communicated when the offeree's CounterSignature exists. Acceptance is complete **against the proposer on dispatch** (`dispatched_at`), and **against the acceptor on receipt** (`received_at`).                                                                                                                                                                                                                                                                                                                                                |
+| Communication of a revocation (s.4)                  | The communication of a revocation is complete "as against the person who makes it, when it is put into a course of transmission to the person to whom it is made, so as to be out of the power of the person who makes it", and "as against the person to whom it is made, when it comes to his knowledge".                     | A `withdraw` or an `accept_revoke` is dispatched at its `dispatched_at` and received at the receiver's `received_at`.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Revocation of a proposal (ss.5, 6(1))                | A proposal "may be revoked at any time before the communication of its acceptance is complete as against the proposer, but not afterwards". A proposal is revoked "by the communication of notice of revocation by the proposer to the other party".                                                                            | The offeror may `withdraw` only until the offeree **dispatches** an acceptance. A `withdraw` takes effect on **receipt**.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Revocation of an acceptance (s.5)                    | "An acceptance may be revoked at any time before the communication of the acceptance is complete as against the acceptor, but not afterwards."                                                                                                                                                                                  | Governed by the offer's `acceptance_revocation` term. See [Acceptance revocation](#acceptance-revocation).                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Proposal kept open (s.5, Explanation, Uttar Pradesh) | Inserted by the Uttar Pradesh Act 57 of 1976: "Where an invitation to a proposal contains a condition that any proposal made in response to such invitation shall be kept open for a specified time and a proposal is thereupon made accepting such condition, such proposal may not be revoked within such time."              | BACP has no rule for it and does not refuse a `withdraw` on that ground. Whether it binds a quotation made in response to an RFQ is open ([Q-19](https://spec.bacp.dev/draft/specification/open-questions/#q-19)).                                                                                                                                                                                                                                                                                                                                            |
+| Crossing (BACP rule)                                 | The Act gives no tie-break.                                                                                                                                                                                                                                                                                                     | When a `withdraw` and an `accept` cross, the outcome comes from the four cases of [Contested crossings](#contested-crossings): the withdrawal wins on the offeree's own receipt of it, the acceptance wins on the offeror's own receipt of it, and otherwise the crossing is contested. No timestamp decides it, and there is no tie rule. A losing withdrawal is a breach event and is reported (`withdraw_lost_crossing`). A losing acceptance is void (`accept_void_withdrawn`, `seller_accept_void`). A contested crossing records no breach event.       |
+| Lapse (s.6(2), (3), (4))                             | A proposal is revoked "by the lapse of the time prescribed in such proposal for its acceptance", "by the failure of the acceptor to fulfil a condition precedent to acceptance", and "by the death or insanity of the proposer, if the fact of his death or insanity comes to the knowledge of the acceptor before acceptance". | An offer lapses at `expires_at`, which is a receipt deadline at the offeror ([Expiry](#expiry-and-the-acceptors-margin)), and silence leads to `EXPIRED`. A counter-offer that cites an expired offer is refused with `NEG_OFFER_EXPIRED`. Either party MAY send a fresh offer while rounds and the deadline remain. If a `conditions_precedent[]` entry fails (e.g. `lc_opened`), the offer becomes `LAPSED_CONDITION`. Treating every condition precedent as one of the kind s.6(3) describes is a BACP choice. BACP has no message for the case of s.6(4). |
+| Absolute acceptance (s.7(1))                         | The acceptance must "be absolute and unqualified".                                                                                                                                                                                                                                                                              | An acceptance mirrors `offer_hash` and carries no terms. A changed term is a counter-offer. That a counter-offer rejects the prior offer comes from case law, not from the text of s.7.                                                                                                                                                                                                                                                                                                                                                                       |
+| Manner of acceptance (s.7(2))                        | If an acceptance is not made in the prescribed manner, the proposer "may, within a reasonable time after the acceptance is communicated to him, insist" on that manner, "but if he fails to do so, he accepts the acceptance".                                                                                                  | Every offer prescribes `acceptance_manner: bacp.neg.accept`. Any other form is non-conforming and is refused promptly with `NEG_ACCEPT_NONCONFORMING`, so that the proposer insists on the prescribed manner within a reasonable time.                                                                                                                                                                                                                                                                                                                        |
+
+The Information Technology Act, 2000, s.13 fixes when an electronic record is despatched and received "save as otherwise agreed" between originator and addressee. The protocol terms that every firm message names (`protocol_terms{version, hash}`) are such an agreed rule. They state the committed-order rule, the receipt window, the contested outcome, that `expires_at` is a receipt deadline, and the stipulation of s.12(2) that unless an acknowledgement has been received the electronic record is deemed never to have been sent. An individual's agreement is shown on what the person sees: the mandate and the ConsentReceipt cite the terms. Whether a hash an agent sends is the principal's agreement for s.13 (s.11 attribution), and whether a consumer's approval citing the terms is "otherwise agreed", are open ([Q-19](https://spec.bacp.dev/draft/specification/open-questions/#q-19)).
+
+**The protocol-terms text and its hash.** The protocol-terms text of a version is the file `protocol-terms/<version>.txt` published with that version ([`protocol-terms/2026-10-18.txt`](https://bacp.dev/latest/protocol-terms/2026-10-18.txt) for this one), UTF-8 with LF line ends and no byte order mark. `hash` is `sha-256:` followed by the unpadded base64url SHA-256 of the exact bytes of that file, with no canonicalisation. A gateway computes it from the published file and never from its own copy of the wording, and a receiver refuses a firm message whose `hash` differs with `capabilities_incompatible`. `scripts/validate.py` checks that every example carries the digest of the file of its `version`.
+
+Invalid: `protocol_terms.hash` that is not the digest of the file (`offer.protocol-terms-hash-stale.invalid.json`)
+
+```
+{
+  "type": "accept",
+  "msg_id": "nmsg_B3acc9Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:10+05:30",
+  "sender_log_seq": 8,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz4",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:9uJbQ1xqk3mQ0yP7Zf2c8nT5vRwLhA6sDeXoGiUy4Nc"
+  },
+  "received_at": "2026-10-13T11:05:11+05:30",
+  "from": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in",
+    "agent_id": "did:web:agents.vaani.example.in:sakhi",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bap",
+      "kid": "bap.vaani.example.in|ukid-7|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:agents.vaani.example.in:sakhi#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "counter_signature": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl",
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "negotiation_mandate_ref": {
+    "id": "mdt_NEG7Q2W9X4K1M3",
+    "hash": "sha-256:NuNND_z4qhA_CZaDGKdqX_9Qm3p9V5VXzrM7DoSWYd8"
+  },
+  "legal_effect": "acceptance",
+  "bound_attestation": {
+    "type": "bacp.neg.bound_attestation",
+    "mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+    "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+    "result": true,
+    "iss": "mm.psp.example.in",
+    "iat": 1791873310,
+    "signature": {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  }
+}
+```
+
+### Acceptance revocation
+
+Legal basis pending review
+
+Whether an offer, an earlier agreement between the parties or a protocol term can validly exclude the acceptor's right under s.5 is open ([Q-19](https://spec.bacp.dev/draft/specification/open-questions/#q-19)). BACP permits `waived` only under the conditions below. Showing the term to a principal does not make the exclusion valid.
+
+The Indian Contract Act, 1872, s.5 says: "An acceptance may be revoked at any time before the communication of the acceptance is complete as against the acceptor, but not afterwards." Under s.4 that communication is complete as against the acceptor "when it comes to the knowledge of the proposer". Neither section says "unless otherwise agreed". The Information Technology Act, 2000, s.10A covers "the revocation of proposals and acceptances" expressed in electronic form. Section 13 fixes only when an electronic record is despatched and received, "save as otherwise agreed"; it does not mention knowledge or revocation. BACP takes the proposer's receipt time (`received_at`) as the time of that knowledge. Whether s.13 receipt is s.4 knowledge is open ([Q-19](https://spec.bacp.dev/draft/specification/open-questions/#q-19), [Q-52](https://spec.bacp.dev/draft/specification/open-questions/#q-52)).
+
+Here "acceptance" means acceptance of a proposal (ICA ss.4–5), not acceptance of goods under MSMED s.15.
+
+**The term.** Every firm offer MUST carry `acceptance_revocation`. There is no default, and a gateway MUST NOT insert or normalise the value before hashing, so the term is always inside the signed bytes and `offer_hash`. A firm offer without it is refused with `400 NEG_SCHEMA_INVALID` and never becomes `LIVE`.
+
+- **`allowed_until_receipt`.** The acceptor may revoke an acceptance until the proposer receives it. In this version no receiver honours this value: every receiver refuses it, on every binding and in every trade profile (table below). The value stays in the schemas so that a later version can lift the refusal without a schema change; the rules that would then apply are the [sunset text](#acceptance-revocation-sunset).
+- **`waived`.** The offer excludes that right. It MUST carry `waiver_basis`: the signed contract between the parties (`doc_type: contract`) or the buyer's own RFQ (`doc_type: rfq`, see [Award](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#award)), with its `hash`. Inside `offer_hash` this is a commitment to the document, not proof of it. The acceptor's gateway MUST NOT accept a `waived` offer without the principal unless it holds the document that hashes to `waiver_basis.hash`; otherwise it escalates to the principal (`requires_buyer_review`). "Holds" means all three of: the gateway obtained the document from its own principal before the offer arrived; the document names the offer's counterparty, by its `np_id` or its GSTIN; and the principal marked the document as a waiver basis. If any of the three is missing, the gateway escalates to the principal (`requires_buyer_review`). A document fetched from `waiver_basis.uri`, taken from the offer, or supplied by the counterparty in any other way does not count.
+
+offer.waived-contract-basis.json (B2B offer under a rate contract)
+
+```
+{
+  "type": "offer",
+  "msg_id": "nmsg_TIL1off7Q2",
+  "negotiation_id": "neg_TILHAN7Q2W9",
+  "transaction_id": "3e7b9c10-5d2a-4f61-8a0e-6c4d2b1f9e27",
+  "round": 1,
+  "dispatched_at": "2026-10-14T10:00:00+05:30",
+  "sender_log_seq": 16,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz2",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.tilhan.example.in",
+    "offeror_kind": "human"
+  },
+  "to": {
+    "role": "buyer",
+    "np_id": "bap.annapurna.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.tilhan.example.in|ukid-1|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "mode": "alternating",
+  "firm": true,
+  "term_sheet": {
+    "term_sheet_id": "ts_annapurna_oil_r3",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "bap.annapurna.example.in",
+        "legal_name": "Annapurna Foods Pvt Ltd",
+        "gstin": "29AABCA1234F1Z5",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.tilhan.example.in|P7",
+        "legal_name": "Tilhan Oils",
+        "gstin": "29AAFFT5678K1ZD",
+        "udyam": {
+          "number": "UDYAM-KR-03-0012345",
+          "category": "small",
+          "activity": "manufacturing",
+          "declared_at": "2026-10-12T09:00:00+05:30"
+        },
+        "aato_band": "5cr_to_10cr",
+        "kind": "agent"
+      },
+      "consignee": {
+        "role": "consignee",
+        "id": "loc:annapurna-ck-whitefield"
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "SFO-15L-TIN",
+        "name": {
+          "en-IN": "Refined sunflower oil, 15 L tin"
+        },
+        "hsn": "1512",
+        "unit": "each",
+        "quantity": {
+          "value": 200,
+          "status": "Agree",
+          "negotiable": true,
+          "proposed_by": "buyer"
+        },
+        "moq": {
+          "value": 100,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 198500,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": false,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 39700000,
+          "currency": "INR"
+        },
+        "price_breaks": [
+          {
+            "min_qty": 100,
+            "unit_price": {
+              "value": 201000,
+              "currency": "INR"
+            }
+          },
+          {
+            "min_qty": 200,
+            "unit_price": {
+              "value": 198500,
+              "currency": "INR"
+            }
+          }
+        ],
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 400000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 42105000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-20T18:00:00+05:30",
+        "status": "Agree",
+        "negotiable": true
+      },
+      "incoterm": {
+        "value": "FOR_DESTINATION",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "partial_allowed": {
+        "value": false,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "late_delivery_penalty": {
+        "value": {
+          "pct_per_week": 0.5,
+          "cap_pct": 5
+        },
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_acceptance",
+            "offset_days": 30
+          },
+          "handlers_allowed": [
+            "in.a2a.neft",
+            "in.a2a.rtgs",
+            "bacp.credit_ledger"
+          ],
+          "is_credit": true
+        }
+      ],
+      "credit_days": {
+        "value": 30,
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "credit_reference_event": {
+        "value": "on_acceptance",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "early_pay_discount": {
+        "value": {
+          "pct": 1,
+          "within_days": 10
+        },
+        "status": "Agree",
+        "negotiable": true
+      },
+      "delay_interest_pa_pct": {
+        "value": 18,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "credit_ledger": {
+        "value": {
+          "ledger_id": "ldg_ANNAxTILH0001",
+          "credit_limit": {
+            "value": 100000000,
+            "currency": "INR"
+          }
+        },
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_type": {
+        "value": "replace",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "warranty_penalty": {
+      "arbitration": {
+        "value": true,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "court_jurisdiction": {
+        "value": "Bengaluru",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "quality": {
+      "spec_ref": "FSSAI refined sunflower oil",
+      "inspection": {
+        "value": {
+          "by": "buyer",
+          "at": "on_receipt"
+        },
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "tax_docs": {
+      "gst_credit_invoice": true,
+      "e_invoice_required": true,
+      "e_way_bill_required": true
+    },
+    "conditions_precedent": [
+      "credit_approval"
+    ]
+  },
+  "all_in_total": {
+    "value": 42105000,
+    "currency": "INR"
+  },
+  "valid_from": "2026-10-14T10:00:00+05:30",
+  "expires_at": "2026-10-14T18:00:00+05:30",
+  "acceptance_manner": "bacp.neg.accept",
+  "acceptance_revocation": "waived",
+  "waiver_basis": {
+    "doc_type": "contract",
+    "id": "RC-2026-114",
+    "issuer": "Annapurna Foods Pvt Ltd",
+    "issued_at": "2026-04-01T10:00:00+05:30",
+    "hash": "sha-256:M5UfYcafnlsmBR85CRvl7P0xBxMx19WS5F0r33UstjI"
+  },
+  "jurisdictional": {
+    "mrp_checked": true,
+    "msme_seller": true,
+    "msmed_due_days_cap": 45
+  }
+}
+```
+
+Invalid: `waived` without `waiver_basis` (`offer.waived-no-basis.invalid.json`)
+
+```
+{
+  "type": "offer",
+  "msg_id": "nmsg_TIL1off7Q2",
+  "negotiation_id": "neg_TILHAN7Q2W9",
+  "transaction_id": "3e7b9c10-5d2a-4f61-8a0e-6c4d2b1f9e27",
+  "round": 1,
+  "dispatched_at": "2026-10-14T10:00:00+05:30",
+  "sender_log_seq": 17,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz3",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.tilhan.example.in",
+    "offeror_kind": "human"
+  },
+  "to": {
+    "role": "buyer",
+    "np_id": "bap.annapurna.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.tilhan.example.in|ukid-1|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "mode": "alternating",
+  "firm": true,
+  "term_sheet": {
+    "term_sheet_id": "ts_annapurna_oil_r3",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "bap.annapurna.example.in",
+        "legal_name": "Annapurna Foods Pvt Ltd",
+        "gstin": "29AABCA1234F1Z5",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.tilhan.example.in|P7",
+        "legal_name": "Tilhan Oils",
+        "gstin": "29AAFFT5678K1ZD",
+        "udyam": {
+          "number": "UDYAM-KR-03-0012345",
+          "category": "small",
+          "activity": "manufacturing",
+          "declared_at": "2026-10-12T09:00:00+05:30"
+        },
+        "aato_band": "5cr_to_10cr",
+        "kind": "agent"
+      },
+      "consignee": {
+        "role": "consignee",
+        "id": "loc:annapurna-ck-whitefield"
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "SFO-15L-TIN",
+        "name": {
+          "en-IN": "Refined sunflower oil, 15 L tin"
+        },
+        "hsn": "1512",
+        "unit": "each",
+        "quantity": {
+          "value": 200,
+          "status": "Agree",
+          "negotiable": true,
+          "proposed_by": "buyer"
+        },
+        "moq": {
+          "value": 100,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 198500,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": false,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 39700000,
+          "currency": "INR"
+        },
+        "price_breaks": [
+          {
+            "min_qty": 100,
+            "unit_price": {
+              "value": 201000,
+              "currency": "INR"
+            }
+          },
+          {
+            "min_qty": 200,
+            "unit_price": {
+              "value": 198500,
+              "currency": "INR"
+            }
+          }
+        ],
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 400000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 42105000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-20T18:00:00+05:30",
+        "status": "Agree",
+        "negotiable": true
+      },
+      "incoterm": {
+        "value": "FOR_DESTINATION",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "partial_allowed": {
+        "value": false,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "late_delivery_penalty": {
+        "value": {
+          "pct_per_week": 0.5,
+          "cap_pct": 5
+        },
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_acceptance",
+            "offset_days": 30
+          },
+          "handlers_allowed": [
+            "in.a2a.neft",
+            "in.a2a.rtgs",
+            "bacp.credit_ledger"
+          ],
+          "is_credit": true
+        }
+      ],
+      "credit_days": {
+        "value": 30,
+        "status": "Agree",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "credit_reference_event": {
+        "value": "on_acceptance",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "early_pay_discount": {
+        "value": {
+          "pct": 1,
+          "within_days": 10
+        },
+        "status": "Agree",
+        "negotiable": true
+      },
+      "delay_interest_pa_pct": {
+        "value": 18,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "credit_ledger": {
+        "value": {
+          "ledger_id": "ldg_ANNAxTILH0001",
+          "credit_limit": {
+            "value": 100000000,
+            "currency": "INR"
+          }
+        },
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_type": {
+        "value": "replace",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "warranty_penalty": {
+      "arbitration": {
+        "value": true,
+        "status": "Agree",
+        "negotiable": false
+      },
+      "court_jurisdiction": {
+        "value": "Bengaluru",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "quality": {
+      "spec_ref": "FSSAI refined sunflower oil",
+      "inspection": {
+        "value": {
+          "by": "buyer",
+          "at": "on_receipt"
+        },
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "tax_docs": {
+      "gst_credit_invoice": true,
+      "e_invoice_required": true,
+      "e_way_bill_required": true
+    },
+    "conditions_precedent": [
+      "credit_approval"
+    ]
+  },
+  "all_in_total": {
+    "value": 42105000,
+    "currency": "INR"
+  },
+  "valid_from": "2026-10-14T10:00:00+05:30",
+  "expires_at": "2026-10-14T18:00:00+05:30",
+  "acceptance_manner": "bacp.neg.accept",
+  "acceptance_revocation": "waived",
+  "jurisdictional": {
+    "mrp_checked": true,
+    "msme_seller": true,
+    "msmed_due_days_cap": 45
+  }
+}
+```
+
+**Consumer sessions.** The value rules depend on the session's trade profile (`context.bacp.profile`, see [Trade Profiles](https://spec.bacp.dev/draft/specification/trade-profiles/#declaring-a-profile)). A consumer profile is one that the profile table marks "waiver permitted: no". The profile is fixed when the session opens; a later message of the session that declares another profile is refused with `capabilities_incompatible` and changes nothing. A session is a **consumer session**, whatever profile it declares, if it declares no profile, if the buyer side's `context.bacp.acting_for.kind` is `individual`, or if the buyer side sends no `acting_for`. The buyer side declares the profile and `acting_for` at session open in a buyer-signed message, and the buyer gateway fills them from the mandate; a seller refuses a profile that misdescribes the trade as set out in [Declaring a profile](https://spec.bacp.dev/draft/specification/trade-profiles/#declaring-a-profile).
+
+**Where each value is permitted.** The rules also depend on the binding that carries the offer between the parties. In this version:
+
+| Leg              | Session  | `allowed_until_receipt`              | `waived` with `waiver_basis`                                                                                                                    | `waived` without `waiver_basis`                                                                                                                                                   |
+| ---------------- | -------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| REST, MCP or A2A | Business | Refused, `capabilities_incompatible` | Permitted. The acceptor's gateway accepts without the principal only if it holds the hashed document as a waiver basis naming the counterparty. | Refused, `NEG_SCHEMA_INVALID`                                                                                                                                                     |
+| REST, MCP or A2A | Consumer | Refused, `capabilities_incompatible` | Refused, `capabilities_incompatible`                                                                                                            | Refused, `NEG_SCHEMA_INVALID`                                                                                                                                                     |
+| Beckn / ONDC     | Business | Refused, `capabilities_incompatible` | Permitted, with the same hash rule                                                                                                              | Accepted only by a human shown the consequence sentence                                                                                                                           |
+| Beckn / ONDC     | Consumer | Refused, `capabilities_incompatible` | Accepted only by a human shown the consequence sentence, as in the next column                                                                  | Accepted only by a human shown the consequence sentence: the buyer through a Trusted Surface step-up, never autonomously (`requires_buyer_review`); a human seller in the BPP app |
+
+- **Refused** means that the receiving gateway answers the offer with the code shown (`capabilities_incompatible` with param `$.acceptance_revocation`). The offer never becomes `LIVE`, and the negotiation state does not change. The gateway also refuses its own principal's draft with the same value and code (`403`), and sends nothing.
+- **No firm offer in a consumer session off Beckn.** In a consumer session on REST, MCP or A2A no value is permitted in this version. A seller there makes only non-firm offers (`firm: false`), and the buyer's acceptance of one is a purchase offer (`legal_effect: purchase_offer`, [Acceptance](#acceptance)).
+- **The Beckn rows are a network limit.** No Beckn carrier exists for `accept_revoke` in this version ([Beckn / ONDC Binding](https://spec.bacp.dev/draft/specification/transports/beckn/#mapping-negotiation)).
+- **`waived` without a basis on Beckn.** Such an offer fails the schema. On a Beckn leg only, the receiving gateway excuses exactly one schema error: the missing `waiver_basis` of a firm offer with `acceptance_revocation: waived`. It refuses an offer with any other schema error, including one that also lacks `waiver_basis`, with `NEG_SCHEMA_INVALID`. It records an offer whose only error is the missing basis, and no agent may accept it. In a consumer session on Beckn it treats a `waived` offer that carries a basis in the same way.
+- **Broadcast RFQ.** For a broadcast RFQ the waiver basis is the RFQ itself: `waiver_basis{doc_type: rfq, hash}` carries the hash of the published RFQ, which the **seller's gateway** fills, replacing "the document names the counterparty" for that case. `Rfq.acceptance_revocation_required: waived` is for business sessions only and is refused in consumer sessions. An RFQ that an agent creates with it needs a `confirm` step-up with reason `rfq_prescribes_waiver`, because it waives the principal's own s.5 right ([Award](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#award)).
+- **Human acceptance on Beckn.** The buyer gateway escalates such an offer to the principal with a `confirm` step-up (reason `constraint_unresolved`) whose `ts_render` carries `acceptance_revocation` and `offer_hash`, and sends the acceptance only after a `negotiation.step_up.approved` event whose `presentation.offer_hash` is that offer's ([Step-up to the Trusted Surface](#step-up-to-the-trusted-surface)). On the seller side only a human may accept it, in the BPP app, after the app shows the consequence sentence.
+- **Never "cannot cancel".** Neither value restricts cancellation, and a value MUST NOT be rendered or relied on as a restriction on cancellation. Cancelling after `CONTRACTED` follows the agreed `cancellation.terms` only ([Negotiation state](#negotiation-state)). The Trusted Surface shows the value only as its fixed consequence sentence, followed by the cancellation terms ([Render input](https://spec.bacp.dev/draft/specification/human-participants/#ts-render)).
+
+**`accept_revoke` in this version.** Because no offer with `allowed_until_receipt` is live, the proposer countersigns, logs and refuses every `accept_revoke` with `accept_revoke_not_allowed`. Nothing else changes, and the acceptance stands. The message keeps its schema: `accept_msg_hash` (the `msg_hash` of the acceptance) and `offer_hash` (the offer it names) are REQUIRED.
+
+**Bids.** `accept_revoke` never governs `bid_retract`. A bidder's retraction follows the auction's [retraction rules](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#retraction) whatever the bid's `acceptance_revocation` value. An award is an acceptance; a revoked award is handled under [Award](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#award) and [Who may run and award](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#who-may-run-and-award).
+
+`accept_revoke` and `withdraw` are always sent under the signature tag `bacp-negotiate`, and an `accept_revoke` of an acceptance that the principal approved on the Trusted Surface needs `hp_proof` ([Operations](#operations)).
+
+offer.accept-revoke.json
+
+```
+{
+  "type": "accept_revoke",
+  "msg_id": "nmsg_B3rev9Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:10+05:30",
+  "sender_log_seq": 6,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz2",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in",
+    "agent_id": "did:web:agents.vaani.example.in:sakhi",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bap",
+      "kid": "bap.vaani.example.in|ukid-7|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:agents.vaani.example.in:sakhi#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "accept_msg_hash": "sha-256:Q_M46apI8sPNTk6FPCC_j49pXb1LH3suHOCHpqK6uJo",
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ"
+}
+```
+
+#### Sunset text for `allowed_until_receipt`
+
+Proposed (sunset)
+
+The rules in this subsection are not in force in this version. They state when a later version may lift the refusal of `allowed_until_receipt` and how the value is then honoured. The conformance cases that need a live offer with `allowed_until_receipt` are published as data in the [Proposed (sunset) block](https://spec.bacp.dev/draft/specification/conformance/#acceptance-revocation-sunset-cases).
+
+**Conditions for lifting the refusal.** A later version lifts the refusal on a binding only when all of these hold:
+
+- **(a) The revoke names its acceptance and offer.** `accept_revoke` carries `accept_msg_hash` and `offer_hash`, and a revoke whose `dispatched_at` is earlier than the `dispatched_at` of the acceptance it names is void. (Specified in this version.)
+- **(b) The receiver commits to receipt order before it sees the next message.** In force in this version for every firm negotiation message ([Signed seller acceptance and clock skew](#signed-seller-acceptance-and-clock-skew)). The receiver returns its CounterSignature, carrying `log_entry_hash` and `log_seq`, in the synchronous response to **each** negotiation message, before it appends any later message of that negotiation to its transcript. The outcome of an `accept_revoke` is a separate message. A CounterSignature that reaches the sender more than 5 seconds after the sender's dispatch, on the sender's own monotonic clock, is recorded but does not count as an order proof. A verifier that holds a CounterSignature naming transcript position *n* for one message and a transcript with a different message at *n* reports `evidence_unverifiable`.
+- **(c) The matched-pair rule** below is implemented, with the hold kept in the transcript.
+- **(d) Exposure release** on a countersigned `accept_revoke_honoured` is idempotent ([Per-principal exposure](#per-principal-exposure)). (Specified in this version.)
+- **(e) Beckn.** A Beckn carrier for `accept_revoke` exists, or Beckn legs keep refusing the value ([Q-22](https://spec.bacp.dev/draft/specification/open-questions/#q-22)).
+- **(f) Tested.** The 16 sunset-block cases (T3-08 to T3-37) pass in a harness that loads the conformance YAML. **Not met as of 18-10-2026:** no implementation passes them yet. It can be met only after an implementation provides the committed-order rule, synchronous receipts, `accept_revoke` and the matched pair. Even then (e) stays open until a Beckn carrier exists.
+
+**Revocation under `allowed_until_receipt` (sunset).** Call the acceptance A and the revocation R.
+
+1. R carries `accept_msg_hash` (the `msg_hash` of A) and `offer_hash` (the offer A names). R's `dispatched_at` MUST NOT be earlier than A's `dispatched_at`; otherwise R is void.
+1. The proposer orders the two by its transcript ([receipt order is chain order](#signed-seller-acceptance-and-clock-skew)), and commits to that order under condition (b): its CounterSignature on each message, with `log_entry_hash`, is in the synchronous response to that message.
+1. If R is received first, the proposer appends R to the negotiation's transcript on receipt and holds it, keyed on `accept_msg_hash`, until the offer's `expires_at`, ordered by chain. Every instance of the proposer that handles A reads the transcript for a held R. If A (same `msg_hash` and `offer_hash`) arrives within the hold, the pair matches: the offer moves `LIVE → ACCEPT_REVOKED`, the negotiation stays in or returns to `NEGOTIATING`, and the outcome is `accept_revoke_honoured`. If A does not arrive, R is discarded at the end of the hold and the discard is logged. Discarding an earlier revocation sooner would be narrower than ICA s.5 and its Illustration, so the hold runs to `expires_at`, ordered by chain, and is not a separate revocation window.
+1. If A is received first, the acceptance stands (`AGREED`), and the outcome is `accept_revoke_after_receipt`.
+1. The proposer countersigns and logs every R, whatever the outcome, and sends the outcome code as a separate message. A receipt of A or R without `log_entry_hash` is not recorded (`evidence_unverifiable`), and the negotiation does not move to `AGREED` on it.
+1. The acceptor's offer moves `ACCEPTED → ACCEPT_REVOKED`, and its negotiation from `ACCEPT_PENDING` to `NEGOTIATING`, only on the proposer's countersigned `accept_revoke_honoured`. Until then the outcome is contested, and the [exposure](#per-principal-exposure) reservation is held.
+
+### Mandate revocation
+
+When the negotiation mandate is revoked, the gateway MUST send `withdraw` (reason `mandate_revoked`) for every live firm offer of that principal, within the 60-second revocation target set in [Mandates and Consent](https://spec.bacp.dev/draft/specification/mandates/index.md), and end open sessions `TERMINATED`. An acceptance that crosses one of these withdrawals follows the crossing rule. If the counterparty accepted earlier, the deal stands, and the principal is told with `agreed_by_counterparty` (`requires_buyer_review`).
+
+## Legal effect and evidence
+
+- An accepted **firm** offer is an agreement on terms: a contract, subject to its `conditions_precedent`. A non-firm offer binds no one until the seller accepts the buyer's purchase offer.
+- Every firm message names the `protocol_terms` that govern it, and the session names them at open. A mismatch between the two sides is `capabilities_incompatible`; a firm message with none is `NEG_SCHEMA_INVALID`.
+
+Invalid: firm offer without `protocol_terms` (`offer.firm-no-protocol-terms.invalid.json`)
+
+```
+{
+  "type": "counter_offer",
+  "msg_id": "nmsg_S2r2a8Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 2,
+  "dispatched_at": "2026-10-13T11:02:00+05:30",
+  "sender_log_seq": 10,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz6",
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in",
+    "agent_id": "did:web:bunkar.example.in:agent",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:bunkar.example.in:agent#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "in_reply_to": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+  "mode": "alternating",
+  "firm": true,
+  "term_sheet": {
+    "term_sheet_id": "ts_saree_r2",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "pp_9f2c1e",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.bunkar.example.in|P2",
+        "kind": "agent",
+        "udyam": {
+          "category": "micro",
+          "activity": "manufacturing"
+        }
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "CHND-SILK-112",
+        "name": {
+          "hi-IN": "चंदेरी सिल्क साड़ी",
+          "en-IN": "Chanderi silk saree"
+        },
+        "hsn": "5007",
+        "unit": "each",
+        "quantity": {
+          "value": 1,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 210000,
+            "currency": "INR"
+          },
+          "status": "Assert",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": true,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 6000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-18T20:00:00+05:30",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "options": [
+        {
+          "option_id": "prepaid",
+          "handlers": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ],
+          "timing": "ON-ORDER",
+          "all_in_total": {
+            "value": 216000,
+            "currency": "INR"
+          }
+        },
+        {
+          "option_id": "cod",
+          "handlers": [
+            "in.cod",
+            "in.cod.upi"
+          ],
+          "timing": "ON-FULFILLMENT",
+          "method_fee": {
+            "value": 4000,
+            "currency": "INR"
+          },
+          "all_in_total": {
+            "value": 220000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "selected_option_id": {
+        "value": "prepaid",
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_order"
+          },
+          "handlers_allowed": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ]
+        }
+      ],
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_window": {
+        "value": "P7D",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "return_type": {
+        "value": "exchange_only",
+        "status": "Agree",
+        "negotiable": true
+      }
+    },
+    "conditions_precedent": [
+      "payment_on_order"
+    ]
+  },
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "valid_from": "2026-10-13T11:02:00+05:30",
+  "expires_at": "2026-10-13T11:32:00+05:30",
+  "inventory_hold_until": "2026-10-13T11:32:00+05:30",
+  "acceptance_manner": "bacp.neg.accept",
+  "acceptance_revocation": "allowed_until_receipt",
+  "agreed_issues": [
+    "/lines/0/quantity",
+    "/delivery/deliver_by"
+  ],
+  "jurisdictional": {
+    "mrp_checked": true,
+    "msme_seller": true
+  },
+  "advisory": {
+    "binding": false,
+    "text_hash": "sha-256:6iak2WON2JhiFipD_0-eRnjeMbrfux8b9kSh87RJ-Oc"
+  }
+}
+```
+
+- Every negotiation produces an append-only, **hash-chained transcript**. Every message, CounterSignature, guard verdict (constraint IDs only), validator flag, step-up event and award is appended to the instruction log under the stages `negotiation` and `guard`, and `NegotiationSession.transcript[]` holds each entry's `msg_hash` and `log_entry_hash`. Tampering with any entry breaks chain verification. See [Evidence and Instruction Log](https://spec.bacp.dev/draft/specification/evidence/index.md).
+- Advisory chat and model rationale are logged with `binding: false` and appear in the transcript only as `advisory.text_hash`.
+- The transcript is encrypted to the parties plus a regulator escrow key. Who governs the escrow key is open ([Q-23](https://spec.bacp.dev/draft/specification/open-questions/#q-23)).
+- The evidence bundle for a transaction adds the transcript, the accepted offer, the `within_bounds` attestation and the bound `on_init`. These let a grievance officer or ODR provider verify what was offered and what was agreed **without seeing the reservation price**.
+- Retention: at least the Consumer Protection Act limitation period, proposed as 2 years for B2C, and longer for B2B and public procurement (kept for CAG/CVC review). The period is open ([Q-56](https://spec.bacp.dev/draft/specification/open-questions/#q-56)).
+
+## Operations
+
+Each operation is defined once and bound to REST, MCP and A2A (see [REST](https://spec.bacp.dev/draft/specification/transports/rest/index.md) and [MCP and A2A](https://spec.bacp.dev/draft/specification/transports/mcp-a2a/index.md)).
+
+| REST                                                                                                                                                                                                          | MCP tool                                                                                                                                           | Signature tag                                                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `POST /negotiations`                                                                                                                                                                                          | `bacp_negotiation_open`                                                                                                                            | `bacp-browse`                                                                               |
+| `GET /negotiations/{id}`                                                                                                                                                                                      | `bacp_negotiation_get`                                                                                                                             | `bacp-browse`                                                                               |
+| `POST /negotiations/{id}/offers` (offer, counter_offer, reject, withdraw, terminate, request_extension, accept_revoke)                                                                                        | `bacp_offer_send`                                                                                                                                  | `bacp-negotiate` for firm messages, `withdraw` and `accept_revoke`; otherwise `bacp-browse` |
+| `POST /negotiations/{id}/accept`                                                                                                                                                                              | `bacp_offer_accept`                                                                                                                                | `bacp-negotiate`                                                                            |
+| `POST /rfqs`, `GET /rfqs/{id}`, `POST /rfqs/{id}/award`                                                                                                                                                       | `bacp_rfq_create`, `bacp_rfq_get`, `bacp_rfq_award`                                                                                                | `bacp-negotiate` (award)                                                                    |
+| `POST /auctions`, `GET /auctions/{id}`, `POST /auctions/{id}/bids`, `POST /auctions/{id}/standing-accepts`, `POST /auctions/{id}/standing-accepts/{standing_accept_id}/withdraw`, `POST /auctions/{id}/award` | `bacp_auction_create`, `bacp_auction_get`, `bacp_auction_bid`, `bacp_standing_accept_lodge`, `bacp_standing_accept_withdraw`, `bacp_auction_award` | `bacp-negotiate`                                                                            |
+
+- **Tag rule.** A `withdraw` or an `accept_revoke` changes whether a contract exists, so it is always signed under `bacp-negotiate`, whether or not the offer it concerns is firm. One signed under any other tag is refused with `401 signature_invalid` ([Signature tags](https://spec.bacp.dev/draft/specification/transports/rest/#signature-tags)).
+- **Decline.** There is no agent-callable decline of an `AGREED` or `BOUND` deal. The principal declines by the Trusted Surface event `negotiation.agreed.declined` ([Decline](#decline-of-an-agreed-or-bound-deal)), and withdraws a purchase offer by `negotiation.purchase_offer.withdrawn` or by the agent's `withdraw` with `accept_msg_hash`.
+- **Tool use.** The agent reads `offers[].state` and the message `crossing_contested`, and never resends a message after a crossing. On `NEG_CLOCK_SKEW` it does not re-sign and retry. On `crossing_contested` it stops, and the principal decides. After a refusal to accept because the state is `ESCALATED`, it calls accept again with `step_up.step_up_id` once the state leaves `ESCALATED`; the id goes to the agent's gateway only.
+- **Revoking an approved acceptance.** If the principal approved the acceptance on the Trusted Surface, an `accept_revoke` of it MUST carry `hp_proof` ([Presence proof](https://spec.bacp.dev/draft/specification/human-participants/#hp-proof)); without one it is refused with `403 presence_not_proven` and nothing is sent. No operation in this version lets an agent obtain a step-up that names an `accept_revoke`, so such a revoke is refused.
+
+MCP results return the `NegotiationSession` in `structuredContent`. A2A 1.0 task states map as: `TASK_STATE_WORKING` (waiting on the counterparty), `TASK_STATE_INPUT_REQUIRED` (a counter-offer to answer), `TASK_STATE_AUTH_REQUIRED` (`ESCALATED`, including the `ask` confirmation and a contested crossing), `TASK_STATE_COMPLETED` (`CONTRACTED`), `TASK_STATE_CANCELED` or `TASK_STATE_FAILED` (`REJECTED`, `TERMINATED`, `CANCELLED`). Versions of A2A before 1.0 use the lowercase names `working`, `input-required`, `auth-required`, `completed`, `canceled` and `failed`. These are A2A's own values and are used verbatim; BACP's own spelling is "cancelled", so A2A `TASK_STATE_CANCELED` (or `canceled`) maps to the BACP negotiation state `CANCELLED` and to the checkout session status `cancelled`. Agent-to-agent negotiation over A2A without a network participant's signature can produce only `firm: false` offers.
+
+## Error codes
+
+Negotiation codes follow the two-channel rule of [Errors](https://spec.bacp.dev/draft/specification/errors/index.md): a code is a **200 message** when it describes an incoming counterparty object or a computed outcome, and a **4xx error** when it blocks the caller's own outgoing commitment.
+
+| Code                                                                                     | HTTP                                      | Resolution                                                                |
+| ---------------------------------------------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------- |
+| `NEG_SCHEMA_INVALID`                                                                     | 400                                       | recoverable                                                               |
+| `NEG_ISSUE_NOT_NEGOTIABLE`                                                               | 200 msg / 403                             | recoverable                                                               |
+| `NEG_STALE_OFFER`                                                                        | 409                                       | recoverable (GET, then respond to the live offer)                         |
+| `NEG_OFFER_EXPIRED`                                                                      | 200 msg / 403 (own, local)                | recoverable (fresh offer or extension request)                            |
+| `NEG_ACCEPT_NONCONFORMING`                                                               | 422 (own) / 200 msg (counterparty)        | recoverable                                                               |
+| `NEG_CLOCK_SKEW`                                                                         | 422                                       | recoverable                                                               |
+| `NEG_TERMS_DRIFT`                                                                        | 200 msg, state `BREACH_FLAGGED`           | requires_buyer_review                                                     |
+| `NEG_MRP_EXCEEDED`                                                                       | 200 msg (counterparty) / 403 (own)        | recoverable                                                               |
+| `NEG_MSMED_CREDIT_CAP`                                                                   | 200 msg (incoming) / 403 (own firm)       | recoverable                                                               |
+| `NEG_DRIP_PRICING`                                                                       | 200 msg                                   | requires_buyer_review                                                     |
+| `NEG_FALSE_URGENCY`, `NEG_BASKET_SNEAK`, `NEG_PERSONALISED_PRICING`                      | 200 msg / 403                             | requires_buyer_review (msg) / recoverable (403)                           |
+| `NEG_EXPOSURE_EXCEEDED`                                                                  | 200 + `step_up`                           | requires_buyer_review                                                     |
+| `NEG_INJECTION_SUSPECTED`                                                                | 200 msg                                   | recoverable                                                               |
+| `NEG_CASH_LIMIT`, `NEG_RERA_TOKEN_CAP`                                                   | 403                                       | recoverable                                                               |
+| `NEG_CREDIT_DISCLOSURE_MISSING`, `NEG_EMI_NO_COST_FALSE`                                 | 403                                       | recoverable                                                               |
+| `NEG_EINVOICE_IRN_MISSING`, `NEG_EWB_MISSING`                                            | 403 (dispatch gate)                       | recoverable                                                               |
+| `NEG_ATTESTATION_REFUSED`                                                                | 403                                       | requires_buyer_review                                                     |
+| `NEG_COLLUSION_SCREEN`                                                                   | 200 msg (flag)                            | requires_buyer_review                                                     |
+| `capabilities_incompatible`                                                              | 200 msg / 403                             | requires_buyer_input                                                      |
+| `handlers_incompatible`                                                                  | 200 msg (intersection) / 403 (acceptance) | requires_buyer_input                                                      |
+| `untrusted_counterparty_text`                                                            | 200 msg (`info`)                          | recoverable                                                               |
+| `withdraw_lost_crossing`, `accept_void_withdrawn`, `seller_accept_void`                  | 200 msg                                   | recoverable                                                               |
+| `accept_revoke_honoured`                                                                 | 200 msg (sunset only)                     | recoverable                                                               |
+| `accept_revoke_after_receipt`                                                            | 200 msg (sunset only)                     | requires_buyer_review                                                     |
+| `accept_revoke_not_allowed`                                                              | 200 msg                                   | requires_buyer_review                                                     |
+| `agreed_by_counterparty`                                                                 | 200 msg                                   | requires_buyer_review                                                     |
+| `crossing_contested`                                                                     | 200 msg (`warning`)                       | requires_buyer_review (buyer side) / requires_seller_review (seller side) |
+| `crossing_unconfirmed`, `formation_disputed`, `principal_declined`                       | 200 msg (`info`)                          | recoverable                                                               |
+| `agreed_by_agent`, `purchase_offered_by_agent`, `autonomous_unavailable_no_notice_route` | 200 msg (`info`)                          | recoverable                                                               |
+| `offer_expired_during_approval`                                                          | 200 msg                                   | requires_buyer_review                                                     |
+| `seller_counter_at_init`                                                                 | 200 msg                                   | requires_buyer_input                                                      |
+| `negotiation_terminated`                                                                 | 200 msg                                   | requires_buyer_input                                                      |
+| `cancelled_no_penalty`                                                                   | 200 msg                                   | recoverable                                                               |
+
+RFQ and auction codes (`NEG_EARLY_AWARD`, `NEG_EARLY_REVEAL`, `NEG_SHILL_BID`, `NEG_DUTCH_PRICE_INCREASE`, `NEG_RETRACTION_REFUSED`, `NEG_AWARD_RULE`, `NEG_DEPOSIT_REQUIRED`, `NEG_DEPOSIT_INVALID`, `bid_not_improving`, `auction_not_open`, `auction_closed_no_award`, `rfq_not_awarded`, `bid_not_revealed`) are listed in [RFQ and Auctions](https://spec.bacp.dev/draft/specification/negotiation/rfq-and-auctions/#error-codes). The full registry is in [Errors](https://spec.bacp.dev/draft/specification/errors/index.md).

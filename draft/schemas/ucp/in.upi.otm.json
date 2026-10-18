@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/draft/schemas/ucp/in.upi.otm.json",
+  "name": "dev.bacp.in.upi.otm",
+  "version": "2026-10-18",
+  "title": "UCP payment handler dev.bacp.in.upi.otm",
+  "description": "The schema of the UCP payment handler dev.bacp.in.upi.otm, the UCP alias of the BACP payment handler in.upi.otm. The BACP projection of UCP checkout declares the handler under this key. Its entry carries the BACP handler id as id and carries no config, because the limits, authentication model and rules of the handler are data in the BACP handler registry (the descriptor with handler_id in.upi.otm) and not UCP handler configuration. A config member, when present, is an empty object.",
+  "type": "object",
+  "properties": {
+    "id": {
+      "const": "in.upi.otm",
+      "description": "The BACP handler id."
+    },
+    "config": {
+      "type": "object",
+      "maxProperties": 0,
+      "description": "Always empty: BACP handler configuration is in the handler registry."
+    }
+  },
+  "required": [
+    "id"
+  ]
+}

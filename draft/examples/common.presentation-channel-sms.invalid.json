@@ -1,0 +1,14 @@
+{
+  "surface": "psp.example.in",
+  "channel": "sms",
+  "language": "hi-IN",
+  "modality": "audio",
+  "content_hash": "sha-256:Bm827PMImR-m3T6Og1qtyYWbfP6FnGgvFauB-iWKvhI",
+  "content_ref": "#/ts_renders/0",
+  "template_id": "psp.example.in/ivr/step-up-confirm/3",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "user_action": "upi_pin",
+  "shown_at": "2026-10-17T10:00:00+05:30",
+  "acted_at": "2026-10-17T10:00:41+05:30",
+  "device_signature": "eyJhbGciOiJFUzI1NiJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQXE4VzNuSzV2UnQ3WWNMbTIifQ.c2lnbmF0dXJl"
+}
