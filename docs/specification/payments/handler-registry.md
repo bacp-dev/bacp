@@ -230,7 +230,7 @@ Generated from `binding.open_primitives` in the same file. An open payment manda
 |---|---|---|
 | `in.upi.otm` | `otm_block` | — |
 | `in.upi.reservepay` | `sbmd_block` | — |
-| `in.upi.circle` | `circle_delegation` | `pilot`: only when attested |
+| `in.upi.circle` | `circle_delegation` | `pilot`: not open-eligible while [Q-77](../open-questions.md#q-77) is open, even when attested |
 | `in.upi.autopay` | `upi_autopay_umn` | — |
 | `in.upi.uap` | — | `reserved` |
 | `in.card.mandate` | `card_emandate` | — |

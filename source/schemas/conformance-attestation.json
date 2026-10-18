@@ -97,7 +97,7 @@
     },
     "status": {
       "$ref": "#/$defs/StatusListRef",
-      "description": "Where the attestation's revocation status is published. A Mandate Manager and a gateway treat a status list that is revoked, more than 24 hours old or unreachable as revoked for issuance and for a new complete on a pilot handler."
+      "description": "Where the attestation's revocation status is published. A Mandate Manager and a gateway refuse issuance and a new complete on a pilot handler when the status is revoked (reason binding_ineligible; at a re-check the mandate is paused) or when their copy of the status list is more than 24 hours old or the list is unreachable (reason attestation_status_stale; recoverable, no pause)."
     }
   },
   "additionalProperties": false,

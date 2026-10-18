@@ -196,7 +196,7 @@ field absent, and the gateway reports `prior_price_invalid` when the field was `
 ### Charge recipient mapping {#recipient-mapping}
 
 A BACP quote line that is not goods carries a `recipient`. ONDC's breakup has no recipient: the `@ondc/org/title_type`
-enum is `item`, `delivery`, `packing`, `tax`, `misc`, `discount` and `offer` (read from ONDC's validator, not a policy
+enum is `item`, `delivery`, `packing`, `tax`, `misc` and `discount`; the build file's examples also use `offer`, which is not in the enum (read from ONDC's build file, not a policy
 text; as of 18-10-2026). BACP therefore publishes its own mapping, and the gateway applies it. The mapping is a published
 rule, not an inference from the charge's code. It is BACP's and is open with ONDC ([Q-80](../open-questions.md#q-80)).
 
@@ -213,10 +213,17 @@ rule, not an inference from the charge's code. It is BACP's and is open with OND
   TagGroup `bacp.charge`, tag `recipient` (a value of the `ChargeRecipient` enum). A stated value takes precedence over
   the table, and the gateway never rewrites it.
 - An unmapped type is a **warning, never a refusal**: the line is kept with `recipient: other`, and the gateway adds the
-  message `charge_recipient_unmapped` (`warning`, `recoverable`) at the line. It does not by itself make a price change
-  or a drip-pricing finding.
-- Until ONDC answers whether `misc` carries convenience fees (Q-80), a convenience fee that arrives as `misc` stays
-  `other_charge`, and the Trusted Surface counts it in the remainder figure, not as a fee line.
+  message `charge_recipient_unmapped` (`warning`, `recoverable`) at the line. The warning on its own is not a price change.
+  An `other_charge` line that first appears after the round that the handler intersection consumed is drip pricing, like
+  any other fee line.
+- Until ONDC answers whether `misc` carries convenience fees ([Q-80](../open-questions.md#q-80)), a line of type
+  `other_charge` is a fee line. The Trusted Surface reads it on its own as "other charge", with its recipient, and never
+  inside the remainder figure. In a human-not-present checkout it is counted with the order's `convenience` lines against
+  the mandate's `convenience_fees`, and an uncovered line raises the `confirm` step-up with reason
+  `constraint_unresolved`. That step-up is never a refusal.
+- A stated `bacp.charge` recipient that breaches the [type-to-recipient rule](../checkout/index.md#fee-lines) is ignored:
+  the gateway applies the table and adds the warning `charge_recipient_invalid` (`recoverable`). A line that named the
+  agent operator or the assisted operator is also treated as an operator charge that the notice does not cover.
 
 ### Offers and discount codes {#offers}
 

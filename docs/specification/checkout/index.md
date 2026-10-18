@@ -173,7 +173,7 @@ gateway:
    `preticked_addon_removed` (`warning`, `recoverable`). A seller that keeps a declined add-on is
    treated as a NACK;
 5. compares prices against `on_select`. A changed unit price or a new fee line (packing,
-   convenience, COD fee) gives `drip_pricing_detected` (`requires_buyer_review`). A fee line whose
+   convenience, COD fee or other charge) gives `drip_pricing_detected` (`requires_buyer_review`). A fee line whose
    `first_disclosed_round` comes after the round that the handler intersection consumed is drip pricing under this
    rule. It then runs the [convenience-fee consistency check](#fee-lines) across the debit modes the seller accepts:
    a `payment_mode_fee_inconsistent` warning (a SHOULD, never a refusal), which in HNP also raises a `confirm`
@@ -197,8 +197,9 @@ gateway:
    `disclosures_missing` (`requires_buyer_review`). It then adds one `type: disclosure` message for each
    `catalogue[n]` whose `sponsorship.status` is `sponsored` (`sponsored_listing`) or `undeclared`
    (`sponsorship_undeclared`), and one `prior_price_claim` message for each that has a `prior_price`, each at
-   `param: $.disclosures.catalogue[n]` with `resolution: recoverable`. The item name travels in `args[]` with
-   `origin: counterparty` ([Message object](../errors.md#message-object));
+   `param: $.disclosures.catalogue[n]` with `resolution: recoverable`. The gateway MAY also put the item name in `args[]` with
+   `origin: counterparty`; an agent that presents the message takes the name from the session line, never from `args` ([Message object](../errors.md#message-object)).
+   An agent presents a `catalogue[]` entry that qualifies even when no message names it;
 8. runs split-order detection and the advisory mandate pre-check
    ([Deterministic evaluation](../mandates.md#evaluation)). The pre-check **MUST NOT** reserve
    budget.
@@ -309,7 +310,12 @@ the line's code; for a charge that arrives over Beckn it uses the published
 `applies_to_handlers`, the handlers it applies to; a line without it applies to every handler, and a fee that applies to
 several handlers but not all is one line that lists them. The intersect response's `comparison[]` records, for each
 option, a gateway-computed `method_charge`: the sum of the scoped payer-borne lines for that option. A `method_charge`
-from a counterparty is ignored, and no view labels it as "who pays".
+from a counterparty is ignored, and no view labels it as "who pays". `recipient: government` is valid only on a line of
+type `tax`, and a `tax` line's recipient is `government`. A line of the seller's quote never carries `agent_operator` or
+`assisted_operator`. On BACP-native lines either breach is schema-invalid. On Beckn the gateway ignores a stated
+`bacp.charge` recipient that breaches it, applies the table, and adds the warning `charge_recipient_invalid`
+(`recoverable`); a line that named the agent or assisted operator is also treated as an operator charge that the notice
+does not cover.
 
 **What never reaches the principal.** The merchant discount rate (MDR), the payment aggregator's commission, the finder
 fee and net-settlement amounts **MUST NOT** appear in a payer line, in `all_in_total`, in a `comparison[]` total, in
@@ -320,12 +326,24 @@ on-boarded merchants cannot pass MDR on to customers on UPI; it is an FAQ, not a
 **Operator charges.** A per-order fee that the principal pays to the agent operator, an assisted operator or the buyer
 app is a gateway-asserted line in the session's `operator_charges[]` (`{code, amount, recipient}`, `code` `agent_fee` or
 `service`, `recipient` `agent_operator`, `assisted_operator` or `buyer_app`). It is never inside the BPP quote: the quote
-total and `all_in_total` stay equal to Beckn `quote.price`. The amount the principal pays, the `ts_render` total and the
-amount checked against the mandate are the quote total plus the sum of `operator_charges[]`. This line discloses a fee;
-it is not a licence to charge one. NPCI's FAQ Q17 says that UPI application providers shall not charge a platform fee or
+total and `all_in_total` stay equal to Beckn `quote.price`.
+
+- The `ts_render` total and the amount evaluated against the mandate's budgets and step-up thresholds are the quote
+  total plus the sum of `operator_charges[]`.
+- The closed Payment Mandate's `amount`, and every debit to the seller's payee, are the quote total (or, under a
+  payment plan, the tender amounts, which add up to `all_in_total`). An operator charge is never part of a debit to the
+  seller's payee.
+- The gateway **MUST** check the session's operator charges against `operator_compensation` in the notice of the
+  mandate's ConsentReceipt. They are covered only when a `from_principal` entry has `basis: per_order` and their sum is
+  at or below its `amount`.
+- An uncovered operator charge raises a `confirm` step-up with reason `constraint_unresolved`, in HP and in HNP. Its
+  render says that the fee is not in the terms the principal approved for this agent. The gateway logs the charge at
+  stage `disclosure`.
+
+This line discloses a fee; it is not a licence to charge one. NPCI's FAQ Q17 says that UPI application providers shall not charge a platform fee or
 any other charge, and the Consumer Protection (E-Commerce) Rules, 2020 r.5(7) (from 01-01-2027) restrict a bundled fee
 of a marketplace e-commerce entity. Whether either reaches an agent operator is open
-([Q-79](../open-questions.md#q-79)). How the operator collects the fee is outside BACP.
+([Q-79](../open-questions.md#q-79)). How the operator collects its charge is outside BACP, and BACP never moves it.
 
 **Intermediary compensation.** The gateway copies the ONDC buyer finder fee and `np_fees` unchanged into the
 session's `intermediary_compensation[]`, writes them to the InstructionLog at stage `disclosure`, and gives them to the
@@ -413,7 +431,7 @@ An agent SHOULD NOT send `discounts` to a gateway that does not list it.
     never as a bare hash ([Instruction log](../evidence.md#instruction-log)).
 12. **Limits.** `codes` has at most 10 entries, each 1 to 64 printable ASCII characters. These are BACP design values
     against code enumeration, not regulatory limits, and are open to review. The gateway MUST rate-limit rejected codes per
-    agent and per seller, and answers an excess with `429 quota_exceeded`.
+    agent, per agent operator and per seller, and answers an excess with `429 quota_exceeded`.
 
 The gateway never funds a discount that is not in the seller's signed quote. A discount funded by the gateway or the buyer
 app is not supported, because it would break "`amount` equals the quote total" ([Q-76](../open-questions.md#q-76)).
@@ -609,9 +627,8 @@ The gateway, in order:
    `incomplete` with `quote_expired` and nothing else happens.
 4. **Checks the collector and bindings**: the collecting party is an authorised PA or bank, and
    `checkout_hash`, disclosures hash, closed-mandate amounts and `auth_binding` all match. The amount of the
-   closed Payment Mandate is the quote total plus the sum of the session's `operator_charges[]`
-   ([Fees on the payer's screen](#fee-lines)). A mandate amount that leaves an operator charge out gets
-   `400 invalid_request` at `$.payment_mandate` and nothing changes.
+   closed Payment Mandate is the quote total; under a payment plan, the amount of each tender's closed Payment Mandate is that tender's `amount` ([Fees on the payer's screen](#fee-lines)). A closed Payment Mandate whose
+   amount does not match gets `400 invalid_request` at `$.payment_mandate` (under a plan, at `$.payment_plan.tenders[i].payment_mandate`) and nothing changes.
 5. **Verifies the InstructionLog chain** (`403 log_chain_invalid`).
 6. **Runs the atomic section**, keyed on the root open Checkout Mandate: split-order detection,
    the authoritative evaluation against exposure, consumption of the closed Payment Mandate, the
@@ -834,7 +851,7 @@ in [Human participants](../human-participants.md#multi-seller).
 ## Idempotency, retries and races {#idempotency}
 
 Every `POST` and `PUT` **MUST** carry an `Idempotency-Key` of 22 to 64 printable ASCII characters,
-which **SHOULD** carry at least 128 bits of entropy. Keys are scoped to (agent, canonical operation, path parameters).
+which **SHOULD** carry at least 122 random bits. Keys are scoped to (agent, canonical operation, path parameters).
 
 | Situation | Result |
 |---|---|

@@ -94,7 +94,7 @@ is refused. All fields below are REQUIRED, and no other claim is allowed.
 | `sub` | The participant the attestation is about: the gateway's subscriber id, the agent id or the Mandate Manager's registry id. |
 | `subject_role` | `gateway`, `agent` or `mm`. Only a gateway may list pilot handlers: for `agent` and `mm`, `pilots[]` is empty. |
 | `scope` | The constant `bacp-protocol-conformance`. It states that the attestation covers BACP protocol conformance and nothing else. |
-| `iat`, `exp` | Issue and expiry time, as NumericDates (seconds since the epoch, RFC 7519 §4.1.4). `exp` is at most 180 days after `iat`. After `exp`, no verifier may rely on the attestation. |
+| `iat`, `exp` | Issue and expiry time, as NumericDates (seconds since the epoch; NumericDate is defined in RFC 7519 §2, `exp` in §4.1.4 and `iat` in §4.1.6). `exp` is at most 180 days after `iat`. After `exp`, no verifier may rely on the attestation. |
 | `jti` | The attestation's unique id (`^[A-Za-z0-9_-]{8,64}$`). A mandate's `rail_binding.conformance` records it, and a pause for a lapsed attestation logs it. |
 | `bacp_version`, `registry_version` | The dated BACP release whose cases were run, and the dated release of the handler registry that the run used. |
 | `levels[]` | The [level ids](#conformance-levels) passed. |
@@ -106,7 +106,8 @@ is refused. All fields below are REQUIRED, and no other claim is allowed.
 The attestation is a statement that the subject passed BACP protocol tests. It MUST NOT be offered or accepted in
 place of any rail onboarding, permission or certification, and MUST NOT be presented as approval by NPCI, RBI, ONDC
 or any public body. A gateway or agent that shows it to a principal says "passed BACP protocol tests" (and the same in
-`hi-IN`, in Devanagari) and MUST NOT use the words "certified" or "approved".
+`hi-IN`, in Devanagari) and MUST NOT use the words "certified", "approved", "verified" or "accredited", or their `hi-IN`
+equivalents, or any logo of NPCI, RBI or ONDC, and MUST NOT show `kind` to a principal.
 
 ### Conformance-authority list {#conformance-authority-list}
 
@@ -141,28 +142,46 @@ signs attestations and nothing else, and only a key of a listed entry qualifies.
   (`gateway_attestation`). The Mandate Manager MUST refuse issuance with `rail_binding_not_open_eligible`
   ([Handler binding](mandates.md#handler-binding)) when any of these holds:
     - the JOSE `typ` is any value other than `bacp-conformance+jwt`;
-    - the signing key is not in an entry of the dated [conformance-authority list](#conformance-authority-list) of the
-      release (or of a registry-signed snapshot); while the list has no entry, no key qualifies, so a Mandate Manager
+    - the signing key, selected by the `kid` of the JOSE header, is not in the `keys[]` of an entry of the
+      [conformance-authority list](#conformance-authority-list) of the latest dated release, or of a registry-signed
+      snapshot no more than 24 hours old; the time of the check is outside the entry's `valid_from` to `valid_until`; or
+      the entry's status is revoked; while the list has no entry, no key qualifies, so a Mandate Manager
       refuses open mandates on every `pilot` handler, including `in.upi.circle` and `in.card.agentic`;
     - the entry is in the Mandate Manager's published exclusion list (`reasons: [attester_not_accepted]`);
     - a `pilots[]` member is outside the entry's `scope.pilots`, or the handler is not in `pilots[]`;
     - `exp` is passed, or `exp − iat` is over 180 days (JSON Schema cannot compare the two, so a conformance case
       tests it);
-    - the status is revoked, the copy of the status list is more than 24 hours old, or the list is unreachable
-      (`reasons: [attestation_status_stale]`);
+    - the status is revoked (`reasons: [binding_ineligible]`);
+    - the copy of the status list is more than 24 hours old, or the list is unreachable
+      (`reasons: [attestation_status_stale]`, `resolution: recoverable`);
+    - the report at the entry's `report_uri_template` for this `jti` is absent, or does not hash to `report_digest`;
+    - `registry_version` is older than the registry release in which the bound handler's `status`, `binding` or
+      `mandate_primitives` last changed;
     - `sub` is not the subscriber that the signing key of the forwarded request resolves to in the registry (the
       Mandate Manager does not take `sub` from a body field);
-    - the entry's `operator` equals the declared operator of `sub`, of the payer PSP in `rail_binding.psp_id` or of the
-      issuing Mandate Manager, or any of those operators is unknown.
+    - the entry's `operator.id`, or the `id` of any of its `funders[]`, equals the operator of `sub`, of the payer PSP in
+      `rail_binding.psp_id` or of the issuing Mandate Manager, or any of those operators is unknown. A participant's
+      operator is the legal entity in its registry record; a profile, a request body or the attestation never supplies
+      it.
 - **Binding.** The Mandate Manager MUST write `rail_binding.conformance{iss, sub, jti}` on every open payment mandate
   bound to a `pilot` handler. The schema leaves the object optional, because a `live` handler needs none; this rule makes
   it REQUIRED for pilot bindings.
 - **At `complete`.** On a pilot handler the gateway MUST refuse (`400 rail_binding_not_open_eligible`) when
-  `rail_binding.conformance` is absent or its `sub` is not itself. It MUST re-check the `exp`, the `pilots[]` and the
-  status of the bound `jti` at every `complete`, under the same 24-hour rule.
-- **Freshness.** An attestation status list that is more than 24 hours old, or unreachable, counts as revoked for
+  `rail_binding.conformance` is absent or its `sub` is not itself. It MUST re-check, at every `complete`, the gateway's
+  current attestation for the pilot: the bound `jti`, or after a lift the newer attestation from the same authority that
+  lifted the pause, whose `sub` is itself and whose `pilots[]` lists the bound handler, under the same 24-hour rule.
+  `rail_binding.conformance` records the attestation verified at issuance and is not rewritten; the InstructionLog entry
+  for a lift records the new `jti`. It MUST also check, under the same 24-hour rule, that
+  `rail_binding.conformance.iss` is still an entry of the list, within its validity and not revoked, that the
+  attestation's key is still in its `keys[]`, and that the bound handler is still in its `scope.pilots`. An entry that
+  is removed, lapsed or revoked, or a key that is removed, is a lapse of the attestation: the gateway adds
+  `binding_ineligible` with cause `attestation`. While [Q-77](open-questions.md#q-77) is open, it refuses every
+  human-not-present `complete` under an open mandate on `in.upi.circle` with `400 rail_binding_not_open_eligible`.
+- **Freshness.** An attestation status list that is more than 24 hours old, or unreachable, is refused for
   issuance and for a human-not-present `complete` on a pilot handler, and the `complete` returns
-  `reasons: [attestation_status_stale]` with `resolution: recoverable` and no pause. It never blocks a status check, a
+  `reasons: [attestation_status_stale]` with `resolution: recoverable` and no pause. An agent that receives
+  `attestation_status_stale` tells the principal that human-not-present payment on this handler is unavailable for now,
+  and offers the human-present step. It never blocks a status check, a
   reversal, a refund or a post-order write. A revoked or expired attestation, at a re-check, pauses the mandate
   ([Handler binding](mandates.md#handler-binding)).
 - **Test fixtures.** The fixture `typ` `bacp-conformance-test+jwt` MUST be refused by every Mandate Manager outside a
@@ -732,8 +751,12 @@ else fails the case. In detail:
   `expect.state.<machine>`, so that a checker can match the case to one transition. A case that is a refusal records the
   same state in both and shows that nothing changed. `<machine>` is the name of the machine in the specification:
   `session`, `mandate`, `mandate_request`, `negotiation` and the other machines that appear in `state` keys of the cases
-  on this page. A case that touches no state machine records no `state`. The rule applies to every case added from the
+  on this page. For the `session` machine the fixture key is the existing `sessions.state` (with `count`). A case that touches no state machine records no `state`. The rule applies to every case added from the
   release that introduces it; earlier cases are not rewritten.
+
+A `POST /mandates` body in a case is an abbreviated fixture: a field that the schema REQUIRES but that the case does not
+exercise, such as `operator_compensation`, is present in the request under test with a valid value and is left out of
+the listing.
 
 Fixture and step keys used by the cases on this page:
 
@@ -1252,10 +1275,10 @@ is empty, because then no attestation verifies and every MM refuses. Its positiv
 control, T0-RT-11b, runs with a fixture conformance authority and is in the block
 below.
 
-The cases below test the [conformance attestation](#attestation-rules): T0-RT-11b and CA-01 to CA-15 (issuance, and the pause on a lapsed
-attestation in CA-04b and CA-07),
-S-F1, S-F1-missing and S-F7 at `complete`, S-F4 on the reconciliation of a receipt, and DISP-01 on how an
-attestation is shown to a principal. T2-OPS-01 to T2-OPS-03 and S-F6b test what a binding pause, an expiry,
+The cases below test the [conformance attestation](#attestation-rules): T0-RT-11b and CA-01 to CA-19, including CA-05b, CA-07c, CA-12b, CA-15b and CA-16b (issuance, the pause on a lapsed
+attestation in CA-04b, CA-07, CA-16 and CA-16b, the lift only by the same authority in CA-07c, and the gateway-side Circle refusal in CA-15b),
+S-F1, S-F1-missing and S-F7 at `complete`, S-F4 on the reconciliation of a receipt, DISP-01 and DISP-02 on how an
+attestation is shown to a principal, and VER-CA-01 on a verifier's report of a debit sent under a lapsed attestation. T2-OPS-01, T2-OPS-02, T2-OPS-03a to T2-OPS-03c and S-F6b test what a binding pause, an expiry,
 an exhaustion and a revocation leave open for the principal. A Mandate Manager runs them in its conformance-harness mode, which loads the
 fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
 
@@ -1435,6 +1458,28 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
     state: {mandate_request: REJECTED}
     rail: {settled_debits: 0, calls: 0}
 
+- case_id: CA-05b
+  title: An attestation whose status is revoked is refused at issuance as binding_ineligible, not as stale
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: revoked}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible], count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
 - case_id: CA-06
   title: A request signed by one gateway that carries an attestation about another is refused
   level: bacp.pay.all.1
@@ -1468,15 +1513,37 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
   steps:
     - clock: {advance_past: gateway_attestation.exp}
     - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
-    - gateway_attestation: {jti: att_J000002, pilots: [in.card.agentic], exp: future, status: ok}
+    - gateway_attestation: {jti: att_J000002, iss: ca.lab.example, sub: gateway_G, pilots: [in.card.agentic], exp: future, status: ok}
     - sweep: {replicas: all}
+    - create_session: {state: ready_for_complete}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
   expect:
     responses:
       - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible], count: 1}
+      - {status: 200, body.status: completed, count: 1}
     state: {mandate: ACTIVE}
     webhooks:
       - {type: mandate.status_changed, status: PAUSED, reason: binding_ineligible, pause_reasons: [binding_ineligible]}
       - {type: mandate.status_changed, status: ACTIVE}
+    log: [{stage: mandate, actor: gateway, reason: binding_ineligible_removed, jti: att_J000002}]
+    rail: {settled_debits: 1}
+
+- case_id: CA-07c
+  title: A newer attestation from another authority does not lift a binding pause
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: PAUSED, pause_reasons: [binding_ineligible], rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    mandate_manager: {id: mm_M, excluded_attesters: [ca.other.example]}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.other.example, sub: gateway_G, pilots: [in.card.agentic], jti: att_J000003, exp: future, status: ok}
+    - sweep: {replicas: all}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [binding_ineligible], count: 1}
+    state: {mandate: PAUSED}
     rail: {settled_debits: 0}
 
 - case_id: CA-08
@@ -1590,6 +1657,28 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
     state: {mandate_request: REJECTED}
     rail: {settled_debits: 0, calls: 0}
 
+- case_id: CA-12b
+  title: An authority funded by the gateway's operator is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, funders: [op.g], scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
 - case_id: CA-13
   title: A production Mandate Manager refuses an attestation with the fixture typ
   level: bacp.pay.all.1
@@ -1654,6 +1743,126 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
     mandate_request: {state: PENDING}
   steps:
     - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.upi.circle}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-15b
+  title: A gateway refuses a human-not-present complete on an open mandate on in.upi.circle while Q-77 is open
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.upi.circle: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.upi.circle, primitive: circle_delegation, rail_binding.conformance: {iss: ca.bank.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    open_questions: {circle_explicit_user_action: open}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: CA-16
+  title: Removing an authority's entry from the list lapses the attestation of a mandate bound to it
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    attestation_status: {att_J000001: ok}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - conformance_authorities: []
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [binding_ineligible], count: 1}
+    state: {mandate: PAUSED}
+    log: [{stage: mandate, actor: gateway, reason: binding_ineligible, cause: attestation, jti: att_J000001}]
+    rail: {settled_debits: 0}
+
+- case_id: CA-16b
+  title: Removing the key that signed the bound attestation lapses it, and the entry stays
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, keys: [{kid: ca-lab-1}], scope: {pilots: [in.card.agentic]}}]
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    attestation_status: {att_J000001: ok}
+    gateway_attestation: {jti: att_J000001, kid: ca-lab-1}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, keys: [{kid: ca-lab-2}], scope: {pilots: [in.card.agentic]}}]
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [binding_ineligible], count: 1}
+    state: {mandate: PAUSED}
+    log: [{stage: mandate, actor: gateway, reason: binding_ineligible, cause: attestation, jti: att_J000001}]
+    rail: {settled_debits: 0}
+
+- case_id: CA-17
+  title: A Mandate Manager that verifies against an older release of the list than the latest is non-conforming
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authority_releases: {R: [ca.lab.example], R+1: []}
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-18
+  title: An attestation whose published run report is absent is refused at issuance
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, report: {status: 404}, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-19
+  title: An attestation run against a registry release older than the bound handler's last descriptor change is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, registry_version: one_release_before_descriptor_change, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
       gateway: forwards
       trusted_surface: approve
   expect:
@@ -1734,6 +1943,29 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
   expect:
     verdict: {code: conformance_fail, rule: attestation_label, required_text: {en-IN: "passed BACP protocol tests", hi-IN: present}}
 
+- case_id: DISP-02
+  title: A profile that labels its attestation "Bank verified" is non-conforming
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    gateway_profile: {conformance: {attestation: present, label: {en-IN: "Bank verified"}}}
+  steps:
+    - render: {surface: gateway_profile_conformance_label}
+  expect:
+    verdict: {code: conformance_fail, rule: attestation_label, required_text: {en-IN: "passed BACP protocol tests", hi-IN: present}}
+
+- case_id: VER-CA-01
+  title: A debit sent after the bound attestation was revoked is reported as outside the mandate
+  level: bacp.pay.all.1
+  system_under_test: verifier
+  fixture:
+    bundle: {instruction_log: [{stage: payment, at: after_revocation_of_bound_jti}], mandates: [{rail_binding.conformance.jti: att_J000001}]}
+    attestation_status: {att_J000001: {revoked_at: before_payment_entry}}
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {debit_outside_mandate: true, basis: [instruction_log_payment_entry, list_version, status_list]}
+
 - case_id: T2-OPS-01
   title: A binding pause never blocks a status check or a reversal of a debit that is already in the ledger
   level: bacp.pay.all.1
@@ -1790,24 +2022,53 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
     state: {mandate: PAUSED}
     beckn: {igm_issue_sent: 2, udir_complaint_keyed_by_rrn: 2}
 
-- case_id: T2-OPS-03
-  title: A human-present cancel is accepted on an order whose mandate is expired, exhausted or revoked, and a human-not-present one is refused
+- case_id: T2-OPS-03a
+  title: A human-present cancel is accepted on an order whose mandate is expired, and a human-not-present one is refused
   level: bacp.core.1
   fixture:
     mandate: {state: EXPIRED, preinstalled: true}
     order: {state: confirmed, placed_under: mandate}
     ts_events: {step_up_hp_proof: valid}
   steps:
-    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HP, hp_proof: valid}
     - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HNP}
-    - mandate: {state: EXHAUSTED}
     - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HP, hp_proof: valid}
-    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HNP}
   expect:
     responses:
-      - {status: 200, count: 2}
-      - {status: 403, code: presence_not_allowed, count: 2}
-    state: {mandate: EXHAUSTED}
+      - {status: 403, code: presence_not_allowed, count: 1}
+      - {status: 200, count: 1}
+    state: {mandate: EXPIRED, order: cancelled}
+
+- case_id: T2-OPS-03b
+  title: A human-present cancel is accepted on an order whose mandate is exhausted, and a human-not-present one is refused
+  level: bacp.core.1
+  fixture:
+    mandate: {state: EXHAUSTED, preinstalled: true}
+    order: {state: confirmed, placed_under: mandate}
+    ts_events: {step_up_hp_proof: valid}
+  steps:
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HNP}
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HP, hp_proof: valid}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_allowed, count: 1}
+      - {status: 200, count: 1}
+    state: {mandate: EXHAUSTED, order: cancelled}
+
+- case_id: T2-OPS-03c
+  title: A human-present cancel is accepted on an order whose mandate is revoked, and a human-not-present one is refused
+  level: bacp.core.1
+  fixture:
+    mandate: {state: REVOKED, preinstalled: true}
+    order: {state: confirmed, placed_under: mandate}
+    ts_events: {step_up_hp_proof: valid}
+  steps:
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HNP}
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HP, hp_proof: valid}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_allowed, count: 1}
+      - {status: 200, count: 1}
+    state: {mandate: REVOKED, order: cancelled}
 ```
 
 ## Human-participant cases {#human-participant-cases}
@@ -1953,6 +2214,7 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
     responses:
       - {status: 404, code: not_found, count: 1}
       - {status: 202, count: 1}
+    state: {session: complete_in_progress}
 
 - case_id: T1-04f
   title: A human-present session step-up has no payer PSP; no PSP fetches its render
@@ -1968,6 +2230,7 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
     responses:
       - {status: 404, code: not_found, count: 1}
       - {status: 200, count: 1}
+    state: {session: requires_escalation}
 
 - case_id: T1-05
   title: An approval whose content hash is not the hash of the ts_render is refused
@@ -2088,6 +2351,41 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
     responses:
       - {status: 403, code: presence_not_proven, body.step_up.kind: post_order, count: 5}
       - {status: 202, count: 1}
+
+- case_id: T1-09e
+  title: Replacement step-ups for one issue are limited, and an excess does not void the pending step-up
+  level: bacp.core.1
+  fixture:
+    issue: {status: PROCESSING, resolution: {action_triggered: REFUND, refund_amount: {value: 680000, currency: INR}}}
+    step_up_limit: {per_agent: 5, per_issue_replacements: 2}
+  steps:
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - on_issue: {action: RESOLUTION_PROPOSED, resolution: {action_triggered: REFUND, refund_amount: {value: 675000, currency: INR}}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - on_issue: {action: RESOLUTION_PROPOSED, resolution: {action_triggered: REFUND, refund_amount: {value: 670000, currency: INR}}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - on_issue: {action: RESOLUTION_PROPOSED, resolution: {action_triggered: REFUND, refund_amount: {value: 665000, currency: INR}}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, body.step_up.kind: post_order, count: 3}
+      - {status: 429, count: 1}
+    state: {step_up.pending: second_replacement, agent_step_up_count: unchanged}
+
+- case_id: T1-09f
+  title: The Trusted Surface render for CLOSED states that closing does not accept a pending remedy
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    issue: {status: PROCESSING, resolution: {action_triggered: REFUND, refund_amount: {value: 680000, currency: INR}}}
+    step_up: {kind: post_order, action: CLOSED}
+  steps:
+    - render: {modality: visual}
+  expect:
+    verdict:
+      code: pass
+      ts_render: {action: CLOSED, subject_hash: absent, states_pending_remedy_not_accepted: true}
+    negative_control: {render_shows_remedy_as_confirmed: {code: ts_conformance_fail}}
 
 - case_id: T1-09d
   title: A step-up voided by a revised resolution is refused as not found
@@ -2383,6 +2681,24 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
       - {status: 201, count: 2}
       - {status: 200, count: 2}
     state: {session: human_handoff, handoff.accepted_by: support_operator_key_1, handoff.ended_at: absent}
+    rail: {settled_debits: 0}
+
+- case_id: T1-16d
+  title: A handoff restart racing an accept never leaves accepted_by absent after an accept returned 200
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, state: incomplete, handoff: {requested_at: present, accepted_by: absent, ended_at: present}}
+    across_replicas: true
+  steps:
+    - parallel:
+        - {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-browse, body: {action: request, route: credential_route_0}}
+        - {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-handoff, signer: support_operator_key_1, body: {action: accept}}
+  expect:
+    exactly_one_of:
+      - responses: [{status: 201, count: 1}, {status: 409, code: session_state_conflict, count: 1}]
+        state: {session: incomplete, handoff.accepted_by: absent}
+      - responses: [{status: 201, count: 1}, {status: 200, count: 1}]
+        state: {session: human_handoff, handoff.accepted_by: support_operator_key_1}
     rail: {settled_debits: 0}
 
 - case_id: T1-17
@@ -3596,6 +3912,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
     leg: rest
     profile: b2b.procurement
     offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, hash: H_RC}, verdict: acceptable}
+    negotiation: {state: NEGOTIATING}
     held_documents: []
   steps:
     - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
@@ -3828,6 +4145,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
     leg: rest
     profile: b2b.procurement
     offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: RC-2026-114, uri: "https://bpp.seller.example.in/contracts/RC-2026-114", hash: H_RC}, verdict: acceptable}
+    negotiation: {state: NEGOTIATING}
     held_documents: []
     counterparty_documents: [{uri: "https://bpp.seller.example.in/contracts/RC-2026-114", hash: H_RC}]
   steps:
@@ -3932,6 +4250,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
   title: A revoke dispatched before the accept it names is void
   fixture:
     leg: rest
+    negotiation: {state: NEGOTIATING}
     offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
   steps:
     - incoming: {type: accept_revoke, accept_msg_hash: H_A, offer_hash: "{offer_hash}", dispatched_at: "-1s", at: "+0s"}
@@ -3944,6 +4263,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
   title: A revoke received after its accept leaves the agreement standing
   fixture:
     leg: rest
+    negotiation: {state: NEGOTIATING}
     offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, proposer: gateway_under_test}
   steps:
     - incoming: {type: accept, msg_hash: H_A, offer_hash: "{offer_hash}", at: "+0s"}
@@ -3980,6 +4300,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
   title: Under allowed_until_receipt a receipt of an accept without log_entry_hash does not count
   fixture:
     leg: rest
+    negotiation: {state: NEGOTIATING}
     offer: {state: LIVE, firm: true, acceptance_revocation: allowed_until_receipt, verdict: acceptable}
   steps:
     - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
@@ -4113,6 +4434,7 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
     profile: b2b.procurement
     counterparty: {np_id: bpp.seller-s.example.in, gstin: 29ABCDE1234F1Z5}
     offer: {state: LIVE, firm: true, acceptance_revocation: waived, waiver_basis: {doc_type: contract, id: TERMS-BAP-2026, hash: H_D}, verdict: acceptable}
+    negotiation: {state: NEGOTIATING}
     held_documents: [{hash: H_D, names: [bap.buyer-app.example.in], waiver_basis: true}]
   steps:
     - request: {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
@@ -4137,7 +4459,7 @@ rules for an agent, the drift message `discovery_price_changed`, `Disclosures.ca
 their [verification by the agent](discovery.md#verifying-results), the repeat on the Trusted Surface and as
 `type: disclosure` messages, and [discounts and published offers](checkout/index.md#discounts). They use the manifest
 form above. The case ids run in three blocks: CD-01 to CD-25 test the disclosure fields and rules, CD-26 to CD-53 test
-source verification, the Trusted Surface repeat and discounts, and CD-R01 to CD-R20 close the traces of the red-team
+source verification, the Trusted Surface repeat and discounts, and CD-R01 to CD-R27 close the traces of the red-team
 review of that design. Cases marked *harness* need a mock seller whose signed callbacks the test controls. CD-23 is
 blocked until `principal.minor_status` exists ([Q-17](open-questions.md#q-17)); CD-25 is informative. These cases also
 use:
@@ -5048,6 +5370,99 @@ Amounts are integer paise.
   expect:
     responses:
       - {status: 429, code: quota_exceeded, count: 2}
+
+- case_id: CD-R21
+  title: (harness) A session with no catalogue entry for a sponsored item the agent verified is a mismatch, and the bundle does not verify
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discovery: {item: I-ATTA, sponsorship: {status: sponsored}, source_checks: [{outcome: verified}]}
+    session: {"disclosures.catalogue": omit_entry_for_I-ATTA}
+  steps:
+    - agent_receives_session: {}
+    - verify_bundle: {}
+  expect:
+    log: {"cart.reason": discovery_source_mismatch}
+    state: {session.status: requires_buyer_review}
+    verdict: {code: evidence_unverifiable, reason: line_without_catalogue_entry}
+
+- case_id: CD-R22
+  title: An agent that fetched no source still gets its issue sent, with the catalogue entries recorded as unchecked
+  level: bacp.core.1
+  fixture:
+    discover_entry: {refs.source_digests: []}
+    bundle: {checkout.disclosures.catalogue: present}
+  steps:
+    - request: {method: POST, path: /issues, tag: bacp-post-order, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 201, count: 1}
+    verification: {catalogue_unchecked: all_entries}
+
+- case_id: CD-R23
+  title: (harness) An issue about an order whose agent recorded a mismatch is sent, with the catalogue failure in verification
+  level: bacp.core.1
+  fixture:
+    discover_entry: {"source_checks[0].outcome": mismatch}
+  steps:
+    - request: {method: POST, path: /issues, tag: bacp-post-order, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 201, count: 1}
+    verification: {catalogue_result: failed}
+
+- case_id: CD-R24
+  title: (harness) An agent whose operator also runs the gateway's BAP rejects a source resolved through that operator's own lookup host
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    agent_operator_shares_operator_with_gateway_bap: true
+    lookup_host: operated_by_shared_operator
+  steps:
+    - agent_verifies_source: {}
+  expect:
+    log: {"discover.source_checks[0].outcome": unverified}
+    state: {agent.lookup_endpoint_required: network_registry}
+
+- case_id: CD-R25
+  title: A sponsored_listing message whose args carry another item's name is presented with the name from the session line
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    message: {code: sponsored_listing, param: "$.disclosures.catalogue[0]", args: [{origin: counterparty, value: "Ghee 1L"}]}
+    session: {"lines[0].name": "Chakki Atta 2 kg", "disclosures.catalogue[0].item_id": I-ATTA}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output: {contains: ["Chakki Atta 2 kg"], contains_none_of: ["Ghee 1L"]}
+
+- case_id: CD-R26
+  title: (harness) A catalogue entry whose by[] is not a superset of the signed discover response's is a mismatch, and the bundle does not verify
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {signed: true, "results[I].sponsorship": {status: sponsored, by: [gateway]}}
+    session: {"disclosures.catalogue[I].sponsorship": {status: sponsored, by: [bpp]}}
+  steps:
+    - agent_receives_session: {}
+    - verify_bundle: {}
+  expect:
+    log: {"cart.reason": discovery_source_mismatch}
+    verdict: {code: evidence_unverifiable, reason: sponsorship_weaker_than_discover_response}
+
+- case_id: CD-R27
+  title: (harness) A validly signed discovery response whose body hash differs from the agent-written discover entry is not accepted, and the issue is still sent
+  level: bacp.core.1
+  fixture:
+    discover_response: {signed: true, signer: gateway, "body.sha256": differs_from_discover_entry_content_hash}
+    session: {"disclosures.catalogue[I].sponsorship.by": matches_discover_response}
+  steps:
+    - verify_bundle: {}
+    - request: {method: POST, path: /issues, tag: bacp-post-order, idempotency_key: fresh}
+  expect:
+    verdict: {code: evidence_unverifiable, reason: discovery_response_hash_mismatch}
+    responses:
+      - {status: 201, count: 1}
 ```
 
 ## Who-pays cases {#who-pays-cases}
@@ -5260,11 +5675,11 @@ Until counsel answers [Q-81](open-questions.md#q-81), no case passes a retained 
     output: {fee_prompts: 0}
 
 - case_id: WP-18
-  title: A complete whose payment mandate leaves out an operator charge gets 400
+  title: A complete whose payment mandate amount is not the quote total gets 400, and an operator charge is not part of the debit
   level: bacp.pay.all.1
   fixture:
     session: {operator_charges: [{code: service, recipient: assisted_operator, amount: {value: 2000, currency: INR}}], quote_total: {value: 48000, currency: INR}}
-    payment_mandate_amount: {value: 48000, currency: INR}
+    payment_mandate_amount: {value: 50000, currency: INR}
   steps:
     - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
   expect:
@@ -5376,6 +5791,150 @@ Until counsel answers [Q-81](open-questions.md#q-81), no case passes a retained 
     responses:
       - {status: 200, "body.totals[0].type": delivery, "body.totals[0].recipient": logistics, count: 1}
 
+- case_id: WP-28
+  title: An ONDC misc line is a fee line, and under an HNP mandate that disallows convenience fees it raises a confirm step-up
+  level: bacp.core.1
+  fixture:
+    mandate: {presence_allowed: [HNP], constraints: {convenience_fees: {allowed: false}}}
+    bpp_on_init: {breakup: [{title_type: item, price: {value: "1450.00"}}, {title_type: delivery, price: {value: "40.00"}}, {title_type: misc, price: {value: "49.00"}}]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, idempotency_key: fresh}
+  expect:
+    messages: [charge_recipient_unmapped]
+    responses:
+      - {status: 200, "body.totals[2].type": other_charge, "body.totals[2].amount.value": 4900, "body.totals[2].recipient": other, body.step_up.reason: constraint_unresolved, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: WP-28b
+  title: A human-present step-up for the same quote reads the other charge as its own fee line, outside the remainder
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {total: {value: 153900, currency: INR}, charge_lines: [{code: other_charge, amount: {value: 4900, currency: INR}, recipient: other}, {code: remainder, amount: {value: 149000, currency: INR}}]}
+  steps:
+    - render: {before: factor}
+  expect:
+    ts_render: {charge_lines_sum_equals_total: true, remainder_contains_fee_line: false}
+
+- case_id: WP-28c
+  title: A misc line first disclosed after the round that the handler intersection consumed is drip pricing
+  level: bacp.core.1
+  fixture:
+    bpp_on_init: {breakup: [{title_type: misc, price: {value: "49.00"}, first_disclosed_round: 2}]}
+    intersection_round: 1
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    messages: [drip_pricing_detected]
+    responses:
+      - {status: 200, "body.messages[0].resolution": requires_buyer_review, count: 1}
+
+- case_id: WP-29
+  title: An operator charge that the mandate notice does not cover raises a confirm step-up and nothing is debited before approval
+  level: bacp.core.1
+  fixture:
+    consent_receipt: {notice: {operator_compensation: {from_principal: [{basis: none}], from_sellers: none}}}
+    session: {operator_charges: [{code: service, recipient: agent_operator, amount: {value: 2500, currency: INR}}], quote_total: {value: 120000, currency: INR}}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, body.step_up.reason: constraint_unresolved, count: 1}
+    log: {entry: {stage: disclosure}}
+    rail: {settled_debits: 0}
+
+- case_id: WP-30
+  title: The mandate amount is the quote total and the budget evaluation counts the quote total plus the operator charge
+  level: bacp.pay.all.1
+  fixture:
+    session: {operator_charges: [{code: service, recipient: agent_operator, amount: {value: 2500, currency: INR}}], quote_total: {value: 120000, currency: INR}}
+    consent_receipt: {notice: {operator_compensation: {from_principal: [{basis: per_order, amount: {value: 2500, currency: INR}}], from_sellers: none}}}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+      fixture_override: {payment_mandate_amount: {value: 122500, currency: INR}}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+      fixture_override: {payment_mandate_amount: {value: 120000, currency: INR}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, path: "$.payment_mandate", count: 1}
+      - {status: 200, count: 1}
+    rail: {settled_debits: 1, debit_to_seller_payee: {value: 120000, currency: INR}}
+    budget: {evaluated_amount: {value: 122500, currency: INR}}
+
+- case_id: WP-31
+  title: Under a payment plan the tenders add up to all_in_total and the render shows the operator charge after it
+  level: bacp.pay.all.1
+  fixture:
+    session: {operator_charges: [{code: service, recipient: agent_operator, amount: {value: 2500, currency: INR}}], all_in_total: {value: 120000, currency: INR}, plan_options: [{tenders: [{handler: in.store_credit, amount: {value: 100000, currency: INR}}, {handler: in.upi.intent, amount: {value: 20000, currency: INR}}]}]}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+    ts_render: {plan_total_read_before_operator_charge: true, plan_total: {value: 120000, currency: INR}, operator_charge_total: {value: 2500, currency: INR}}
+
+- case_id: WP-32
+  title: A refund that retains a line not in the committed terms gets refund_short_of_terms and is not blocked
+  level: bacp.core.1
+  fixture:
+    committed_quote: {charges: [{code: delivery, amount: {value: 4000, currency: INR}, refund_rule: before_dispatch}]}
+    order: {paid: {value: 149000, currency: INR}, dispatched: false}
+  steps:
+    - refund_receipt: {amount: {value: 140100, currency: INR}, charges_retained: [{code: delivery, amount: {value: 4000, currency: INR}, refund_rule: never}, {code: restocking_fee, amount: {value: 4900, currency: INR}, refund_rule: never}]}
+  expect:
+    messages: [refund_short_of_terms]
+    refund: {blocked: false, held: false}
+
+- case_id: WP-32b
+  title: A retained line above the disclosed amount by 1 paisa is not a match
+  level: bacp.core.1
+  fixture:
+    committed_quote: {charges: [{code: delivery, amount: {value: 4000, currency: INR}, refund_rule: before_dispatch}]}
+    order: {paid: {value: 149000, currency: INR}, dispatched: true}
+  steps:
+    - refund_receipt: {amount: {value: 144999, currency: INR}, charges_retained: [{code: delivery, amount: {value: 4001, currency: INR}, refund_rule: before_dispatch}]}
+  expect:
+    messages: [refund_short_of_terms]
+
+- case_id: WP-33
+  title: A government recipient stated on a delivery line is ignored on Beckn and the table applies
+  level: bacp.core.1
+  fixture:
+    bpp_on_init: {breakup: [{title_type: delivery, price: {value: "30.00"}, tags: {bacp.charge: {recipient: government}}}]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    messages: [charge_recipient_invalid]
+    responses:
+      - {status: 200, "body.totals[0].type": delivery, "body.totals[0].recipient": seller, count: 1}
+
+- case_id: WP-33b
+  title: A BACP-native line of type other_charge whose recipient is agent_operator is schema-invalid
+  level: bacp.core.1
+  system_under_test: validator
+  fixture:
+    total: {type: other_charge, recipient: agent_operator, amount: {value: 2000, currency: INR}}
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Total}
+  expect:
+    verdict: {code: schema_invalid}
+
+- case_id: WP-34
+  title: A seller-paid buyer finder fee under a notice that says from_sellers none gives operator_compensation_mismatch
+  level: bacp.core.1
+  fixture:
+    consent_receipt: {notice: {operator_compensation: {from_principal: [{basis: none}], from_sellers: none}}}
+    bpp: {on_select_bff: "3.00%"}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    messages: [operator_compensation_mismatch]
+    responses:
+      - {status: 200, "body.intermediary_compensation[0].source": seller, "body.intermediary_compensation[0].origin": ondc_bff, count: 1}
+    log: {entry: {stage: disclosure}}
+    mandate_manager_reports: 1
+
 - case_id: WP-I1
   title: An HNP checkout with a convenience fee that the mandate's convenience_fees does not cover raises a confirm step-up
   level: bacp.pay.all.1
@@ -5463,6 +6022,34 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
       - {status: 403, code: mandate_scope_mismatch, count: 1}
     rail: {settled_debits: 0}
 
+- case_id: BND-PLAN-TS-02
+  title: A plan that an approved confirm step-up shows but that the session never offered is refused
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    plan_options: [{plan_id: A}, {plan_id: B}]
+    step_up: {approved: true, kind: confirm, ts_render.plan: C}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, body: {payment_plan: C}}
+  expect:
+    responses:
+      - {status: 400, code: plan_not_offered, param: $.payment_plan, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: BND-PLAN-TS-03
+  title: An approval of plan A on one session does not cover another session's complete
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    step_up: {approved: true, session: S1, ts_render.plan: A}
+    sessions: [{id: S2, checkout_hash: other}]
+  steps:
+    - request: {method: POST, path: "/sessions/S2/complete", tag: bacp-pay, presence: HNP, body: {payment_plan: A, cites_approval_of: S1}}
+  expect:
+    responses:
+      - {status: 400, code: plan_not_offered, count: 1}
+    rail: {settled_debits: 0}
+
 - case_id: BND-PLAN-RACE-01
   title: A second plan for the same checkout_hash while the first has an in-doubt tender is refused, and the first completes when the tender resolves
   level: bacp.pay.all.1
@@ -5506,6 +6093,17 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     plan: {tenders: [{status: refunded, reversal_deadline: present}, {status: failed}]}
     sessions: {state_before_settlement: complete_in_progress, state: cancelled}
     ts_read_out: {contains: being_returned, not_contains: no_money_moved}
+
+- case_id: BND-PLAN-IDEM-02
+  title: The same Idempotency-Key and tender id in two sessions give two PSP keys, and no receipt of the first session is applied to the second
+  level: bacp.pay.all.1
+  requires_capability: in.bacp.payment_plan
+  fixture:
+    sessions: [{id: S1, state: completed, plan: completed_under_key_k, tender: t1}, {id: S2, state: ready_for_complete, tender: t1}]
+  steps:
+    - request: {method: POST, path: "/sessions/S2/complete", tag: bacp-pay, presence: HNP, idempotency_key: k}
+  expect:
+    rail: {psp_keys_distinct: true, s2_tender_debited_on_its_own: true, s1_receipt_applied_to_s2: false}
 
 - case_id: BND-PLAN-IDEM-01
   title: A repeated complete under the same key returns the stored response and re-debits no tender
@@ -5579,8 +6177,8 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
   fixture:
     ledgers: {count: 1, entries: 120}
   steps:
-    - request: {method: GET, path: "/ledgers/{ledger_id}/entries?limit=50", tag: bacp-browse}
-    - request: {method: GET, path: "/ledgers/{ledger_id}/entries?limit=51", tag: bacp-browse}
+    - request: {method: GET, path: "/ledgers/{ledger_id}/entries?limit=50&mandate_ref={mandate_ref}", tag: bacp-browse}
+    - request: {method: GET, path: "/ledgers/{ledger_id}/entries?limit=51&mandate_ref={mandate_ref}", tag: bacp-browse}
   expect:
     responses:
       - {status: 200, "body.entries.length": 50, "body.next_after_seq": 50, count: 1}
@@ -5747,7 +6345,7 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
   level: bacp.core.1
   requires_capability: in.bacp.ledger
   fixture:
-    ledger: {pending: {from_seq: 30, to_seq: 41, count: 12}, balance: {value: 435000, currency: INR}, head_hash: H}
+    ledger: {pending: {from_seq: 30, to_seq: 41, count: 12, posted_by: counterparty_of_acknowledger}, balance: {value: 435000, currency: INR}, head_hash: H}
     posted_between_render_and_approval: {seq: 42}
   steps:
     - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, through_seq: 41, head_hash: H}, hp_proof: approved}
@@ -5756,6 +6354,85 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     responses:
       - {status: 200, count: 1}
     ledger: {acknowledged_through_41: 12, acknowledgement_events: 1, event_names_head_hash: H, e42: pending_ack, e37_after_dispute: disputed, others_unchanged: true}
+
+- case_id: BND-LEDGER-STMT-04
+  title: A statement acknowledgement by the debtor never covers the debtor's own pending_ack payment
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {entries: [{seq: 7, id: e7, type: sale, status: acknowledged, posted_by: creditor}, {seq: 8, id: e8, type: payment, posted_by: debtor, status: pending_ack, message: settlement_payee_unmatched}], head_hash: H8}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, subject: {ledger_range: {through_seq: 8, head_hash: H8}}}, hp_proof: approved, acting: debtor_agent}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+    ledger: {e8: pending_ack, e7: acknowledged, e7_settled: false, event_lists_debtor_posted_entry: false}
+
+- case_id: BND-LEDGER-STMT-05
+  title: A statement acknowledgement by the creditor does not cover a pending_ack payment, and its per-entry acknowledgement shows the payee
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {entries: [{seq: 8, id: e8, type: payment, posted_by: debtor, status: pending_ack, payee: m@psp, message: settlement_payee_unmatched}], head_hash: H8}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, subject: {ledger_range: {through_seq: 8, head_hash: H8}}}, hp_proof: approved, acting: creditor_agent}
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, subject: {ledger_ref: {entry: e8}}}, acting: creditor_agent}
+  expect:
+    ledger: {e8_after_statement: pending_ack}
+    responses:
+      - {status: 403, code: presence_not_proven, "body.step_up.ts_render.subject_ref.payee": "m@psp", count: 1}
+
+- case_id: BND-LEDGER-ACK-PAYEE-01
+  title: A per-entry acknowledgement of a payment with settlement_payee_unmatched is refused with a render that carries the payee
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {entries: [{seq: 8, id: e8, type: payment, posted_by: debtor, status: pending_ack, payee: m@psp, message: settlement_payee_unmatched}], head_hash: H8}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, subject: {ledger_ref: {entry: e8}}}, acting: creditor_agent}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, "body.step_up.ts_render.subject_ref.payee": "m@psp", "body.step_up.ts_render": validates_against_TsRender, count: 1}
+
+- case_id: BND-LEDGER-STMT-06
+  title: With no itemise_above and a short history, an entry above the largest earlier acknowledged entry is acknowledged one by one
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {itemise_above: absent, acknowledged_history_by_poster: [{value: 80000, currency: INR}, {value: 95000, currency: INR}, {value: 110000, currency: INR}, {value: 120000, currency: INR}], pending: [{seq: 5, id: e5, amount: {value: 1850000, currency: INR}, posted_by: creditor}]}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, subject: {ledger_range: {through_seq: 5}}}, hp_proof: approved, acting: debtor_agent}
+  expect:
+    responses:
+      - {status: 422, code: invalid_request, param: $.subject.through_seq, count: 1}
+    ledger: {e5: pending_ack}
+
+- case_id: BND-LEDGER-ACK-02
+  title: An agent that names the creditor's own mandate cannot acknowledge the creditor's entry, and no step-up is raised
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    ledger: {entries: [{id: e9, posted_by: creditor, amount: {value: 600000, currency: INR}}]}
+  steps:
+    - request: {method: POST, path: /trade-acts, tag: bacp-post-order, idempotency_key: fresh, body: {act: LEDGER_ACK, subject: {ledger_ref: {entry: e9}}, actor: {mandate_ref: creditor_mandate}}}
+  expect:
+    responses:
+      - {status: 403, code: ack_not_by_counterparty, count: 1}
+    step_ups_raised: 0
+    ledger: {e9: unchanged}
+
+- case_id: BND-LEDGER-READ-02
+  title: A mandate of a principal who is not a party to the ledger reads nothing
+  level: bacp.core.1
+  requires_capability: in.bacp.ledger
+  fixture:
+    agent: {mandates: [{id: M1, principal: P1}, {id: M2, principal: P2}]}
+    ledger: {parties: [P2, K]}
+  steps:
+    - request: {method: GET, path: "/ledgers/{ledger_id}?mandate_ref=M1", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 1}
 
 - case_id: BND-LEDGER-STMT-03
   title: A statement acknowledgement whose head is no longer the ledger head is refused
@@ -5807,6 +6484,17 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     - ledger_computes: {sale: S1}
   expect:
     ledger: {"msmed.acceptance_basis": unattested, "msmed.statutory_due_date": absent, debtor_notified: true}
+
+- case_id: BND-MSME-POD-03
+  title: Seller-only proof of delivery notifies the debtor and derives no due date
+  level: bacp.b2b.1
+  requires_capability: in.bacp.trade_document
+  fixture:
+    documents: [{doc_type: proof_of_delivery, signed_by: seller_only}]
+  steps:
+    - ledger_computes: {sale: S1}
+  expect:
+    ledger: {debtor_notification_event: {names_entry: S1}, "msmed.statutory_due_date": absent}
 
 - case_id: BND-MSME-POD-02
   title: Attested delivery evidence dates acceptance at the delivery date, with or without a GRN, and a recorded and sent objection moves it
@@ -5912,7 +6600,7 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
       - {status: 200, "body validates against": "source/ucp/shopping/checkout.json", count: 1}
 
 - case_id: BND-UCP-02
-  title: A ₹100 discount projects to -10000 and the UCP total equals the BACP all-in total
+  title: A ₹100 discount projects to -10000 and the UCP total equals the BACP all-in total when the session has no operator charge
   level: bacp.core.1
   requires_capability: in.bacp.ucp_checkout
   fixture:
@@ -5923,6 +6611,18 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     responses:
       - {status: 200, "body.totals[type=discount].amount": -10000, "body.totals[type=total].amount": all_in_total, count: 1}
     pinned_schema: {positive_discount_fails: true}
+
+- case_id: BND-UCP-03
+  title: An operator charge is a UCP fee line, the UCP total includes it and bacp.all_in_total keeps the quote figure
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    sessions: {count: 1, state: ready_for_complete, all_in_total: {value: 120000, currency: INR}, operator_charges: [{code: service, amount: {value: 2500, currency: INR}, recipient: agent_operator}]}
+  steps:
+    - request: {method: GET, path: "/checkout-sessions/{id}", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 200, "body.totals[type=fee].amount": 2500, "body.totals[type=total].amount": 122500, "body.bacp.all_in_total": 120000, "body validates against": "source/ucp/shopping/checkout.json", count: 1}
 
 - case_id: BND-UCPF-01
   title: A complete under key k on /sessions is replayed on /checkout-sessions

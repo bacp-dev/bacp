@@ -333,7 +333,14 @@
           },
           "recipient": {
             "$ref": "common.json#/$defs/ChargeRecipient",
-            "description": "Who receives the charge from the payer's money, as the seller's side signed it. REQUIRED. The gateway never infers it from the charge code; for a charge that arrives over Beckn it applies the published title_type mapping of the Beckn binding."
+            "not": {
+              "enum": [
+                "government",
+                "agent_operator",
+                "assisted_operator"
+              ]
+            },
+            "description": "Who receives the charge from the payer's money, as the seller's side signed it. REQUIRED. The gateway never infers it from the charge code; for a charge that arrives over Beckn it applies the published title_type mapping of the Beckn binding. A charge of the seller's side is never to the government (tax is not a charge code here) and never to the agent operator or an assisted operator."
           },
           "refund_rule": {
             "enum": [

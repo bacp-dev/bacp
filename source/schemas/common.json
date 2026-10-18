@@ -802,6 +802,7 @@
         },
         "plan_hash": {
           "$ref": "#/$defs/Hash",
+          "pattern": "^sha-256:",
           "description": "plan_hash of the payment plan a step-up showed. REQUIRED on a step_up.approved event whose ts_render carries plan, and never present otherwise. The gateway checks that it equals the ts_render's plan.plan_hash, or refuses the event with 403 ts_render_mismatch."
         },
         "user_action": {

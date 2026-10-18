@@ -18,6 +18,7 @@
     },
     "plan_hash": {
       "$ref": "common.json#/$defs/Hash",
+      "pattern": "^sha-256:",
       "description": "sha-256 over the JCS (RFC 8785) form of the plan's tenders: the array of {tender_id, handler, amount, sequence} objects (with tranche_id when present), in ascending sequence, without payment_mandate and without any response-only field. The same value in PlanOption.plan_hash, in a closed payment mandate's tender.plan_hash and in the ts_render's plan.plan_hash."
     },
     "checkout_hash": {
@@ -218,6 +219,7 @@
         },
         "plan_hash": {
           "$ref": "common.json#/$defs/Hash",
+          "pattern": "^sha-256:",
           "description": "The hash that a PlanRequest's tenders must match (see PaymentPlan.plan_hash)."
         },
         "description": {

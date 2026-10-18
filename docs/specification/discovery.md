@@ -254,8 +254,9 @@ Rules:
 4. A BACP-aware BPP resolves the BAP's keys, and the keys of the buyer's
    credential provider, through the same registry.
 5. An agent that verifies a discovery source MUST resolve the BPP's key from the network registry's own endpoint, or
-   through a lookup service operated by the agent operator, or by a party that is neither the gateway nor shares an
-   operator with the gateway's BAP. It MUST NOT use a key, a registry record or a lookup response that the gateway
+   through a lookup service whose operator is neither the gateway's operator nor shares an operator with the gateway's
+   BAP. An agent operator that also operates, or shares an operator with, the gateway's BAP MUST use the network
+   registry's own endpoint. The agent MUST NOT use a key, a registry record or a lookup response that the gateway
    supplies. The agent records the lookup source in the `discover` InstructionLog entry.
 
 Which body anchors agent identity and issues AgentCredentials (an NPCI agent
@@ -415,9 +416,11 @@ above or, before `complete`, compare the chosen item's BPP-signed quote unit pri
 is higher, the choice no longer stands, and the agent re-ranks on quoted prices or escalates to the principal.
 
 **At checkout.** When a session returns `Disclosures.catalogue[]`, an agent that verified or presented the items MUST check
-each entry against its own verification of that item at discovery. The entry's `source_digest` MUST be one the agent
-verified for that item, its `sponsorship` MUST NOT be weaker than the verified value (by the precedence `sponsored`,
-`undeclared`, `not_sponsored`), and its `prior_price`, `mrp` and `discovered_unit_price` MUST equal the verified values.
+each entry against the values it presented for that item at discovery. The agent MUST also check that every line item it
+chose from a discover response has exactly one `catalogue[]` entry with that `item_id`. A missing entry is a mismatch.
+The entry's `source_digest` MUST be one the agent checked for that item, its `sponsorship.status` MUST NOT be weaker than the
+presented value (by the precedence `sponsored`, `undeclared`, `not_sponsored`) and its `sponsorship.by[]` MUST contain every party of
+the `sponsorship.by[]` the agent presented, and its `prior_price`, `mrp` and `discovered_unit_price` MUST equal the presented values.
 Otherwise the agent records `discovery_source_mismatch` and treats the session as `requires_buyer_review`.
 This closes the gap in which a gateway swaps in a different genuine callback at checkout.
 

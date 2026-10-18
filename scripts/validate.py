@@ -35,6 +35,25 @@ from openapi_spec_validator import validate as validate_openapi
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
 
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """A safe loader that refuses a repeated mapping key instead of silently keeping the last."""
+
+    def construct_mapping(self, node, deep=False):
+        seen = set()
+        for key_node, _ in node.value:
+            key = self.construct_object(key_node, deep=True)
+            if key in seen:
+                raise yaml.constructor.ConstructorError(
+                    None, None, f"duplicate mapping key {key!r}", key_node.start_mark
+                )
+            seen.add(key)
+        return super().construct_mapping(node, deep)
+
+
+def load_yaml(text: str):
+    return yaml.load(text, Loader=_UniqueKeyLoader)  # noqa: S506 (SafeLoader subclass)
+
+
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "source"
 UCP_CHECKOUT = "https://ucp.dev/schemas/shopping/checkout.json"
@@ -78,7 +97,12 @@ def main() -> int:
     # The OpenAPI document is registered under a URI next to the schemas, so that its relative
     # refs (../schemas/common.json#/...) resolve to the schema $ids.
     api_path = SRC / "services" / "bacp.openapi.yaml"
-    api_doc = yaml.safe_load(api_path.read_text())
+    try:
+        api_doc = load_yaml(api_path.read_text())
+    except yaml.YAMLError as e:
+        fail(f"{api_path.relative_to(ROOT)}: not readable as YAML without a repeated key: {e}")
+        print(f"FAILURES: {len(failures)}")
+        return len(failures)
     api_uri = "https://bacp.dev/services/bacp.openapi.yaml"
     registry = registry.with_resource(api_uri, DRAFT202012.create_resource(api_doc))
     api_components = api_doc.get("components", {}).get("schemas", {})
@@ -158,7 +182,7 @@ def main() -> int:
 
     # 5. OpenAPI
     try:
-        validate_openapi(yaml.safe_load(api_path.read_text()), base_uri=api_path.as_uri())
+        validate_openapi(load_yaml(api_path.read_text()), base_uri=api_path.as_uri())
         print("PASS", api_path.name)
     except Exception as e:  # noqa: BLE001
         fail(f"{api_path.name}: {str(e).splitlines()[0]}")

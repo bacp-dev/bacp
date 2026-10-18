@@ -2219,6 +2219,7 @@ paths:
       x-bacp-mcp-tool: bacp_ledger_get
       x-bacp-idempotent: false
       parameters:
+      - $ref: '#/components/parameters/LedgerMandateRef'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       responses:
@@ -2252,6 +2253,7 @@ paths:
       x-bacp-mcp-tool: bacp_ledger_entries_list
       x-bacp-idempotent: false
       parameters:
+      - $ref: '#/components/parameters/LedgerMandateRef'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - name: after_seq
@@ -2868,7 +2870,7 @@ components:
       name: Idempotency-Key
       in: header
       required: true
-      description: 128-bit or more random value (UUIDv4 or ULID). Required on every POST and PUT.
+      description: Random value of 22–64 printable ASCII characters, required on every POST and PUT. For POST /discover it MUST be generated afresh from at least 122 random bits (for example a UUIDv4) and never reused; a ULID does not qualify there. The example key is 26 random Crockford base32 characters, not a ULID.
       schema:
         type: string
         minLength: 22
@@ -2937,6 +2939,15 @@ components:
       schema:
         type: string
         pattern: ^auc_[A-Za-z0-9]{8,40}$
+    LedgerMandateRef:
+      name: mandate_ref
+      in: query
+      required: true
+      description: The mandate through which the calling agent acts for its principal on this ledger. The calling agent holds it (the request is signed
+        with its cnf key), and it names a principal who is the ledger's creditor or debtor; otherwise 404 not_found. For a read it is ACTIVE.
+      schema:
+        type: string
+        pattern: ^mdt_[A-Za-z0-9]{12,40}$
     LedgerId:
       name: ledger_id
       in: path
@@ -3883,6 +3894,22 @@ components:
         amount:
           $ref: ../schemas/common.json#/$defs/PositiveAmount
           description: 'Closed mandates only: exact payable amount, greater than zero'
+        tender:
+          type: object
+          description: 'Closed payment mandates only, and only one that pays one tender of a payment plan: the plan_hash of the plan and the tender_id
+            this mandate pays. Its amount is then the tender''s amount, not the quote total. A mandate that carries it MUST NOT pay a complete that
+            has no payment_plan.'
+          required:
+          - plan_hash
+          - tender_id
+          properties:
+            plan_hash:
+              $ref: ../schemas/common.json#/$defs/Hash
+              pattern: '^sha-256:'
+            tender_id:
+              type: string
+              pattern: ^tdr_[A-Za-z0-9]{6,40}$
+          additionalProperties: false
         payee:
           type: object
           description: The party a payment under this mandate is paid to. An open Payment Mandate whose rail_binding.primitive is sbmd_block (a
@@ -3954,7 +3981,7 @@ components:
                 jti:
                   type: string
                   pattern: ^[A-Za-z0-9_-]{8,64}$
-                  description: The jti of the attestation. The gateway re-checks its status at every complete, and a pause for a lapsed attestation
+                  description: The jti of the attestation. The gateway re-checks its status at every complete (or, after a lift, the status of the newer attestation that lifted the pause), and a pause for a lapsed attestation
                     logs it.
               additionalProperties: false
               description: 'The conformance attestation that admitted the bound handler as a pilot, as the Mandate Manager verified it at issuance:
@@ -4140,6 +4167,19 @@ components:
           not:
             required:
             - rail_binding
+      - description: A tender binding is only for a closed payment mandate.
+        if:
+          required:
+          - tender
+        then:
+          properties:
+            form:
+              const: closed
+            kind:
+              const: payment
+          required:
+          - form
+          - kind
       - description: An open mandate carries data scopes, an audit URI, a retention period and at least one frequency bound.
         if:
           properties:
@@ -4844,6 +4884,11 @@ components:
           - presence_not_proven
           - evidence_unverifiable
           - session_state_conflict
+          - bacp_mandate_required
+          - plan_not_offered
+          - plan_conflict
+          - ledger_head_mismatch
+          - settlement_payee_unmatched
         message:
           type: string
         param:
@@ -4861,8 +4906,8 @@ components:
             type: string
           description: 'Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors (rail_limit_exceeded). On
             rail_binding_not_open_eligible the reasons include binding_ineligible, reissue_required, registry_copy_stale, attestation_status_stale
-            (a conformance-attestation status that is revoked, more than 24 hours old or unreachable; recoverable, no pause) and
-            attester_not_accepted (the attestation''s signer is in the Mandate Manager''s published exclusion list).
+            (a conformance-attestation status list that is more than 24 hours old or unreachable; recoverable, no pause; a revoked or expired attestation gives binding_ineligible) and
+            attester_not_accepted (the attestation''s signer is in the Mandate Manager''s published exclusion list).'
         step_up_kind:
           enum:
           - confirm
@@ -4919,6 +4964,8 @@ components:
           - payment_mode_fee_inconsistent
           - refund_short_of_terms
           - charge_recipient_unmapped
+          - charge_recipient_invalid
+          - operator_compensation_mismatch
         origin:
           enum:
           - gateway
@@ -5717,7 +5764,7 @@ components:
         recipient:
           $ref: ../schemas/common.json#/$defs/ChargeRecipient
           description: Who receives the line from the payer's money, as the seller's side signed it. REQUIRED when type is delivery, packing, convenience_fee,
-            cod_fee or other_charge. The gateway fills it from the BPP's signed value and never infers it from the type.
+            cod_fee, tax or other_charge. The gateway fills it from the BPP's signed value and never infers it from the type. government is valid only when type is tax, and a tax line's recipient is government; a line of the seller's quote never names agent_operator or assisted_operator.
         refund_rule:
           enum:
           - always
@@ -5742,12 +5789,41 @@ components:
               - packing
               - convenience_fee
               - cod_fee
+              - tax
               - other_charge
           required:
           - type
         then:
           required:
           - recipient
+      - if:
+          required:
+          - recipient
+          properties:
+            type:
+              not:
+                const: tax
+        then:
+          properties:
+            recipient:
+              not:
+                const: government
+      - if:
+          required:
+          - recipient
+          properties:
+            type:
+              const: tax
+        then:
+          properties:
+            recipient:
+              const: government
+      - properties:
+          recipient:
+            not:
+              enum:
+              - agent_operator
+              - assisted_operator
     OperatorCharge:
       type: object
       description: A per-order fee the principal pays to the agent operator, an assisted operator or the buyer app. The gateway asserts it, outside the
@@ -5778,7 +5854,6 @@ components:
       - payee_role
       - source
       - basis
-      - value
       - origin
       properties:
         payee_role:
@@ -5796,15 +5871,31 @@ components:
         value:
           type: integer
           minimum: 0
-          description: In basis points when basis is pct, and in integer paise when basis is flat.
+          description: Basis points; only when basis is pct.
         amount:
           $ref: '#/components/schemas/Amount'
-          description: The amount for this order, where it is known.
+          description: The amount for this order. REQUIRED when basis is flat; optional when basis is pct, where it is known.
         origin:
           enum:
           - ondc_bff
           - np_fees
           - operator_declared
+      allOf:
+      - if:
+          properties:
+            basis:
+              const: pct
+          required:
+          - basis
+        then:
+          required:
+          - value
+        else:
+          required:
+          - amount
+          not:
+            required:
+            - value
       additionalProperties: false
     ChargeLine:
       type: object
@@ -5820,11 +5911,12 @@ components:
           - payment_handling
           - handling
           - cod_fee
+          - other_charge
           - agent_fee
           - service
           - remainder
-          description: Every fee line the Trusted Surface reads one at a time, whoever receives it, and remainder for everything else (goods, delivery,
-            packing and tax) as one figure.
+          description: Every fee line the Trusted Surface reads one at a time, whoever receives it (including a line of type other_charge), and remainder
+            for everything else (goods, delivery, packing and tax only) as one figure.
         amount:
           $ref: '#/components/schemas/Amount'
         recipient:
@@ -6099,10 +6191,10 @@ components:
           type: integer
           minimum: 0
           description: The position of the entry in Disclosures.catalogue[] of the session that the entry is about.
-        cover:
+        cover_index:
           type: integer
           minimum: 0
-          description: On a summary step-up only, the position in covers[] of the leg whose session holds that Disclosures.catalogue[]. Absent otherwise.
+          description: On a summary step-up only, the position in covers[] of the leg whose session holds that Disclosures.catalogue[]. Absent otherwise. A cover_index that is not a position in covers[], or an index that is not a position in that leg's Disclosures.catalogue[], makes the render invalid (evidence_unverifiable).
         sponsorship:
           $ref: '#/components/schemas/Sponsorship'
         prior_price:
@@ -6176,8 +6268,8 @@ components:
           $ref: '#/components/schemas/Hash'
           description: 'REQUIRED for the trade acts GRN, CRAC, MSMED_OBJECTION and LEDGER_ACK: the hash of exactly what the principal is shown (for a
             document, the JCS hash of the exact body; for a ledger entry, its entry_hash; for a ledger statement, the head_hash at through_seq). For the
-            issue actions RESOLUTION_ACCEPTED and RESOLUTION_REJECTED: the sha-256 over the JCS form of the issue''s resolution as shown. Absent for
-            every other action.'
+            issue actions RESOLUTION_ACCEPTED and RESOLUTION_REJECTED: the sha-256 over the JCS form of the issue''s resolution as shown, absent when the issue
+            has no resolution. Absent for every other action, including ESCALATED, INFO_PROVIDED and CLOSED; a render that carries it for another action is invalid.'
         subject_ref:
           type: object
           description: For a trade act, what the act is about. REQUIRED with the trade acts GRN, CRAC, MSMED_OBJECTION and LEDGER_ACK. kind order or
@@ -6200,6 +6292,10 @@ components:
             through_seq:
               type: integer
               minimum: 0
+            payee:
+              type: string
+              maxLength: 256
+              description: The payee of the cited rail receipt. REQUIRED when kind is ledger_entry and the entry is a payment in pending_ack with settlement_payee_unmatched.
           if:
             properties:
               kind:
@@ -6292,6 +6388,7 @@ components:
           properties:
             plan_hash:
               $ref: '#/components/schemas/Hash'
+              pattern: '^sha-256:'
             tenders:
               type: array
               minItems: 1
@@ -6353,6 +6450,23 @@ components:
           properties:
             kind:
               const: post_order
+      - if:
+          required:
+          - action
+          properties:
+            action:
+              not:
+                enum:
+                - GRN
+                - CRAC
+                - MSMED_OBJECTION
+                - LEDGER_ACK
+                - RESOLUTION_ACCEPTED
+                - RESOLUTION_REJECTED
+        then:
+          not:
+            required:
+            - subject_hash
       - if:
           required:
           - action
@@ -6420,14 +6534,14 @@ components:
             catalogue_disclosure:
               items:
                 required:
-                - cover
+                - cover_index
         else:
           properties:
             catalogue_disclosure:
               items:
                 not:
                   required:
-                  - cover
+                  - cover_index
     StepUp:
       type: object
       required:
@@ -7419,6 +7533,39 @@ components:
                 params.virtual_payment_address), as the gateway received them (the raw on_init body and its Beckn Authorization header). REQUIRED for every Reserve Pay leg. Verification
                 step 6 checks the signature and compares the payee of the PSP payment receipt, and for Reserve Pay the open Payment Mandate's payee,
                 with it.
+        discovery_response:
+          type: object
+          description: The signed POST /discover response, exactly as the gateway sent it. The sha-256 of body is the content_hash of the
+            session's agent-written discover InstructionLog entry. REQUIRED when checkout.disclosures.catalogue[] is present and that entry
+            exists. A verifier rebuilds the signature base from status (@status) and content_digest, checks the gateway's signature against its
+            profile key and that each catalogue[] entry's sponsorship.status is no weaker than, and its sponsorship.by[] a superset of, that of
+            the same item here.
+          required:
+          - status
+          - body
+          - content_digest
+          - signature_input
+          - signature
+          properties:
+            status:
+              type: integer
+              minimum: 100
+              maximum: 599
+              description: The HTTP status code of the response, covered by the signature as @status.
+            body:
+              type: string
+              minLength: 1
+              description: The response content exactly as sent, as UTF-8 text, with no content coding. Its sha-256 is the content_hash of
+                the agent-written discover InstructionLog entry.
+            content_digest:
+              type: string
+              description: The Content-Digest header exactly as sent; it MUST match body.
+            signature_input:
+              type: string
+              description: The Signature-Input header of the response.
+            signature:
+              type: string
+              description: The Signature header of the response.
         discovery_sources:
           type: array
           description: For a session whose items came from POST /discover, the BPP-signed on_search callback behind every source_digest in
@@ -7469,6 +7616,16 @@ components:
               maximum: 6
             chain_valid:
               type: boolean
+            catalogue_result:
+              enum: [passed, failed, not_applicable]
+              description: Result of the step-6 catalogue checks over the entries that were checked. not_applicable when the bundle has no
+                Disclosures.catalogue[]. A failed result does not stop POST /issues.
+            catalogue_unchecked:
+              type: array
+              uniqueItems: true
+              items: {type: integer, minimum: 0}
+              description: Indexes into checkout.disclosures.catalogue[] of the entries the agent did not check (source_digest not in the
+                agent-written discover entry), and of every entry whose sponsorship comparison had no agent-written discover entry.
         bundle_signature:
           $ref: '#/components/schemas/Signature'
     WebhookEvent:
@@ -7863,7 +8020,13 @@ components:
     LedgerEntriesQuery:
       type: object
       description: The query parameters of GET /ledgers/{ledger_id}/entries.
+      required:
+      - mandate_ref
       properties:
+        mandate_ref:
+          type: string
+          pattern: ^mdt_[A-Za-z0-9]{12,40}$
+          description: The mandate through which the calling agent acts for its principal on this ledger. REQUIRED.
         after_seq:
           type: integer
           minimum: 0
@@ -7905,12 +8068,17 @@ components:
         type is refused with 400 at $.type. The gateway signs the entry as the debtor''s custodian. The entry settles nothing until the receipt it
         cites matches the creditor''s settlement accounts.'
       required:
+      - mandate_ref
       - type
       - amount
       - settles
       - settlement_evidence
       - prev_hash
       properties:
+        mandate_ref:
+          type: string
+          pattern: ^mdt_[A-Za-z0-9]{12,40}$
+          description: The mandate through which the calling agent acts for its principal, the debtor. The gateway accepts the posting only when that principal is the debtor of the ledger.
         type:
           const: payment
         amount:
@@ -8300,7 +8468,9 @@ components:
       type: object
       description: 'A BACP session in the shape of the UCP checkout schema pinned at source/ucp (UCP commit a5e7cfe): every UCP-required member is
         present, amounts are integers in paise, the discount lines are negative integers, the status uses UCP''s names, and the BACP-only state is
-        under bacp. It validates against the pinned shopping/checkout.json and against this component.'
+        under bacp. It validates against the pinned shopping/checkout.json and against this component. This component constrains only the envelope,
+        the status, the currency, continue_url and bacp; three rules are enforced only by the pinned UCP schema: the shape of line_items, a subtotal
+        in totals, and the sign of a discount total.'
       required:
       - ucp
       - id

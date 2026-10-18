@@ -32,7 +32,7 @@ this page and the OpenAPI document differ, this page is authoritative.
 | `Signature-Input`, `Signature` | request | every call except the public reads | RFC 9421 HTTP Message Signature by the agent's `cnf` key (see [Signatures](#signatures)) |
 | `Content-Digest` | request | every signed call | RFC 9530 digest of the raw body (of the empty body on a `GET`), covered by the signature |
 | `BACP-Agent` | request | every signed agent call | The AgentCredential (SD-JWT VC) with only the disclosures the gateway needs |
-| `Idempotency-Key` | request | every POST and PUT | 22–64 printable ASCII characters with at least 128 bits of entropy (see [Idempotency](#idempotency)) |
+| `Idempotency-Key` | request | every POST and PUT | 22–64 printable ASCII characters with at least 122 random bits (see [Idempotency](#idempotency)) |
 | `Content-Type` | request | every call with a body | `application/json` |
 | `Idempotent-Replayed` | response | on a replay | `true` when the response is the stored response of an earlier request with the same key |
 | `Retry-After` | response | with 409 `idempotency_in_flight` and 429 `quota_exceeded` | Seconds to wait before retrying with the **same** key |
@@ -91,6 +91,7 @@ signature.
 | 7 | If the idempotency store fails, writes fail closed with 503 `idempotency_store_unavailable`. |
 | 8 | After a lost response, a timeout or a 5xx, the agent MUST call `GET` on the resource first, and MAY retry only with the **same** key. A new key is a new purchase intent and is evaluated against the mandate afresh. |
 | 9 | A write refused with `403 presence_not_proven` is retried with `hp_proof` under a **new** key: the body differs, so the same key gets `422 idempotency_conflict`, whose message names a new key. |
+| 10 | Across a projection twin (an operation and its `/checkout-sessions` form), the stored request is compared in its canonical BACP form, and a replay returns the stored outcome in the shape of the path that was called. |
 
 `complete` is protected twice: by the idempotency key and by the rule that a closed payment mandate is consumed at
 most once and a `checkout_hash` is debited at most once (see [Sessions and Checkout](../checkout/index.md)).

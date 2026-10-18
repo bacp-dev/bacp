@@ -118,11 +118,14 @@ record or a profile presents without a list entry does not qualify. The role gra
 receipt, a request or a rail attestation.
 
 - An attestation's `exp` is at most 180 days after its `iat`.
-- A verifier of an attestation reads its status list and treats the attestation as revoked when the list marks it
-  revoked, when the copy it holds is more than 24 hours old, or when the list cannot be reached. This rule is
+- A verifier of an attestation reads its status list and refuses to rely on the attestation when the list marks it
+  revoked, when the copy it holds is more than 24 hours old, or when the list cannot be reached; a stale or
+  unreachable list does not pause a mandate, while a revocation, an expiry or a lapse of the entry or key (next bullet) does ([Handler binding](mandates.md#handler-binding)). This rule is
   fail-closed for issuing a mandate and for a new `complete` on a pilot handler; it never blocks a status check, a
-  reversal, a refund or a post-order write
-  ([Handler binding](mandates.md#handler-binding)).
+  reversal, a refund or a post-order write.
+- An entry that is removed from the latest dated release of the list, whose validity has ended or whose status is
+  revoked, and a key that is removed from its entry, no longer qualify: an attestation that rests on them is a lapsed
+  attestation for every mandate bound to it ([Rules](conformance.md#attestation-rules)).
 
 ## Request signatures
 
@@ -299,7 +302,7 @@ Every `POST` and `PUT` MUST carry an `Idempotency-Key`. `GET` requests do not.
 ### The key
 
 - The key MUST be 22–64 printable ASCII characters and SHOULD carry at least
-  128 bits of entropy (for example a UUIDv4 or a ULID).
+  122 random bits (for example a UUIDv4).
 - For `POST /discover` the key MUST be generated afresh for each search from at least 122 random bits (for example a
   UUIDv4), MUST NOT be predictable from earlier keys, and MUST NOT be reused, even after the gateway's idempotency
   record has expired. The key binds the sellers' `on_search` callbacks to this search
@@ -393,7 +396,7 @@ form, with a key id that the registry resolves. See
 | AgentCredential and its `cnf` key | `exp` at most 180 days after `iat`; the operator re-issues with a new `cnf` key | The issuer marks the credential revoked in its status list. The gateway rejects it with `401 agent_credential_revoked`. |
 | Registry keys (BAP, BPP, Mandate Manager, PSP, credential issuer) | At least every 180 days | Removed or marked invalid in the registry record; verifiers stop accepting signatures under it once they refresh the record |
 | Operator signing key | Per the operator's registry record | As for registry keys |
-| Conformance attestation | `exp` at most 180 days after `iat` | The authority marks the attestation revoked in its status list, or the entry is removed from the public list ([Conformance-authority keys](#conformance-authority-keys)) |
+| Conformance attestation | `exp` at most 180 days after `iat` | The authority marks the attestation revoked in its status list, or the entry is removed from the latest release of the public list ([Conformance-authority keys](#conformance-authority-keys)) |
 
 Rules:
 

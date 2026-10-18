@@ -2,15 +2,16 @@ Pinned copies of Universal Commerce Protocol (UCP) JSON Schemas
 ================================================================
 
 Upstream:   https://github.com/Universal-Commerce-Protocol/ucp
-Commit:     a5e7cfe3a03392899b2199ff751be6ae7c928c8a (described upstream as "draft after v2026-08-25")
+Commit:     a5e7cfe3a03392899b2199ff751be6ae7c928c8a (12-10-2026, on UCP's main branch, which upstream labels "draft"; 39 commits after v2026-08-25)
 Path:       source/schemas/ (the files that shopping/checkout.json references, directly or indirectly: 41 files)
 Copied:     18-10-2026, byte for byte, without change
 Licence:    Apache License, Version 2.0 (the same licence as BACP; see ../../LICENSE). Copyright 2026 UCP Authors.
             The upstream repository has no NOTICE file. BACP's NOTICE file records this use.
 
 Why: the BACP UCP checkout projection (capability in.bacp.ucp_checkout) is tested against exactly these schemas by
-scripts/validate.py and by the examples named ucp-checkout.*.json. UCP has published no tagged release that can be
-cited as of 18-10-2026 (open question Q-82), so the pin is a commit, not a release.
+scripts/validate.py and by the examples named ucp-checkout.*.json. UCP's latest tagged release is v2026-08-25 (25-08-2026); the
+other releases are v2026-04-08, v2026-01-23 and v2026-01-11 (as of 18-10-2026). The pin is a commit, not a release (open
+question Q-82).
 
 These files are not BACP schemas. Their $id values stay under https://ucp.dev/schemas/, and the build does not rewrite
 them. To re-pin, replace the files with the files of a later upstream commit or tag, update this file and rerun

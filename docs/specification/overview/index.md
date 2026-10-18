@@ -136,7 +136,7 @@ flowchart LR
     CONS -.-> Q36["Exposure ledger across gateways<br/>Q-36"]
     RAILS -.-> UAP["in.upi.uap<br/>reserved"]
     RAILS -.-> AGT["in.card.agentic<br/>pilot, Q-39"]
-    RAILS -.-> CIR["in.upi.circle<br/>pilot"]
+    RAILS -.-> CIR["in.upi.circle<br/>pilot, closed, Q-77"]
     subgraph B["Capability discovery and payment handlers"]
         PROF["/.well-known/bacp profile:<br/>capabilities, negotiation,<br/>payment_handlers, reserved_handlers"]
     end
@@ -147,11 +147,11 @@ flowchart LR
 ```
 
 Figure: BACP in one page. The principal and the agent operator (left) call the BACP gateway stack (centre), which
-reaches sellers and their Seller Apps on ONDC through Beckn (right). Payment rails, consent and identity (bottom) are
-the base every call depends on. The bottom band is the gateway's published profile, where a counterparty reads
+reaches sellers and their Seller Apps on ONDC through Beckn (right). Payment rails, consent and identity (the "Shared base" group) are
+the base every call depends on. The "Capability discovery" group is the gateway's published profile, where a counterparty reads
 capabilities and payment handlers. Dashed boxes are Proposed or not yet usable, each tied to an
 [open question](../open-questions.md) or a [handler status](../payments/handler-registry.md): a `reserved` handler
-backs no payment, and a `pilot` handler backs a mandate only when the gateway's conformance attestation lists it.
+backs no payment, and a `pilot` handler backs a mandate only when the gateway's conformance attestation lists it; `in.upi.circle` stays closed even then ([Q-77](../open-questions.md#q-77)).
 
 ## Layering
 
@@ -202,7 +202,7 @@ carries only payment *terms*: money moves off-network.
 
 | Layer | What BACP reuses | What BACP adds |
 |---|---|---|
-| **Transport bindings** | REST (OpenAPI 3.1), MCP tools with `structuredContent`, A2A `DataPart` and the `TASK_STATE_AUTH_REQUIRED` task state. One operation set, bound three ways, as UCP does. | RFC 9421 agent signatures with separate tags for browsing, paying, post-order writes and negotiation. Step-up mapped to A2A `TASK_STATE_AUTH_REQUIRED` and MCP `insufficient_scope`. See [REST](../transports/rest.md) and [MCP and A2A](../transports/mcp-a2a.md). |
+| **Transport bindings** | REST (OpenAPI 3.1), MCP tools with `structuredContent`, A2A `DataPart` and the `TASK_STATE_AUTH_REQUIRED` task state. One operation set, bound three ways. UCP binds its own operations four ways (REST, MCP, A2A and an embedded binding), and BACP does not adopt the embedded one. | RFC 9421 agent signatures with separate tags for browsing, paying, post-order writes and negotiation. Step-up mapped to A2A `TASK_STATE_AUTH_REQUIRED` and MCP `insufficient_scope`. See [REST](../transports/rest.md) and [MCP and A2A](../transports/mcp-a2a.md). |
 | **Session facade** | UCP checkout lifecycle and status names; ACP full-state responses, flat errors, `messages[].resolution` and idempotency; AP2's Trusted Surface and fail-closed constraint evaluation. | A synchronous session over asynchronous Beckn; the deterministic verifier; the instruction log; an in-doubt payment saga. See [Sessions and Checkout](../checkout/index.md). |
 | **Beckn/ONDC backbone** | Beckn `{context, message}`, ACK plus `on_*` callbacks, Ed25519/BLAKE2b network signing, registry lookup, ONDC payment and settlement fields, IGM. | The [`context.bacp`](https://bacp.dev/schemas/beckn-context-bacp.json) extension, mandatory idempotency and a replay cache, and an IGM `actors[]` entry of type `AI_AGENT` (Proposed: [Q-11](../open-questions.md#q-11)). Agent semantics stay in a namespace that network participants can ignore. See [Beckn / ONDC Binding](../transports/beckn.md). |
 | **Payment rails** | Live Indian rails: UPI Reserve Pay, UPI Circle, UPI AutoPay, card e-mandates, eNACH, PPIs, COD and others, with their own regulatory limits. | Payment authority bound to a **live** rail primitive with a PSP-signed attestation; a basket-blind payment leg; rail-anchored receipts. See [Payments](../payments/index.md). |

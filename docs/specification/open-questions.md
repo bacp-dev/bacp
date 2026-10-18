@@ -7,8 +7,10 @@ This page lists every question that BACP version `2026-10-17` cannot answer on i
 settled. Each open question names the body whose answer BACP needs and the working position this version takes until
 then. Other pages link here with anchors such as `open-questions.md#q-16`.
 
-!!! note "No blocking questions in 2026-10-17"
-    No open question blocks version `2026-10-17`: **0** questions are marked Blocking. A question is Blocking when,
+!!! note "No question blocks 2026-10-17"
+    No open question blocks version `2026-10-17`. One, [Q-77](#q-77), is marked Blocking for settlement only: its
+    fail-safe default applies, and the mark means that settling it needs the approvals that GOVERNANCE.md requires for
+    a Blocking question. No other question is marked Blocking. A question is Blocking when,
     without its answer, a dated release cannot make a normative, testable statement, or would publish a design that
     conflicts with a rule already in force. Ten questions were Blocking before this release. Five are now
     [settled](#settled) with a concrete rule ([Q-41](#q-41), [Q-42](#q-42), [Q-43](#q-43), [Q-44](#q-44) and [Q-47](#q-47), plus
@@ -107,12 +109,12 @@ are involved, the owner is the one that must give the answer.
 | [Q-74](#q-74) | Provisional and instrument-linked discounts on plain sessions | BACP WG | Open |
 | [Q-75](#q-75) | Zero-payable orders | BACP WG | Open |
 | [Q-76](#q-76) | Gateway-funded and buyer-app-funded discounts | BACP WG | Open |
-| [Q-77](#q-77) | Whether a standing open mandate on UPI Circle is "explicit user action" (NPCI OC 201B) | NPCI, Legal counsel | Open, fail-safe default |
+| [Q-77](#q-77) | Whether a standing open mandate on UPI Circle is "explicit user action" (NPCI OC 201B) | NPCI, Legal counsel | Open, fail-safe default, Blocking for settlement |
 | [Q-78](#q-78) | Where a convenience fee must be disclosed when an agent selects the payment mode (NPCI/UPI/CC/01 para 7.5) | NPCI, Legal counsel | Open, fail-safe default |
 | [Q-79](#q-79) | Operator fees and commissions: duty to disclose, FAQ Q17, Rules r.5(7), tax | Legal counsel | Open |
 | [Q-80](#q-80) | ONDC recipient on the breakup, `misc` and the collector's MDR | ONDC | Open, fail-safe default |
 | [Q-81](#q-81) | Retained payment charges, MDR on refunds and on UPI mandates | Legal counsel, NPCI | Open, fail-safe default |
-| [Q-82](#q-82) | Which tagged UCP release the UCP checkout projection pins | BACP WG | Open, fail-safe default |
+| [Q-82](#q-82) | Whether the UCP checkout projection pins a tagged UCP release or a commit | BACP WG | Open, fail-safe default |
 | [Q-83](#q-83) | Counsel flags from the plan, ledger and trade-act bindings | Legal counsel | Open, fail-safe default |
 
 ## Questions {#questions}
@@ -816,8 +818,9 @@ counsel:
 - Is a price shown beside a maximum retail price, an MRP strike-through, or a coupon, bank offer or cart-level
   minimum-value offer, an "announcement of price reduction"?
 - Whose lowest price counts under r.4(13): this platform's, all platforms' or offline prices too?
-- Do r.4(12) and r.4(13) bind for-resale (B2B) purchases (whether the Consumer Protection Act, 2019 reaches them is not
-  verified as of 18-10-2026)?
+- Do r.4(12) and r.4(13) bind for-resale (B2B) purchases (section 2(7) of the Consumer Protection Act, 2019 excludes a person who buys for resale or for any commercial
+  purpose from "consumer"; whether that exclusion applies to r.4(12) and r.4(13) is a question for counsel, as of
+  18-10-2026)?
 - Does a gateway that alters or computes a prior price become the party that announces the reduction?
 - Is brand-funded placement of an item a "sponsored listing" when the seller did not pay?
 - Is a sponsored slot that is not targeted, shown to a minor, "targeted advertising" under DPDP s.9(3)?
@@ -887,7 +890,7 @@ same pattern as the discovery source?<br>
 **Owner.** BACP WG.
 
 **Working position.** The evidence bundle's `bpp_signed_quote` catches such a change on dispute, after the fact. The
-mandate bounds the amount in a human-not-present flow. No run-time check exists in this version.
+mandate bounds the amount in a human-not-present flow. No run-time check exists in this version. A residual remains: `applied[].automatic` is derived by the gateway from the breakup tag `offer/auto`, so a gateway that submits an affiliate offer and labels it `automatic: true` escapes the [discount rule 2](checkout/index.md#discounts) check at run time. It is caught only from `bpp_signed_quote` on dispute.
 
 ### Q-73 Trusted Surface repeat of catalogue disclosures {#q-73}
 
@@ -948,8 +951,15 @@ that "explicit user action", and does "IoT" there cover software profiles such a
 
 **Working position (fail-safe default).** `in.upi.circle` backs no open mandate, even when a conformance authority
 whose scope includes it is listed and the gateway's attestation lists it, until an NPCI member bank and counsel
-answer. A Mandate Manager refuses an open mandate request on `in.upi.circle` with `rail_binding_not_open_eligible`. A
-human-present payment through Circle is unaffected. See [UPI Circle](payments/rails.md#upi-circle-delegate).
+answer. A Mandate Manager refuses an open mandate request on `in.upi.circle` with `rail_binding_not_open_eligible`, and a
+gateway refuses every human-not-present `complete` under an open mandate on it. The registry marks the handler
+`open_eligible: false` for this reason. A human-present payment through Circle is unaffected. See
+[UPI Circle](payments/rails.md#upi-circle-delegate).
+
+**Blocking for settlement.** This question is marked Blocking so that settling it, or any other change that lets
+`in.upi.circle` back an open mandate, needs the approvals that GOVERNANCE.md requires for the resolution of a Blocking
+question (two maintainers and steering group sign-off), and for the interim period the further approval that
+GOVERNANCE.md (c) requires. The fail-safe default above means that it does not block the release.
 
 ### Q-78 Where a convenience fee is disclosed when an agent selects the payment mode {#q-78}
 
@@ -974,7 +984,7 @@ providers shall NOT charge Platform Fee or any other charge") reach an agent ope
 provider? Is a per-order operator fee a "bundled fee" under rule 5(7) of the Consumer Protection (E-Commerce) Rules,
 2020 (from 01-01-2027), and is a BACP gateway or agent operator an "e-commerce entity" or "marketplace e-commerce
 entity" (rule 3(1)(b), (g))? What is the GST treatment of an operator fee line, and which BACP party is the "operator"
-for CGST s.52 TCS and Income-tax Act s.194-O TDS?<br>
+for CGST s.52 TCS and Income-tax Act s.194-O TDS? Does the operator refund an operator charge when an order is cancelled for the seller's fault?<br>
 **Owner.** Legal counsel.
 
 **Working position.** No Indian rule was found that requires an operator to disclose a seller-paid commission (not
@@ -1010,14 +1020,15 @@ MDR or aggregator fees. See [Refunds](payments/index.md#refunds).
 
 ### Q-82 Pinned UCP release for the UCP checkout projection {#q-82}
 
-**Question.** Which tagged release of the Universal Commerce Protocol should the `in.bacp.ucp_checkout` projection pin, once
-UCP publishes one? As of 18-10-2026 the UCP repository that was checked has no release tags, and the schemas that
-BACP pins are those of commit `a5e7cfe` (described in the repository as "draft after v2026-08-25").<br>
+**Question.** Should the `in.bacp.ucp_checkout` projection pin a tagged release of the Universal Commerce Protocol or a
+commit? As of 18-10-2026 UCP has four releases, the latest `v2026-08-25` (25-08-2026), and the schemas that BACP pins are
+those of commit `a5e7cfe` (12-10-2026) on UCP's `main` branch, which upstream labels `draft`; that commit is 39 commits
+after `v2026-08-25` and differs from it in nine of the pinned files.<br>
 **Owner.** BACP WG.
 
 **Working position (fail-safe default).** The projection is pinned to commit `a5e7cfe` and says so
 ([UCP checkout projection](transports/ucp-checkout.md)). A gateway MUST NOT claim UCP compatibility on any other UCP
-version. When UCP publishes a tagged release, a later BACP release re-pins and re-runs the projection checks.
+version. Whether a later BACP release re-pins to a tag is open; a re-pin re-runs the projection checks.
 
 ### Q-83 Counsel flags from the plan, ledger and trade-act bindings {#q-83}
 

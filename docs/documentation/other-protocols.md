@@ -23,11 +23,11 @@ The descriptions are based on each protocol's public specification or announceme
 
 ## UCP
 
-The [Universal Commerce Protocol](https://ucp.dev) is an open standard for interoperable commerce between platforms (such as AI agents), businesses and payment providers. Businesses publish a profile at a well-known URL. Platforms negotiate capabilities such as checkout, cart, catalogue and orders, and the same operations are bound to REST, MCP and A2A. UCP versions its specification by date.
+The [Universal Commerce Protocol](https://ucp.dev) is an open standard for interoperable commerce between platforms (such as AI agents), businesses and payment providers. Businesses publish a profile at a well-known URL. Platforms negotiate capabilities such as checkout, cart, catalogue and orders, and the same operations are bound to REST, MCP, A2A and an embedded binding. UCP versions its specification by date.
 
 **How BACP relates.** BACP's checkout session follows UCP checkout's lifecycle and status names (BACP spells `cancelled` and adds `human_handoff`). BACP is not wire-compatible with UCP. Paths, totals and the sign of discounts, the `ucp` envelope, the `complete` payload and payment authority, and the MCP argument shape differ. A gateway that lists the capability `in.bacp.ucp_checkout` also serves a [projection](https://bacp.dev/latest/specification/transports/ucp-checkout/) in the shape of the UCP checkout, pinned to UCP commit `a5e7cfe`, and UCP clients use that projection. BACP adds what UCP leaves out for India: discovery across a network rather than per business, write paths after an order (cancel, return, grievance), Indian payment rails, DPDP consent and GST.
 
-**Where BACP differs from UCP.** The table lists every difference that matters to an agent built for UCP, in the order in which such an agent fails. The first row is the one that moves money: a UCP-built agent that reads a BACP discount as a UCP discount shows the buyer an extra charge instead of a saving. UCP facts are as of 18-10-2026, from the UCP repository at commit `a5e7cfe` ("draft after v2026-08-25"); UCP has published no tagged release to cite ([Q-82](../specification/open-questions.md#q-82)).
+**Where BACP differs from UCP.** The table lists every difference that matters to an agent built for UCP, in the order in which such an agent fails. The first row is the one that moves money: a UCP-built agent that reads a BACP discount as a UCP discount shows the buyer an extra charge instead of a saving. UCP facts are as of 18-10-2026, from the UCP repository at commit `a5e7cfe` (12-10-2026, on UCP's `main` branch, which upstream labels `draft`). UCP's latest tagged release is `v2026-08-25` (25-08-2026), and the pinned commit is 39 commits after it ([Q-82](../specification/open-questions.md#q-82)).
 
 | # | Difference | UCP | BACP | What a UCP-built agent gets wrong |
 |---|---|---|---|---|
@@ -62,8 +62,8 @@ every capability uses.
 | Capabilities (checkout, order, catalogue) | `in.bacp.discover`, `in.bacp.checkout`, `in.bacp.mandate`, `in.bacp.order`, `in.bacp.issue` | [Discovery](../specification/discovery.md) |
 | Extensions | The extensibility rules: ignore unknown fields, fail closed on unknown mandate constraints, namespaced `extensions`, registered error codes and handlers | [Extensibility](../specification/overview/index.md#extensibility) |
 
-Two UCP parts have no BACP counterpart in this version: the cart capability, and linking a buyer's account at a seller.
-Both are parked, not rejected. BACP has no mechanism yet by which a third party defines a new capability or vertical;
+Among the UCP parts with no BACP counterpart in this version are the cart capability, linking a buyer's account at a seller, `ask` (natural-language questions to a business), `permalink` (a browser-addressable intent), location search and lookup, and a second vertical, `lodging`.
+These are parked, not rejected. BACP has no mechanism yet by which a third party defines a new capability or vertical;
 how a new vertical is added stays an open topic, and the extensibility rules above are today's only extension path.
 
 **What BACP does not take from UCP.** BACP does not adopt UCP's Embedded Protocol, in which a business's own checkout
@@ -145,7 +145,7 @@ x402 is an HTTP 402 flow for paying per request: the server answers with a payme
 
 | From | BACP reuses |
 |---|---|
-| UCP | Checkout lifecycle and status names (not wire-compatible), three-way transport binding, RFC 9421 and RFC 9530 signing, idempotency keys, date-based versions, capability intersection |
+| UCP | Checkout lifecycle and status names (not wire-compatible), REST, MCP and A2A transport bindings (UCP has a fourth, embedded binding, which BACP does not adopt), RFC 9421 and RFC 9530 signing, idempotency keys, date-based versions, capability intersection |
 | AP2 | Open and closed mandates as SD-JWT with key binding, the non-agentic Trusted Surface, fail-closed constraints, signed receipts |
 | ACP | Full-state responses, flat errors with resolution hints, strict idempotency responses |
 | A2A | Agent card, `TASK_STATE_AUTH_REQUIRED` step-up, data parts |

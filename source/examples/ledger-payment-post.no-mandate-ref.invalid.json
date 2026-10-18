@@ -1,0 +1,22 @@
+{
+  "type": "payment",
+  "amount": {
+    "value": 480000,
+    "currency": "INR"
+  },
+  "settles": [
+    {
+      "entry_id": "lde_KHATA00000006",
+      "amount": {
+        "value": 480000,
+        "currency": "INR"
+      }
+    }
+  ],
+  "settlement_evidence": {
+    "handler": "in.upi.intent",
+    "receipt_id": "rcpt_UPI0000000042",
+    "rrn": "629318004499"
+  },
+  "prev_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc"
+}

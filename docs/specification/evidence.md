@@ -265,11 +265,12 @@ trusting the agent or its operator.
 | `receipts[]` | The full signed receipts: the BPP's checkout receipt, the PSP's payment receipt, and any refund receipts. |
 | `consent_receipts[]` | The ConsentReceipts under which data was shared. |
 | `instruction_log[]` | The session's full InstructionLog. |
+| `discovery_response` | The signed `POST /discover` response as `{status, body, content_digest, signature_input, signature}`, where `body` is the response content exactly as sent, with no content coding, and its sha-256 is the `content_hash` of the session's agent-written `discover` InstructionLog entry. REQUIRED when `Disclosures.catalogue[]` is present and that entry exists. The verifier rebuilds the signature base from `status` (`@status`) and the stored `content_digest`. |
 | `discovery_sources[]` | For a session whose items came from `POST /discover`: the BPP-signed `on_search` callback behind every `source_digest` in `checkout.disclosures.catalogue[]`, each as `{body, authorization}` exactly as the gateway received it ([Retention of the signed callbacks](discovery.md#catalogue-retention)). A verifier checks that the sha-256 of each `body` equals the `source_digest` and that the `authorization` verifies against the BPP's registry key, and compares the item values in the body with `checkout.disclosures.catalogue[]`. |
 | `trusted_surface_events[]` | Every signed Trusted Surface event of the transaction, verbatim as received at `/trusted-surface/events` (step-up results, mandate activation, credit acceptance, AFA completion), each with its [`Presentation`](human-participants.md#presentation). |
 | `ts_renders[]` | The gateway-signed [`ts_render`](human-participants.md#ts-render) (compact JWS) of every step-up that a `step_up.approved` or `step_up.declined` event in `trusted_surface_events[]` names, byte-identical to what the Trusted Surface fetched. In a bundle released to a seller or a payer PSP, a summary step-up's render is left out and `ts_render_digests[]` carries it instead. |
 | `ts_render_digests[]` | Only in a bundle released to a seller or a payer PSP: for each summary step-up over a [multi-seller basket](checkout/index.md#multi-seller-basket), `{step_up_id, render_hash, cover}`, where `render_hash` is the sha-256 of its `ts_render` and `cover` is the `covers[]` entry of this transaction's leg. The other sellers' lines stay out of the bundle. |
-| `verification` | The gateway's own result: `steps_passed` (0 to 6) and `chain_valid`. |
+| `verification` | The gateway's own result: `steps_passed` (0 to 6), `chain_valid`, and for step 6 `catalogue_result` and `catalogue_unchecked[]`. |
 | `bundle_signature` | The operator's signature over the whole bundle minus `bundle_signature`. |
 
 A human-readable rendering of a bundle, the informative summary profile
@@ -334,16 +335,25 @@ chain is valid, and the bundle signature verifies:
    ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)).
    For a session step-up of kind `confirm` or `rail_auth` the verifier also checks the catalogue disclosure:
    every `Disclosures.catalogue[]` entry of `checkout.disclosures` that is `sponsored` or `undeclared`, or has a
-   `prior_price`, MUST have an entry in the `ts_render`'s `catalogue_disclosure[]`, so that an omission fails; each
+   `prior_price`, MUST have an entry in the `ts_render`'s `catalogue_disclosure[]`, so that an omission fails; where the session's agent-written
+   `discover` InstructionLog entry exists for the bundle's `transaction_id`, `checkout.disclosures.catalogue[]` MUST hold
+   exactly one entry for each line item of the BPP-signed quote whose item appears in a source named in that entry's
+   `refs.source_digests`; each
    entry's `sponsorship`, `prior_price` and `unit_price` MUST equal (JCS) those of the `Disclosures.catalogue[]` entry
    that its `index` names (`unit_price` against `discovered_unit_price`; on a summary step-up, of the leg that
-   `covers[cover]` names, which only a verifier that holds that leg's bundle can check); and
+   `covers[cover_index]` names, which only a verifier that holds that leg's bundle can check); and
    `counterparty_text[name_ref].text` MUST equal a language value of the item's name in the BPP-signed quote for that
-   item. Every `Disclosures.catalogue[].source_digest` MUST appear in `refs.source_digests` of the session's
-   `discover` InstructionLog entry written by the agent; the signed source in `discovery_sources[]` whose sha-256 is that
+   item. For each `Disclosures.catalogue[]` entry whose `source_digest` appears in `refs.source_digests` of the
+   session's `discover` InstructionLog entry written by the agent, the signed source in `discovery_sources[]` whose sha-256 is that
    digest MUST verify against the BPP's registry key as of the signature's `created` time; its `context.message_id` MUST
    equal the derivation from the `idempotency_key` in that log entry; and its item values MUST match those of the
-   `Disclosures.catalogue[]` entry, derived by the [normative mapping](transports/beckn.md#disclosure-mapping). This
+   `Disclosures.catalogue[]` entry, derived by the [normative mapping](transports/beckn.md#disclosure-mapping). An entry
+   whose digest is not there was not checked by the agent; the verifier records it as unchecked, and it does not fail the
+   step. Where the session's agent-written `discover` InstructionLog entry exists, `discovery_response` MUST be present, its
+   signature MUST verify against the gateway's profile key, and the sha-256 of its `body` MUST equal that entry's
+   `content_hash`; each entry's `sponsorship.status` MUST then be no weaker than, and its `sponsorship.by[]` a superset
+   of, those of the same item in `discovery_response`. Where there is no such entry, the sponsorship comparison is
+   recorded as unchecked and does not fail the step. This
    makes the verifier, not the gateway, the judge of whether the sponsorship and prior price shown at checkout are those
    the seller sent.
    Any failure is `evidence_unverifiable`. Step 6 proves what the principal was shown and, through
@@ -357,7 +367,10 @@ The gateway runs this verification when it builds the bundle and records the res
 
 - Before raising an issue the gateway **MUST** assemble the bundle and verify it fully. If it does
   not pass all six verification steps with a valid chain, `POST /issues` returns `422 evidence_unverifiable`
-  and nothing is sent ([Orders and Post-order](checkout/post-order.md#igm)).
+  and nothing is sent ([Orders and Post-order](checkout/post-order.md#igm)). The one exception is the catalogue
+  checks of step 6: a catalogue entry that fails or is unchecked does not stop the issue; the gateway records it in
+  `verification` (`catalogue_result`, `catalogue_unchecked[]`) and sends the issue. A gateway **MUST NOT** refuse to raise
+  an issue because of a catalogue check.
 - The Beckn `issue` carries the bundle by reference: `evidence_bundle_ref` (the
   `/evidence/{transaction_id}` URI) and `evidence_bundle_hash` (`sha-256` over the JCS form of the
   bundle). The bundle itself is also returned on the `Issue` to the agent.

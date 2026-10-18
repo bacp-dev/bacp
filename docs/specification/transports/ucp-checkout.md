@@ -11,11 +11,12 @@ checkout. This page defines that **projection**. A gateway that does not list th
 `/checkout-sessions` path: a UCP client gets `404`, as it did before this release.
 
 !!! warning "Pinned to a UCP commit, not a release"
-    The projection is tested against unmodified copies of the UCP JSON Schemas at UCP commit `a5e7cfe` (described
-    upstream as "draft after v2026-08-25"), kept under `source/ucp/` ([provenance and licence](https://bacp.dev/latest/ucp/PINNED.txt)).
-    UCP had published no tagged release that BACP could cite as of 18-10-2026, so the pin is a commit. Which tagged
-    release to pin later is [Q-82](../open-questions.md#q-82). A gateway MUST NOT claim UCP compatibility on any other UCP
-    version.
+    The projection is tested against unmodified copies of the UCP JSON Schemas at UCP commit `a5e7cfe` (12-10-2026, on
+    UCP's `main` branch, which upstream labels `draft`), kept under `source/ucp/`
+    ([provenance and licence](https://bacp.dev/latest/ucp/PINNED.txt)). UCP's latest tagged release is `v2026-08-25`
+    (25-08-2026); the other releases are `v2026-04-08`, `v2026-01-23` and `v2026-01-11`. The pinned commit is 39 commits
+    after `v2026-08-25`, so the pin is a commit, not a release (as of 18-10-2026). Whether to pin a tag or a commit is
+    [Q-82](../open-questions.md#q-82). A gateway MUST NOT claim UCP compatibility on any other UCP version.
 
 ## Whole or absent {#whole-or-absent}
 
@@ -109,7 +110,7 @@ loses something. The rows are in the order in which a UCP client fails.
 
 | # | BACP | In the UCP projection | What the UCP shape loses |
 |---|---|---|---|
-| 1 | **Discount sign.** A discount is a non-negative `Amount` of type `discount` | A negative integer in paise: BACP `discount` of ₹30 is `-3000`. The UCP `total` equals BACP's `all_in_total` | Nothing, if the sign is flipped; a projection with a positive discount fails the pinned schema and adds the discount to the total |
+| 1 | **Discount sign.** A discount is a non-negative `Amount` of type `discount` | A negative integer in paise: BACP `discount` of ₹30 is `-3000`. The UCP `total` line is `all_in_total` plus the operator charges, and each operator charge is a UCP `totals[]` line of type `fee` with `display_text` from the gateway's templates; `bacp.all_in_total` keeps the quote figure | Nothing, if the sign is flipped; a projection with a positive discount fails the pinned schema and adds the discount to the total |
 | 2 | A declined payment makes the session `cancelled` | UCP's own rule would be `incomplete` with a recoverable `payment_failed`, but the projection reports the BACP outcome: `canceled`, with `bacp.status: cancelled` | The retry that UCP offers after a decline |
 | 3 | `cancelled` | `canceled`. A UCP platform treats a checkout as canceled only when the business reports `canceled`, so the projection reports it | The spelling |
 | 4 | `complete` takes mandates (JWS) | `payment.instruments[]` with a BACP closed payment mandate as the credential, and the checkout mandate in `bacp` | UCP's own payment instruments and AP2 |
@@ -119,10 +120,15 @@ loses something. The rows are in the order in which a UCP client fails.
 | 8 | `Amount` is `{value, currency}` | An integer in paise, with `currency` at the root (`INR`) | Nothing |
 | 9 | `/sessions` | `/checkout-sessions` | Nothing |
 | 10 | MCP tools take the body's properties, path parameters and `idempotency_key` | UCP's tool names, with the same arguments plus UCP's `id` | `meta` is not used |
-| 11 | Messages carry a `LangText` map, and counterparty text is labelled | One string in the negotiated language in UCP `content`, every language in `bacp.messages`. Counterparty text never goes in UCP `content`. `ai_disclosure.notice` becomes a UCP `warning` | The other languages, and the labelling of counterparty text |
+| 11 | Messages carry a `LangText` map, and counterparty text is labelled | One string in the negotiated language in UCP `content`, every language in `bacp.messages`. Counterparty text never goes in UCP `content`, and a UCP `line_items[].item.title` is seller text in a UCP field, marked as counterparty text in `bacp`. `ai_disclosure.notice` becomes a UCP `warning` | The other languages, and the labelling of counterparty text |
 | 12 | `links` come from the gateway | Typed policy links with gateway-template titles | Seller links |
 | 13 | GST heads and `TCS` | The GST heads sum to the UCP `tax` line, with the split in the sub-lines of that line or in namespaced total types; a `TCS` line never enters a buyer-facing total (whether it may is flagged to counsel, [Q-83](../open-questions.md#q-83)) | The split of GST in a client that ignores sub-lines |
-| 14 | `prior_price` and `mrp` | UCP `list_price` is filled only from `prior_price.amount`, never from `mrp` | The MRP |
+| 14 | `prior_price` and `mrp` | UCP's catalogue `variant.json` carries a `list_price` ("List price before discounts"), which is not among the pinned checkout schemas. Wherever the projection states a price before discount, it takes `prior_price.amount` and never `mrp` | The MRP |
+
+UCP `buyer` fields on `create_checkout` are held by the gateway and are not sent to the seller before the ConsentReceipt
+([Data minimisation](../mandates.md#consent)). A payment instrument that carries a member that UCP allows and BACP does
+not define, for example a display or billing field, gets `400 invalid_request` rather than being ignored: the projection
+fails closed, and this is a known delta from UCP.
 
 ## Pinned schemas and checks {#pinned-schemas}
 

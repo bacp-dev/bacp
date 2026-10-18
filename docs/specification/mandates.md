@@ -325,6 +325,13 @@ approves.
 - This is BACP policy, not a statutory duty. No Indian rule found requires an agent operator to disclose a
   seller-paid commission (not verified as of 18-10-2026), and BACP cites no law for it
   ([Q-79](open-questions.md#q-79)).
+- When a session's `intermediary_compensation[]` has an entry with `source: seller` while the mandate's notice says
+  `from_sellers: none`, the gateway adds the warning `operator_compensation_mismatch` (`requires_buyer_review`) and logs
+  it at stage `disclosure`. It tells the principal once per mandate on the Trusted Surface and reports the mismatch to
+  the Mandate Manager. The Mandate Manager then asks the operator for a corrected notice, which takes effect only on
+  the principal's re-approval.
+- When the AgentCredential has no `compensation_model`, the notice says that the operator has not declared its
+  compensation model to its credential issuer.
 - Per-order amounts are shown again at the time of the order as an [operator charge](checkout/index.md#fee-lines).
   What sellers pay is carried per order in `intermediary_compensation[]` and is never read out per order.
 
@@ -441,19 +448,20 @@ never against agent claims.
 | `cod_allowed` | boolean | Cash-on-delivery orders are allowed HNP only when `true`. | `403 cod_not_allowed` |
 | `cod_max_open_orders` | integer ≥ 0 | Maximum open COD orders the agent may hold HNP. Where a negotiation mandate also sets a cap, the stricter wins. | `403 cod_open_orders_cap` |
 | `credit_funding_allowed` | boolean | A credit-funded handler (BNPL, cardless EMI, a credit line) is refused unless this is `true`. | `403 credit_funding_not_allowed` |
-| `convenience_fees` | `{allowed, max_per_order?}` | In a human-not-present checkout, the agent may pay a convenience fee only when `allowed` is `true` and the total of the order's `convenience` lines is at or below `max_per_order` (when it is set). With `allowed: false`, `max_per_order` MUST be absent. | `confirm` step-up, reason `constraint_unresolved`, before any money moves |
+| `convenience_fees` | `{allowed, max_per_order?}` | In a human-not-present checkout, the agent may pay a convenience fee only when `allowed` is `true` and the total of the order's `convenience` and `other_charge` lines that apply to the handler being paid is at or below `max_per_order` (when it is set). With `allowed: false`, `max_per_order` MUST be absent. | `confirm` step-up, reason `constraint_unresolved`, before any money moves |
 
 COD and credit funding are described in [Credit and Split Tender](payments/credit-and-split-tender.md).
 
 **Convenience fees in a human-not-present checkout.** NPCI/UPI/CC/01 para 7.5 asks the Payee PSP to disclose a
 convenience fee "upfront to the User on the merchant payment page(s) prior to the selection of the payment mode". When
 the agent selects the mode and no human sees a payment page, the mandate is where the principal's consent to such a fee
-is recorded. In HNP, if the order has a `convenience_fee` line (a `convenience` charge) that `convenience_fees` does not
+is recorded. In HNP, if the order has a `convenience_fee` line (a `convenience` charge) or an `other_charge` line that `convenience_fees` does not
 cover, because the field is absent, `allowed` is `false` or the total of those lines is above `max_per_order`, the
 gateway raises a `confirm` step-up with reason `constraint_unresolved` and moves no money. This is a mandate constraint,
 so a verifier that does not know the key fails closed
 ([Fail-closed handling](#unknown-constraints)). Whether disclosure through the Trusted Surface meets para 7.5 is
-open ([Q-78](open-questions.md#q-78)).
+open ([Q-78](open-questions.md#q-78)). The check runs at `complete` against the handler actually debited, including after
+a `rail_fallback`. The existing split-order trigger applies when an order is split to stay under `max_per_order`.
 
 ### Budgets {#budgets}
 
@@ -608,7 +616,7 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   `rail_binding.conformance{iss, sub, jti}`: the conformance authority, the gateway and the attestation's `jti`. The
   schema leaves it optional, and a conformance rule makes it REQUIRED for every pilot binding
   ([Conformance attestation](conformance.md#attestation-rules)). At `complete` the gateway refuses the mandate when it
-  is absent or its `sub` is not the gateway itself, and re-checks the bound `jti`.
+  is absent or its `sub` is not the gateway itself, and re-checks the gateway's current attestation (the bound `jti`, or after a lift the newer attestation that lifted the pause).
 - **Re-checked at every `complete`.** Eligibility (status, attestation and primitive) is not fixed
   at issuance. The gateway **MUST** re-check it at step 1 of [Deterministic evaluation](#evaluation)
   on every `complete`, against the current registry, never against a copy taken when the mandate
@@ -630,11 +638,16 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   cancels every open session under the mandate with the message `rail_binding_not_open_eligible`.
   Every later `complete` under it gets `400 rail_binding_not_open_eligible` with
   `reasons: [binding_ineligible]` while the binding stays ineligible.
-- **A lapsed attestation pauses the mandate.** When the bound attestation is revoked, or its `exp` passes, at a
-  re-check, the gateway adds `binding_ineligible` with the cause `attestation`, and writes the attestation's `jti` into
+- **A lapsed attestation pauses the mandate.** When the bound attestation is revoked, or its `exp` passes, or its
+  authority's entry is removed, lapsed or revoked, or its key is removed from the entry, at a re-check, the gateway adds `binding_ineligible` with the cause `attestation`, and writes the attestation's `jti` into
   the InstructionLog entry for the addition. A status list that is stale or unreachable is not a revocation: the
   `complete` gets `400 rail_binding_not_open_eligible` with `reasons: [attestation_status_stale]` and
   `resolution: recoverable`, and the mandate is not paused ([Conformance attestation](conformance.md#attestation-rules)).
+  A debit under an open Payment Mandate on a pilot handler is not authorised by the mandate if, when the gateway sent
+  it, the bound attestation was revoked or expired, its entry was not on the list, or the gateway was not
+  `rail_binding.conformance.sub`. A verifier reports such a debit as outside the mandate from the InstructionLog
+  `payment` entry of the debit, the list version and the status list. A Mandate Manager that finds the bound attestation revoked
+  or expired tells the principal on the Trusted Surface and offers revocation.
 - **A binding pause gates new `complete` only.** It never blocks a status check, a reversal, or a refund to the
   original source of a debit whose `rrn` or `utr` is already in the ledger; these MUST proceed. A refund to any other
   destination MUST be refused (`credits_to_other_party: 0`). Cancel, return and issue on orders already placed under the
@@ -648,7 +661,10 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   principal, on the Trusted Surface, removes `principal_paused` and `unmatched_rail_debit`. The gateway removes only
   `binding_ineligible`, and only on a registry version strictly newer than the one recorded for the
   pause in which the binding is eligible again (or, for a pause caused by the gateway's conformance
-  attestation, a newer attestation that lists the pilot); a replica that still holds the recorded
+  attestation, a newer attestation from the same authority (`iss` equal to `rail_binding.conformance.iss`), whose `sub`
+  is the gateway itself, that lists the bound handler and passes every check in
+  [At `complete`](conformance.md#attestation-rules); an attestation from another authority does not lift the pause, and
+  the principal's Mandate Manager issues a new mandate instead, under every issuance rule); a replica that still holds the recorded
   or an older version **MUST NOT** remove it. When the last reason is removed the mandate returns to `ACTIVE`
   and the gateway sends `mandate.status_changed` (`ACTIVE`) to the agent; a change to the set of a
   mandate that stays `PAUSED` is sent as `mandate.status_changed` (`PAUSED`) with the new
@@ -770,7 +786,7 @@ There are three kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
-| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), a convenience fee that the mandate's [`convenience_fees`](#constraints) does not cover in HNP, the HNP `payment_mode_fee_inconsistent` warning ([Fees on the payer's screen](checkout/index.md#fee-lines)), an order that a seller's [`requires_principal_confirmation`](discovery.md#principal-confirmation) covers, or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, [fee-bearer](#fee-bearer-change), payee or collector ([Per-leg rule](#per-leg-rule)). |
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), a convenience fee that the mandate's [`convenience_fees`](#constraints) does not cover in HNP, an operator charge that the mandate's `operator_compensation` does not cover, the HNP `payment_mode_fee_inconsistent` warning ([Fees on the payer's screen](checkout/index.md#fee-lines)), an order that a seller's [`requires_principal_confirmation`](discovery.md#principal-confirmation) covers, or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, [fee-bearer](#fee-bearer-change), payee or collector ([Per-leg rule](#per-leg-rule)). |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
 | `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`); a replacement for a step-up voided after a counterparty revised the issue's `resolution` is not counted ([Presence proof](human-participants.md#hp-proof)). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 
@@ -902,7 +918,8 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
    the PSP's own pre-check) gives `403 rail_limit_exceeded` with all reasons.
 8. **Step-up thresholds.** `above_amount`, `new_merchant`, `outside_categories` and
    `first_order` give a `confirm` step-up. This step is skipped only while the session's current
-   `checkout_hash` equals the `checkout_hash` of the approved step-up's `Presentation`. Once the
+   `checkout_hash` equals the `checkout_hash` of the approved step-up's `Presentation` and its current `disclosures.hash`
+   equals the `price_breakup_hash` of the approved render. Once the
    quote changes, the approval no longer applies: step 8 runs again and a new step-up is needed,
    and no money moves on the old approval. A `step_up_id` that belongs to another session is
    `404 not_found`, unless the step-up is an approved summary step-up whose `covers[]` names this
@@ -1095,7 +1112,8 @@ stateDiagram-v2
   and while a binding reason is in the set, `complete` returns
   `400 rail_binding_not_open_eligible`, not `mandate_paused`. The gateway removes
   `binding_ineligible` itself on a strictly newer registry version in which the binding is
-  eligible, or, for a pause caused by its conformance attestation, on a newer attestation that lists the pilot,
+  eligible, or, for a pause caused by its conformance attestation, on a newer attestation from the same authority that
+  lists the pilot and passes every check in [At `complete`](conformance.md#attestation-rules),
   never `principal_paused` or `reissue_required`, and the mandate stays `PAUSED` while any
   reason remains. The gateway does not notify the MM; the MM reads the same registry
   ([Q-61](open-questions.md#q-61)). Pause and lift are written to the InstructionLog with the

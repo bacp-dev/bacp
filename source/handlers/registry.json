@@ -826,13 +826,14 @@
   },
   "binding": {
    "class": "O",
-   "open_eligible": true,
+   "open_eligible": false,
    "open_primitives": [
     "circle_delegation"
    ],
    "closed_auth": [
     "upi.pin"
-   ]
+   ],
+   "open_requires": "Not open-eligible while Q-77 (OC 201B explicit user action) is open; a conformance attestation that lists this handler does not open it."
   },
   "mandate_primitives": [
    {
@@ -885,7 +886,7 @@
      "value": 200000,
      "currency": "INR"
     },
-    "conflict_note": "OC 201 (13-08-2024) item 9 and OC 201B (08-10-2025) item 8 give ₹5,000 cumulative for the first 24 hours; the NPCI UPI Circle page gives ₹2,000; the stricter value is kept pending NPCI's confirmation of which figure the rail enforces."
+    "conflict_note": "OC 201 (13-08-2024) item 9 gives a daily transaction limit of ₹5,000 for the first 24 hours and OC 201B (08-10-2025) item 8 a cumulative limit of ₹5,000 for the first 24 hours; the NPCI UPI Circle page gives ₹2,000; the stricter value is kept pending NPCI's confirmation of which figure the rail enforces."
    },
    {
     "name": "devices",

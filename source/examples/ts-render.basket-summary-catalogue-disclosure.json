@@ -102,7 +102,7 @@
   ],
   "catalogue_disclosure": [
     {
-      "cover": 0,
+      "cover_index": 0,
       "index": 0,
       "sponsorship": {
         "status": "undeclared"

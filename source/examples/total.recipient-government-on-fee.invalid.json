@@ -1,0 +1,8 @@
+{
+  "type": "convenience_fee",
+  "recipient": "government",
+  "amount": {
+    "value": 3000,
+    "currency": "INR"
+  }
+}

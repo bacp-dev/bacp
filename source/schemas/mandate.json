@@ -352,7 +352,8 @@
       ],
       "properties": {
         "plan_hash": {
-          "$ref": "common.json#/$defs/Hash"
+          "$ref": "common.json#/$defs/Hash",
+          "pattern": "^sha-256:"
         },
         "tender_id": {
           "type": "string",
@@ -442,7 +443,7 @@
             "jti": {
               "type": "string",
               "pattern": "^[A-Za-z0-9_-]{8,64}$",
-              "description": "The jti of the attestation. The gateway re-checks its status at every complete, and a pause for a lapsed attestation logs it."
+              "description": "The jti of the attestation. The gateway re-checks its status at every complete (or, after a lift, the status of the newer attestation that lifted the pause), and a pause for a lapsed attestation logs it."
             }
           },
           "additionalProperties": false,

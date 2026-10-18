@@ -273,7 +273,7 @@ bundle attached.
    order whose mandate is not `ACTIVE` (`REVOKED`, `PAUSED`, `EXPIRED` or `EXHAUSTED`) it **MUST** be `HP`.
 2. It assembles the transaction's **evidence bundle** and runs the verification (the five AP2 steps and step 6, Trusted Surface events) and the
    InstructionLog chain check ([Evidence bundle](../evidence.md#bundle)). If the bundle does not
-   verify fully, it returns `422 evidence_unverifiable` and sends nothing.
+   verify fully, it returns `422 evidence_unverifiable` and sends nothing. A failure of only the catalogue checks of step 6 does not stop the issue: the gateway sends it with the result recorded in `verification`. A gateway **MUST NOT** refuse to raise an issue because of a catalogue check.
 3. It sends Beckn IGM 2.0 `issue` with the agent as an `actors[]` entry of `type` `AI_AGENT`
    (Proposed, see below) whose `id` is the issue's `complainant_id`, the agent id and operator, `on_behalf_of` set to the principal's pseudonymous `principal_ref`, the
    `mandate_ref`, the payment references (RRN or UTR), the `evidence_bundle_ref` URI and the
