@@ -714,7 +714,7 @@
     "value": 10000,
     "currency": "INR"
    },
-   "notes": "Whether a refund restores the block is not verified as of 17-10-2026. The mandate budget is not restored."
+   "notes": "Whether a refund restores the block is not verified as of 17-10-2026. The mandate budget is not restored. Refund to the original source: RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141) para 10(f). Failed-transaction TAT (P5D) and compensation (₹100 a day): RBI/2019-20/67 Annex."
   },
   "dispute": {
    "channels": [
@@ -785,6 +785,11 @@
     "file": "Pine Labs UPI Reserve Pay docs, https://www.pinelabs.com/docs/online-payments/upi-reserve-pay",
     "section": "whole instrument",
     "label": "VENDOR"
+   },
+   {
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693",
+    "section": "Annex",
+    "label": "RBI"
    }
   ],
   "notes": "NPCI UPI OC 228 (08-10-2025) and the UPI Consolidated Circular v1.0 para 16.1 extend Reserve Pay to all UPI-permitted sources of funds, naming savings, current and overdraft accounts, RuPay credit cards and pre-sanctioned credit lines; the extant pricing of RuPay credit cards and credit lines on UPI applies to executed debits. funding stays debit for this descriptor: a block on a RuPay credit card or a credit line is a credit-funded leg (funding credit, in.upi.rupay_cc or in.upi.credit_line), which the PSP attestation states and which needs credit_funding_allowed. Acquirer eligibility: OC 228 enables Reserve Pay to begin with only for 'online verified merchants with low ticket and high frequency transactions'. One mobile number may hold only one block at a time for a particular merchant (OC 228 Issuer Banks para 4; Consolidated Circular para 16.4); no NPCI text caps blocks per user across merchants. A block is not a guarantee of payment. A timeout on a debit is a decline, reversed in real time and not settled; for timeouts only, acquiring entities may retry at most 3 times in 24 hours (OC 228 Acquiring entities para 3). The payer is notified of block creation, modification, debit, revoke and expiry (OC 228 Issuer Banks para 2; Consolidated Circular para 16.11); no NPCI text found states whether a pre-debit notice applies (Q-03). The payee PSP and the UPI app must give the user a facility to revoke the block (Consolidated Circular para 16.10); the merchant gives the facility to modify its amount or validity (para 16.9). No public NPCI list of the issuers that support Reserve Pay was found as of 17-10-2026 (an absence finding; Q-04). NPCI product page: block set up with UPI PIN; unused money is released on expiry or cancellation."
@@ -871,12 +876,13 @@
      "section": "whole instrument",
      "label": "NPCI"
     },
-    "verification": "verified",
+    "verification": "conflict",
     "configurable": true,
     "amount": {
      "value": 200000,
      "currency": "INR"
-    }
+    },
+    "conflict_note": "OC 201 (13-08-2024) item 9 and OC 201B (08-10-2025) item 8 give ₹5,000 cumulative for the first 24 hours; the NPCI UPI Circle page gives ₹2,000; the stricter value is kept pending NPCI's confirmation of which figure the rail enforces."
    },
    {
     "name": "devices",
@@ -910,7 +916,8 @@
    "compensation_per_day": {
     "value": 10000,
     "currency": "INR"
-   }
+   },
+   "notes": "Refund to the original source: RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141) para 10(f). Failed-transaction TAT (P5D) and compensation (₹100 a day): RBI/2019-20/67 Annex."
   },
   "dispute": {
    "channels": [
@@ -969,6 +976,21 @@
    {
     "file": "NBSL press release 'BHIM Goes Live with UPI Circle Full Delegation' (25-11-2025), https://www.npci.org.in/uploads/NBSL_Press_release_BHIM_Goes_Live_with_UPI_Circle_Full_Delegation_Enabling_Authorised_UPI_Payments_within_set_limits_7b308e643d.pdf",
     "section": "whole instrument",
+    "label": "NPCI"
+   },
+   {
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693",
+    "section": "Annex",
+    "label": "RBI"
+   },
+   {
+    "file": "NPCI UPI OC 201 'Introduction of UPI Circle (delegated payments for secondary users)', 13-08-2024, https://www.npci.org.in/uploads/UPI_OC_No_201_FY_24_25_Introduction_of_UPI_Circle_Delegated_Payments_for_secondary_users_cf6799f126.pdf",
+    "section": "item 9 (cooling period: first 24 hours)",
+    "label": "NPCI"
+   },
+   {
+    "file": "NPCI UPI OC 201B 'Addendum to NPCI/UPI/2024-25/OC 201: Introduction of IoT devices & software on UPI Circle', 08-10-2025, https://www.npci.org.in/uploads/UPI_OC_No_201_B_FY_2025_26_Addendum_to_NPCI_UPI_2024_25_OC_201_Introduction_of_Io_T_devices_software_on_UPI_Circle_09ec83c893.pdf",
+    "section": "p.1 (explicit user action); p.2 item 8 (24 hours cooling period)",
     "label": "NPCI"
    }
   ],
@@ -1220,7 +1242,7 @@
     "value": 10000,
     "currency": "INR"
    },
-   "notes": "Refund to the credit line. Never to a PPI."
+   "notes": "Refund to the credit line. Never to a PPI. Refund to the original source: RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141) para 10(f). Failed-transaction TAT (P5D) and compensation (₹100 a day): RBI/2019-20/67 Annex."
   },
   "dispute": {
    "channels": [
@@ -1268,6 +1290,11 @@
    {
     "file": "RBI circular on pre-sanctioned credit lines through UPI (RBI/2023-24/58, CO.DPSS.POLC.No.S-567/02-23-001/2023-2024)",
     "section": "whole instrument",
+    "label": "RBI"
+   },
+   {
+    "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693",
+    "section": "Annex",
     "label": "RBI"
    }
   ]

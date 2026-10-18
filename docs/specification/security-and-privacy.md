@@ -89,7 +89,8 @@ deterministic, non-LLM verifier inside the gateway, which fails closed.
 - An AFA threshold produces a `rail_auth` step-up. Every other rail cap produces 403 `rail_limit_exceeded` with
   every local and rail reason in `reasons[]`.
 - Revocation stops new commitments within 60 seconds. Protective post-order writes (cancel, return, issue) on
-  existing orders remain allowed.
+  existing orders remain allowed, with the principal present, after a revocation, a pause for any reason, expiry or
+  exhaustion.
 
 ### Merchant spoofing {#merchant-spoofing}
 

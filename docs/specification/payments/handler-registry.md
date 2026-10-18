@@ -102,6 +102,30 @@ Rules for registry content:
 - Status changes (`pilot` to `live`, `reserved` to `pilot`) are registry changes and follow the [proposal process](#proposing-a-new-handler).
 - Eligibility is evaluated against the current registry at every `complete`, not when a mandate was issued. A change that makes an active mandate's binding ineligible (a downgrade from `live` to `pilot`, `reserved` or `deprecated`, or a primitive removed from `binding.open_primitives`) pauses the affected mandates ([Handler binding](../mandates.md#handler-binding)). Mandate Managers and gateways take the registry from the dated release or a registry-signed snapshot, never from a gateway's `GET /payment-handlers`, and a gateway adopts a downgrade within 24 hours of the release.
 
+### Conformance authorities {#conformance-authorities}
+
+Who may sign the attestation that admits a `pilot` handler is data, like the handler status: the public, dated
+[conformance-authority list](../conformance.md#conformance-authority-list), published as
+`source/registry/conformance-authorities.json` beside `source/handlers/registry.json` and valid against
+[`conformance-authority-list.json`](https://bacp.dev/schemas/conformance-authority-list.json).
+
+- Each entry is scoped to named handlers (`scope.pilots`, at least one). An attestation that lists a pilot outside the
+  signing entry's scope is refused.
+- The list is the floor and the ceiling: a Mandate Manager MAY narrow it by publishing an exclusion list and MUST NOT
+  add a signer to it.
+- The list ships empty in `2026-10-17`. Until an entry is added, no pilot handler can back an open mandate.
+- Adding an entry, and moving any handler from `pilot` to `live`, needs the approvals in
+  [GOVERNANCE.md](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md#interim-maintainer).
+
+### Reference patterns and receipt echo {#ref-pattern}
+
+A descriptor's `mandate_primitives[].ref_pattern` is an OPTIONAL regular expression that a `rail_binding.rail_ref` of
+that primitive has to match, so that a Mandate Manager can check the reference's shape. It is set only from a public
+source that states the format; no descriptor sets one in this version, and putting one on a `live` descriptor later is a
+breaking change. A payer-PSP-signed receipt SHOULD echo the mandate `primitive` and `rail.rail_ref`
+([`receipt.json`](https://bacp.dev/schemas/receipt.json)), so that the gateway can reconcile it against the mandate's
+binding.
+
 ## Alias resolution
 
 !!! note "Settled"

@@ -99,9 +99,10 @@ any Beckn message is sent:
    checked against the mandate of the issue's order.
 3. **Scope.** The action (`CANCEL`, `RETURN` or `RAISE_ISSUE`) **MUST** be in the mandate's
    `action_scope` (`403 mandate_scope_mismatch`).
-4. **Status.** The mandate **MUST** be `ACTIVE`, or `REVOKED` with `presence: HP`. A write on a
-   revoked mandate without HP returns `403 presence_not_allowed`. Any other status returns its
-   mandate error (`mandate_paused`, `mandate_expired`, `mandate_exhausted`).
+4. **Status.** The mandate **MUST** be `ACTIVE`; or `REVOKED`, `PAUSED`, `EXPIRED` or `EXHAUSTED` with
+   `presence: HP`, for every pause reason (`principal_paused`, `binding_ineligible`, `reissue_required` and
+   `unmatched_rail_debit`). A write on a revoked, paused, expired or exhausted mandate without HP returns
+   `403 presence_not_allowed`. A `PENDING` or `REJECTED` mandate returns `403 mandate_required`.
 5. **Presence.** `presence` **MUST** be in the mandate's `presence_allowed`
    (`403 presence_not_allowed`), plus the per-action presence rules below.
 6. **Presence proof.** A write with `presence: HP` **MUST** carry `hp_proof{ts_event_hash, step_up_id}`:
@@ -115,9 +116,12 @@ any Beckn message is sent:
    Checkout Mandate. No Beckn or IGM message is sent until the proof passes
    ([Presence proof](../human-participants.md#hp-proof)).
 
-**Revocation does not strand an order.** Revoking a mandate stops new commitments only. Cancel,
-return and issue on orders already placed under it stay allowed, with the principal present,
-because they protect the principal and the seller's take-back and refund duties continue.
+**An ended or paused mandate does not strand an order.** Revoking, pausing, expiring or exhausting a
+mandate stops new commitments only. Cancel, return and issue on orders already placed under it stay
+allowed, with the principal present, whatever the reason: a principal must always be able to cancel, return
+or dispute an order that is already paid, and the seller's take-back and refund duties continue. A pause for
+a lapsed conformance attestation or any other binding reason is a gateway condition and never blocks the
+principal's protective write.
 
 ## Cancel {#cancel}
 
@@ -258,7 +262,7 @@ bundle attached.
 ```
 
 1. The gateway passes the [post-order gate](#post-order-gate). `presence` defaults to `HNP`; on an
-   order whose mandate is `REVOKED` it **MUST** be `HP`.
+   order whose mandate is not `ACTIVE` (`REVOKED`, `PAUSED`, `EXPIRED` or `EXHAUSTED`) it **MUST** be `HP`.
 2. It assembles the transaction's **evidence bundle** and runs the verification (the five AP2 steps and step 6, Trusted Surface events) and the
    InstructionLog chain check ([Evidence bundle](../evidence.md#bundle)). If the bundle does not
    verify fully, it returns `422 evidence_unverifiable` and sends nothing.

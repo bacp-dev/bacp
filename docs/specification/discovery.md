@@ -50,14 +50,13 @@ A BACP gateway MUST publish a profile document at the path
 | `payment_handlers_registry` | OPTIONAL | URI of the gateway's `GET /payment-handlers` endpoint. |
 | `profiles` | OPTIONAL | [Trade profiles](trade-profiles.md) the gateway supports. |
 | `limits.max_body_bytes` | RECOMMENDED | The largest request body the gateway accepts. It MUST NOT exceed 256 KiB. |
-| `conformance` | RECOMMENDED | The [conformance levels](conformance.md#conformance-levels) the gateway claims and its signed conformance attestation. |
+| `conformance` | RECOMMENDED | `{levels, attestation, excluded_attesters[]}`: the [conformance levels](conformance.md#conformance-levels) the participant claims, its signed [conformance attestation](conformance.md#conformance-attestation) (REQUIRED to offer a `pilot` handler) and, on a Mandate Manager's profile, `excluded_attesters[]`: the `ca_id`s of the [public conformance-authority list](conformance.md#conformance-authority-list) that it does not accept. A Mandate Manager only narrows the list and publishes the narrowing here, so that a refusal (`attester_not_accepted`) is testable. |
 
 Receivers MUST ignore profile fields they do not understand.
 
 !!! warning "Proposed"
-    The field names `limits.max_body_bytes` and `conformance` are proposed and
-    are not yet in the `Profile` schema. The proposed shape of `conformance` is
-    `{"levels": ["bacp.core.1", ...], "attestation": "<compact JWS>"}`.
+    The field name `limits.max_body_bytes` is proposed and is not yet in the
+    `Profile` schema.
 
 ### Example
 

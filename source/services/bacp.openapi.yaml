@@ -1022,6 +1022,7 @@ paths:
       - order
       operationId: cancelOrder
       summary: Mandate-scoped cancel (Beckn cancel). Requires CANCEL in action_scope.
+      description: The mandate of the order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -1077,6 +1078,7 @@ paths:
       - order
       operationId: requestReturn
       summary: Mandate-scoped return (Beckn update with update_target=item). Requires RETURN in action_scope.
+      description: The mandate of the order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -1185,6 +1187,7 @@ paths:
       - issue
       operationId: raiseIssue
       summary: Raise an IGM issue as AI_AGENT on behalf of the user (IGM issue). Requires RAISE_ISSUE in action_scope.
+      description: The mandate of the order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -1275,6 +1278,7 @@ paths:
       - issue
       operationId: issueAction
       summary: Complainant action (IGM 2.0 action log). ESCALATE moves ISSUE to GRIEVANCE. ODR is an out-of-protocol reference.
+      description: The mandate of the issue's order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
       - $ref: '#/components/parameters/SignatureInput'
@@ -2732,6 +2736,9 @@ components:
           - registry
           - operator
           - support_operator
+          - conformance_authority
+          description: The registry role of the key that made this signature. conformance_authority signs conformance attestations only, and
+            only for a key that appears in the public conformance-authority list.
         kid:
           type: string
           description: Registry-resolvable key id, e.g. 'bap.example.in|ukid-7|ed25519' or a did:web#fragment
@@ -3025,13 +3032,7 @@ components:
               minItems: 1
               uniqueItems: true
               items:
-                enum:
-                - bacp.core.1
-                - bacp.pay.upi.1
-                - bacp.pay.all.1
-                - bacp.neg.1
-                - bacp.b2b.1
-                - bacp.auction.1
+                $ref: ../schemas/common.json#/$defs/ConformanceLevel
             attestation:
               $ref: '#/components/schemas/Jws'
           additionalProperties: false
@@ -3362,6 +3363,30 @@ components:
                 identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A version format for
                 registry-signed snapshots is not yet defined, so only a release date is valid. A record of the issuance check only; the gateway
                 re-checks eligibility against the current registry at every complete.'
+            conformance:
+              type: object
+              required:
+              - iss
+              - sub
+              - jti
+              properties:
+                iss:
+                  type: string
+                  minLength: 1
+                  description: The ca_id of the conformance authority that signed the gateway's attestation.
+                sub:
+                  type: string
+                  minLength: 1
+                  description: The gateway that the attestation is about. At complete, the gateway refuses the mandate when this is not itself.
+                jti:
+                  type: string
+                  pattern: ^[A-Za-z0-9_-]{8,64}$
+                  description: The jti of the attestation. The gateway re-checks its status at every complete, and a pause for a lapsed attestation
+                    logs it.
+              additionalProperties: false
+              description: 'The conformance attestation that admitted the bound handler as a pilot, as the Mandate Manager verified it at issuance:
+                {iss, sub, jti}. A conformance rule REQUIRES it on every open payment mandate bound to a pilot handler; the schema leaves it optional
+                because a live handler needs none. It is part of the signed, immutable mandate.'
             rail_limits:
               type: object
               properties:
@@ -3791,6 +3816,11 @@ components:
           type: string
         open_mandate_ref:
           type: string
+        primitive:
+          $ref: ../schemas/common.json#/$defs/MandatePrimitiveType
+          description: The mandate primitive that the payment or refund was made under. A payer-PSP-signed receipt SHOULD echo it together with
+            rail.rail_ref, so that the gateway can reconcile the receipt against the mandate's rail_binding; a mismatch with the mandate's primitive
+            is an unmatched rail debit.
         transaction_id:
           type: string
           description: Beckn context.transaction_id, end to end
@@ -4252,7 +4282,10 @@ components:
           type: array
           items:
             type: string
-          description: Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors (rail_limit_exceeded).
+          description: 'Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors (rail_limit_exceeded). On
+            rail_binding_not_open_eligible the reasons include binding_ineligible, reissue_required, registry_copy_stale, attestation_status_stale
+            (a conformance-attestation status that is revoked, more than 24 hours old or unreachable; recoverable, no pause) and
+            attester_not_accepted (the attestation''s signer is in the Mandate Manager''s published exclusion list).
         step_up_kind:
           enum:
           - confirm
@@ -4395,6 +4428,27 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/Jwk'
+        conformance:
+          type: object
+          properties:
+            levels:
+              type: array
+              minItems: 1
+              uniqueItems: true
+              items:
+                $ref: ../schemas/common.json#/$defs/ConformanceLevel
+              description: The conformance levels that the participant claims.
+            attestation:
+              $ref: '#/components/schemas/Jws'
+              description: The participant's signed conformance attestation (JOSE header typ bacp-conformance+jwt), listing the same levels.
+            excluded_attesters:
+              type: array
+              uniqueItems: true
+              items:
+                type: string
+              description: On a Mandate Manager's profile, the ca_ids from the public conformance-authority list that this Mandate Manager does not
+                accept. A Mandate Manager may only narrow the public list, never add to it.
+          description: The conformance levels the participant claims, its attestation and, for a Mandate Manager, its exclusion list.
         negotiation:
           $ref: ../schemas/negotiation-session.json#/$defs/Capability
         payment_handlers_registry:
@@ -5808,6 +5862,13 @@ components:
           format: uri
           description: Where the gateway sends mandate.status_changed (and later events for this mandate), which can occur before any session
             exists.
+        gateway_attestation:
+          $ref: '#/components/schemas/Jws'
+          description: 'The gateway''s conformance attestation (a compact JWS with the JOSE header typ bacp-conformance+jwt), forwarded to the Mandate
+            Manager. REQUIRED when the requested rail resolves to a pilot handler, and then the Mandate Manager verifies it before issuing: the
+            signing key is in an entry of the public conformance-authority list, the attestation lists the handler in pilots[], and its sub is the
+            subscriber that the request''s signing key resolves to. A request without it, or with one that does not verify, is refused with 400
+            rail_binding_not_open_eligible.'
     MandateHandle:
       type: object
       required:
@@ -6194,7 +6255,7 @@ components:
             at $.bpp_id).
         presence:
           $ref: '#/components/schemas/Presence'
-          description: Presence of this write. Defaults to HNP. HP is required on an order whose mandate is REVOKED.
+          description: Presence of this write. Defaults to HNP. HP is required on an order whose mandate is not ACTIVE (REVOKED, PAUSED, EXPIRED or EXHAUSTED).
         hp_proof:
           $ref: '#/components/schemas/HpProof'
     Issue:

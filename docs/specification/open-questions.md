@@ -92,7 +92,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-57](#q-57) | IGM SLA timelines and auto-escalation | ONDC | Open |
 | [Q-58](#q-58) | Signature tag for gateway-signed webhooks | BACP WG | Open, fail-safe default |
 | [Q-59](#q-59) | Open mandates on merchant- and BACP-enforced handlers | BACP WG | Open, fail-safe default |
-| [Q-60](#q-60) | Issuer and payload of the conformance attestation | BACP WG | Open, fail-safe default |
+| [Q-60](#q-60) | Issuer and payload of the conformance attestation | BACP WG | Settled |
 | [Q-61](#q-61) | Gateway-to-MM mandate events | BACP WG | Open |
 | [Q-62](#q-62) | Who certifies assisted operators | ONDC | Open |
 | [Q-63](#q-63) | PSP rendering of a third-party `ts_render`; IVR callbacks | NPCI | Open |
@@ -109,6 +109,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-74](#q-74) | Provisional and instrument-linked discounts on plain sessions | BACP WG | Open |
 | [Q-75](#q-75) | Zero-payable orders | BACP WG | Open |
 | [Q-76](#q-76) | Gateway-funded and buyer-app-funded discounts | BACP WG | Open |
+| [Q-77](#q-77) | Whether a standing open mandate on UPI Circle is "explicit user action" (NPCI OC 201B) | NPCI, Legal counsel | Open, fail-safe default |
 
 ## Questions {#questions}
 
@@ -752,19 +753,6 @@ spend when posted, released only by a `credit_note` or a resolved dispute, and i
 or the Mandate Manager's key, never the agent's `cnf` key. Depends on [Q-46](#q-46). See
 [Mandates and Consent](mandates.md#handler-binding) and [Conformance](conformance.md#handler-binding-cases).
 
-### Q-60 Conformance attestation {#q-60}
-
-**Question.** Which registry role signs a conformance attestation, who may hold that role, and is the proposed payload
-(`iss`, `sub`, `levels[]`, `pilots[]`, `exp`, `status`) final, and which explicit JOSE `typ` does the attestation carry?<br>
-**Owner.** BACP WG.
-
-**Working position.** Proposed: the payload in [Conformance](conformance.md#conformance-attestation), signed by a
-registry key of a conformance-authority role, with `iss` never equal to `sub` or run by the same operator. Fail-safe
-default: a Mandate Manager that cannot verify a gateway's attestation refuses to issue an open mandate on a `pilot`
-handler, and a gateway offers a `pilot` handler only when its own unexpired attestation lists it. Until this question
-is settled no key qualifies, so, as of 17-10-2026, no open mandate can be issued on any `pilot` handler, including
-`in.upi.circle` and `in.card.agentic`.
-
 ### Q-61 Gateway-to-MM mandate events {#q-61}
 
 **Question.** Should a gateway tell the Mandate Manager that issued a mandate when it pauses that mandate because its
@@ -781,7 +769,8 @@ moves on the MM's view: every gateway re-derives eligibility at step 1 of evalua
 [Mandates and Consent](mandates.md#handler-binding). The same gap means that a relinquishment of a root open Checkout
 Mandate at the gateway does not reach the MM, which revokes the root's Reserve Pay blocks at the rail; the gateway
 treats the siblings as revoked at once and keeps each block as exposure until its revocation is confirmed or it
-expires ([Revocation](mandates.md#revocation)).
+expires ([Revocation](mandates.md#revocation)). The same gap covers the status of a gateway's conformance attestation: the MM
+reads the attestation's status list itself ([Q-60](#q-60)), and a gateway-to-MM event for it is part of this question.
 
 ### Q-62 Certification of assisted operators {#q-62}
 
@@ -968,6 +957,19 @@ carried?<br>
 seller-signed quote total, and it would make the payable depend on the gateway. The gateway never adds or keeps a discount
 the seller did not sign.
 
+### Q-77 Explicit user action on UPI Circle {#q-77}
+
+**Question.** NPCI OC 201B (NPCI/UPI/OC-201B/2025-26, 08-10-2025) extends UPI Circle to IoT devices and software and
+states that "debit transactions using IoT shall be only initiated by explicit user action." May a UPI Circle delegation
+back a human-not-present debit under a standing open mandate that an agent executes without the principal present? Is
+that "explicit user action", and does "IoT" there cover software profiles such as an AI agent?<br>
+**Owner.** NPCI, Legal counsel. Linked from [Q-60](#q-60).
+
+**Working position (fail-safe default).** `in.upi.circle` backs no open mandate, even when a conformance authority
+whose scope includes it is listed and the gateway's attestation lists it, until an NPCI member bank and counsel
+answer. A Mandate Manager refuses an open mandate request on `in.upi.circle` with `rail_binding_not_open_eligible`. A
+human-present payment through Circle is unaffected. See [UPI Circle](payments/rails.md#upi-circle-delegate).
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
@@ -1096,6 +1098,29 @@ The corrigendum G.S.R. 892(E) (10-12-2025) and the DPDP (Removal of Difficulties
 and the reported corrigendum G.S.R. 113(E) appear only in secondary sources; no amending notification had been found
 as of 17-10-2026. See [Security and Privacy](security-and-privacy.md#commencement).
 
+### Q-60 Conformance attestation {#q-60}
+
+!!! success "Settled"
+    Settled on 18-10-2026, for the next dated release.
+
+**Question.** Which registry role signs a conformance attestation, who may hold that role, and is the proposed payload
+(`iss`, `sub`, `levels[]`, `pilots[]`, `exp`, `status`) final, and which explicit JOSE `typ` does the attestation carry?<br>
+**Owner.** BACP WG.
+
+**Answer.** The role is `conformance_authority` (`Signature.role`). Only a key of an entry in a public, dated,
+per-handler [conformance-authority list](conformance.md#conformance-authority-list) qualifies; an entry is an independent
+lab or a rail-sponsor bank, scoped to named handlers, and the list ships empty. A Mandate Manager may narrow the list
+by publishing an exclusion list and never add to it. The payload is
+[`conformance-attestation.json`](https://bacp.dev/schemas/conformance-attestation.json), with the JOSE `typ`
+`bacp-conformance+jwt`, `subject_role`, `scope`, `jti`, `registry_version`, `manifest_digest` and `report_digest`. The
+Mandate Manager verifies it at issuance and writes `rail_binding.conformance{iss, sub, jti}` into every pilot mandate;
+the gateway re-checks the bound `jti` at every `complete`. An attestation status list that is revoked, more than
+24 hours old or unreachable fails closed, for issuance and for a new `complete` only. See
+[Conformance attestation](conformance.md#conformance-attestation). Holders at release: none, so a Mandate Manager still
+refuses open mandates on every `pilot` handler. Adding an entry needs the approval in
+[GOVERNANCE.md](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md#interim-maintainer). Settling this question does
+not open the human-not-present path on `in.upi.circle`, which waits for [Q-77](#q-77).
+
 ### Q-72 Signed discovery results {#q-72}
 
 !!! success "Settled"
@@ -1134,7 +1159,7 @@ authorities?<br>
   `in.ppi.wallet` only `ppi_emandate` is open-eligible, never the wallet balance.
 - The descriptor's `status` must be `live`, or `pilot` only when the gateway's
   [conformance attestation](conformance.md#conformance-attestation) lists the pilot in `pilots[]`; the Mandate
-  Manager verifies this before issuing. The attestation payload is Proposed ([Q-60](#q-60)).
+  Manager verifies this before issuing. The attestation payload and its signer are settled ([Q-60](#q-60)).
 - Eligibility is re-checked against the current registry at every `complete`. A registry downgrade pauses the
   affected mandates and cancels their open sessions.
 - The atomic reservation is keyed on the root open checkout mandate, so sibling open payment mandates cannot together
@@ -1205,7 +1230,8 @@ from several sellers with no human present, and what does each fallback mean for
 - **Per leg**, the gateway plans the payment in this order: the principal's designated preference; then the seller's
   existing payee-bound instrument, such as a block already held for that seller (3a); then a gift PPI the principal
   designated; then one planned human-present step, raised for the whole basket before any debit. UPI Circle and
-  agentic card tokens back no open mandate while they are `pilot` ([Q-60](#q-60)), and no rung ranks above the
+  agentic card tokens back no open mandate while they are `pilot` and no listed conformance authority has attested the
+  gateway for them ([Q-60](#q-60)); UPI Circle also waits for [Q-77](#q-77). No rung ranks above the
   principal's preference.
 - A **new** per-seller block (3b) is offered only beside a one-time human-present payment to the same seller, with
   equal weight, never after a failed payment and never on an IVR callback. A block set up outside a checkout is

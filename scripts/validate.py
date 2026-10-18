@@ -9,7 +9,8 @@ Checks
      a <component>.<case>.json whose <component> names no schema file is checked against the OpenAPI component
      schema of that name in PascalCase (mandate-request -> #/components/schemas/MandateRequest);
   4. source/handlers/registry.json entries validate against handler-descriptor.json;
-  5. source/services/bacp.openapi.yaml is a valid OpenAPI 3.1 document.
+  5. source/services/bacp.openapi.yaml is a valid OpenAPI 3.1 document;
+  6. source/registry/conformance-authorities.json validates against conformance-authority-list.json.
 Exit status is the number of failures.
 """
 
@@ -126,6 +127,14 @@ def main() -> int:
         print("PASS", api_path.name)
     except Exception as e:  # noqa: BLE001
         fail(f"{api_path.name}: {str(e).splitlines()[0]}")
+
+    # 6. conformance-authority list (ships empty)
+    ca_path = SRC / "registry" / "conformance-authorities.json"
+    errs = list(validators["conformance-authority-list"].iter_errors(json.loads(ca_path.read_text())))
+    if errs:
+        fail(f"{ca_path.name}: {errs[0].message} at {errs[0].json_path}")
+    else:
+        print("PASS", ca_path.name)
 
     print(f"FAILURES: {len(failures)}")
     return len(failures)

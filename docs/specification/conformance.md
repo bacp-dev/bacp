@@ -41,9 +41,10 @@ proves little. So:
    expected verdict. Requirement ids and specification sections are carried as
    data, so the traceability matrix is generated rather than hand-written.
 6. **Versioned and signed.** The manifest is versioned with the specification
-   (see [Versioning](https://bacp.dev/versioning/)). A run produces a signed
-   report, and the registry issues a conformance credential listing the levels
-   passed.
+   (see [Versioning](https://bacp.dev/versioning/)). A run produces a published
+   report, and a conformance authority on the [public list](#conformance-authority-list)
+   may sign a [conformance attestation](#conformance-attestation) listing the
+   levels passed.
 7. **Portable.** Schemas are resolved by their `$id` from the published
    schema bundle, never from a local path.
 8. **Every required code is tested.** Every registered error or message code
@@ -83,38 +84,94 @@ A conformance attestation is a compact JWS issued after a conformance run
 in its [profile](discovery.md#profile-document) (`conformance.attestation`),
 and an AgentCredential carries the agent's in `conformance.attestation`.
 
-!!! warning "Proposed"
-    The payload below, and the registry role whose key signs it, are Proposed.
-    BACP `2026-10-17` does not yet define a conformance-authority role in the
-    registry; who may hold it is open ([Q-60](open-questions.md#q-60)).
+The payload is defined by [`conformance-attestation.json`](https://bacp.dev/schemas/conformance-attestation.json).
+The JOSE header `typ` MUST be `bacp-conformance+jwt` (RFC 8725 section 3.11); an attestation with any other `typ`
+is refused. All fields below are REQUIRED, and no other claim is allowed.
 
 | Field | Content |
 |---|---|
-| `iss` | The issuer: the registry that issues the conformance credential (see [Principles](#principles), item 6), signing with a key of the conformance-authority role. |
-| `sub` | The participant the attestation is about: the gateway's subscriber id, or the agent id. |
+| `iss` | The `ca_id` of the entry in the [conformance-authority list](#conformance-authority-list) whose key signed the attestation. |
+| `sub` | The participant the attestation is about: the gateway's subscriber id, the agent id or the Mandate Manager's registry id. |
+| `subject_role` | `gateway`, `agent` or `mm`. Only a gateway may list pilot handlers: for `agent` and `mm`, `pilots[]` is empty. |
+| `scope` | The constant `bacp-protocol-conformance`. It states that the attestation covers BACP protocol conformance and nothing else. |
+| `iat`, `exp` | Issue and expiry time, as NumericDates (seconds since the epoch, RFC 7519 §4.1.4). `exp` is at most 180 days after `iat`. After `exp`, no verifier may rely on the attestation. |
+| `jti` | The attestation's unique id (`^[A-Za-z0-9_-]{8,64}$`). A mandate's `rail_binding.conformance` records it, and a pause for a lapsed attestation logs it. |
+| `bacp_version`, `registry_version` | The dated BACP release whose cases were run, and the dated release of the handler registry that the run used. |
 | `levels[]` | The [level ids](#conformance-levels) passed. |
-| `pilots[]` | The canonical ids of the `pilot` payment handlers whose cases the participant passed and that it may offer. Empty when there are none. |
-| `exp` | Expiry time, as a NumericDate (seconds since the epoch, RFC 7519 §4.1.4). After it, no verifier may rely on the attestation. |
+| `pilots[]` | The canonical ids of the `pilot` payment handlers whose cases the gateway passed and that it may offer. Empty when there are none. A legacy alias is not a canonical id. |
+| `manifest_digest` | `sha-256:` digest of the conformance-case manifest that was run. |
+| `report_digest` | `sha-256:` digest of the published, reproducible run report behind the attestation. |
 | `status` | Where the attestation's revocation status is published: `{"status_list": {"uri": …, "idx": …}}`, the same shape as an AgentCredential's `status` ([Identity and Request Signing](identity-and-signing.md#agentcredential)). |
 
-An explicit JOSE `typ` header value for the attestation (RFC 8725 §3.11) is
-not yet assigned; it is part of [Q-60](open-questions.md#q-60).
+The attestation is a statement that the subject passed BACP protocol tests. It MUST NOT be offered or accepted in
+place of any rail onboarding, permission or certification, and MUST NOT be presented as approval by NPCI, RBI, ONDC
+or any public body. A gateway or agent that shows it to a principal says "passed BACP protocol tests" (and the same in
+`hi-IN`, in Devanagari) and MUST NOT use the words "certified" or "approved".
 
-Rules:
+### Conformance-authority list {#conformance-authority-list}
 
-- Before a Mandate Manager issues an open payment mandate on a handler whose
-  registry status is `pilot`, it MUST verify the gateway's attestation: the
-  signature against a registry-resolvable key of the conformance-authority
-  role, `iss` not equal to `sub` and not operated by the same operator as
-  `sub`, `sub` equal to the gateway, `exp` not passed, the status not revoked,
-  and the handler's canonical id in `pilots[]`. Until
-  [Q-60](open-questions.md#q-60) defines the conformance-authority role, no
-  key qualifies, so a Mandate Manager refuses open mandates on every `pilot`
-  handler, including `in.upi.circle` and `in.card.agentic`. If any check fails, or the attestation cannot be
-  verified, it MUST refuse issuance with `rail_binding_not_open_eligible`
+The **conformance-authority list** is the only way to admit a signer of conformance attestations. It is a public,
+dated list that each dated BACP release publishes as `source/registry/conformance-authorities.json`, or that a
+registry-signed snapshot carries; its schema is
+[`conformance-authority-list.json`](https://bacp.dev/schemas/conformance-authority-list.json). The registry role
+`conformance_authority` ([Identity and Request Signing](identity-and-signing.md#conformance-authority-keys)) names a key that
+signs attestations and nothing else, and only a key of a listed entry qualifies.
+
+- **The list ships empty** in `2026-10-17`. No key qualifies until an entry is added, so a Mandate Manager still
+  refuses open mandates on every `pilot` handler, as it did before this list existed. Adding an entry needs the
+  further approval that [GOVERNANCE.md](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md#interim-maintainer)
+  requires.
+- **Who may be listed.** An independent test laboratory (`kind: lab`) or a rail-sponsor bank (`kind: rail_sponsor`).
+  `kind` is for display and grants no extra power. A bank is listed only at its own request and is never the required
+  signer. Every entry names its `operator` (legal name and id), its `funders[]`, its `keys[]`, the
+  `report_uri_template` of its published run reports, its validity period and a `status` pointer.
+- **Every entry is scoped.** `scope.levels[]` and `scope.pilots[]` (at least one handler) bound what the authority may
+  attest. A pilot outside the entry's `scope.pilots` is refused.
+- **A Mandate Manager may only narrow the list.** It MAY publish an exclusion list (`excluded_attesters[]` in its
+  [profile](discovery.md#profile-document)) and MUST NOT accept a signer that the public list does not contain.
+- **A conformance authority only signs and revokes.** It never routes, holds or settles funds. The project's
+  interim maintainer never holds, operates or funds an authority key (GOVERNANCE.md).
+- **Separation is checked per mandate.** The Mandate Manager compares the entry's `operator` with the operators of the
+  attested subject, of the payer PSP and of itself ([Rules](#attestation-rules)).
+
+#### Rules {#attestation-rules}
+
+- **At issuance.** Before a Mandate Manager issues an open payment mandate on a handler whose registry status is
+  `pilot`, it MUST verify the gateway's attestation, which the gateway forwards in the mandate request
+  (`gateway_attestation`). The Mandate Manager MUST refuse issuance with `rail_binding_not_open_eligible`
+  ([Handler binding](mandates.md#handler-binding)) when any of these holds:
+    - the JOSE `typ` is any value other than `bacp-conformance+jwt`;
+    - the signing key is not in an entry of the dated [conformance-authority list](#conformance-authority-list) of the
+      release (or of a registry-signed snapshot); while the list has no entry, no key qualifies, so a Mandate Manager
+      refuses open mandates on every `pilot` handler, including `in.upi.circle` and `in.card.agentic`;
+    - the entry is in the Mandate Manager's published exclusion list (`reasons: [attester_not_accepted]`);
+    - a `pilots[]` member is outside the entry's `scope.pilots`, or the handler is not in `pilots[]`;
+    - `exp` is passed, or `exp − iat` is over 180 days (JSON Schema cannot compare the two, so a conformance case
+      tests it);
+    - the status is revoked, the copy of the status list is more than 24 hours old, or the list is unreachable
+      (`reasons: [attestation_status_stale]`);
+    - `sub` is not the subscriber that the signing key of the forwarded request resolves to in the registry (the
+      Mandate Manager does not take `sub` from a body field);
+    - the entry's `operator` equals the declared operator of `sub`, of the payer PSP in `rail_binding.psp_id` or of the
+      issuing Mandate Manager, or any of those operators is unknown.
+- **Binding.** The Mandate Manager MUST write `rail_binding.conformance{iss, sub, jti}` on every open payment mandate
+  bound to a `pilot` handler. The schema leaves the object optional, because a `live` handler needs none; this rule makes
+  it REQUIRED for pilot bindings.
+- **At `complete`.** On a pilot handler the gateway MUST refuse (`400 rail_binding_not_open_eligible`) when
+  `rail_binding.conformance` is absent or its `sub` is not itself. It MUST re-check the `exp`, the `pilots[]` and the
+  status of the bound `jti` at every `complete`, under the same 24-hour rule.
+- **Freshness.** An attestation status list that is more than 24 hours old, or unreachable, counts as revoked for
+  issuance and for a human-not-present `complete` on a pilot handler, and the `complete` returns
+  `reasons: [attestation_status_stale]` with `resolution: recoverable` and no pause. It never blocks a status check, a
+  reversal, a refund or a post-order write. A revoked or expired attestation, at a re-check, pauses the mandate
   ([Handler binding](mandates.md#handler-binding)).
-- The gateway MUST re-check `exp`, the status and `pilots[]` of its own
-  attestation at every `complete` on a pilot handler.
+- **Test fixtures.** The fixture `typ` `bacp-conformance-test+jwt` MUST be refused by every Mandate Manager outside a
+  conformance harness.
+- **No other use.** A conformance authority only signs and revokes; the attestation MUST NOT be offered or accepted in
+  place of any rail onboarding, permission or certification, and MUST NOT be presented as approval by NPCI, RBI, ONDC
+  or any public body.
+- **Unchanged for `in.upi.circle`.** Listing Circle in an authority's scope and in an attestation does not open the
+  human-not-present path on `in.upi.circle` ([UPI Circle](payments/rails.md#upi-circle-delegate)).
 
 No open question blocks a conformance level of `2026-10-17`; the remaining
 ones are listed on [Open Questions](open-questions.md), each with a fail-safe
@@ -247,6 +304,12 @@ A BACP gateway MUST:
   `reissue_required` and never remove it, and write every addition and
   removal to the InstructionLog with the `registry_version`
   ([Handler binding](mandates.md#handler-binding)).
+- On a pilot handler, refuse a `complete` whose mandate has no `rail_binding.conformance` or names another gateway,
+  re-check the bound attestation's `jti` (expiry, `pilots[]` and status) at every `complete`, pause the mandate with
+  `binding_ineligible` (cause `attestation`, the `jti` logged) when it is revoked or expired, and for a status that is
+  more than 24 hours old or unreachable refuse an HNP `complete` with `reasons: [attestation_status_stale]`,
+  `resolution: recoverable` and no pause ([Conformance attestation](#attestation-rules); cases S-F1, S-F1-missing,
+  S-F7, CA-04b, CA-07).
 - Evaluate budgets, usage, rail caps and split-order detection inside one
   atomic section keyed on the root open Checkout Mandate against a
   reservation ledger, reserve every tender of a split-tender plan in that one
@@ -296,6 +359,11 @@ A BACP gateway MUST:
   the session (`403 presence_not_proven`); and skip evaluation step 8 only
   while the session's `checkout_hash` equals the approval's
   ([Human participants](human-participants.md#presentation)).
+- Accept a post-order write (cancel, return, raise issue, issue action) with `presence: HP` and a valid `hp_proof` on an
+  order whose mandate is `REVOKED`, `PAUSED` (for every pause reason), `EXPIRED` or `EXHAUSTED`, and refuse it without HP
+  with `403 presence_not_allowed`; let a status check, a reversal and a refund to the original source of a debit that is
+  in the ledger proceed under a binding pause, and refuse a refund to any other destination (cases T2-OPS-01 to
+  T2-OPS-03, S-F6b; [Post-order gate](checkout/post-order.md#post-order-gate)).
 - Refuse every post-order write with `presence: HP` that lacks a valid
   `hp_proof` (`403 presence_not_proven`, with a `post_order` step-up when the
   proof is missing) before any network message; accept a proof only for the
@@ -443,6 +511,11 @@ A Mandate Manager MUST:
   [conformance attestation](#conformance-attestation) listing it. Take the
   registry from the dated release or a registry-signed snapshot, never from a
   gateway endpoint, and record its version in `rail_binding.registry_version`.
+- Verify the gateway's attestation under every rule of [Conformance attestation](#attestation-rules) (signer in the
+  public list and not excluded, scope, `typ`, 180-day validity, 24-hour status freshness, `sub` equal to the signing
+  gateway, separation of operators), write `rail_binding.conformance{iss, sub, jti}` on every pilot binding, refuse any
+  `in.upi.circle` open mandate request while [Q-77](open-questions.md#q-77) is open, read the attestation's status list
+  itself, and refuse the fixture `typ` outside a harness (cases T0-RT-11b, CA-01 to CA-15).
 - For a Reserve Pay mandate, require `payee{vpa, bpp_id}` equal to the
   seller's BPP-signed payment terms and `rail_limits.block_amount`, and
   refuse a buyer-app payee for HNP; for a request with
@@ -594,8 +667,11 @@ These invariants MUST hold after every conformance case:
 3. **Check outcomes and invariants.** For each case the runner compares the
    responses, states, messages, rail counts, log entries and webhooks with the
    case's expectations, then evaluates every global invariant.
-4. **Report.** The runner produces a signed report. If every required case
-   passed, the registry issues a conformance credential listing the levels.
+4. **Report.** The runner produces a report that anyone can reproduce. If every
+   required case passed, a conformance authority on the
+   [public list](#conformance-authority-list) may sign a
+   [conformance attestation](#conformance-attestation) listing the levels,
+   with the digest of the report.
 
 Informative: suggested manifest layout. The layout is `levels.yaml` (the level table as data),
 `cases/<level>/*.yaml` (one file per case), `invariants.yaml` and `codes.yaml`
@@ -680,6 +756,17 @@ Fixture and step keys used by the cases on this page:
   `trusted_surface` (the runner plays the gateway and inspects what a
   Mandate Manager or PSP surface renders and records) or `beckn_adapter`
   (the runner plays a seller behind a validator that strips `context.bacp`).
+- The attestation cases use these fixture keys. `conformance_authorities` is the dated list that the Mandate Manager
+  loads (entries with `ca_id`, `operator`, `scope` and, optionally, `kind`); the runner signs an attestation with the
+  key of the entry named in `iss`. `operators` gives the declared operator of each subscriber and registry id, or
+  `unknown`. `mandate_manager` gives its `id`, its `mode` (`harness`, which loads the fixture list and accepts the
+  fixture `typ` `bacp-conformance-test+jwt`, or `production`) and its `excluded_attesters` and
+  `private_accepted_attesters`. `gateway_attestation` gives the payload fields the case is about, the JOSE `typ`, and
+  the `status` (`ok`, `revoked`, `unreachable` or `{last_good_fetch: <time relative to the runner's clock>}`);
+  `iat_to_exp` replaces `exp` with a validity length. `attestation_status` gives the status of a `jti` as the gateway
+  sees it, and as a step it changes that status. A step that names a fixture key (`operators`,
+  `conformance_authorities`, `gateway_attestation`) replaces it. `clock: {advance_past: …}` moves the runner's clock
+  past a time, and `psp_receipt_arrives` delivers a PSP-signed receipt to the gateway.
 - `requirement: SHOULD` marks a case for a SHOULD-level rule: it is reported,
   and does not fail the level.
 - `applies_from` is the date from which a case is required (for example
@@ -1155,17 +1242,23 @@ root-checkout-mandate section are ordered is not specified in this version
     `mandate_scope_mismatch`.
 
 T0-RT-11 cannot tell a correct Mandate Manager from one that refuses every
-pilot handler until [Q-60](open-questions.md#q-60) defines the
-conformance-authority role, because until then no attestation verifies and
-every MM refuses. Its positive control, T0-RT-11b, is Proposed and published
-in the block below.
+pilot handler while the [conformance-authority list](#conformance-authority-list)
+is empty, because then no attestation verifies and every MM refuses. Its positive
+control, T0-RT-11b, runs with a fixture conformance authority and is in the block
+below.
+
+The cases below test the [conformance attestation](#attestation-rules): T0-RT-11b and CA-01 to CA-15 (issuance, and the pause on a lapsed
+attestation in CA-04b and CA-07),
+S-F1, S-F1-missing and S-F7 at `complete`, S-F4 on the reconciliation of a receipt, and DISP-01 on how an
+attestation is shown to a principal. T2-OPS-01 to T2-OPS-03 and S-F6b test what a binding pause, an expiry,
+an exhaustion and a revocation leave open for the principal. A Mandate Manager runs them in its conformance-harness mode, which loads the
+fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
 
 !!! warning "Proposed"
     T0-RT-09 needs a way for the Mandate Manager to check `rail_ref` against
-    the bound primitive (a per-primitive reference pattern in the handler
-    descriptor). BACP `2026-10-17` does not define one. T0-RT-11b needs the
-    conformance-authority role that [Q-60](open-questions.md#q-60) is to
-    define. Both cases below are published as data for review and are not run
+    the bound primitive. The handler descriptor now has an optional
+    `mandate_primitives[].ref_pattern`, but no descriptor sets one in this
+    version, so T0-RT-09 is published as data for review and is not run
     against this version.
 
 ```yaml
@@ -1187,21 +1280,529 @@ in the block below.
     rail: {settled_debits: 0, calls: 0}
 
 - case_id: T0-RT-11b
-  title: Positive control for T0-RT-11, an attestation from the conformance authority covers a pilot handler
+  title: Positive control for T0-RT-11, an attestation from a listed fixture authority covers a pilot handler
   level: bacp.pay.all.1
   system_under_test: mandate_manager
   fixture:
-    registry: {in.upi.circle: {status: pilot}}
-    gateway_attestation: {iss: conformance_authority, sub: gateway, pilots: [in.upi.circle], exp: future}
-    psp_attestation: {type: in.upi.circle, primitive: circle_delegation}
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, gateway_G2: op.g2, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance-test+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
   steps:
-    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.circle}}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
       gateway: forwards
       trusted_surface: approve
   expect:
     responses:
       - {status: 202, body.status: PENDING, count: 1}
     state: {mandate_request: ACTIVE}
+    mandate: {rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: present}}
+
+- case_id: CA-01
+  title: An attestation with the JOSE typ JWT is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: JWT, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-02
+  title: An attestation signed by a key that is in no list entry is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.unlisted.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-03
+  title: A pilot outside the signing entry's scope is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.erupi]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-04
+  title: An attestation marked revoked in its status list is refused at issuance
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, jti: att_J000001, status: revoked}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-04b
+  title: An attestation revoked after issuance pauses the mandate, logs its jti and refuses the next complete
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    attestation_status: {att_J000001: ok}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - attestation_status: {att_J000001: revoked}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible], count: 1}
+    state: {mandate: PAUSED, pause_reasons: [binding_ineligible]}
+    webhooks: [{type: mandate.status_changed, status: PAUSED, reason: binding_ineligible, pause_reasons: [binding_ineligible]}]
+    log: [{stage: mandate, actor: gateway, reason: binding_ineligible, cause: attestation, jti: att_J000001}]
+    rail: {settled_debits: 0}
+
+- case_id: CA-05
+  title: A status list that cannot be reached is a refusal at issuance
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: unreachable}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, resolution: recoverable, reasons: [attestation_status_stale], count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-06
+  title: A request signed by one gateway that carries an attestation about another is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, gateway_G2: op.g2, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G2, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-07
+  title: An attestation that expires pauses the mandate at the next complete, and a newer attestation lifts the pause
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    gateway_attestation: {jti: att_J000001, exp: future}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - clock: {advance_past: gateway_attestation.exp}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+    - gateway_attestation: {jti: att_J000002, pilots: [in.card.agentic], exp: future, status: ok}
+    - sweep: {replicas: all}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible], count: 1}
+    state: {mandate: ACTIVE}
+    webhooks:
+      - {type: mandate.status_changed, status: PAUSED, reason: binding_ineligible, pause_reasons: [binding_ineligible]}
+      - {type: mandate.status_changed, status: ACTIVE}
+    rail: {settled_debits: 0}
+
+- case_id: CA-08
+  title: An unreachable attestation status list does not block a human-present issue on an existing order
+  level: bacp.core.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    attestation_status: {att_J000001: unreachable}
+    order: {state: delivered, placed_under: mandate}
+  steps:
+    - request: {method: POST, path: /issues, tag: bacp-post-order, presence: HP, hp_proof: valid, body: {order_id: "{order_id}", category: ORDER}}
+  expect:
+    responses:
+      - {status: 201, body.status: OPEN, count: 1}
+    state: {mandate: ACTIVE}
+
+- case_id: CA-09
+  title: An attestation valid for 400 days is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], iat_to_exp: P400D, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-10
+  title: An agent attestation that lists pilot handlers is schema-invalid and is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: agent, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-11
+  title: An authority run by the gateway's own operator, or by an operator that is unknown, is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.g, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+    - operators: {gateway_G: unknown}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 2}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-12
+  title: An authority run by the payer PSP's operator, or by the issuing Mandate Manager's operator, is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.p, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+    - conformance_authorities: [{ca_id: ca.lab.example, operator: op.m, scope: {pilots: [in.card.agentic]}}]
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 2}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-13
+  title: A production Mandate Manager refuses an attestation with the fixture typ
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: production, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance-test+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-14
+  title: A Mandate Manager refuses a listed authority that it excludes, and cannot add an authority that the public list lacks
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: [ca.lab.example], private_accepted_attesters: [ca.private.example]}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+    - gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.private.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [attester_not_accepted], count: 1}
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: CA-15
+  title: An open mandate request on in.upi.circle is refused even when a listed authority's scope includes it
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.upi.circle: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.bank.example, kind: rail_sponsor, operator: op.bank, scope: {pilots: [in.upi.circle]}}]
+    operators: {gateway_G: op.g, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.bank.example, sub: gateway_G, subject_role: gateway, pilots: [in.upi.circle], exp: future, status: ok}
+    psp_attestation: {type: in.upi.circle, primitive: circle_delegation, psp_id: psp_P}
+    open_questions: {circle_explicit_user_action: open}
+    mandate_request: {state: PENDING}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.upi.circle}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: S-F1
+  title: A mandate bound to one gateway's attestation is refused at another gateway
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    gateway: {id: gateway_G2}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate: ACTIVE}
+    rail: {settled_debits: 0}
+
+- case_id: S-F1-missing
+  title: An open mandate on a pilot handler without rail_binding.conformance is refused at complete
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: absent, preinstalled: true}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+    state: {mandate: ACTIVE}
+    rail: {settled_debits: 0}
+
+- case_id: S-F7
+  title: A stale attestation status refuses an HNP complete on a pilot handler without pausing the mandate
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    attestation_status: {att_J000001: {last_good_fetch: -25h}}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, resolution: recoverable, reasons: [attestation_status_stale], count: 1}
+    state: {mandate: ACTIVE}
+    webhooks: []
+    rail: {settled_debits: 0}
+
+- case_id: S-F4
+  title: A PSP-signed receipt whose primitive differs from the mandate's pauses the mandate as an unmatched rail debit
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, preinstalled: true}
+    psp_receipt: {rrn: "412345678901", primitive: ppi_emandate, rail_ref: AGT-INTENT-000123456}
+  steps:
+    - psp_receipt_arrives: {reconcile_against: rrn}
+  expect:
+    state: {mandate: PAUSED, pause_reasons: [unmatched_rail_debit]}
+    webhooks: [{type: mandate.status_changed, status: PAUSED, reason: unmatched_rail_debit, pause_reasons: [unmatched_rail_debit]}]
+    rail: {settled_debits: 0}
+
+- case_id: DISP-01
+  title: A profile that labels its attestation "NPCI certified" is non-conforming
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    gateway_profile: {conformance: {attestation: present, label: {en-IN: "NPCI certified"}}}
+  steps:
+    - render: {surface: gateway_profile_conformance_label}
+  expect:
+    verdict: {code: conformance_fail, rule: attestation_label, required_text: {en-IN: "passed BACP protocol tests", hi-IN: present}}
+
+- case_id: T2-OPS-01
+  title: A binding pause never blocks a status check or a reversal of a debit that is already in the ledger
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {state: ACTIVE, rail: in.card.agentic, primitive: agentic_token_intent, rail_binding.conformance: {iss: ca.lab.example, sub: gateway_G, jti: att_J000001}, preinstalled: true}
+    attestation_status: {att_J000001: ok}
+    sessions: {count: 1, state: ready_for_complete}
+    rail: {on_complete: timeout}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+    - attestation_status: {att_J000001: revoked}
+    - rail_event: {type: failed_with_debit, rrn: "412345678901"}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {path: complete, status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible], count: 1}
+    state: {mandate: PAUSED, pause_reasons: [binding_ineligible]}
+    rail: {settled_debits: 0, reversal_to_source: {original_rrn: "412345678901"}}
+    log: [{stage: mandate, actor: gateway, reason: binding_ineligible, cause: attestation, jti: att_J000001}]
+
+- case_id: S-F6b
+  title: A refund from a paused mandate goes only to the source of the original debit
+  level: bacp.pay.all.1
+  fixture:
+    library_level: true
+    mandate: {state: PAUSED, pause_reasons: [binding_ineligible], rail: in.card.agentic, primitive: agentic_token_intent, preinstalled: true}
+    ledger: {debit: {rrn: "412345678901", source: payer_account_A}}
+  steps:
+    - refund: {original_rrn: "412345678901", destination: payee_account_B}
+    - refund: {original_rrn: "412345678901", destination: source}
+  expect:
+    verdict: {refund_to_other_destination: refused, refund_to_source: processed}
+    state: {mandate: PAUSED, pause_reasons: [binding_ineligible]}
+    rail: {credits_to_other_party: 0, refunds_to_source: 1}
+
+- case_id: T2-OPS-02
+  title: A human-present issue on an order is accepted under a paused mandate for every pause reason, and a human-not-present one is refused
+  level: bacp.core.1
+  fixture:
+    mandate: {state: PAUSED, pause_reasons: [binding_ineligible], preinstalled: true}
+    order: {state: delivered, placed_under: mandate}
+    ts_events: {step_up_hp_proof: valid}
+  steps:
+    - request: {method: POST, path: /issues, tag: bacp-post-order, presence: HP, hp_proof: valid, body: {order_id: "{order_id}", category: PAYMENT}}
+    - request: {method: POST, path: /issues, tag: bacp-post-order, presence: HNP, body: {order_id: "{order_id}", category: PAYMENT}}
+    - mandate: {state: PAUSED, pause_reasons: [principal_paused]}
+    - request: {method: POST, path: /issues, tag: bacp-post-order, presence: HP, hp_proof: valid, body: {order_id: "{order_id}", category: PAYMENT}}
+    - request: {method: POST, path: /issues, tag: bacp-post-order, presence: HNP, body: {order_id: "{order_id}", category: PAYMENT}}
+  expect:
+    responses:
+      - {status: 201, body.status: OPEN, count: 2}
+      - {status: 403, code: presence_not_allowed, count: 2}
+    state: {mandate: PAUSED}
+    beckn: {igm_issue_sent: 2, udir_complaint_keyed_by_rrn: 2}
+
+- case_id: T2-OPS-03
+  title: A human-present cancel is accepted on an order whose mandate is expired, exhausted or revoked, and a human-not-present one is refused
+  level: bacp.core.1
+  fixture:
+    mandate: {state: EXPIRED, preinstalled: true}
+    order: {state: confirmed, placed_under: mandate}
+    ts_events: {step_up_hp_proof: valid}
+  steps:
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HP, hp_proof: valid}
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HNP}
+    - mandate: {state: EXHAUSTED}
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HP, hp_proof: valid}
+    - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HNP}
+  expect:
+    responses:
+      - {status: 200, count: 2}
+      - {status: 403, code: presence_not_allowed, count: 2}
+    state: {mandate: EXHAUSTED}
 ```
 
 ## Human-participant cases {#human-participant-cases}

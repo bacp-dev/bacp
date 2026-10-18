@@ -36,18 +36,18 @@ labels for traceability between this page, the open questions and conformance re
 
 | Status | Requirements |
 |---|---|
-| Covered | 161 |
-| Partial | 49 |
+| Covered | 162 |
+| Partial | 52 |
 | Gap | 11 |
 | N/A | 5 |
-| **Total** | **226** |
+| **Total** | **230** |
 
 | Group | Requirements |
 |---|---|
 | [Reserve Bank of India (RBI)](#rbi) | 66 |
-| [NPCI and card networks](#npci) | 10 |
+| [NPCI and card networks](#npci) | 13 |
 | [MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar](#meity-dpdp) | 24 |
-| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 17 |
+| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 18 |
 | [ONDC network policy](#ondc) | 6 |
 | [GST, Income-tax and Legal Metrology](#gst-legal-metrology) | 9 |
 | [MSMED and Competition](#msmed-competition) | 11 |
@@ -145,6 +145,9 @@ NPCI scheme rules and circulars for UPI, NACH and Bharat Connect, and card-netwo
 | **PAY-104** Agent carts use a dynamic QR or intent bound to the order ID; reject static QR | NPCI UPI rules (static and dynamic QR); rejecting static QR for agent carts is BACP policy | Dynamic QR or intent bound to the order id; static QR rejected for agent carts ([Rail Bindings](payments/rails.md)) | Covered |
 | **PAY-105** P2M caps by category (₹1 lakh / ₹5 lakh), configurable | NPCI circular of 28-08-2025 (press report) | Category P2M caps applied by the handler intersection amount filter ([Handler Registry](payments/handler-registry.md)) | Covered |
 | **PAY-106** OTM: block, then single capture, then release | RBI statement of 07-12-2022 (PR 2022-2023/1321; notes UPI single-block-single-debit); vendor documentation | OTM block, single capture, release (`released_block`) ([Rail Bindings](payments/rails.md)) | Covered (see [Q-31](open-questions.md#q-31)) |
+| **REQ-410** Software on UPI Circle only where NPCI permits it, onboarded by the secondary PSP bank after due diligence and app security evaluation | NPCI UPI OC 201B (NPCI/UPI/OC-201B/2025-26, 08-10-2025) general item 4 and secondary-app items | `in.upi.circle` is `pilot`; an open mandate on it needs a conformance attestation from a listed authority, and `in.upi.circle` stays closed to open mandates for now ([UPI Circle](payments/rails.md#upi-circle-delegate), [Conformance](conformance.md#conformance-attestation)) | **Partial**: Whether software and AI profiles are within the circular's scope is not answered → [Q-77](open-questions.md#q-77) |
+| **REQ-411** Debits using IoT on UPI Circle are initiated only by explicit user action | NPCI UPI OC 201B p.1: "debit transactions using IoT shall be only initiated by explicit user action" | No open (human-not-present) mandate on `in.upi.circle`; human-present Circle payments are unaffected ([UPI Circle](payments/rails.md#upi-circle-delegate)) | **Partial**: The circular does not define "explicit user action" or mention agents → [Q-77](open-questions.md#q-77) |
+| **REQ-412** UPI Circle first-24-hour cumulative limit | NPCI UPI OC 201 (13-08-2024) item 9 and OC 201B (08-10-2025) item 8 (₹5,000 cumulative); NPCI UPI Circle product page (₹2,000) | `first_24h` kept at ₹2,000 and graded `conflict` in the registry; the stricter value is enforced ([Handler Registry](payments/handler-registry.md)) | **Partial**: The two NPCI sources conflict; which figure the rail enforces is not confirmed as of 18-10-2026 |
 | **PAY-115** Agentic-token intent object kept as dispute evidence | Mastercard Agent Pay launch, 29-04-2025 (Agentic Tokens; dispute support); keeping the intent object is BACP policy | Agentic token intent primitive in the descriptor ([Handler Registry](payments/handler-registry.md)) | **Partial**: Intent object not kept in receipts or evidence → [Q-39](open-questions.md#q-39) |
 | **PAY-202** Show only the bank-returned payee name; agent cannot edit it | NPCI payee-name rule (secondary); RBI/2024-25/99 | The user sees only the bank-returned payee name; the agent cannot edit it; a name mismatch is held for human confirmation ([Rail Bindings](payments/rails.md)) | Covered |
 | **PAY-206** NACH mandates registered only with human AFA; eSign ≤₹1 lakh; NB/DC cap configurable | NPCI/2020-21/NACH/Circular No.010, 15-07-2020 (secondary; not verified against the NPCI text as of 17-10-2026) | NACH mandate caps by authentication mode (`nach_mandate_above_cap`) ([Rail Bindings](payments/rails.md)) | Covered (see [Q-29](open-questions.md#q-29)) |
@@ -201,6 +204,7 @@ The Consumer Protection (E-Commerce) Rules 2020 and the Central Consumer Protect
 | **REQ-327** A marketplace does not use collected information to sell goods under its own brand, or to promote a seller as associated with it, without express and affirmative consent | Consumer Protection (E-Commerce) Rules r.5(6), inserted by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027) | None | **Gap**: no design |
 | **REQ-328** No bundled fee for an unrelated service (loyalty and membership programmes excepted) | Consumer Protection (E-Commerce) Rules r.5(7), inserted by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027) | None | **Gap**: no design |
 | **REQ-329** Show the seller's GST or MSME registration number | Consumer Protection (E-Commerce) Rules r.6(5)(j), added by the (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from 01-01-2027) | None: the mandatory disclosures carry no registration number | **Gap**: no design |
+| **REQ-330** Do not represent that a service has sponsorship, approval or affiliation that it lacks; a conformance attestation is not approval | Consumer Protection Act 2019 s.2(47)(i)(d) and (e) (unfair trade practice) | The attestation says "passed BACP protocol tests", never "certified" or "approved", and is not offered in place of any rail onboarding or certification; a profile that labels it otherwise is non-conforming ([Conformance](conformance.md#attestation-rules); case DISP-01) | Covered |
 | **REQ-321** Grievance officer acknowledges in 48 h and resolves in 1 month; ticket number | Consumer Protection (E-Commerce) Rules r.4(5), r.5(3)(b); r.4(5) as substituted from 01-01-2027 (G.S.R. 789(E)) keeps 48 h / one month and adds giving the complainant a copy of the complaint as recorded | Grievance officer in the AgentCredential; issue id; expected response times ([Beckn binding](transports/beckn.md#igm)) | **Partial**: No SLA clocks or auto-escalation → [Q-57](open-questions.md#q-57) |
 | **PAY-132** Payment-method fees shown before commit; compare totals | CCPA Dark Patterns Guidelines (drip pricing; secondary) | Per-option all-in totals from round 1; handler comparison logged ([Handler Registry](payments/handler-registry.md)) | Covered |
 | **NEG-114** on_init term hash must equal the accepted offer hash, otherwise NEG_TERMS_DRIFT | CCPA Dark Patterns Guidelines (bait and switch; secondary) | `on_init` terms must equal the accepted offer, otherwise `NEG_TERMS_DRIFT` and BREACH_FLAGGED ([Negotiation](negotiation/index.md)) | Covered |

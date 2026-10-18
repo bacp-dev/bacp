@@ -232,6 +232,11 @@
             "type": "string",
             "description": "Rail reference carried in rail_binding.rail_ref, e.g. UMN, UMRN, SBMD block id."
           },
+          "ref_pattern": {
+            "type": "string",
+            "format": "regex",
+            "description": "OPTIONAL regular expression that a rail_binding.rail_ref of this primitive has to match, so that a Mandate Manager can check the reference's shape. It is set only from a public source that states the format; no descriptor sets one in this version. Adding one to a live descriptor later is a breaking change."
+          },
           "limits_enforced_by": {
             "enum": [
               "rail",

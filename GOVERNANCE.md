@@ -14,6 +14,8 @@ The structure below is final. The people who fill each role are not yet named. R
 - [ ] Code of Conduct response team: `[Conduct team member name, organisation]` (receives mail at `conduct@bacp.dev`)
 - [ ] Security response team: `[Security team member name, organisation]` (receives mail at `security@bacp.dev`)
 
+The [interim-maintainer section](#interim-maintainer) applies until every slot is filled.
+
 ## Principles
 
 BACP is governed neutrally, in the public interest, so that no single company, network or vendor controls a protocol that many Indian participants may depend on.
@@ -58,6 +60,22 @@ BACP uses **lazy consensus**: a proposal is accepted if it has the required appr
 - Review periods are counted in calendar days from the time the pull request or issue is marked ready for review. Maintainers may shorten the period for an urgent security or correctness fix; they record the reason in the pull request.
 - An objection MUST give reasons and, where possible, an alternative. Maintainers try to resolve it by discussion; an objection that is answered in writing and not pursued for 7 days lapses.
 - Decisions and their reasons are recorded in the pull request or issue. Resolved open questions are recorded on the open questions page with a link to the decision.
+
+## Interim maintainer
+
+Until the conditions below are met, the project owner, Akash Jha, acts as sole maintainer, editor for every area, steering group and release approver ("interim maintainer").
+
+(a) Review periods, public review on GitHub, written reasons for every approval and the 90-day breaking-change notice apply unchanged. A review period may be shortened only for an urgent security or correctness fix, with the reason recorded. The 90-day notice is shortened only for a security fix under [SECURITY.md](SECURITY.md).
+
+(b) Every change approved under this section is labelled `interim-approval` in its pull request and in the release notes.
+
+(c) No entry is added to the conformance-authority list, and no payment handler moves from `pilot` to `live`, without the further approval of a maintainer from another organisation who declares no material interest, after a 14-day public nomination or review. Removing a list entry, or revoking an attestation, for a security reason is not restricted. The interim maintainer MUST NOT hold, operate or fund a conformance-authority key.
+
+(d) The decisions of panel round R1 (T0 to T3), listed by commit hash in the release notes, and every later change labelled `interim-approval`, are ratified provisionally. Within 90 days after this section ends, the maintainers and the steering group confirm or reopen each of them and record the outcome on the open questions page.
+
+(e) This section ends when at least three maintainers from at least two organisations and a steering group of at least three members are named, or on 18-10-2027 (twelve months after the owner's decision of 18-10-2026 to adopt this section), whichever comes first. If that date arrives before quorum, this section is renewed once, for at most six months, by a 14-day public notice giving reasons. After the renewal, only editorial changes are merged until quorum.
+
+This section is a governance change adopted under itself, by the interim maintainer, on 18-10-2026.
 
 ## Escalation
 

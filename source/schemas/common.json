@@ -97,8 +97,10 @@
             "bpp",
             "registry",
             "operator",
-            "support_operator"
-          ]
+            "support_operator",
+            "conformance_authority"
+          ],
+          "description": "The registry role of the key that made this signature. conformance_authority signs conformance attestations only, and only for a key that appears in the public conformance-authority list."
         },
         "kid": {
           "type": "string",
@@ -233,6 +235,17 @@
       "type": "string",
       "description": "Handlers that may back an OPEN (HNP) payment mandate (binding class O). Supersedes the legacy RailType.",
       "pattern": "^(in\\.upi\\.(reservepay|circle|autopay|otm)|in\\.card\\.(mandate|agentic)|in\\.nach\\.debit|in\\.ppi\\.(wallet|gift|netc_topup|ncmc_topup)|in\\.store_credit|in\\.loyalty|in\\.erupi|in\\.cbdc\\.programmed|in\\.bbps\\.upms|bacp\\.credit_ledger|in\\.upi\\.uap\\.[a-z0-9_.]+|upi\\.circle\\.delegate|upi\\.reservepay\\.block|upi\\.autopay|upi\\.uap\\.[a-z0-9_.]+)$"
+    },
+    "ConformanceLevel": {
+      "enum": [
+        "bacp.core.1",
+        "bacp.pay.upi.1",
+        "bacp.pay.all.1",
+        "bacp.neg.1",
+        "bacp.b2b.1",
+        "bacp.auction.1"
+      ],
+      "description": "Id of a conformance level: bacp.core.1 (Core), bacp.pay.upi.1 (Payments-UPI), bacp.pay.all.1 (Payments-All), bacp.neg.1 (Negotiation), bacp.b2b.1 (B2B), bacp.auction.1 (Auctions)."
     },
     "MandatePrimitiveType": {
       "description": "Type of the rail object that carries a standing authority, as listed in a handler descriptor's mandate_primitives[].type, for example sbmd_block (UPI Reserve Pay block), upi_autopay_umn, card_emandate, nach_umrn, ppi_emandate or balance_cap.",

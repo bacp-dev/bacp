@@ -49,13 +49,15 @@ UPI Circle lets a primary user delegate UPI payments to a secondary user, or to 
 |---|---|---|
 | Per transaction, per device | ₹5,000 | NPCI UPI Circle page |
 | Per month, per device | ₹15,000 | NPCI UPI Circle page |
-| First 24 hours after linking | ₹2,000 | NPCI UPI Circle page |
+| First 24 hours after linking | ₹2,000 | NPCI UPI Circle page. **Sources conflict:** NPCI OC 201 (13-08-2024) item 9 and OC 201B (08-10-2025) item 8 state ₹5,000 cumulative for the first 24 hours. The stricter value applies until NPCI confirms which figure the rail enforces (as of 18-10-2026). |
 | Devices or software per primary user | 5 | NPCI UPI Circle page |
 
 - **Linking.** OTP, then QR or intent, then consent and limit setting in the primary user's UPI app, then PIN or biometric. AFA happens at linking; payments within the limits need no per-transaction PIN.
-- **Status.** NPCI states that "AI/Software driven IoT Payments are under pilot with limited users as a part of Closed User Group". The handler is therefore `pilot`, and a gateway MAY use it only when its conformance attestation lists it.
+- **Status.** NPCI states that "AI/Software driven IoT Payments are under pilot with limited users as a part of Closed User Group". The handler is therefore `pilot`, and a gateway MAY use it only when its conformance attestation lists it (and, until [Q-77](../open-questions.md#q-77) is settled, not for an open mandate).
 - **Full delegation** to a human secondary went live on BHIM on 25-11-2025: up to ₹15,000 a month, with expiry from 1 month to 5 years, usable "after a short cooling period" (NBSL press release). The length of the cooling period and any per-transaction cap for human secondaries are not stated in any public NPCI text found as of 17-10-2026 ([Q-08](../open-questions.md#q-08)).
-- **Payee scope.** A Circle delegation is not tied to one merchant. While the handler is `pilot` it backs no open mandate until [Q-60](../open-questions.md#q-60) is settled, and where it does, it ranks below the principal's own preference in a multi-seller basket ([per-leg rule](../mandates.md#per-leg-rule)).
+- **Explicit user action.** NPCI OC 201B (NPCI/UPI/OC-201B/2025-26, 08-10-2025), which extends Circle to IoT devices and software, states: "debit transactions using IoT shall be only initiated by explicit user action." Whether a standing open mandate that an agent executes without the principal present is "explicit user action", and whether "IoT" there covers software profiles, is open ([Q-77](../open-questions.md#q-77)).
+- **No open mandate on Circle for now.** `in.upi.circle` backs no open mandate, even when a listed conformance authority's scope includes it and a gateway's attestation lists it, until Q-77 is settled. A Mandate Manager refuses an open mandate request on `in.upi.circle` with `rail_binding_not_open_eligible`. This does not change today's behaviour, because no Circle open mandate can exist while the [conformance-authority list](../conformance.md#conformance-authority-list) is empty.
+- **Payee scope.** A Circle delegation is not tied to one merchant. Where it ever backs an open mandate, it ranks below the principal's own preference in a multi-seller basket ([per-leg rule](../mandates.md#per-leg-rule)).
 
 Binding rules:
 

@@ -489,8 +489,11 @@ With a UPI Circle binding, Meera links Sakhi as a delegate (secondary) in her
 UPI app instead of creating a block. As of 17-10-2026, Circle is in an NPCI
 pilot for software secondary users, so the handler `in.upi.circle` has status
 `pilot` and a gateway may use it only when its conformance attestation lists
-it. The rail then enforces caps per secondary user: ₹5,000 per transaction,
-₹15,000 per month and ₹2,000 in the first 24 hours. A primary user can add up
+it. In this version no open mandate can back Circle yet: the conformance-authority
+list is empty, and NPCI's reading of "explicit user action" for software on
+Circle is open ([Q-77](open-questions.md#q-77)). The description below is what a
+Circle binding will look like once both are settled. The rail then enforces caps per secondary user: ₹5,000 per transaction,
+₹15,000 per month and ₹2,000 in the first 24 hours (NPCI's sources conflict on this figure; the stricter value applies, see [Rail Bindings](payments/rails.md#upi-circle-delegate)). A primary user can add up
 to five secondary users. The open Payment Mandate carries
 `rail_binding.type: in.upi.circle`, and its BACP caps MUST be at or below the
 Circle caps. Unlike a Reserve Pay block, a Circle delegation is not tied to one

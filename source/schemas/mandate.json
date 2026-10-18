@@ -368,6 +368,33 @@
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
           "description": "The handler-registry version against which the Mandate Manager checked this binding's eligibility at issuance: the identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A version format for registry-signed snapshots is not yet defined, so only a release date is valid. A record of the issuance check only; the gateway re-checks eligibility against the current registry at every complete."
         },
+        "conformance": {
+          "type": "object",
+          "required": [
+            "iss",
+            "sub",
+            "jti"
+          ],
+          "properties": {
+            "iss": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The ca_id of the conformance authority that signed the gateway's attestation."
+            },
+            "sub": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The gateway that the attestation is about. At complete, the gateway refuses the mandate when this is not itself."
+            },
+            "jti": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$",
+              "description": "The jti of the attestation. The gateway re-checks its status at every complete, and a pause for a lapsed attestation logs it."
+            }
+          },
+          "additionalProperties": false,
+          "description": "The conformance attestation that admitted the bound handler as a pilot, as the Mandate Manager verified it at issuance: {iss, sub, jti}. A conformance rule REQUIRES it on every open payment mandate bound to a pilot handler; the schema leaves it optional because a live handler needs none. It is part of the signed, immutable mandate."
+        },
         "rail_limits": {
           "type": "object",
           "properties": {

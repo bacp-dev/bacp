@@ -56,6 +56,10 @@
     "open_mandate_ref": {
       "type": "string"
     },
+    "primitive": {
+      "$ref": "common.json#/$defs/MandatePrimitiveType",
+      "description": "The mandate primitive that the payment or refund was made under. A payer-PSP-signed receipt SHOULD echo it together with rail.rail_ref, so that the gateway can reconcile the receipt against the mandate's rail_binding; a mismatch with the mandate's primitive is an unmatched rail debit."
+    },
     "transaction_id": {
       "type": "string",
       "description": "Beckn context.transaction_id, end to end"

@@ -329,7 +329,8 @@ Revocation { #revocation }
     (for example a UPI safety switch), or by the agent relinquishing it. It
     reaches the gateway and the agent within 60 seconds. It stops new
     commitments; protective actions on orders already placed (cancel, return,
-    grievance) remain allowed with `presence: HP`.
+    grievance) remain allowed with `presence: HP`, as they do after a pause,
+    expiry or exhaustion.
 
 Step-up { #step-up }
 :   Escalating a decision to the principal on the Trusted Surface. A step-up

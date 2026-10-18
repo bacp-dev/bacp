@@ -227,8 +227,9 @@ Manager** (MM) issues it.
    issuance (`rail_binding_not_open_eligible`) if the attested `primitive` is not in the
    descriptor's `binding.open_primitives`, the descriptor is not open-eligible, or its `status`
    is neither `live` nor an attested `pilot`. For a `pilot` handler the MM **MUST** first verify the
-   gateway's [conformance attestation](conformance.md#conformance-attestation) and find the handler
-   in its `pilots[]`. The MM then checks that every BACP constraint is at or below the attested rail
+   gateway's [conformance attestation](conformance.md#attestation-rules), forwarded in the request's
+   `gateway_attestation`, find the handler in its `pilots[]`, and write `rail_binding.conformance{iss, sub, jti}`
+   into the mandate. The MM then checks that every BACP constraint is at or below the attested rail
    limits, and, for a Reserve Pay block, that the attested `block_amount` is at most the requested
    one and that the attested expiry is no later than the root open Checkout Mandate's
    `valid_until`. It builds the open Checkout and open Payment Mandates, or, for a request with
@@ -542,14 +543,19 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   `400 rail_binding_not_open_eligible`.
 - **Checked at issuance.** The MM **MUST** refuse to issue an open Payment Mandate whose binding
   fails these checks, and **MUST** verify the gateway's conformance attestation before it issues
-  one on a `pilot` handler ([Issuance](#issuance), step 6). Until [Q-60](open-questions.md#q-60)
-  defines the conformance-authority role, no attestation verifies, so an MM refuses open mandates
+  one on a `pilot` handler ([Issuance](#issuance), step 6). While the
+  [conformance-authority list](conformance.md#conformance-authority-list) has no entry, no attestation verifies, so an MM refuses open mandates
   on every `pilot` handler, including `in.upi.circle` and `in.card.agentic`.
 - **Registry source.** The MM and the gateway **MUST** take the registry from the dated BACP
   release (its `source/handlers/registry.json`) or from a snapshot signed by the registry, and
   **MUST NOT** take it from a gateway endpoint such as `GET /payment-handlers`, which is unsigned
   ([Discovery](discovery.md)). The MM records the version it checked against in
   `rail_binding.registry_version`.
+- **The attestation is bound into the mandate.** On a pilot handler the open Payment Mandate carries
+  `rail_binding.conformance{iss, sub, jti}`: the conformance authority, the gateway and the attestation's `jti`. The
+  schema leaves it optional, and a conformance rule makes it REQUIRED for every pilot binding
+  ([Conformance attestation](conformance.md#attestation-rules)). At `complete` the gateway refuses the mandate when it
+  is absent or its `sub` is not the gateway itself, and re-checks the bound `jti`.
 - **Re-checked at every `complete`.** Eligibility (status, attestation and primitive) is not fixed
   at issuance. The gateway **MUST** re-check it at step 1 of [Deterministic evaluation](#evaluation)
   on every `complete`, against the current registry, never against a copy taken when the mandate
@@ -571,6 +577,15 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   cancels every open session under the mandate with the message `rail_binding_not_open_eligible`.
   Every later `complete` under it gets `400 rail_binding_not_open_eligible` with
   `reasons: [binding_ineligible]` while the binding stays ineligible.
+- **A lapsed attestation pauses the mandate.** When the bound attestation is revoked, or its `exp` passes, at a
+  re-check, the gateway adds `binding_ineligible` with the cause `attestation`, and writes the attestation's `jti` into
+  the InstructionLog entry for the addition. A status list that is stale or unreachable is not a revocation: the
+  `complete` gets `400 rail_binding_not_open_eligible` with `reasons: [attestation_status_stale]` and
+  `resolution: recoverable`, and the mandate is not paused ([Conformance attestation](conformance.md#attestation-rules)).
+- **A binding pause gates new `complete` only.** It never blocks a status check, a reversal, or a refund to the
+  original source of a debit whose `rrn` or `utr` is already in the ledger; these MUST proceed. A refund to any other
+  destination MUST be refused (`credits_to_other_party: 0`). Cancel, return and issue on orders already placed under the
+  mandate stay allowed with `presence: HP` ([Post-order gate](checkout/post-order.md#post-order-gate)).
 - **Pause reasons form a set.** A paused mandate carries the set of reasons for which it is paused:
   `principal_paused` (a pause by the principal on the Trusted Surface), `binding_ineligible`,
   `reissue_required` (below) and `unmatched_rail_debit` (a debit on a Reserve Pay block that matches
@@ -589,9 +604,11 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   `principal_paused` or `unmatched_rail_debit` remain, it gets `403 mandate_paused`.
 - **The Mandate Manager is not notified by the gateway.** The MM reads the same registry and can
   detect the change itself; a gateway-to-MM event is not defined in `2026-10-17`
-  ([Q-61](open-questions.md#q-61)). The gateway **MUST** record every addition and removal of
+  ([Q-61](open-questions.md#q-61)). For a pilot binding the MM **MUST** read the attestation's status list itself
+  and does not rely on the gateway's report; the event that would carry it stays open under Q-61. The gateway **MUST**
+  record every addition and removal of
   `binding_ineligible` or `reissue_required` as an InstructionLog entry at stage `mandate`
-  (actor `gateway`) whose content carries the reason and the `registry_version`, in the chain of
+  (actor `gateway`) whose content carries the reason, the `registry_version` and, for a lapsed attestation, its `jti`, in the chain of
   every session the change cancels, and otherwise in the `mandate` entry of the next session
   opened under the mandate ([Evidence](evidence.md#stages)).
 - **The agent does not turn a binding pause into a request.** This binding pause is not a
@@ -651,7 +668,8 @@ presence ([handler intersection](payments/index.md#handler-intersection-and-pref
 Rules on the order:
 
 - Any-merchant primitives that are `pilot` (`in.upi.circle`, `in.card.agentic`) back no open mandate
-  until [Q-60](open-questions.md#q-60) is settled, and a rung never ranks above the principal's
+  until a listed [conformance authority](conformance.md#conformance-authority-list) attests the gateway for them
+  (`in.upi.circle` also waits for [Q-77](open-questions.md#q-77)), and a rung never ranks above the principal's
   preference. A seller that lacks only a block keeps its place and is offered the human-present
   step; it is not dropped from the basket.
 - The gateway **MUST** record, for every leg, the rung chosen and every rung skipped with its reason,
@@ -984,9 +1002,9 @@ stateDiagram-v2
   the same way with `mandate_paused` and `mandate_expired`. A principal pause adds the reason
   `principal_paused`, and a principal resume removes only that reason
   ([pause reasons](#handler-binding)).
-- Revocation stops **new** commitments only. Cancel, return and issue on orders already placed
-  under the mandate stay allowed as protective actions, with `presence: HP`
-  ([Post-order gate](checkout/post-order.md#post-order-gate)).
+- Revocation, every pause (whatever its reason), expiry and exhaustion stop **new** commitments only.
+  Cancel, return and issue on orders already placed under the mandate stay allowed as protective actions,
+  with `presence: HP` ([Post-order gate](checkout/post-order.md#post-order-gate)).
 - If a debit races a revocation, the rail rejects it, because the Trusted Surface revokes the rail
   primitive first.
 - **Ending a root ends its siblings.** When a root open Checkout Mandate ends in any way (revoked by
@@ -1011,7 +1029,8 @@ stateDiagram-v2
   and while a binding reason is in the set, `complete` returns
   `400 rail_binding_not_open_eligible`, not `mandate_paused`. The gateway removes
   `binding_ineligible` itself on a strictly newer registry version in which the binding is
-  eligible, never `principal_paused` or `reissue_required`, and the mandate stays `PAUSED` while any
+  eligible, or, for a pause caused by its conformance attestation, on a newer attestation that lists the pilot,
+  never `principal_paused` or `reissue_required`, and the mandate stays `PAUSED` while any
   reason remains. The gateway does not notify the MM; the MM reads the same registry
   ([Q-61](open-questions.md#q-61)). Pause and lift are written to the InstructionLog with the
   `registry_version` ([Handler binding](#handler-binding)).
@@ -1166,7 +1185,7 @@ machine-readable form. A REST export interface is not part of this version
 | `mandate_invalid_signature` | 403 | unrecoverable |
 | `mandate_invalid` | 403 | unrecoverable |
 | `mandate_schema_invalid` | 400 | unrecoverable |
-| `rail_binding_not_open_eligible` | 400 | requires_buyer_input; recoverable for `reasons: [registry_copy_stale]` |
+| `rail_binding_not_open_eligible` | 400 | requires_buyer_input; recoverable for `reasons: [registry_copy_stale]` and `reasons: [attestation_status_stale]` |
 | `constraint_unknown` | 403 | unrecoverable |
 | `mandate_expired`, `mandate_revoked`, `mandate_paused`, `mandate_exhausted` | 403 | requires_buyer_input |
 | `mandate_scope_mismatch` | 403 | requires_buyer_review |

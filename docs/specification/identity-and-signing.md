@@ -109,6 +109,21 @@ key by its registry key id, for example `bap.example.in|ukid-7|ed25519`, and
 MUST NOT trust a key presented only in a request. See
 [Registry lookup](discovery.md#registry-lookup).
 
+### Conformance-authority keys {#conformance-authority-keys}
+
+A key of the registry role `conformance_authority` (`Signature.role`) signs [conformance
+attestations](conformance.md#conformance-attestation) and nothing else. Such a key qualifies only if it belongs to an
+entry of the [public conformance-authority list](conformance.md#conformance-authority-list); a key that the registry
+record or a profile presents without a list entry does not qualify. The role grants no right to sign a mandate, a
+receipt, a request or a rail attestation.
+
+- An attestation's `exp` is at most 180 days after its `iat`.
+- A verifier of an attestation reads its status list and treats the attestation as revoked when the list marks it
+  revoked, when the copy it holds is more than 24 hours old, or when the list cannot be reached. This rule is
+  fail-closed for issuing a mandate and for a new `complete` on a pilot handler; it never blocks a status check, a
+  reversal, a refund or a post-order write
+  ([Handler binding](mandates.md#handler-binding)).
+
 ## Request signatures
 
 Every agent request to a gateway, other than the two unsigned discovery
@@ -377,6 +392,7 @@ form, with a key id that the registry resolves. See
 | AgentCredential and its `cnf` key | `exp` at most 180 days after `iat`; the operator re-issues with a new `cnf` key | The issuer marks the credential revoked in its status list. The gateway rejects it with `401 agent_credential_revoked`. |
 | Registry keys (BAP, BPP, Mandate Manager, PSP, credential issuer) | At least every 180 days | Removed or marked invalid in the registry record; verifiers stop accepting signatures under it once they refresh the record |
 | Operator signing key | Per the operator's registry record | As for registry keys |
+| Conformance attestation | `exp` at most 180 days after `iat` | The authority marks the attestation revoked in its status list, or the entry is removed from the public list ([Conformance-authority keys](#conformance-authority-keys)) |
 
 Rules:
 
