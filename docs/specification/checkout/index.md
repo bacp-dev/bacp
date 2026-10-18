@@ -193,7 +193,9 @@ gateway:
    (`seller_address` and `grievance_officer` **SHOULD** be present). For a session whose items came from `POST /discover`
    it also fills `catalogue[]` with one entry per line item, copied unaltered from the discover response:
    `item_id`, `sponsorship`, `discovered_unit_price` and `source_digest`, and `mrp`, `tax_inclusive` and `prior_price`
-   where the item had them. It hashes all of it into `disclosures.hash`. A missing mandatory disclosure gives
+   where the item had them. It hashes all of it, and the session's typed `policies[]`
+   ([Typed policies](../discovery.md#typed-policies)), into `disclosures.hash`, and raises `policy_text_mismatch` for a typed value that
+   contradicts the binding `return_terms` or `cancellation_terms`. A missing mandatory disclosure gives
    `disclosures_missing` (`requires_buyer_review`). It then adds one `type: disclosure` message for each
    `catalogue[n]` whose `sponsorship.status` is `sponsored` (`sponsored_listing`) or `undeclared`
    (`sponsorship_undeclared`), and one `prior_price_claim` message for each that has a `prior_price`, each at
@@ -279,10 +281,97 @@ Response (`200`, abridged):
 }
 ```
 
+### Units, quantity and weighed goods {#units}
+
+A catalogue item MAY carry a `measure`, a [`QuantityUnit`](https://bacp.dev/schemas/common.json) `{unit, scale, increment,
+display_text}`: `unit` is a UN/CEFACT Recommendation 20 code, one step is 10^-scale of the unit, and `increment` is the
+ordering granularity in steps. A line echoes the item's `measure`. With no `measure` the item is sold by the piece (unit
+`C62`, scale 0, increment 1). `measure` is REQUIRED for loose goods in the [`kirana.khata`](../trade-profiles.md#kirana)
+profile and RECOMMENDED elsewhere.
+
+- `ItemRef.quantity` stays an integer of at least 1. With the default measure it is a count, as before. For an item whose
+  measure has `scale` above 0 it is a count of 10^-scale units, and it MUST be a multiple of `increment`: `1500` with
+  `{unit: KGM, scale: 3, increment: 250}` is 1.5 kg in six steps of 250 g. An off-increment quantity (`1600`) gets
+  `400 invalid_request` at `$.items[n].quantity` and is never rounded.
+- On ONDC Retail the gateway sends `quantity.count = quantity / increment`, and only where the seller's own pack measure
+  equals the increment; otherwise it refuses and does not convert ([Quantity and units](../transports/beckn.md#quantity-units)).
+- `display_text` is counterparty text, spoken only as a labelled value.
+
+**Weighed goods.** A line sold by weight can end up heavier or lighter than quoted. BACP keeps the principal from paying
+more than she was quoted unless she heard "up to ₹X" and a hold exists:
+
+1. By default a post-order weight adjustment can only reduce the amount, as a `refund` in `adjustments[]`. An upward
+   adjustment with no `adjustment_band` is refused, and the order stands at the quoted total
+   ([Weighed goods](post-order.md#weight-adjustment)).
+2. A line MAY carry `adjustment_band{max_up, max_down}`. It is not a mandate constraint, so it adds no new family of bounds,
+   and it is hashed into `checkout_hash` ([below](#checkout-hash)). The gateway accepts a `max_up` only when (a) the
+   Trusted Surface reads it as "up to ₹X" and the principal confirms, (b) the quote total plus the sum of `max_up` over all
+   lines is within the approved amount and the mandate's caps, (c) `max_up` is at most one `increment` of the line's measure,
+   and (d) the rail holds the amount at payment, the extra is collected only from that hold, and there is no second debit and
+   no cash-on-delivery top-up. Where the rail has no such hold, the band is absent and an adjustment can only reduce the
+   amount. A session whose total plus the sum of `max_up` is above the mandate cap escalates with `confirm`, and the Trusted
+   Surface shows "up to ₹X".
+3. `substitution{policy}` is `none` (the default), `same_brand` or `ask`. A substitute line arrives only through a new quote
+   with a new `checkout_hash`, never inside the same quote or on `on_confirm` ([Seller refusals and substitution](#substitution)).
+
+Whether an upward adjustment after a human-not-present payment is a new supply that needs fresh consent, whether the GST
+invoice must show the final weighed quantity, and whether a one-time UPI block can be captured in part are open
+([Q-101](../open-questions.md#q-101), [Q-102](../open-questions.md#q-102)); the down-only default applies until they are
+answered.
+
+### Fulfilment options and minimum order {#fulfilment-options}
+
+The session carries `fulfilment_options[]`, projected from `on_select` and `on_init`: each is `{id, type, label, slot,
+tat, charge, pickup_location}`. `type` is `Delivery` or `Self-Pickup`, `slot` is `{start, end}`, `tat` is the seller's
+time to fulfil (from its `time_to_ship` tag), `charge` is an `Amount` in integer paise and `pickup_location` is the place
+of collection for a `Self-Pickup` option. Location has no capability of its own: it is folded into `pickup_location`.
+`label` and `pickup_location` are counterparty text, and the Trusted Surface shows them only as labelled seller values.
+
+- The agent chooses by `fulfilment.option_id` on `PUT /sessions/{session_id}`. The choice is hashed into
+  `checkout_hash`. An id that the session did not offer gets `400 invalid_request` at `$.fulfilment.option_id`.
+- A seller's `Order` MAY carry `fulfilments[]{id, type, state}` (SHOULD, where the seller reports several), and
+  `fulfilment_state` is kept.
+- A provider's or item's `min_order{value, item_qty}` (SHOULD, where the seller sets one) is checked when the session
+  is created and updated. A basket below it is refused with `400 invalid_request` at `$.items`.
+
+### Line provenance {#line-provenance}
+
+Each `LineItem` carries `added_by`, one of `principal`, `agent`, `seller` and `assisted_operator`. The gateway assigns it
+from the signer and the source and never from the request: a request that sets `added_by` is not believed, and the
+gateway records what it observed (an agent-signed request gives `agent`). It is `principal` only for a line that the
+principal confirmed on a Trusted Surface or by a human-present render. A line that a seller's quote adds is `seller`, and
+a line that an assisted-channel operator adds is `assisted_operator`.
+
+- The agent MAY send `principal_requested: true` on an `ItemRef`. The claim decides only how the Trusted Surface reads
+  the line: the Trusted Surface reads in full every `agent`, `seller` and `assisted_operator` line that the agent has not
+  marked `principal_requested` (`ts_render.unrequested_lines[]`, named in `render_required[]` whenever it is not
+  empty), and counts the rest ("and 11 items you asked for"). The claim never changes `added_by`.
+- A zero-price line that a seller scheme adds is read out and does not block. A paid line that a seller added needs a new
+  quote, so a new `checkout_hash`.
+- An `ItemRef` MAY carry its own `transaction_id` and `source_digest`, so that a re-quote from an old list still runs the
+  `discovery_price_changed` check against the price that list showed.
+- Seller view: the line's `added_by` is projected to the seller's view of the order where the network can carry it
+  ([Q-102](../open-questions.md#q-102)).
+
+### Extension members {#ext}
+
+`SessionCreate`, `SessionUpdate` and `Session` carry an optional `ext` member: an object keyed by the reverse-DNS id of a
+declared third-party capability (a key never starts with `in.`), each value an object that the capability's registry
+schema governs ([Capability declarations](../discovery.md#capability-declarations)). An `ext` member whose capability is
+not listed in the profile's `capabilities`, or whose declaration is not active, is refused with `400 capability_unsupported`
+at `$.ext["<id>"]`, and the session is unchanged. An `ext` member that touches an amount, the payee, presence, a mandate or
+a disclosure is critical: it is refused unless its capability is listed **and** the amount also appears as a line of the
+base `totals`, and it is never a mandate constraint. Until an extension-registry review exists
+([Q-94](../open-questions.md#q-94)) no third-party declaration is active, so every `ext` member is refused.
+
 ### checkout_hash binding {#checkout-hash}
 
-`checkout_hash` is `sha-256` over the JCS form of the **BPP-signed quote** returned in `on_init`.
-It is the anchor that binds every later artefact to one basket and one price:
+`checkout_hash` is `sha-256` over the JCS form of the **BPP-signed quote** returned in `on_init`. When the session also
+carries a chosen `fulfilment.option_id`, an `adjustment_band` or a `substitution` policy on a line, which are choices of the
+principal and not part of the seller's quote, the hash is `sha-256(JCS({"quote": <the quote>, "selection": {"fulfilment_option_id":
+..., "lines": [{"id": ..., "adjustment_band": ..., "substitution": ...}]}}))`, naming only the members that are present.
+With none of them the hash is the one above, so every hash computed before this release stays valid. It is the anchor that
+binds every later artefact to one basket and one price:
 
 - the agent copies it into both closed mandates ([Closing](../mandates.md#closing)), together with
   the exact quote total;
@@ -292,7 +381,7 @@ It is the anchor that binds every later artefact to one basket and one price:
 - the payment leg to the PSP carries `checkout_hash` instead of the basket, and the PSP's Receipt
   repeats it;
 - the gateway allows at most one debit per `checkout_hash` (under a payment plan, at most one per tender, and never more in total than `all_in_total`; see [Wire binding of plans](../payments/credit-and-split-tender.md#plan-wire));
-- the evidence bundle recomputes it from the BPP-signed quote ([Evidence](../evidence.md#bundle)).
+- the evidence bundle recomputes it from the BPP-signed quote and, where the session recorded one, the principal's selection ([Evidence](../evidence.md#bundle)).
 
 `checkout_hash` is the hash of the quote, **not** of an accepted negotiation offer. Nothing in
 BACP asserts that `checkout_hash` equals an `offer_hash`.
@@ -302,7 +391,10 @@ BACP asserts that `checkout_hash` equals an `offer_hash`.
 When a seller NACKs, `Error.seller_reason` carries the reason that its BPP-signed NACK states. A retry of the same item at a total no higher
 than the one the principal was shown is `recoverable`. A substitute item or seller at a higher total than the last BPP-signed quote of the
 session needs a new `confirm` step-up, in human-present and in human-not-present sessions alike
-([Seller refusals and substitution](../transports/beckn.md#seller-reasons)). A BPP-signed `seller_confirmation` tag raises a `confirm` step-up
+([Seller refusals and substitution](../transports/beckn.md#seller-reasons)). A substitute never arrives in the same quote
+and never on `on_confirm` without a new `checkout_hash`: a line's `substitution.policy` is `none` by default, so a
+substitute is not accepted, and with `same_brand` or `ask` a substitute still comes only in a new quote
+([Units and weighed goods](#units)). A BPP-signed `seller_confirmation` tag raises a `confirm` step-up
 with reason `seller_confirmation`, at most one per `checkout_hash`.
 
 ### Fees on the payer's screen {#fee-lines}
@@ -385,7 +477,7 @@ Enforcement rides on the existing suspected-split-order `confirm` trigger
 BACP carries discount codes in the shape of the UCP Discount extension: codes go in, and the discounts that the seller
 applied (by code or automatically) and the codes it rejected come out. The capability is `in.bacp.discounts`, which
 extends `in.bacp.checkout`. A gateway that supports it lists it in `capabilities` ([Capabilities](../discovery.md#capabilities)).
-An agent SHOULD NOT send `discounts` to a gateway that does not list it.
+An agent SHOULD NOT send `discounts` to a gateway that does not list it. A gateway that does not list it refuses a request that carries `discounts` with `400 capability_unsupported` at `$.discounts` and creates or changes nothing, and never ignores the member ([Capabilities](../discovery.md#capabilities)).
 
 1. **Codes in.** `POST /sessions` and `PUT /sessions/{session_id}` accept `discounts: {codes[]}`. The list replaces the
    earlier one. Because `PUT` already replaces every agent-editable field, an omitted `discounts` clears the codes, as
@@ -409,6 +501,10 @@ An agent SHOULD NOT send `discounts` to a gateway that does not list it.
    ([Negotiation](../negotiation/index.md#negotiation-modes)). A discount that carries `provisional` or `eligibility` is invalid, so
    that a producer of another protocol that sends them fails loudly instead of being half-mapped
    ([Q-74](../open-questions.md#q-74)).
+   A `provisional` loyalty benefit never enters `total`, `all_in_total` or `charge_lines[]`, and the agent says it with the
+   `loyalty_provisional` sentence ([Disclosure phrases](../human-participants.md#disclosure-phrases)). A paid
+   membership that a seller adds is a line with `added_by: seller`, and the principal hears it as a line she did not add
+   ([Line provenance](#line-provenance)). The loyalty capability is parked ([Q-98](../open-questions.md#q-98)).
 6. **Cashback is not a discount.** It is never in `applied[]`, and the agent never describes it as lowering the price
    ([Rail bindings](../payments/rails.md)).
 7. **Display.** An applied discount is shown only as a discount line with the fixed `discount_applied` sentence

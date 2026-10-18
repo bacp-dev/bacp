@@ -114,7 +114,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-79](#q-79) | Operator fees and commissions: duty to disclose, FAQ Q17, Rules r.5(7), tax | Legal counsel | Open |
 | [Q-80](#q-80) | ONDC recipient on the breakup, `misc` and the collector's MDR | ONDC | Open, fail-safe default |
 | [Q-81](#q-81) | Retained payment charges, MDR on refunds and on UPI mandates | Legal counsel, NPCI | Open, fail-safe default |
-| [Q-82](#q-82) | Whether the UCP checkout projection pins a tagged UCP release or a commit | BACP WG | Open, fail-safe default |
+| [Q-82](#q-82) | Whether the UCP checkout projection pins a tagged UCP release or a commit | BACP WG | Settled |
 | [Q-83](#q-83) | Counsel flags from the plan, ledger and trade-act bindings | Legal counsel | Open, fail-safe default |
 | [Q-84](#q-84) | Whether the Legal Metrology (Indian Standard Time) Rules reach machine timestamps | Legal counsel, ONDC | Open |
 | [Q-85](#q-85) | Counsel flags from the negotiation timing rules | Legal counsel | Open, fail-safe default |
@@ -126,6 +126,15 @@ are involved, the owner is the one that must give the answer.
 | [Q-91](#q-91) | Re-attestation of a Reserve Pay block under a successor root | NPCI | Open, fail-safe default |
 | [Q-92](#q-92) | Deemed-debit scope after OC 228, and overdraft funding attested as deposit | NPCI | Open, fail-safe default |
 | [Q-93](#q-93) | Gift PPI refund after expiry or closure, and to a non-reloadable instrument | RBI, Legal counsel | Open |
+| [Q-94](#q-94) | Review process for third-party extensions in the extension registry | BACP WG | Open, fail-safe default |
+| [Q-95](#q-95) | A gateway-held cart (UCP cart) | BACP WG | Open, fail-safe default |
+| [Q-96](#q-96) | Linking a buyer's account at a seller | BACP WG | Open, fail-safe default |
+| [Q-97](#q-97) | Ask: natural-language questions to a seller | BACP WG | Open, fail-safe default |
+| [Q-98](#q-98) | Loyalty memberships and benefits | BACP WG | Open, fail-safe default |
+| [Q-99](#q-99) | Catalogue lookup by id and product variants | BACP WG | Open |
+| [Q-100](#q-100) | Purchasable ranking parameters | BACP WG | Open, fail-safe default |
+| [Q-101](#q-101) | Counsel flags from the UCP capability parity rules | Legal counsel | Open, fail-safe default |
+| [Q-102](#q-102) | ONDC and NPCI points of the UCP capability parity rules | ONDC, NPCI | Open, fail-safe default |
 
 ## Questions {#questions}
 
@@ -755,6 +764,10 @@ verify every webhook against a key in the gateway profile's `keys` and MUST NOT 
 verification; it MUST NOT reject a webhook only because its signature has no `tag` or an unknown one. See
 [Identity and Request Signing](identity-and-signing.md#signature-tags) and [REST](transports/rest.md).
 
+**Upstream issue UCP #659 (as of 18-10-2026).** BACP's webhook signature already covers `webhook-id` and `webhook-timestamp`
+([REST](transports/rest.md#webhooks)), so the header-coverage point of that issue (closed upstream on 31-07-2026) is met. Only the
+dedicated tag stays open.
+
 ### Q-62 Certification of assisted operators {#q-62}
 
 **Question.** Who certifies the human assisted operators (village-level entrepreneurs at Common Service Centres,
@@ -853,7 +866,8 @@ the owner sign them off. For any other language, an operator uses its own fixed,
 sentence, never a translation made at run time. The same route is needed for the Trusted Surface's fixed sentences that
 [Human participants](human-participants.md#ts-requirements) adds: the TS-6 refusal, the assisted announcement, "a matching
 code does not make a link safe", "your bank never asks for your PIN on a call it makes", the no-PIN-basis notice and the
-`seller_confirmation` and re-prompt sentences.
+`seller_confirmation` and re-prompt sentences. The disclosure phrases `capability_absent`, `added_not_by_you`, `cart_estimate`,
+`loyalty_provisional` and `policy_not_stated`, and the marketing-consent sentences of the Trusted Surface, are drafts and need the same review.
 
 ### Q-69 ONDC catalogue tags for sponsored listings and prior price {#q-69}
 
@@ -1016,18 +1030,6 @@ or the gateway returns `refund_short_of_terms` without blocking the refund. No c
 payment-related charge, or a retention on a return for a defect, until this is answered. A refund is never reduced by
 MDR or aggregator fees. See [Refunds](payments/index.md#refunds).
 
-### Q-82 Pinned UCP release for the UCP checkout projection {#q-82}
-
-**Question.** Should the `in.bacp.ucp_checkout` projection pin a tagged release of the Universal Commerce Protocol or a
-commit? As of 18-10-2026 UCP has four releases, the latest `v2026-08-25` (25-08-2026), and the schemas that BACP pins are
-those of commit `a5e7cfe` (12-10-2026) on UCP's `main` branch, which upstream labels `draft`; that commit is 39 commits
-after `v2026-08-25` and differs from it in nine of the pinned files.<br>
-**Owner.** BACP WG.
-
-**Working position (fail-safe default).** The projection is pinned to commit `a5e7cfe` and says so
-([UCP checkout projection](transports/ucp-checkout.md)). A gateway MUST NOT claim UCP compatibility on any other UCP
-version. Whether a later BACP release re-pins to a tag is open; a re-pin re-runs the projection checks.
-
 ### Q-83 Counsel flags from the plan, ledger and trade-act bindings {#q-83}
 
 **Question.** Five points for legal counsel, none of which blocks the bindings:
@@ -1131,6 +1133,126 @@ exempt from two-factor authentication under the AFA Directions (RBI/2025-26/79),
 cited to NPCI OC 200 item 3, para (d) (Reserve Pay) and to UPI Consolidated Circular v1.0 paras 15.2 and 15.4 (OTM). The answer decides whether a
 future `rbi_annex1_item` is ever set on these handlers. The registry grades only the NPCI layer of the basis (`afa.verification`), and notes
 that no RBI exemption basis for the later debits was found.
+
+### Q-94 Review process for third-party extensions {#q-94}
+
+**Question.** Who reviews and admits a third-party extension (a capability under a reverse-DNS id, declared with a
+`registry_ref` and a `schema_digest`) to the extension registry, on what criteria, and how is an entry published and
+revoked?<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** No third-party declaration is active. A gateway ignores no third-party entry
+silently: it does not activate it, and every `ext` member of a request is refused with `400 capability_unsupported`.
+Only `in.bacp.*` declarations are valid. A third-party entry will be published in a dated release together with the
+registry release manifest (`source/handlers/release.json`), so that its digest is checked like a handler's. Principals lose
+nothing today except an option that a bank or a distributor would add: it waits for a BACP release. See
+[Capability declarations](discovery.md#capability-declarations).
+
+### Q-95 A gateway-held cart {#q-95}
+
+**Question.** Should BACP add a cart that the gateway holds between discovery and a session (UCP's
+`dev.ucp.shopping.cart`)? No ONDC primary source shows a server-held cart: the buyer builds the cart in the buyer
+application and sends `select`.<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** The capability is parked: a gateway does not list it, the UCP projection answers `404`
+for the cart operations, and a request that carries `cart_id` is refused with `400 capability_unsupported` at `$.cart_id`
+(UCPF-06). A cart lives with the agent operator, and a principal on a feature phone has no gateway-held list. Any
+future cart MUST meet these controls: each cart line carries `transaction_id` and `source_digest` and a gateway-assigned
+`added_by`, so that conversion still runs the `discovery_price_changed` check and the sponsorship copy; a cart total is
+an estimate (`estimate: true`, spoken with the `cart_estimate` sentence), is never a `Presentation` and is never approved by
+a step-up; a cart belongs to one (agent, principal) pair and anyone else gets `404`; a conversion re-quotes every line
+(a new `select`, a new `checkout_hash`) and never takes prices from the cart; and a replayed conversion with another
+presence, root mandate or `basket_id` gets `409`. The projection's alternative, to validate and re-quote, is open.
+
+### Q-96 Linking a buyer's account at a seller {#q-96}
+
+**Question.** Should an agent be able to link the principal's account at a seller (UCP's identity linking, which uses the
+OAuth authorization-code flow), so that the seller fills the buyer, address and instruments from its stored state?<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** Parked: no tool, DataPart or REST operation links an account. The negatives are
+normative now: no seller one-time password or password is requested or relayed by an agent, no seller-account token
+appears in a tool argument, a tool result, the InstructionLog, an evidence bundle or model context, and a link token is never
+a mandate ([MCP authentication](transports/mcp-a2a.md#mcp-auth)). Any future capability MUST meet these controls: the
+authorisation endpoint comes only from the seller's registry record; linking is a Trusted Surface consent event in every
+case and the seller's own origin is a second route only when the principal's modality is `visual`, never on voice or
+feature-phone channels; the token is bound to the agent key, the principal and the seller as audience; its scope is no
+wider than `data_scopes` and a ConsentReceipt covers it; and an address or instrument that the seller fills in never feeds
+`fulfilment` or `complete`, and any difference gives `requires_buyer_review`. Whether an account that a seller creates from
+a chained grant is consent is a question for counsel ([Q-101](#q-101)).
+
+### Q-97 Ask: natural-language questions to a seller {#q-97}
+
+**Question.** Should BACP carry UCP's Ask capability, a natural-language question to a business and its answer? Ask is in
+no UCP release as of 18-10-2026 (it is on UCP's `main` branch after `v2026-08-25`, [Q-82](#q-82)).<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** Parked. If it is added, an answer is `untrusted_counterparty_text`: it is
+never an input of a human-not-present decision, never a binding disclosure and never evidence, and the agent MUST NOT execute
+anything it says.
+
+### Q-98 Loyalty memberships and benefits {#q-98}
+
+**Question.** Should BACP carry UCP's loyalty extension (memberships, tiers, benefits and earning forecasts on a checkout)?<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** Parked, and the controls that apply today are normative: a `provisional` loyalty
+benefit never enters `total` or `charge_lines[]`, a plain session carries no loyalty discount ([Discounts](checkout/index.md#discounts)),
+and a paid membership that a seller adds is a line with `added_by`, read to the principal as a line she did not add. A loyalty
+claim on a plain session is refused (UCPF-06 on the projection). Points as a tender stay with [Q-59](#q-59), which is closed.
+
+### Q-99 Catalogue lookup by id and product variants {#q-99}
+
+**Question.** Should BACP add lookup of catalogue items by id and a variant model (options, selected options, product and
+variant ids) beyond today's `POST /discover` results?<br>
+**Owner.** BACP WG.
+
+**Working position.** Not added: no panel evidence for either yet. An agent re-discovers an item by search, and an item is
+one `CatalogItem` with its own id.
+
+### Q-100 Purchasable ranking parameters {#q-100}
+
+**Question.** Should an agent be able to ask the gateway to rank by a purchasable parameter (a promoted placement, a
+sponsored rank) in the request?<br>
+**Owner.** BACP WG.
+
+**Working position (fail-safe default).** Not added. If it is, the request field takes a value from a gateway-listed enum, is
+never a mandate constraint (an unknown constraint fails closed and this would be a new family), and the result is
+sponsored under [Catalogue disclosures](discovery.md#catalogue-disclosures) and shown as such.
+
+### Q-101 Counsel flags from the UCP capability parity rules {#q-101}
+
+**Question.** Five points for legal counsel, none of which blocks the rules:
+
+1. Whether a seller's business default (`source: "business"`, `granted: true`) can ever be consent under DPDP Act s.6(1).
+2. Whether an account that a seller creates from a chained grant is consent.
+3. How a BACP marketing receipt relates to the preferences under the Telecom Commercial Communications Customer Preference Regulations, 2018 (TCCCPR), and whether it satisfies DPDP s.6(1) with them.
+4. Whether an upward weight adjustment after a human-not-present payment is a new supply that needs fresh consent, and whether the GST
+   invoice must show the final weighed quantity.
+5. What DPDP retention duty attaches to a list or cart that an agent holds.
+
+**Owner.** Legal counsel.
+
+**Working position (fail-safe default).** (1) and (3) A seller default is never consent, and with no marketing receipt every marketing
+purpose is `granted: false`; the receipt is Proposed ([Marketing consent](mandates.md#marketing-consent)). (2) No linking
+capability exists. (4) An adjustment can only reduce the amount unless the principal agreed an `adjustment_band` and a hold exists
+([Weighed goods](checkout/post-order.md#weight-adjustment)). (5) The agent operator's own retention rules apply, and BACP holds no cart.
+
+### Q-102 ONDC and NPCI points of the UCP capability parity rules {#q-102}
+
+**Question.** Four points for ONDC and one for a UPI member bank:
+
+1. What ONDC buyer-app feature codes 011 and 013 mean.
+2. Whether the ONDC B2B `buyer_id` is a GSTIN only.
+3. Which Beckn paths carry a selectable fulfilment, a `unitized.measure` outside RET11 and a seller-view `added_by`, and whether any domain can carry a fractional ordered measure.
+4. Whether a one-time UPI block can be captured in part, with the rest released, which an upward `adjustment_band` needs.
+
+**Owner.** ONDC, NPCI (through a member bank).
+
+**Working position (fail-safe default).** The gateway sends `quantity.count` only where the seller's pack measure equals the increment, and refuses
+otherwise ([Quantity and units](transports/beckn.md#quantity-units)). The gateway projects `acting_for.gstin` into `buyer_id` and sends nothing else
+as a buyer identity. A band is accepted only where the rail holds the amount and the hold can be captured in part; otherwise adjustments are down only.
 
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
@@ -1632,6 +1754,24 @@ opening them are written down now, so that opening later is a registry change pl
 
 Whether a gateway that funds a ledger needs RBI registration under the RBI Act, 1934, s.45-IA is a question for counsel (not verified as of
 18-10-2026). See [Handler binding](mandates.md#handler-binding) and [Booking and settling](payments/credit-and-split-tender.md#booking-and-settling).
+
+### Q-82 Pinned UCP release for the UCP checkout projection {#q-82}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T4 with the T8 apply).
+
+**Question.** Should the `in.bacp.ucp_checkout` projection pin a tagged release of the Universal Commerce Protocol or a
+commit?<br>
+**Owner.** BACP WG.
+
+**Answer.** The projection pins UCP's tagged release `v2026-08-25` (25-08-2026, commit `cd78fb3`), the latest of UCP's four
+releases as of 18-10-2026. The pin was commit `a5e7cfe` (12-10-2026) on UCP's `main` branch, which upstream labels `draft` and
+which is 39 commits after the tag; four of the 41 pinned files differ, so the move changes the copies of `link.json`,
+`policy.json`, `warning_code.json` and `ucp.json`. Three changes that UCP made on `main` after the tag are not in the pinned
+release, and BACP does not depend on them: the Ask capability, the cart rule that `line_items` SHOULD be `[]`, and the
+registry of policy types (the tagged text lists `dev.ucp.shopping.policy.return` and `.warranty`). A gateway MUST NOT claim
+UCP compatibility on any other UCP version. A later re-pin to a newer tag re-runs the projection checks. See
+[UCP checkout projection](transports/ucp-checkout.md).
 
 ### Other settled points {#settled-other}
 

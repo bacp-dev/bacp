@@ -302,6 +302,42 @@ rule; a value of 0, or above 100, makes the benefit of the offer absent. A negat
 only where ONDC defines the sign, and otherwise the benefit is absent. The gateway validates every offer against
 `CatalogOffer` itself, and does not rely on the network's validation of offers.
 
+### Quantity and units {#quantity-units}
+
+A BACP `ItemRef.quantity` is a whole number of steps of the item's `measure` ([Units, quantity and weighed goods](../checkout/index.md#units)).
+ONDC Retail, as checked in ONDC's log-validation utility (domain RET11, as of 18-10-2026; not verified for other domains),
+carries the ordered quantity in `select` as an integer `quantity.count`, and the item's pack measure in the catalogue as
+`quantity.unitized.measure{unit, value}`, with `unit` one of `unit`, `dozen`, `gram`, `kilogram`, `tonne`, `litre` and
+`millilitre`. The gateway maps between them as follows.
+
+1. **Count rule.** The gateway sends `quantity.count = quantity / increment`, and only where the seller's `unitized.measure`
+   equals the increment in the same unit (a `measure` of `{unit: KGM, scale: 3, increment: 250}` against a seller's
+   `{unit: gram, value: 250}`). Then a BACP quantity of `1500` is `count: 6`. Where the seller's measure is anything else
+   (a seller that lists only 1 kg packs, for an increment of 250 g), the gateway refuses the line with `400 invalid_request`
+   at `$.items[n].quantity`, sends no `select`, and never converts or rounds.
+2. **The unit table.** The ONDC unit enum maps to UN/CEFACT Recommendation 20 codes as below. The codes are to be
+   checked against the Recommendation 20 list at the next review (not verified as of 18-10-2026).
+
+| ONDC `unitized.measure.unit` | Recommendation 20 code |
+|---|---|
+| `unit` | `C62` |
+| `dozen` | `DZN` |
+| `gram` | `GRM` |
+| `kilogram` | `KGM` |
+| `tonne` | `TNE` |
+| `litre` | `LTR` |
+| `millilitre` | `MLT` |
+
+3. **Fulfilment, policies and minimum order.** The gateway projects `fulfilment_options[]` from the fulfilments of `on_select`
+   and `on_init`, the typed policies from the tags `returnable`, `return_window`, `cancellable` and `available_on_cod`,
+   the `tat` of an option from `time_to_ship`, and `min_order` from the seller's minimum order value and minimum item
+   quantity ([Typed policies](../discovery.md#typed-policies)). The Beckn paths for a selectable fulfilment and for a
+   `unitized.measure` outside RET11 are not verified ([Q-102](../open-questions.md#q-102)).
+4. **Business buyer.** On an ONDC B2B order the gateway projects `acting_for.gstin`, which it sends only under the
+   `ACTING_FOR` scope and a per-seller ConsentReceipt that lists it, into the order's `buyer_id`
+   ([Mandates and Consent](../mandates.md#consent)). Whether `buyer_id` is GSTIN-only is not verified
+   ([Q-102](../open-questions.md#q-102)).
+
 ### Registry record mapping {#registry-mapping}
 
 A gateway that reads a Beckn registry lookup response builds the BACP

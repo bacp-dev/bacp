@@ -147,7 +147,7 @@ Every excluded handler is reported with a reason, for example `not_in_registry`,
 - **Multi-seller baskets.** For each leg of a [multi-seller basket](../checkout/index.md#multi-seller-basket) the fallback rungs of the [per-leg rule](../mandates.md#per-leg-rule) (the seller's existing payee-bound instrument, a gift PPI the principal designated, one planned human-present step) rank **below** the principal's designated preference (rule 1); no rung, and no any-merchant primitive, ranks above it. For every leg the `comparison[]` records the option chosen (`chosen: true`) and every option skipped, each with its `reason`.
 - If a card is excluded because card-not-present use is disabled on it, the agent MUST NOT silently try another card.
 
-The REST binding of the intersection is `POST /payment-handlers/intersect`. It takes a `negotiation_id` (the inputs come from the negotiated TermSheet) or, on a gateway that lists `in.bacp.payment_plan`, a `session_id` alone for a plain checkout session ([Q-45](../open-questions.md#q-45), settled 18-10-2026). A gateway that does not list the capability still requires the `negotiation_id` and refuses a `session_id` alone with `400 invalid_request`.
+The REST binding of the intersection is `POST /payment-handlers/intersect`. It takes a `negotiation_id` (the inputs come from the negotiated TermSheet) or, on a gateway that lists `in.bacp.payment_plan`, a `session_id` alone for a plain checkout session ([Q-45](../open-questions.md#q-45), settled 18-10-2026). A gateway that does not list the capability still requires the `negotiation_id` and refuses a `session_id` with `400 capability_unsupported` at `$.session_id`.
 
 For a plain session:
 

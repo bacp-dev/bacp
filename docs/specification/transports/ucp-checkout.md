@@ -10,13 +10,14 @@ optional capability **`in.bacp.ucp_checkout`**, which adds five operations that 
 checkout. This page defines that **projection**. A gateway that does not list the capability serves no
 `/checkout-sessions` path: a UCP client gets `404`, as it did before this release.
 
-!!! warning "Pinned to a UCP commit, not a release"
-    The projection is tested against unmodified copies of the UCP JSON Schemas at UCP commit `a5e7cfe` (12-10-2026, on
-    UCP's `main` branch, which upstream labels `draft`), kept under `source/ucp/`
-    ([provenance and licence](https://bacp.dev/latest/ucp/PINNED.txt)). UCP's latest tagged release is `v2026-08-25`
-    (25-08-2026); the other releases are `v2026-04-08`, `v2026-01-23` and `v2026-01-11`. The pinned commit is 39 commits
-    after `v2026-08-25`, so the pin is a commit, not a release (as of 18-10-2026). Whether to pin a tag or a commit is
-    [Q-82](../open-questions.md#q-82). A gateway MUST NOT claim UCP compatibility on any other UCP version.
+!!! info "Pinned to UCP release v2026-08-25"
+    The projection is tested against unmodified copies of the UCP JSON Schemas of UCP's tagged release `v2026-08-25`
+    (25-08-2026, commit `cd78fb3`), kept under `source/ucp/`
+    ([provenance and licence](https://bacp.dev/latest/ucp/PINNED.txt)). The other UCP releases are `v2026-04-08`,
+    `v2026-01-23` and `v2026-01-11` (as of 18-10-2026). Text that UCP added to its `main` branch after the tag (the Ask
+    capability, a cart rule that `line_items` SHOULD be empty, and a registry of policy types) is not in the pinned
+    release, and the projection does not depend on it ([Q-82](../open-questions.md#q-82)). A gateway MUST NOT claim UCP
+    compatibility on any other UCP version.
 
 ## Whole or absent {#whole-or-absent}
 
@@ -31,6 +32,7 @@ look right.
 | UCPF-03 | An instrument whose credential is not of type `in.bacp.closed_payment_mandate` is refused with `400 invalid_request` at `$.payment.instruments[i].credential`, with no rail call. | BND-UCPF-03 |
 | UCPF-04 | `continue_url` is only `step_up.trusted_surface_url` and otherwise absent, and `links[]` carries only typed policy links with titles from the gateway's own templates. | BND-UCPF-04 |
 | UCPF-05 | A `complete` that carries `ap2.checkout_mandate` is refused with `400 invalid_request` at `$.ap2.checkout_mandate`, with no rail call. | BND-UCPF-05 |
+| UCPF-06 | A request that carries a UCP member of a capability that BACP does not define is refused with `400 capability_unsupported` at that member and no session is created or changed: a buyer-consent member (`$.buyer.consent`, UCP `dev.ucp.shopping.buyer_consent`), a loyalty member (`$.loyalty`, UCP `dev.ucp.common.loyalty`) or a cart reference (`$.cart_id`, UCP `dev.ucp.shopping.cart`). The paths are those of the pinned UCP schemas. The projection never declares these capabilities in its `ucp` envelope. | BND-UCPF-06 |
 | Shape | A projected checkout validates against the pinned UCP `shopping/checkout.json`, and a discount line is a negative integer. | BND-UCP-01, BND-UCP-02 |
 
 ## Operations {#operations}
@@ -48,17 +50,35 @@ checks and the same state machine; only the request and response shape differ. T
 
 - The `id` is the BACP session id. A request carries `UCP-Agent: profile="..."` as UCP requires. The gateway does not
   use it to authenticate or authorise: the agent is identified by its AgentCredential and its RFC 9421 signature.
-  Fetching the profile that the header names is not defined here, and a gateway that does so MUST treat the URL as
-  untrusted input (the hygiene rules for such fetches are not yet written).
+  A gateway SHOULD NOT fetch the profile that the header names at all. A gateway that does MUST follow
+  [URL fetch hygiene](../security-and-privacy.md#url-fetch-hygiene), and takes nothing from the fetched profile that
+  affects a version, an amount, a payee, a handler or a mandate.
 - A request body is the UCP body, plus a top-level `bacp` member that carries what BACP needs and UCP has no place
   for: on `create_checkout`, the seller (`bpp_id`, `provider_id`), `transaction_id`, `presence` and `mandate_ref`; on
   `complete_checkout`, the checkout mandate, `checkout_hash` and `presence` ([below](#complete)).
 - A response is the UCP checkout. BACP-only state is under the top-level `bacp` member (UCP's checkout schema allows
   additional members): the BACP `status`, `checkout_hash`, `all_in_total`, every language of every message, the
   `step_up`, `plan_options` and `payment_plan`. A UCP client ignores it.
-- The `ucp` envelope declares `dev.ucp.shopping.checkout` at version `2026-08-25` (the UCP version that the pinned
-  commit follows) and the session's BACP handlers as `payment_handlers`, each keyed by its BACP handler id. It never
+- The `ucp` envelope declares `dev.ucp.shopping.checkout` at version `2026-08-25` (the UCP version of the pinned
+  release) and the session's BACP handlers as `payment_handlers`, each keyed by its BACP handler id. It never
   declares `dev.ucp.common.payment.ap2_mandate` ([No AP2](#no-ap2)).
+
+**Namespaces and the handler keys.** The projection never declares an `in.*` id together with a `schema` in the profile
+or envelope that a UCP platform reads, and a BACP gateway MUST NOT accept or fetch a schema for an `in.*` id from a UCP
+business profile or from any other source: it logs `extension_not_registered` and does not activate the handler or
+capability. UCP wants a handler key to be a reverse-DNS id whose schema is served from the same authority, and the
+BACP handler ids are not DNS-bound ([Extensibility](../overview/index.md#extensibility)), so the keys of
+`ucp.payment_handlers` stay schema-less. On 18-10-2026 the owner confirmed that BACP holds the domain `bacp.dev`, whose
+reverse-DNS authority is `dev.bacp`, so the projection MAY move its handler keys to aliases under that authority, with a
+schema served from `https://bacp.dev/`, once BACP publishes the handler configuration schema that such an alias needs.
+This version publishes none, and the `in.bacp.*` capability ids do not change.
+
+**Parked UCP operations.** The projection answers `404` for the UCP cart operations and for every other UCP operation
+that this page does not list; the cart ([Q-95](../open-questions.md#q-95)), account linking ([Q-96](../open-questions.md#q-96)),
+Ask ([Q-97](../open-questions.md#q-97)), loyalty ([Q-98](../open-questions.md#q-98)), catalogue lookup and variants ([Q-99](../open-questions.md#q-99))
+and ranking parameters ([Q-100](../open-questions.md#q-100)) are parked, each with its controls. If the projection ever declares UCP buyer consent, it confirms
+`granted: false, source: "platform"` for every purpose unless an active marketing ConsentReceipt of the seller exists
+([Marketing consent](../mandates.md#marketing-consent)); until it does, UCPF-06 refuses a buyer-consent member.
 
 ## Complete {#complete}
 

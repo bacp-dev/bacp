@@ -1199,6 +1199,10 @@ The exception is a debit that bought nothing. The gateway releases the spend of 
    confirmation on the Trusted Surface that the credit arrived (a `confirm` step-up with reason `refund_received`, whose
    render says "I have received ₹X" in the principal's language, and whose approval is the principal's own factor).
 
+A downward weight adjustment of a weighed line ([Weighed goods](checkout/post-order.md#weight-adjustment)) comes after
+fulfilment and is a partial refund, so it releases nothing. An upward adjustment that an `adjustment_band` allows is
+collected from the hold placed at payment and stays inside the budget that the hold took.
+
 A receipt of the collector's PSP alone moves the session to `reversed` and leaves the spend in place until the principal
 confirms, so that a seller with an insider at its payment aggregator cannot restore the budget by forging a refund. A
 partial refund, a refund to anything but the source (for example into `in.store_credit`) and a refund on initiation alone
@@ -1433,6 +1437,31 @@ Example: a class receipt issued at mandate setup.
 }
 ```
 
+### Marketing consent {#marketing-consent}
+
+Marketing is not part of a purchase, a mandate or a spend, so it has its own consent event. It is never a `purpose.code`
+of a mandate, and a ConsentReceipt for personal data (the receipt above) never covers it.
+
+**Fail-safe (normative).** With no active marketing ConsentReceipt for a seller, the gateway and the Mandate Manager
+report every marketing purpose of that seller as `granted: false`. A seller's own default, a UCP `buyer.consent` member
+(`source: "business"` is a default, not consent), a class receipt (`recipient.bpp_id: "*"`) and a receipt for personal data
+never grant one. The principal is never asked for marketing consent inside a payment step-up: a `Presentation` of a
+`bacp-pay` step-up that carries a marketing grant is refused, because consent is its own event on the Trusted Surface,
+one purpose and one channel at a time, with "no" as the first or an equal option.
+
+!!! warning "Proposed"
+    The receipt below is **Proposed**: it can change shape in a later dated release without a `!`, because a Proposed rule is
+    not yet part of what a conforming implementation must do. Whether it satisfies DPDP s.6(1) and the Telecom Commercial
+    Communications Customer Preference Regulations, 2018 together is a question for counsel
+    ([Q-101](open-questions.md#q-101)); the fail-safe above does not depend on the answer.
+
+A **marketing ConsentReceipt** has `consent_kind: "marketing"` ([`consent-receipt.json`](https://bacp.dev/schemas/consent-receipt.json)).
+The Mandate Manager issues it, and the principal gives it on the Trusted Surface (`captured_via`, never the agent). It has no
+`mandate_ref`, no `data_items` and no `purpose`. Instead it carries `purposes[]` (each `{code, text, granted}`, none
+preselected) and `channels[]` (`sms`, `whatsapp`, `voice_call`, `email`, `push`), and it reuses `notice`, `captured_via`,
+`withdrawal` (as easy as giving consent), `grievance` and `retention`. `recipient.bpp_id` MUST NOT be `"*"`: a marketing
+receipt names one seller. A purpose that the principal was not asked about does not appear and is not granted.
+
 ### Consent Manager registration {#consent-manager-registration}
 
 DPDP Rule 4 and Act s.6(9) apply from 13-11-2026. How the MM relates to a registered Consent
@@ -1463,7 +1492,10 @@ Manager is open ([Q-16](open-questions.md#q-16)). Until it is settled, these fai
   omitted. The purpose limits which scopes may be requested. The gateway sends `acting_for` to a seller only under a
   per-seller ConsentReceipt whose `data_items[]` lists `ACTING_FOR`, so that the principal's consent to this disclosure is
   on record for that seller. For a sole proprietor, whose GSTIN or name is personal data, this serves the DPDP Act, 2023,
-  s.6(1) and s.6(10) from 13-05-2027.
+  s.6(1) and s.6(10) from 13-05-2027. A request carries no buyer GSTIN of its own: the only GSTIN that reaches a seller is
+  `acting_for.gstin`, which the mandate's `data_scopes` fix, and a request that names a GSTIN other than that one, or
+  any GSTIN under a mandate without `ACTING_FOR`, is refused with `403 mandate_scope_mismatch` before anything is sent to
+  the seller. On an ONDC B2B order the gateway projects `acting_for.gstin` into the order's `buyer_id`.
 - When a session update shares data (`data_share`), the gateway **MUST** check that `SHARE_DATA`
   is in `action_scope`, that every field is in `data_scopes`, and that `consent_receipt_ref` names
   an active, not withdrawn, ConsentReceipt of this mandate (the class receipt, or a per-seller

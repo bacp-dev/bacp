@@ -199,7 +199,7 @@ The payload is defined by [`ts-render.json`](https://bacp.dev/latest/schemas/ts-
   `seller_name`; a `RETURN` carries `items[]`; and an issue action carries `issue_id`. `step_up_id` is at least 128 bits from a
   cryptographically secure random source (`^stp_[A-Za-z0-9_-]{22,64}$`), opaque and never read aloud to or typed by a person.
 - **Must-understand is scoped.** A render MAY carry `render_required[]`, naming the fields that the principal must be
-  shown, for example `catalogue_disclosure`, `items` or `acceptance_revocation`. A Trusted Surface that does not understand a
+  shown, for example `catalogue_disclosure`, `items`, `unrequested_lines` or `acceptance_revocation`. A Trusted Surface that does not understand a
   name listed there renders nothing and posts nothing. It ignores an unknown field that is not listed, so that adding a
   render field does not break every deployed Trusted Surface. The gateway refuses an approval whose
   `presentation.renders` omits a listed name with `400 invalid_request` ([Presentation record](#presentation)).
@@ -227,6 +227,8 @@ The payload is defined by [`ts-render.json`](https://bacp.dev/latest/schemas/ts-
 | `basket[]` | On a summary step-up over a [multi-seller basket](#multi-seller) only: one line per seller, `{bpp_id, payee_name, amount, handler, needs_pin, funds_locked, expires_at, funding}`. `payee_name` is the name the payer's bank returns for the payee VPA. `funds_locked` and `expires_at` are the amount a block reserves and when it is released. `funding` is `deposit` (the principal's own money) or `credit`. |
 | `covers[]` | On a summary step-up only: the legs the approval covers, each `{session_id, checkout_hash, payee, amount}` ([Step-up](mandates.md#step-up)). A summary's `session_id` and `checkout_hash` are those of the session whose `complete` raised it. |
 | `catalogue_disclosure[]` | Optional. On a session step-up (`confirm` or `rail_auth`, including a summary step-up) only: one entry for each line item whose `Disclosures.catalogue[]` entry is `sponsored` or `undeclared`, or carries a `prior_price`. Each entry is `{index, sponsorship, name_ref}` and, for a prior price, `prior_price` and `unit_price` (the discovered unit price shown with it). `index` is the position of the entry in that session's `Disclosures.catalogue[]`; on a summary step-up each entry also carries `cover_index`, the position in `covers[]` of the leg whose session it is. A `cover_index` that is not a position in `covers[]`, or an `index` that is not a position in that leg's `Disclosures.catalogue[]`, makes the render invalid (`evidence_unverifiable`). `name_ref` is the position of the item's name in `counterparty_text[]`. An entry for an item that is `not_sponsored` and has no `prior_price` is invalid. Never present on a `post_order` step-up or a negotiation `confirm`. It is hashed into `Presentation.content_hash` with the rest of the render ([Catalogue disclosure on the Trusted Surface](#ts-catalogue-disclosure)). |
+| `unrequested_lines[]` | On a session step-up (`confirm` or `rail_auth`) only: one entry `{index, added_by, name_ref}` for each line of the session whose `added_by` is `agent`, `seller` or `assisted_operator` and that the agent has not marked `principal_requested`. `index` is the position of the line in the session's `line_items[]`, and `name_ref` is the position of its name in `counterparty_text[]`. It is present only when it has an entry, and then it is also named in `render_required[]`, so that a Trusted Surface that does not understand it renders nothing. The Trusted Surface reads every entry in full, before the total ([Line provenance](checkout/index.md#line-provenance)). |
+| `requested_line_count` | Optional, on a session step-up. The number of lines that the agent marked `principal_requested` and that are not in `unrequested_lines[]`. The Trusted Surface counts them aloud ("and 11 items you asked for") and does not read them one by one unless the principal asks. |
 | `plan` | On a session step-up (`confirm` or `rail_auth`) over a [payment plan](payments/credit-and-split-tender.md#plan-wire) only: `{plan_hash, tenders[]}`, each tender `{tender_id, handler, amount, sequence}`. The Trusted Surface shows the whole plan, every tender and its amount, never one tender alone, and reads the plan's total as one figure with its tenders beside it. When the session has operator charges, the render reads the plan total and then each operator charge, and `total` is their sum. Requires `checkout_hash`. It is hashed into `Presentation.content_hash` with the rest of the render. |
 | `offer_hash` | On a negotiation `kind: confirm` step-up only: the `offer_hash` of the offer the principal is asked to approve ([Step-up to the Trusted Surface](negotiation/index.md#step-up-to-the-trusted-surface)). Never present with `checkout_hash`. |
 | `acceptance_revocation` | On a negotiation `kind: confirm` step-up about a firm offer only: the offer's [`acceptance_revocation`](negotiation/index.md#acceptance-revocation) value, copied unchanged; in this version only `waived` occurs, because receivers refuse `allowed_until_receipt`. Present only with `offer_hash`. It is hashed into `Presentation.content_hash` with the rest of the render. |
@@ -264,6 +266,12 @@ Content rules for `ts_render` and every Trusted Surface template:
    cancelled: cancelling after the contract is formed follows the cancellation terms.
 6. On a step-up whose render carries `catalogue_disclosure[]`, the Trusted Surface repeats what discovery showed, before
    the total, as [below](#ts-catalogue-disclosure).
+   On a step-up whose render carries `unrequested_lines[]`, the Trusted Surface first reads, with the `added_not_by_you`
+   sentence of [Disclosure phrases](#disclosure-phrases), each line that the principal did not add, in the order of the list
+   and with the item name as a labelled seller value from `counterparty_text[]`, then counts the lines the principal asked
+   for (`requested_line_count`), and only then reads the total. A zero-price line that a seller scheme adds is read out and
+   does not block. A paid line that a seller added needs a new quote. `unrequested_lines[]` is a list in the render, not a
+   style, so that a screen reader announces it as a list with a count.
 7. On an assisted session (`assisted_operators[]` present), before the factor, the Trusted Surface states from its
    own templates that an assisted operator is present and that only the principal enters the factor (`hi-IN`:
    "आपकी मदद एक सहायक कर रहे हैं। PIN सिर्फ़ आप डालें, किसी को न बताएँ।", in English: "An assistant is helping you.
@@ -364,7 +372,7 @@ Trusted Surface showed, how, and what the principal did:
 | `user_action` | yes | `tap_confirm`, `upi_pin`, `biometric`, `passkey`, `voice_confirm_plus_device` or `decline`. `biometric` is the principal's own biometric enrolled for the principal on the Trusted Surface device, never an operator's. |
 | `shown_at`, `acted_at` | yes | When it was shown and when the principal acted. |
 | `template_id` | no | The Trusted Surface template and its version. |
-| `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` or `plan`, and on any step-up approval whose render lists a name in `render_required[]` | The render fields beyond this version's base set that the Trusted Surface presented: `catalogue_disclosure`, `plan`, `items` or `acceptance_revocation`, for example `["catalogue_disclosure", "plan"]`. It is the only extension point of `Presentation`. |
+| `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` or `plan`, and on any step-up approval whose render lists a name in `render_required[]` | The render fields beyond this version's base set that the Trusted Surface presented: `catalogue_disclosure`, `plan`, `items`, `unrequested_lines` or `acceptance_revocation`, for example `["catalogue_disclosure", "plan"]`. It is the only extension point of `Presentation`. |
 | `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the `checkout_hash` of the order's closed Checkout Mandate. Never present with `offer_hash`. A `post_order` step-up for an order-less ledger act has no quote, and its approval carries none. |
 | `offer_hash` | on `negotiation.step_up.approved` | The offer a negotiation `confirm` step-up showed. Never present with `checkout_hash`. |
 | `plan_hash` | on `step_up.approved` when the render carries `plan` | The `plan.plan_hash` of the payment plan the content showed. |
@@ -517,7 +525,8 @@ floor is a BACP design value, not an external requirement.
 ## Disclosure phrases {#disclosure-phrases}
 
 For a buyer on a feature phone, an IVR call or a screen reader, the agent is the display. The sentences below are how an
-agent tells the principal about sponsored results and prior prices ([Catalogue disclosures](discovery.md#catalogue-disclosures)).
+agent tells the principal about sponsored results and prior prices ([Catalogue disclosures](discovery.md#catalogue-disclosures)),
+about a refused capability, a line the principal did not add, a provisional loyalty benefit and a policy that a seller does not state.
 They are fixed: they bind agents and the scripts of assisted operators, and a paraphrase is non-conformant, because a
 paraphrase by a language model is itself a way to change what the principal understands. Counterparty text never appears
 inside them, except as a labelled value.
@@ -535,16 +544,22 @@ inside them, except as a labelled value.
 | `discount_applied` | "Discount{ with code {code}}: ₹{amount} off." | "छूट{ (कोड {code})}: ₹{amount} कम।" |
 | `discount_rejected` | "Code {code} was not accepted." | "कोड {code} स्वीकार नहीं हुआ।" |
 | `discount_affiliate` | "Your assistant's provider earns if this code is used." | "यह कोड इस्तेमाल होने पर आपके सहायक की कंपनी को कमाई होती है।" |
+| `added_not_by_you` | "This item was not added by you: it was added by {party}." | "यह सामान आपने नहीं जोड़ा; इसे {party} ने जोड़ा है।" |
+| `cart_estimate` | "This is an estimate, not a price you will pay." | "यह एक अनुमान है, आपसे लिया जाने वाला दाम नहीं।" |
+| `loyalty_provisional` | "A loyalty benefit may apply later. It is not in this total." | "लॉयल्टी का लाभ बाद में लागू हो सकता है। वह इस कुल राशि में शामिल नहीं है।" |
+| `policy_not_stated` | "The {policy} policy is not stated." | "{policy} नीति नहीं बताई गई है।" |
+| `capability_absent` | "This shopping service does not offer that feature, so your request was not applied." | "यह शॉपिंग सेवा यह सुविधा नहीं देती, इसलिए आपका अनुरोध लागू नहीं हुआ।" |
 | party `bpp` | "the seller's app" | "विक्रेता का ऐप" |
 | party `gateway` | "the shopping service" | "शॉपिंग सेवा" |
 | party `agent` | "your assistant's provider" | "आपके सहायक की कंपनी" |
+| party `assisted_operator` | "the assistant helping you" | "आपकी मदद कर रहा सहायक" |
 | party unknown | "a party in the chain" | "बीच का कोई पक्ष" |
 
 The `hi-IN` sentences say, in English: "Sponsored: {party} has been paid to show this"; "Whether this is sponsored has
 not been stated"; "Now ₹{price}. Seller's lowest price in the 30 days before this discount: ₹{prior}"; and "MRP
 (maximum retail price) ₹{mrp}". The party phrases say, in English: "the seller's app", "the shopping service", "your
 assistant's company" and "some party in the chain". The discount phrases say, in English: "Discount (code {code}): ₹{amount}
-less"; "Code {code} was not accepted"; and "If this code is used, your assistant's company earns". The part in braces and
+less"; "Code {code} was not accepted"; "If this code is used, your assistant's company earns"; and "This shopping service does not offer that feature, so your request was not applied" (`capability_absent`, which has no slot). The new keys say, in English: "This item was not added by you: it was added by {party}" (`added_not_by_you`; the party is the one that the line's `added_by` names: `seller` is spoken as the seller's app); "This is an estimate, not a price you will pay" (`cart_estimate`, used only if a cart capability is ever added, [Q-95](open-questions.md#q-95)); "A loyalty benefit may apply later; it is not in this total" (`loyalty_provisional`); and "The {policy} policy is not stated" (`policy_not_stated`, where `{policy}` is one of three fixed words: return (`वापसी की`), cancellation (`रद्द करने की`) or cash on delivery (`कैश ऑन डिलीवरी की`)). The part in braces and
 brackets of `discount_applied` is left out for an automatic discount, which has no code.
 
 Rules:
@@ -560,7 +575,7 @@ Rules:
    language uses a fixed translation of the same sentence from its own templates, and never a free translation made at
    run time. Whether a reviewed translation route exists for fixed legal labels in the Eighth Schedule languages is open
    ([Q-68](open-questions.md#q-68)).
-5. `{party}`, `{price}`, `{prior}`, `{mrp}`, `{code}` and `{amount}` are the only slots. `{code}` is filled from the code the agent
+5. `{party}`, `{price}`, `{prior}`, `{mrp}`, `{code}`, `{amount}` and `{policy}` are the only slots. `{code}` is filled from the code the agent
    itself submitted, never from `applied[].code`, which a seller could fill with text. The `title` of a discount is seller
    text, shown only as labelled counterparty text. An item name, if it is spoken, is a separate, labelled seller value
    and never part of a sentence.

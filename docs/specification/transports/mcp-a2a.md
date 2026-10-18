@@ -54,6 +54,19 @@ and the trade acts carries `destructiveHint`. These annotations are hints for th
 whatever they say. The tool table below is checked against the `x-bacp-mcp-tool`, `x-bacp-signature-tag` and
 `x-bacp-idempotent` extensions of the OpenAPI document.
 
+**Generated per gateway, and closed.** A server generates each `inputSchema` for the gateway it fronts, from the
+capabilities that the gateway's profile lists: a property that carries `x-bacp-capability` in the OpenAPI document is
+present only when the gateway lists that capability, so a gateway that does not list `in.bacp.discounts` publishes
+`bacp_checkout_create` and `bacp_checkout_update` with no `discounts` argument. Every `inputSchema` is closed
+(`additionalProperties: false`), and the server MUST validate each call against it before acting. A call with an
+argument that the schema does not define is an `isError: true` result with `invalid_request` at `$.<argument>`. A call
+with an argument that a capability owns and the gateway does not list is an `isError: true` result with
+`capability_unsupported` at that argument's path (the same refusal as on REST, [Capabilities](../discovery.md#capabilities)),
+and the server never drops the argument and carries on. MCP clients are asked to give tool-execution errors to the model, so
+this is the channel from which the model corrects itself; the `content` of the result is the fixed sentence for the key
+`capability_absent` ([Disclosure phrases](../human-participants.md#disclosure-phrases)) in the principal's language, which
+the agent says in place of reporting an effect that did not happen.
+
 **Descriptions.** A server MUST give these tools the following description text, because the model reads it and not
 this page:
 
@@ -176,7 +189,8 @@ is signed by a human support operator under tag `bacp-handoff` and is never a to
 - A protocol failure is returned as a tool error result (`isError: true`) whose `structuredContent` is the flat `Error`
   object (`type`, `code`, `message`, `param`, `resolution`), with the same code the REST binding would return. The agent
   reads the code and `param`, corrects the argument and calls again; a missing or wrong argument is
-  `invalid_request` at `$.<argument>`.
+  `invalid_request` at `$.<argument>`, and an argument of a capability that the gateway does not list is
+  `capability_unsupported` at `$.<argument>`, with `capability` in `structuredContent`.
 
 ### Authentication {#mcp-auth}
 
@@ -193,6 +207,15 @@ is signed by a human support operator under tag `bacp-handoff` and is never a to
   carriage: on stdio the host sees `bacp_checkout_complete`, the order write tools, `bacp_trade_act_record` and
   `bacp_ledger_payment_post` as absent from `tools/list`, not as tools that fail at call time. A principal on a local
   desktop MCP host completes on a remote (HTTP) binding or through a human channel.
+- **MCP per version.** A gateway that lists more than one version serves one MCP endpoint for each and publishes them as
+  `mcp_endpoints{version: uri}` in its profile ([Fields](../discovery.md#fields)), because MCP's Streamable HTTP has a
+  single endpoint path and a host may be unable to set the `BACP-Version` header. A session created on one endpoint and
+  used on another gets `409 version_mismatch`.
+- **No seller account, OTP or password.** No tool asks the agent for, relays or stores a seller's one-time password or
+  account password. No seller-account token, link token or session cookie appears in a tool argument, a tool result, the
+  InstructionLog, an evidence bundle or model context, and a call that carries one is refused with `400 invalid_request`
+  and the value is not logged. A link token is never a mandate and never authorises a payment. Linking a buyer's account at
+  a seller is itself parked, with the controls any such capability must meet ([Q-96](../open-questions.md#q-96)).
 - **No credentials in arguments.** No tool argument carries a gift-card code, a voucher code or an instrument credential;
   a call that does is refused with `400 invalid_request`, makes no rail call, and the argument is not logged.
 
@@ -203,8 +226,11 @@ is signed by a human support operator under tag `bacp-handoff` and is never a to
 - A BACP gateway that offers A2A publishes an A2A Agent Card at `/.well-known/agent-card.json` and lists `a2a` in the
   `transports` of its BACP profile.
 - **Proposed:** the card declares the BACP extension in its capabilities, references the gateway's
-  `/.well-known/bacp` profile, and is signed as a JWS over its JCS form, as A2A allows. The extension URI is not yet
-  assigned.
+  `/.well-known/bacp` profile, and is signed as a JWS over its JCS form, as A2A allows. The extension URI carries the
+  version, `https://bacp.dev/<version>/a2a` (for example `https://bacp.dev/2026-10-17/a2a`), and the card declares it with
+  `required: true`, so that a client that does not know the version cannot proceed without noticing. A gateway that lists
+  more than one version lists one extension URI for each, and a task is pinned to the version of the URI it started under
+  ([The version of a request](../discovery.md#request-version)).
 - A2A authentication follows the card's declared `securitySchemes`; as with MCP, it authenticates the client and is
   never a mandate.
 

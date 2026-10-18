@@ -21,7 +21,10 @@ Checks
   8. source/ucp holds unmodified copies of the UCP JSON Schemas at the pinned commit (source/ucp/PINNED.txt), and the examples
      named ucp-checkout.*.json (a projected UCP checkout) and ucp-complete-request.*.json (the body of a projected
      complete_checkout) validate against those schemas as well as against the OpenAPI components UcpCheckout and
-     UcpCompleteRequest; files named *.invalid.json MUST fail.
+     UcpCompleteRequest; files named *.invalid.json MUST fail;
+  9. x-bacp-capability: every value in the OpenAPI document is a capability id of the table in docs/specification/discovery.md
+     (or a list of such ids), every operation of a path that the table lists for a capability carries the tag with exactly
+     the capabilities that list it, and the capability-owned request members named in CAPABILITY_MEMBERS carry it too.
 Exit status is the number of failures.
 """
 
@@ -122,8 +125,8 @@ def main() -> int:
     api_components = api_doc.get("components", {}).get("schemas", {})
     ucp_resources = []
     pinned = SRC / "ucp" / "PINNED.txt"
-    if not pinned.exists() or "a5e7cfe" not in pinned.read_text():
-        fail("source/ucp/PINNED.txt is missing or does not name the pinned UCP commit")
+    if not pinned.exists() or "v2026-08-25" not in pinned.read_text() or "cd78fb38e819de77d9b527d110476eccb876f1bd" not in pinned.read_text():
+        fail("source/ucp/PINNED.txt is missing or does not name the pinned UCP release tag and its commit")
     for p in sorted((SRC / "ucp").rglob("*.json")):
         d = json.loads(p.read_text())
         if not str(d.get("$id", "")).startswith("https://ucp.dev/schemas/"):
@@ -234,10 +237,23 @@ def main() -> int:
     # 7. transport annotations, the MCP tool table and the path-parameter collision rule
     check_transport(api_doc, schemas)
 
+    # 9. capability tags
+    check_capabilities(api_doc)
+
     print(f"FAILURES: {len(failures)}")
     return len(failures)
 
 
+# (component schema, property, capability): request or response members that a capability owns
+CAPABILITY_MEMBERS = [
+    ("SessionCreate", "discounts", "in.bacp.discounts"),
+    ("SessionUpdate", "discounts", "in.bacp.discounts"),
+    ("Session", "discounts", "in.bacp.discounts"),
+    ("CompleteRequest", "payment_plan", "in.bacp.payment_plan"),
+    ("Session", "payment_plan", "in.bacp.payment_plan"),
+    ("PaymentState", "plan_options", "in.bacp.payment_plan"),
+    ("IntersectRequest", "session_id", "in.bacp.payment_plan"),
+]
 SIGNATURE_TAGS = {"bacp-browse", "bacp-pay", "bacp-post-order", "bacp-negotiate", "bacp-ts", "bacp-handoff", "none"}
 HTTP_METHODS = ("get", "put", "post", "delete", "patch")
 
@@ -320,6 +336,70 @@ def check_transport(api_doc: dict, schemas: dict) -> None:
         if tool not in tools:
             fail(f"mcp-a2a.md tool table lists {tool}, which no OpenAPI operation declares in x-bacp-mcp-tool")
     print("PASS", f"transport annotations ({len(tools)} MCP tools)")
+
+
+def _cap_value(v: object) -> set[str] | None:
+    if isinstance(v, str):
+        return {v}
+    if isinstance(v, list) and v and all(isinstance(x, str) for x in v):
+        return set(v)
+    return None
+
+
+def _walk_caps(node: object, where: str, found: list[tuple[str, object]]) -> None:
+    if isinstance(node, dict):
+        for k, v in node.items():
+            if k == "x-bacp-capability":
+                found.append((where, v))
+            else:
+                _walk_caps(v, f"{where}/{k}", found)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            _walk_caps(v, f"{where}/{i}", found)
+
+
+def check_capabilities(api_doc: dict) -> None:
+    """x-bacp-capability: known ids, a tag on every operation that the capability table lists, and on the owned members."""
+    page = (ROOT / "docs" / "specification" / "discovery.md").read_text()
+    section = page[page.index("## Capabilities"):page.index("## Negotiation capability")]
+    owners: dict[str, set[str]] = {}
+    known: set[str] = set()
+    for line in section.splitlines():
+        cells = [c.strip() for c in line.split("|")]
+        m = re.match(r"^`(in\.bacp\.[a-z_]+)`$", cells[1]) if len(cells) > 3 else None
+        if not m:
+            continue
+        cap = m.group(1)
+        known.add(cap)
+        if "extends `in.bacp." in cells[2]:
+            continue  # members of another capability's operations, tagged per member below
+        for path in re.findall(r"`(?:[A-Z]+ )?(/[^`\s]*)`", cells[2]):
+            owners.setdefault(re.sub(r"\{[^}]*\}", "{}", path), set()).add(cap)
+    found: list[tuple[str, object]] = []
+    _walk_caps(api_doc, "#", found)
+    for where, v in found:
+        caps = _cap_value(v)
+        if caps is None or not caps <= known:
+            fail(f"{where}: x-bacp-capability {v!r} is not a capability id of discovery.md (or a list of them)")
+    for path, item in api_doc["paths"].items():
+        want = owners.get(re.sub(r"\{[^}]*\}", "{}", path))
+        if not want:
+            continue
+        for method in HTTP_METHODS:
+            op = item.get(method)
+            if op is None:
+                continue
+            have = _cap_value(op.get("x-bacp-capability"))
+            if have != want:
+                fail(f"{method.upper()} {path}: x-bacp-capability is {sorted(have) if have else 'missing'}, discovery.md lists {sorted(want)}")
+    schemas = api_doc.get("components", {}).get("schemas", {})
+    for comp, prop, cap in CAPABILITY_MEMBERS:
+        node = schemas.get(comp, {}).get("properties", {}).get(prop)
+        if node is None:
+            fail(f"{comp}.{prop}: not found in the OpenAPI components")
+        elif _cap_value(node.get("x-bacp-capability")) != {cap}:
+            fail(f"{comp}.{prop}: x-bacp-capability must be {cap}")
+    print("PASS", f"capability tags ({len(found)} tags)")
 
 
 if __name__ == "__main__":

@@ -32,6 +32,7 @@ this page and the OpenAPI document differ, this page is authoritative.
 | `Signature-Input`, `Signature` | request | every call except the public reads | RFC 9421 HTTP Message Signature by the agent's `cnf` key (see [Signatures](#signatures)) |
 | `Content-Digest` | request | every signed call | RFC 9530 digest of the raw body (of the empty body on a `GET`), covered by the signature |
 | `BACP-Agent` | request | every signed agent call | The AgentCredential (SD-JWT VC) with only the disclosures the gateway needs |
+| `BACP-Version` | request | every agent call when the profile lists more than one version; optional otherwise | The BACP version of the request ([Version negotiation](../discovery.md#request-version)). Covered by the signature whenever present |
 | `Idempotency-Key` | request | every POST and PUT | 22–64 printable ASCII characters with at least 122 random bits (see [Idempotency](#idempotency)) |
 | `Content-Type` | request | every call with a body | `application/json` |
 | `Idempotent-Replayed` | response | on a replay | `true` when the response is the stored response of an earlier request with the same key |
@@ -46,7 +47,7 @@ Every agent request MUST be signed with RFC 9421 HTTP Message Signatures. The fu
 AgentCredential are in [Identity and Request Signing](../identity-and-signing.md). In summary:
 
 - The signature MUST cover `@method`, `@authority`, `@path`, `content-digest` and `bacp-agent`, plus
-  `idempotency-key` on every non-GET request. A request under tag `bacp-ts` or `bacp-handoff` carries no
+  `idempotency-key` on every non-GET request, and `bacp-version` whenever the request carries `BACP-Version`. A request under tag `bacp-ts` or `bacp-handoff` carries no
   `BACP-Agent` header and does not cover `bacp-agent`. It MUST also cover `@query` whenever the target URI has a query, and
   SHOULD cover `content-type`. A signature that lacks a required component is rejected with 401 `signature_invalid`.
 - Signature parameters MUST include `created`, `expires`, `nonce`, `keyid` and `tag`. `expires − created` MUST NOT

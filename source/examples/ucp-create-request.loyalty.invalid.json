@@ -1,0 +1,22 @@
+{
+  "line_items": [
+    {
+      "item": {
+        "id": "I-ATTA-2KG"
+      },
+      "quantity": 1
+    }
+  ],
+  "bacp": {
+    "transaction_id": "7a2d4c1e-5b3f-4e8a-9c0d-2e3f4a5b6c7d",
+    "bpp_id": "bpp.dairy.example.in",
+    "provider_id": "P-207",
+    "presence": "HNP",
+    "mandate_ref": "mdt_CHK7Q2W9X4K1M3"
+  },
+  "loyalty": {
+    "membership": {
+      "id": "m_1"
+    }
+  }
+}

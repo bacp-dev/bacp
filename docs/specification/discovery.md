@@ -38,7 +38,9 @@ A BACP gateway MUST publish a profile document at the path
 | Field | Required | Meaning |
 |---|---|---|
 | `bacp.version` | REQUIRED | The protocol version this profile describes. See [Version negotiation](#version-negotiation). |
-| `bacp.supported_versions` | OPTIONAL | Every protocol version the gateway accepts. |
+| `bacp.supported_versions` | OPTIONAL | Every protocol version the gateway accepts. When it lists more than one, a request names its version in the signed `BACP-Version` header ([Version negotiation](#version-negotiation)). |
+| `mcp_endpoints` | OPTIONAL | `{version: uri}`: the MCP endpoint of each listed version. REQUIRED when the gateway lists more than one version and offers `mcp`. |
+| `capability_declarations` | OPTIONAL | `{capability id: {version, extends, ...}}`: machine-readable declarations of capabilities, a sibling of `capabilities` ([Capability declarations](#capability-declarations)). |
 | `bap_id` | REQUIRED | The Beckn/ONDC subscriber id of the BAP that hosts the gateway. Every AgentCredential the gateway accepts names this BAP. |
 | `transports` | REQUIRED | Bindings offered: `rest`, `mcp`, `a2a`. See [Transports](transports/rest.md). |
 | `capabilities` | REQUIRED | Capability ids the gateway supports (see [Capabilities](#capabilities)). |
@@ -116,14 +118,44 @@ BACP versions are dates in `YYYY-MM-DD` form. The first dated release is
 
 A participant that implements `draft` MUST expect breaking changes at any
 time. A dated release such as `2026-10-17` changes only as the
-[Versioning](https://bacp.dev/versioning/) policy allows.
+[Versioning](https://bacp.dev/versioning/) policy allows. Version strings are a
+release date (`YYYY-MM-DD`) or `draft`, as defined by
+[`ProtocolVersion`](https://bacp.dev/schemas/common.json).
 
-!!! note
-    BACP `2026-10-17` does not define how an agent names the selected version on an
-    individual REST request when a gateway supports more than one, so a
-    gateway SHOULD list only one version until it does. Version strings are a
-    release date (`YYYY-MM-DD`) or `draft`, as defined by
-    [`ProtocolVersion`](https://bacp.dev/schemas/common.json).
+### The version of a request {#request-version}
+
+An agent names the version of each request in the `BACP-Version` request header, whose value is a
+[`ProtocolVersion`](https://bacp.dev/schemas/common.json). A single header is enough because a profile that lists one
+version needs no choice.
+
+1. **When it is required.** `BACP-Version` is REQUIRED on every agent request when the gateway's profile lists more than
+   one version in `bacp.version` and `bacp.supported_versions`. A request without it gets `400 invalid_request` at
+   `$.headers.BACP-Version`, on the pattern of `idempotency_key_required`. A gateway that lists one version accepts a
+   request with no header as that version, and a request that names another version gets `400 version_unsupported`.
+2. **It is signed.** `bacp-version` is a covered component of the request signature whenever the header is present
+   ([Covered components](identity-and-signing.md#covered-components)). A header that is present and not covered gets
+   `401 signature_invalid`, so that a party on the path cannot change the version of a signed request.
+3. **An unlisted version** gets `400 version_unsupported` at `$.headers.BACP-Version`, with `supported_versions[]` listing
+   the versions that the gateway lists.
+4. **A session is pinned.** A session is pinned to the version that it was created under, on every transport. A later
+   request for the session that names another version gets `409 version_mismatch`, and nothing changes. A new version
+   needs a new session.
+5. **The fingerprint.** The version is part of the idempotency *fingerprint* of a request, not of the key's scope: the
+   same key with the same body and another version is refused as `422 idempotency_conflict`
+   ([Idempotency](identity-and-signing.md#idempotency)).
+6. **MCP.** A gateway that lists more than one version and offers `mcp` serves one MCP server for each version and
+   publishes them in `mcp_endpoints{version: uri}`, because an MCP host may be unable to set a header. The version of
+   a session on MCP is the version of the endpoint that created it.
+7. **A2A.** The A2A extension URI carries the version, `https://bacp.dev/<version>/a2a`, and the Agent Card declares it
+   with `required: true` ([Agent card](transports/mcp-a2a.md#a2a-card)).
+8. **The protective floor.** A request that is `bacp-pay` or `bacp-post-order` runs the protective checks of the newest
+   version that the gateway lists, whichever version the request names, so that naming an older version cannot switch a
+   protective check off. A version that lacks a check never lowers the floor.
+9. **Never from a fetched document.** A gateway and an agent MUST NOT take a version from a document that was fetched
+   from a URL, such as a UCP profile or a seller's page. The version of a request is the signed header or the endpoint,
+   and nothing else.
+
+A gateway that lists one version is unaffected: the header is optional for it and the rules above change nothing.
 
 ## Capabilities
 
@@ -139,12 +171,42 @@ operation whose capability the gateway does not list.
 | `in.bacp.payment_plan` | `payment.plan_options[]` on a session, `complete.payment_plan`, and `session_id` on `POST /payment-handlers/intersect`; extends `in.bacp.checkout` | [Wire binding of plans](payments/credit-and-split-tender.md#plan-wire) |
 | `in.bacp.ledger` | `GET /ledgers/{id}`, `GET /ledgers/{id}/entries`, `POST /ledgers/{id}/entries` (agent: `type: payment` only), and `ledger_ref` and `ledger_range` acts on `POST /trade-acts` | [The khata credit ledger](payments/credit-and-split-tender.md#the-khata-credit-ledger) |
 | `in.bacp.trade_document` | `POST /trade-acts` (GRN, CRAC, MSMED objection), `GET /orders/{id}/documents` | [Seller-side and trade acts](human-participants.md#trade-acts) |
-| `in.bacp.ucp_checkout` | `/checkout-sessions`, `/checkout-sessions/{id}`, `/checkout-sessions/{id}/complete`, `/checkout-sessions/{id}/cancel`: the checkout in the shape of UCP checkout, pinned to UCP commit `a5e7cfe`; listed only if every entry criterion passes | [UCP checkout projection](transports/ucp-checkout.md) |
+| `in.bacp.ucp_checkout` | `/checkout-sessions`, `/checkout-sessions/{id}`, `/checkout-sessions/{id}/complete`, `/checkout-sessions/{id}/cancel`: the checkout in the shape of UCP checkout, pinned to UCP release `v2026-08-25`; listed only if every entry criterion passes | [UCP checkout projection](transports/ucp-checkout.md) |
 | `in.bacp.mandate` | `/mandates`, `/mandates/{id}`, `/mandates/{id}/relinquish` | [Mandates and Consent](mandates.md) |
 | `in.bacp.order` | `/orders/{id}`, `/orders/{id}/cancel`, `/orders/{id}/returns` | [Orders and Post-order](checkout/post-order.md) |
 | `in.bacp.issue` | `/issues`, `/issues/{id}`, `/issues/{id}/actions`, `/evidence/{transaction_id}` | [Evidence and Instruction Log](evidence.md) |
 
-A gateway MUST support every operation of a capability it lists. `in.bacp.payment_plan` and `in.bacp.ucp_checkout` require `in.bacp.checkout` in the same list. A gateway that lists none of `in.bacp.payment_plan`, `in.bacp.ledger` and `in.bacp.trade_document` refuses a `complete` that carries `payment_plan` with `400 invalid_request` at `$.payment_plan`, and exposes no tool or DataPart for them on MCP or A2A.
+A gateway MUST support every operation of a capability it lists. `in.bacp.payment_plan` and `in.bacp.ucp_checkout` require `in.bacp.checkout` in the same list.
+
+**Refuse, do not ignore.** A request member that a capability owns, where the gateway's version defines the capability but the gateway does not list it, MUST be refused with `400 capability_unsupported` at the member's JSON path, with `capability` set to the capability id, and nothing is created or changed. The gateway MUST NOT ignore the member. This covers:
+
+- `discounts` on `POST /sessions` and `PUT /sessions/{session_id}` (`in.bacp.discounts`), at `$.discounts`;
+- `payment_plan` on `complete` and `session_id` on `POST /payment-handlers/intersect` (`in.bacp.payment_plan`), at `$.payment_plan` and `$.session_id`;
+- the members that a future capability owns.
+
+A gateway that lists none of `in.bacp.payment_plan`, `in.bacp.ledger` and `in.bacp.trade_document` also exposes no tool or DataPart for them on MCP or A2A. A field that the gateway's version does not define is not capability-owned and keeps the rule of [Extensibility](overview/index.md#extensibility) (it is ignored on REST). The refusal is not the `discount_code_unsupported` warning, which a gateway that lists `in.bacp.discounts` returns when the seller declines codes. In the OpenAPI document, `x-bacp-capability` names the capability that owns an operation or a property, so that `scripts/validate.py` can test the rule: a value is a capability id from the table above, or a list of ids when any one of them suffices.
+
+### Capability declarations {#capability-declarations}
+
+The optional profile member `capability_declarations` is a map beside `capabilities`, which stays a list of ids. Every
+key MUST also appear in `capabilities`, and a gateway that lists a key in `capabilities` MAY omit its declaration.
+
+- An `in.bacp.*` entry is `{version, extends}`: the capability's own date and the capability or capabilities that it
+  extends (`in.bacp.discounts` extends `in.bacp.checkout`, as the table above says). The key MUST be a capability id of
+  the table above; an id such as `in.bacp.emi` that BACP does not define is invalid.
+- A third-party entry, for a capability that a bank or a distributor defines, is `{version, extends, registry_ref,
+  schema_digest}`. `registry_ref` names the entry of the extension registry, and `schema_digest` is the digest of the
+  schema that the registry pins for it. The entry has **no schema URL**: a gateway never fetches an extension's schema
+  at run time, because a fetched schema is a way into the money path for whoever controls the URL. A third-party key is
+  a reverse-DNS id under a domain that its operator controls, never an `in.*` id.
+- **Gated.** A third-party entry activates only once a review process for the extension registry exists
+  ([Q-94](open-questions.md#q-94)). Until then only `in.bacp.*` entries are valid, a third-party entry is not activated, and
+  any `ext` member of a request is refused with `capability_unsupported`.
+- A third-party payload travels in the `ext` member of a session, under the capability's key. It is closed by the
+  schema that the declaration pins, and it is present in an MCP `inputSchema` only while the capability is active. An
+  `ext` member that touches an amount, the payee, presence, a mandate or a disclosure is *critical*: the gateway refuses it
+  unless its capability is listed and the amount also appears as a line of the base `totals`, and it is never a mandate
+  constraint ([Extensibility](overview/index.md#extensibility)).
 
 Negotiation, RFQs and auctions are advertised through the `negotiation` field
 rather than a capability id. Handler listing and intersection are advertised
@@ -486,6 +548,9 @@ participants whichever way it is answered.
 | `mrp` | OPTIONAL | The Legal Metrology retail sale price, inclusive of all taxes, as an `Amount` in integer paise. It maps from Beckn `price.maximum_value`. |
 | `tax_inclusive` | REQUIRED whenever `mrp` or `prior_price` is present | Whether `unit_price` and `prior_price` include all taxes. |
 | `prior_price` | OPTIONAL | `{amount, basis, announced_on}`: the lowest price of the item in the 30 days before `announced_on`, asserted by the seller (BPP). `basis` has one value, `lowest_30d`. Its presence is the claim that the seller announced a price reduction on `announced_on`. |
+| `measure` | RECOMMENDED | The item's sale measure, a `QuantityUnit` ([Units](checkout/index.md#units)). |
+| `policies[]` | OPTIONAL | Typed policies `{type, allowed, window, applies_to[], description, url}`, with `type` one of `in.bacp.policy.return`, `in.bacp.policy.cancel` and `in.bacp.policy.cod` ([Typed policies](#typed-policies)). |
+| `min_order` | RECOMMENDED | `{value, item_qty}` on the item or its provider: the smallest basket total or item quantity that the seller accepts. |
 
 **Sponsored.** An item is *sponsored* when its position or selection was affected by payment, including through a
 ranking parameter that a party can buy. This is BACP policy. It is not a statutory definition.
@@ -548,6 +613,28 @@ ranking parameter that a party can buy. This is BACP policy. It is not a statuto
 
 After a session is created for items from a discover response, the gateway copies each such item's discovered values into
 `Disclosures.catalogue[]` ([Sessions and Checkout](checkout/index.md#update)).
+
+#### Typed policies and minimum order {#typed-policies}
+
+The typed policies are a projection of tags that ONDC sellers already send, so that an agent can read a return window
+without parsing prose. The binding text is still the disclosure.
+
+1. **Projection.** The gateway projects `returnable` and `return_window` to `in.bacp.policy.return` (`allowed`, `window`),
+   `cancellable` to `in.bacp.policy.cancel` and `available_on_cod` to `in.bacp.policy.cod`. It projects `time_to_ship` to the
+   `tat` of the session's fulfilment option ([Fulfilment options](checkout/index.md#fulfilment-options)), not to a policy.
+   `description` and `url` are counterparty text.
+2. **Hashed.** The session's typed policies are hashed into `disclosures.hash` with the rest of the disclosures, so that
+   an approval covers them.
+3. **Checked against the text.** The gateway compares each typed value with the binding `return_terms` and
+   `cancellation_terms`. A typed value that contradicts the binding text raises the warning `policy_text_mismatch`
+   (`requires_buyer_review`) and the session moves to `requires_escalation` with a `confirm` step-up, so that the
+   session never reaches `ready_for_complete` on a typed value that the text denies.
+4. **What the agent says.** The agent speaks the binding text, or a typed value only where the gateway has checked it
+   against that text. A policy that the seller does not state is spoken as "not stated"
+   (`policy_not_stated`, [Disclosure phrases](human-participants.md#disclosure-phrases)), never as "no returns".
+5. **Minimum order.** A session whose basket is below the `min_order` of its provider or of one of its items is refused
+   with `400 invalid_request` at `$.items`, never silently dropped or padded. `min_order` is a SHOULD for a seller that
+   sets one.
 
 #### Retention of the signed callbacks {#catalogue-retention}
 

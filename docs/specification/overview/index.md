@@ -388,10 +388,18 @@ The release process, URL scheme and breaking-change policy are defined on the
 BACP is designed to be extended without breaking existing participants, with
 one deliberate exception: authority is never extended silently.
 
-1. **Unknown fields are ignored.** A receiver MUST ignore fields it does not
-   understand in requests, responses, webhooks and network messages, unless the
-   schema for that object forbids additional properties. A network participant
-   that does not speak BACP ignores `context.bacp`.
+1. **Unknown fields are ignored; a member of an unlisted capability is refused.**
+   A receiver MUST ignore fields it does not understand in requests, responses,
+   webhooks and network messages, unless the schema for that object forbids
+   additional properties. A network participant that does not speak BACP
+   ignores `context.bacp`. The exception is a request member that a capability
+   owns, where the receiver's version defines the capability but the receiver
+   does not list it: the receiver MUST refuse it with `400 capability_unsupported`
+   at the member's path, MUST create or change nothing, and MUST NOT ignore it.
+   An ignored `discounts` member would let an agent tell the principal that a
+   coupon was applied when it was not. Fields from a version that the receiver
+   does not implement are ignored as before. See
+   [Capabilities](../discovery.md#capabilities).
 2. **Unknown mandate constraints fail closed.** A verifier that meets a
    constraint key it does not understand, in any mandate, MUST reject the
    mandate (`constraint_unknown`). An unknown constraint might be the very
@@ -415,7 +423,20 @@ one deliberate exception: authority is never extended silently.
    reserved and deprecated handlers MUST NOT back a payment.
 7. **Namespaces.** Indian rails and instruments use `in.<family>.<variant>`
    handler ids. BACP-native constructs use `bacp.<construct>`. Capabilities use
-   `in.bacp.*`.
+   `in.bacp.*`. The `in.*` ids are governed by the BACP registries and are
+   **not bound to a DNS name**: nothing about a domain such as `bacp.in`, which
+   an unrelated party holds (as of 18-10-2026), makes an `in.*` id or a schema URL under it
+   trustworthy. BACP never declares an `in.*` id together with a `schema` in a
+   profile that a UCP platform reads, and a BACP gateway MUST NOT accept or
+   fetch a schema for an `in.*` id from any source.
+8. **Extensions come from a digest-pinned registry and are never fetched.** A
+   third-party extension is declared in `capability_declarations` by registry
+   reference and schema digest ([Capability declarations](../discovery.md#capability-declarations)),
+   and its payload travels under `ext.<id>`. A gateway MUST NOT fetch an
+   extension's schema at run time. An `ext` member that touches an amount, the
+   payee, presence, a mandate or a disclosure is *critical*: it is refused unless
+   its capability is listed and the amount also appears as a line of the base
+   `totals`, and it is never a mandate constraint.
 
 ## Page map
 

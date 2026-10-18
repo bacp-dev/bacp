@@ -219,6 +219,30 @@ allows, even when the rail authority is far larger than the budget, and MUST NOT
 | Signature lifetime | `expires − created ≤ 300 s`; the nonce cache is bounded by that window. |
 | Upstream waits | A missing `on_*` callback MUST end the wait with 504 `bpp_timeout` (or the payment saga states), never an unbounded wait. |
 
+### URL fetch hygiene {#url-fetch-hygiene}
+
+BACP fetches a document from a URL in a few places: a gateway's `/.well-known/bacp` profile, a key set (`keys`, a registry
+key set), the profile that a `UCP-Agent` header names and any documentation URL that a participant publishes. A URL that
+a counterparty supplies is untrusted input. The rules below are at the strength of UCP's own fetch rules (as of
+18-10-2026): three are MUST and four are SHOULD, and the body bound is a SHOULD because a MUST would be BACP's own
+choice and would break fetchers that exist today. They do not apply to a Beckn registry lookup, which has its own
+signed form ([Registry lookup](discovery.md#registry-lookup)).
+
+| # | Rule | Level |
+|---|---|---|
+| 1 | The URL MUST be `https`. A fetcher MUST NOT fetch an `http` URL. | MUST |
+| 2 | A fetcher MUST NOT follow a redirect (`3xx`). | MUST |
+| 3 | A fetcher SHOULD set connect and total timeouts. | SHOULD |
+| 4 | A fetcher SHOULD NOT cache a document for less than 60 seconds (a floor, not a time to live). | SHOULD |
+| 5 | A fetcher MUST resolve the host and refuse an address that is not globally routable (RFC 6890 special-purpose ranges, including loopback, private, link-local such as `169.254.169.254`, and unique-local addresses), checking the resolved address and not only the name. | MUST |
+| 6 | A fetcher SHOULD force one refresh when a signature or digest check fails against a cached copy, and no more. | SHOULD |
+| 7 | A fetcher SHOULD accept a body of at least 128 KiB and SHOULD refuse a larger one that it does not need. | SHOULD |
+
+The split is UCP's: its rules 1, 2 and 7 (rules 1, 2 and 5 here) are MUST, and its rules 3, 4, 6 and 8 (rules 3, 4, 6 and 7 here) are SHOULD.
+A fetched document is data. It never changes a version, an amount, a payee, a handler, a mandate or a signer, and a
+gateway never derives a key or an extension schema from it without the checks that the registry rules state.
+Inbound request bodies are already capped at 256 KiB (`request_too_large`).
+
 ### Field-scoped webhooks {#webhooks}
 
 1. A webhook body MUST NOT embed a signed receipt. Every embedded receipt MUST be replaced by a `ReceiptRef`:
@@ -292,6 +316,12 @@ needs to show compliance; it does not replace their own notices and policies.
   Surface (see [Mandates and Consent](mandates.md#consent)).
 - Purchase consent is never recorded automatically: no confirmation without a covering mandate or an explicit buyer
   confirmation, and pre-ticked add-ons are declined.
+- **Marketing consent is off unless a receipt says otherwise.** With no active marketing receipt for a seller, every
+  marketing purpose is `granted: false`, whatever a seller's default, a UCP `buyer.consent` member or any other receipt
+  says. A business default is never consent (DPDP Act, 2023, s.6(1) asks for a clear affirmative action by the
+  principal; the Consumer Protection (E-Commerce) Rules, 2020, r.4(9) forbids recording consent automatically). Marketing
+  consent is never asked inside a payment step-up. The standalone receipt for it is **Proposed**
+  ([Marketing consent](mandates.md#marketing-consent), [Q-101](open-questions.md#q-101)).
 
 ### Purpose limitation {#purpose-limitation}
 

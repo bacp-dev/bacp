@@ -1,0 +1,7 @@
+{
+  "type": "invalid_request",
+  "code": "version_unsupported",
+  "message": "BACP-Version v1 is not listed",
+  "param": "$.headers.BACP-Version",
+  "resolution": "recoverable"
+}

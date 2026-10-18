@@ -2,17 +2,19 @@ Pinned copies of Universal Commerce Protocol (UCP) JSON Schemas
 ================================================================
 
 Upstream:   https://github.com/Universal-Commerce-Protocol/ucp
-Commit:     a5e7cfe3a03392899b2199ff751be6ae7c928c8a (12-10-2026, on UCP's main branch, which upstream labels "draft"; 39 commits after v2026-08-25)
+Release:    v2026-08-25 (published 25-08-2026), a tagged release
+Commit:     cd78fb38e819de77d9b527d110476eccb876f1bd (the commit of the tag v2026-08-25)
 Path:       source/schemas/ (the files that shopping/checkout.json references, directly or indirectly: 41 files)
 Copied:     18-10-2026, byte for byte, without change
 Licence:    Apache License, Version 2.0 (the same licence as BACP; see ../../LICENSE). Copyright 2026 UCP Authors.
             The upstream repository has no NOTICE file. BACP's NOTICE file records this use.
 
 Why: the BACP UCP checkout projection (capability in.bacp.ucp_checkout) is tested against exactly these schemas by
-scripts/validate.py and by the examples named ucp-checkout.*.json. UCP's latest tagged release is v2026-08-25 (25-08-2026); the
-other releases are v2026-04-08, v2026-01-23 and v2026-01-11 (as of 18-10-2026). The pin is a commit, not a release (open
-question Q-82).
+scripts/validate.py and by the examples named ucp-checkout.*.json. The pin is a release tag. UCP's releases are
+v2026-08-25, v2026-04-08, v2026-01-23 and v2026-01-11 (as of 18-10-2026). Until 18-10-2026 the pin was commit a5e7cfe
+on UCP's main branch (12-10-2026), which is 39 commits after the tag; four of the 41 files differ (link.json, policy.json,
+warning_code.json and ucp.json). The change from the commit to the tag is recorded in open question Q-82.
 
 These files are not BACP schemas. Their $id values stay under https://ucp.dev/schemas/, and the build does not rewrite
-them. To re-pin, replace the files with the files of a later upstream commit or tag, update this file and rerun
+them. To re-pin, replace the files with the files of a later upstream tag, update this file and rerun
 scripts/validate.py.

@@ -36,18 +36,18 @@ labels for traceability between this page, the open questions and conformance re
 
 | Status | Requirements |
 |---|---|
-| Covered | 176 |
-| Partial | 67 |
+| Covered | 178 |
+| Partial | 69 |
 | Gap | 15 |
 | N/A | 6 |
-| **Total** | **264** |
+| **Total** | **268** |
 
 | Group | Requirements |
 |---|---|
 | [Reserve Bank of India (RBI)](#rbi) | 73 |
 | [NPCI and card networks](#npci) | 16 |
-| [MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar](#meity-dpdp) | 29 |
-| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 32 |
+| [MeitY: IT Act, CERT-In, DPDP Act, DPDP Rules and Aadhaar](#meity-dpdp) | 30 |
+| [Central Consumer Protection Authority (CCPA) and Consumer Protection](#consumer-protection) | 35 |
 | [ONDC network policy](#ondc) | 6 |
 | [GST, Income-tax and Legal Metrology](#gst-legal-metrology) | 10 |
 | [MSMED and Competition](#msmed-competition) | 11 |
@@ -200,6 +200,7 @@ The CERT-In Directions of 28-04-2022 under s.70B(6) of the Information Technolog
 | **REQ-414** Notice and consent request in English or an Eighth Schedule language | DPDP Act, 2023, s.6(3) (from 13-05-2027), cited as alignment | Language fail-safe: a Trusted Surface that cannot render the step-up's language renders nothing, and the gateway answers `503 trusted_surface_unavailable` with handoff routes ([Language fail-safe](human-participants.md#ts-language-failsafe)) | **Partial**: A principal whose language no Trusted Surface serves gets a human route, not self-service |
 | **REQ-415** An assisted operator's act attributed to the principal | Information Technology Act, 2000, s.11(b) and s.11(c) | `assisted_by` and `Participant.ref` are attribution, never authentication; `ref_verification` is `asserted` until a registry exists ([Assisted channel](human-participants.md#assisted)) | **Partial**: Whether the operator's act is attributable, and what proves authority, is for counsel → [Q-86](open-questions.md#q-86) and [Q-62](open-questions.md#q-62) |
 | **REQ-416** Verifiable consent of the lawful guardian of a person with disability who has one | DPDP Act, 2023, s.9(1) (from 13-05-2027) | None in this version: a Proposed participant role `lawful_guardian`, with no disability data and no `ACTING_FOR` or assisted stand-in ([Legal time bands](human-participants.md#time-bands)) | **Gap**: No schema before a later release |
+| **REQ-417** Marketing communication needs the principal's clear affirmative action for that purpose, and withdrawal as easy as consent | DPDP Act, 2023, s.6(1) and s.6(4) (from 13-05-2027); Telecom Commercial Communications Customer Preference Regulations, 2018 (not checked against the primary text as of 18-10-2026) | The fail-safe (no receipt, no grant) is normative; a standalone marketing ConsentReceipt (Proposed) carries `purposes[]` with none preselected, `channels[]`, a named seller and the withdrawal route ([Marketing consent](mandates.md#marketing-consent)) | **Partial**: The receipt is Proposed, and its relation to the TCCCPR preferences is open ([Q-101](open-questions.md#q-101)) |
 
 ## CCPA and Consumer Protection {#consumer-protection}
 
@@ -238,6 +239,9 @@ The Consumer Protection (E-Commerce) Rules 2020 and the Central Consumer Protect
 | **REQ-333** No nagging after a decline or by a seller's repeated revisions | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (10); Consumer Protection (E-Commerce) Rules 2020 r.4(15) (from 01-01-2027) | The decline cool-off keyed on `(order_id, action, issue_id)` or `(session_id, kind)`, and the seller re-prompt cap per `(principal, issue_id)`, each published in `/.well-known/bacp` ([Limits on step-ups](human-participants.md#step-up-limits)) | Covered |
 | **REQ-334** No bait and switch: "out of stock", then a higher-priced product | CCPA Guidelines for Prevention and Regulation of Dark Patterns, 2023, Annexure 1 (7)(b) | A substitute item or seller at a higher total than the last BPP-signed quote needs a `confirm` step-up in human-present and human-not-present sessions ([Seller refusals and substitution](transports/beckn.md#seller-reasons)) | Covered |
 | **REQ-335** A seller does not refuse to take back defective goods; cancellation charges are symmetric | Consumer Protection (E-Commerce) Rules 2020 r.6(3) and r.4(8) | `return_refused` and `seller_cancelled` are `requires_buyer_review` with the `grievance_contact` and are never terminal ([Returns](checkout/post-order.md#returns)) | Covered |
+| **REQ-338** Basket sneaking: nothing, including a paid membership, is added to the basket without the buyer's explicit consent | CCPA Guidelines for Prevention and Regulation of Dark Patterns 2023 (basket sneaking, Annex 1); Consumer Protection (E-Commerce) Rules 2020 r.4(9) | The gateway assigns `added_by` from the signer and never from the request; the Trusted Surface reads every line that the principal did not add in full before the total and counts the rest; a paid line that a seller added needs a new quote; a `provisional` loyalty benefit never enters the total ([Line provenance](checkout/index.md#line-provenance), [Discounts](checkout/index.md#discounts)) | Covered |
+| **REQ-339** A weighed line never costs more than the buyer was quoted unless the buyer agreed to "up to ₹X" | CCPA Guidelines for Prevention and Regulation of Dark Patterns 2023 (drip pricing and bait and switch, Annex 1) | A post-order weight adjustment can only reduce the amount; an upward `adjustment_band` needs the Trusted Surface to read "up to ₹X", is at most one increment, is within the approved amount and the mandate caps, and is collected only from a hold ([Units, quantity and weighed goods](checkout/index.md#units), [Weighed goods](checkout/post-order.md#weight-adjustment)) | **Partial**: Whether a one-time UPI block can be captured in part, and whether an upward adjustment is a new supply that needs fresh consent ([Q-101](open-questions.md#q-101), [Q-102](open-questions.md#q-102)) |
+| **REQ-340** Consent for marketing is not recorded automatically | Consumer Protection (E-Commerce) Rules 2020 r.4(9) | With no active marketing ConsentReceipt for a seller, every marketing purpose is `granted: false`; a seller default or a UCP `buyer.consent` member never grants one; marketing consent is never asked inside a payment step-up ([Marketing consent](mandates.md#marketing-consent)) | Covered |
 | **REQ-336** The complainant gets a copy of the complaint as recorded | Consumer Protection (E-Commerce) (Amendment) Rules 2026, G.S.R. 789(E) r.4(5) (from 01-01-2027) | `GET /evidence/{transaction_id}/summary`, which the grievance officer can fetch for the principal in her language ([Evidence summary](human-participants.md#evidence-summary)) | Covered |
 
 ## ONDC network policy {#ondc}

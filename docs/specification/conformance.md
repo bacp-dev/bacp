@@ -526,6 +526,16 @@ A BACP gateway MUST:
   `in.bacp.ledger`, `in.bacp.trade_document` and `in.bacp.ucp_checkout` that its profile
   lists, and, whatever it lists, the transport cases that bind every gateway (cases BND-TAG-01,
   BND-TAG-02, BND-MCP-STDIO-01, BND-MCP-ARGS-01, BND-MCP-IDEM-01).
+- Refuse, and never ignore, a request member that a capability owns when its profile does not list that capability
+  (`400 capability_unsupported` at the member's path, nothing created or changed), publish a closed MCP `inputSchema`
+  generated from the capabilities it lists, and, on the UCP projection, refuse a buyer-consent, loyalty or `cart_id`
+  member (cases T8-CAP-01, T8-CAP-03 to T8-CAP-05); require `BACP-Version` as a covered component when its profile lists more than one
+  version, pin a session to its version, put the version in the idempotency fingerprint, run the protective checks of the newest version
+  for `bacp-pay` and `bacp-post-order`, and never fetch an extension schema (cases T8-CAP-02, T8-VER-01 to T8-VER-06, T8-EXT-01 to T8-EXT-03,
+  T8-FETCH-01 to T8-FETCH-04); refuse an off-increment quantity, an unoffered fulfilment option and a basket below `min_order`, refuse an upward
+  weight adjustment that no band allows, accept no substitute without a new `checkout_hash`, assign `added_by` itself, and report every
+  marketing purpose as not granted without a receipt (cases T8-QTY-01, T8-QTY-02, T8-ADJ-01 to T8-ADJ-03, T8-SUB-01, T8-FO-01, T8-MIN-01,
+  T8-POL-01, T8-LINE-01 to T8-LINE-03, T8-GST-01, T8-GST-02, T8-MKT-01, T8-MKT-02, T8-LINK-01, T8-LOY-01).
 
 ### Seller (BPP)
 
@@ -3095,7 +3105,7 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
     - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, body: {payment_plan: {tenders: 2}}}
   expect:
     responses:
-      - {status: 400, code: invalid_request, param: $.payment_plan, count: 1}
+      - {status: 400, code: capability_unsupported, param: $.payment_plan, capability: in.bacp.payment_plan, count: 1}
     rail: {settled_debits: 0}
 
 - case_id: T1-32
@@ -6664,7 +6674,7 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     beckn: {messages_containing_excluded: 0}
 
 - case_id: BND-Q45-02
-  title: A gateway that does not list in.bacp.payment_plan refuses an intersect that carries only a session_id
+  title: A gateway that does not list in.bacp.payment_plan refuses an intersect that carries a session_id
   level: bacp.pay.all.1
   fixture:
     capabilities: {omits: [in.bacp.payment_plan]}
@@ -6672,7 +6682,7 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh, body: {session_id: S1, presence: HNP}}
   expect:
     responses:
-      - {status: 400, code: invalid_request, param: $.negotiation_id, count: 1}
+      - {status: 400, code: capability_unsupported, param: $.session_id, capability: in.bacp.payment_plan, count: 1}
 
 - case_id: BND-TAG-02
   title: Every operation of the OpenAPI document declares its signature tag, and an unlisted agent endpoint gets 401
@@ -6683,7 +6693,7 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
     - validate: {script: scripts/validate.py}
     - request: {method: GET, path: /unlisted-agent-endpoint, tag: bacp-browse}
   expect:
-    validation: {operations_without_x_bacp_signature_tag: 0}
+    validation: {operations_without_x_bacp_signature_tag: 0, capability_tags_missing_or_unknown: 0}
     responses:
       - {status: 401, code: signature_invalid, count: 1}
 
@@ -6825,6 +6835,22 @@ case, and the gateway keeps the behaviour that case T1-31 checks. Cases without 
       - {status: 400, code: invalid_request, param: $.ap2.checkout_mandate, count: 1}
       - {status: 200, "body.ucp.capabilities": lacks_dev.ucp.common.payment.ap2_mandate, count: 1}
     rail: {calls: 0}
+
+- case_id: BND-UCPF-06
+  title: A create_checkout that carries a buyer-consent, loyalty or cart_id member is refused at that member, and no session is created
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  steps:
+    - request: {method: POST, path: /checkout-sessions, tag: bacp-browse, idempotency_key: fresh, body: {line_items: 1, buyer: {consent: present}}}
+    - request: {method: POST, path: /checkout-sessions, tag: bacp-browse, idempotency_key: fresh, body: {line_items: 1, loyalty: present}}
+    - request: {method: POST, path: /checkout-sessions, tag: bacp-browse, idempotency_key: fresh, body: {line_items: 1, cart_id: present}}
+  expect:
+    responses:
+      - {status: 400, code: capability_unsupported, param: $.buyer.consent, count: 1}
+      - {status: 400, code: capability_unsupported, param: $.loyalty, count: 1}
+      - {status: 400, code: capability_unsupported, param: $.cart_id, count: 1}
+    sessions: {created: 0}
+    beckn: []
 
 - case_id: BND-UCP-COMPLETE-01
   title: A complete from a platform that carries no BACP closed payment mandate fails at complete with bacp_mandate_required and no rail call
@@ -8996,3 +9022,524 @@ integer paise. Levels: gateway cases `bacp.pay.all.1` unless stated; schema case
 The T0 cases that the registry serial and the new rules touch are changed in place: T0-RT-06 accepts a refusal at `create_session` or at `complete`,
 T0-RT-16 and T0-RT-17 read the registry `serial` where they read a version, and T2-OPS-03b gains a human-present `RAISE_ISSUE`. T0-RT-16b, T0-RT-17b,
 T0-RT-19b, T0-RT-19c and T0-RT-20 are added beside the other T0 cases.
+
+## UCP capability parity cases {#t8-cases}
+
+The cases below cover [refusing a member of an unlisted capability](discovery.md#capabilities), the closed per-gateway MCP
+[`inputSchema`](transports/mcp-a2a.md#mcp-tools), the UCP projection's criterion UCPF-06, the [version of a request](discovery.md#request-version),
+[capability declarations and `ext`](discovery.md#capability-declarations), [URL fetch hygiene](security-and-privacy.md#url-fetch-hygiene),
+[units and weighed goods](checkout/index.md#units), [fulfilment options](checkout/index.md#fulfilment-options), [typed policies](discovery.md#typed-policies),
+[line provenance](checkout/index.md#line-provenance), the business buyer, [marketing consent](mandates.md#marketing-consent) and the parked capabilities. They use the
+manifest form above, their ids use the prefix `T8-` and amounts are integer paise. Level: gateway cases `bacp.core.1` unless stated. They also use:
+
+- `capabilities` (fixture): `{omits: [...]}` removes the named capability ids from the gateway's profile, and
+  `{lists: [...]}` adds them;
+- `tool_results` (expect), as in the binding cases, with `structuredContent.capability` and `content_key` (the disclosure-phrase key that
+  the `content` text is taken from, in the principal's language);
+- `sessions: {created: 0}` (expect): no session was created or changed by the step;
+- `headers` (request): the request headers that the case sets, for example `BACP-Version`, with `covered: false` for a header that is sent and left out of
+  `Signature-Input`, and `omit` for a header that is left out;
+- `profile` (fixture): the gateway's profile, for example `{versions: [A, B]}`, `capabilities`, `capability_declarations` and `mcp_endpoints`;
+- `fetch` (step): the runner makes the gateway or projection fetch a URL, and `fetch_target` (fixture) is the mock server's answer (a redirect, a resolved address, a body size);
+  the expect key `fetches` counts the requests that the mock server saw;
+- `ts_render`, `tool_call`, `psp_receipt_arrives`, `incoming` and `validate` as in the cases above, and `seller_callback` (step): the mock seller sends the named `on_*` callback.
+
+Case T8-CAP-05 is [BND-UCPF-06](#binding-cases).
+
+```yaml
+- case_id: T8-CAP-01
+  title: A gateway that does not list in.bacp.discounts refuses a POST /sessions that carries discounts, and creates no session
+  level: bacp.core.1
+  fixture:
+    gateway_version: "2026-10-17"
+    capabilities: {omits: [in.bacp.discounts]}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {discounts: {codes: [WELCOME50]}}}
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {discounts: {codes: [WELCOME50]}}}
+  expect:
+    responses:
+      - {status: 400, code: capability_unsupported, param: $.discounts, capability: in.bacp.discounts, count: 2}
+    sessions: {created: 0}
+    beckn: []
+
+- case_id: T8-CAP-03
+  title: The MCP inputSchema of a gateway that does not list in.bacp.discounts has no discounts argument and is closed, and an unknown argument is an invalid_request
+  level: bacp.core.1
+  fixture:
+    transport: mcp_http
+    capabilities: {omits: [in.bacp.discounts]}
+  steps:
+    - mcp: {method: tools/list}
+    - tool_call: {name: bacp_checkout_create, arguments: {foo: 1}}
+  expect:
+    tools:
+      - {name: bacp_checkout_create, "inputSchema.properties.discounts": absent, "inputSchema.additionalProperties": false}
+      - {name: bacp_checkout_update, "inputSchema.properties.discounts": absent, "inputSchema.additionalProperties": false}
+    tool_results:
+      - {isError: true, "structuredContent.code": invalid_request, "structuredContent.param": $.foo}
+
+- case_id: T8-CAP-04
+  title: An MCP call that carries discounts to a gateway that does not list in.bacp.discounts is an error result with the fixed capability_absent sentence
+  level: bacp.core.1
+  fixture:
+    transport: mcp_http
+    capabilities: {omits: [in.bacp.discounts]}
+    principal_language: hi-IN
+  steps:
+    - tool_call: {name: bacp_checkout_create, arguments: {idempotency_key: fresh, discounts: {codes: [WELCOME50]}}}
+  expect:
+    tool_results:
+      - {isError: true, "structuredContent.code": capability_unsupported, "structuredContent.param": $.discounts, "structuredContent.capability": in.bacp.discounts, content_key: capability_absent}
+    sessions: {created: 0}
+
+- case_id: T8-CAP-02
+  title: A PUT that carries a third-party ext member whose capability the profile does not list is refused at that member, and the session is unchanged
+  level: bacp.core.1
+  fixture:
+    profile: {capabilities: {omits: [com.examplebank.checkout.emi]}}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {ext: {com.examplebank.checkout.emi: {tenure_months: 6}}}}
+  expect:
+    responses:
+      - {status: 400, code: capability_unsupported, param: '$.ext["com.examplebank.checkout.emi"]', capability: com.examplebank.checkout.emi, count: 1}
+    state: {session: ready_for_complete, unchanged: true}
+
+- case_id: T8-VER-01
+  title: A request without BACP-Version is refused when the profile lists two versions, at the header's own path
+  level: bacp.core.1
+  fixture:
+    profile: {versions: [A, B]}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, headers: {BACP-Version: omit}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.headers.BACP-Version, count: 1}
+    sessions: {created: 0}
+
+- case_id: T8-VER-01b
+  title: A request that names a version the profile does not list is refused with the listed versions, and a gateway that lists one version accepts a request with no header
+  level: bacp.core.1
+  fixture:
+    profile: {versions: [A]}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, headers: {BACP-Version: "2026-09-01"}}
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, headers: {BACP-Version: omit}}
+  expect:
+    responses:
+      - {status: 400, code: version_unsupported, param: $.headers.BACP-Version, supported_versions: [A], count: 1}
+      - {status: 201, count: 1}
+
+- case_id: T8-VER-02
+  title: A BACP-Version header that is sent and not covered by the signature is refused
+  level: bacp.core.1
+  fixture:
+    profile: {versions: [A, B]}
+    sessions: {count: 1, state: ready_for_complete, version: B}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, headers: {BACP-Version: B, covered: false}}
+  expect:
+    responses:
+      - {status: 401, code: signature_invalid, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T8-VER-03
+  title: A session created under version B refuses a request that names version A, and nothing changes
+  level: bacp.core.1
+  fixture:
+    profile: {versions: [A, B]}
+    sessions: {count: 1, state: ready_for_complete, version: B}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, headers: {BACP-Version: A}}
+  expect:
+    responses:
+      - {status: 409, code: version_mismatch, param: $.headers.BACP-Version, count: 1}
+    state: {session: ready_for_complete, unchanged: true}
+
+- case_id: T8-VER-04
+  title: The same key and body under another version is a fingerprint mismatch, and nothing is executed a second time
+  level: bacp.core.1
+  fixture:
+    profile: {versions: [A, B]}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: K, headers: {BACP-Version: B}}
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: K, headers: {BACP-Version: A}}
+  expect:
+    responses:
+      - {status: 201, count: 1}
+      - {status: 422, code: idempotency_conflict, count: 1}
+    sessions: {created: 1}
+
+- case_id: T8-VER-05
+  title: A session created on the MCP endpoint of version B and updated on the endpoint of version A is a version_mismatch
+  level: bacp.core.1
+  fixture:
+    transport: mcp_http
+    profile: {versions: [A, B], mcp_endpoints: {A: endpoint_a, B: endpoint_b}}
+  steps:
+    - tool_call: {endpoint: B, name: bacp_checkout_create, arguments: {idempotency_key: fresh}}
+    - tool_call: {endpoint: A, name: bacp_checkout_update, arguments: {session_id: S1, idempotency_key: fresh}}
+  expect:
+    tool_results:
+      - {isError: false}
+      - {isError: true, "structuredContent.code": version_mismatch}
+
+- case_id: T8-VER-06
+  title: A bacp-pay request that names version A runs a protective check that only version B has
+  level: bacp.core.1
+  fixture:
+    profile: {versions: [A, B]}
+    protective_check: {present_in: [B], absent_in: [A]}
+    sessions: {count: 1, state: ready_for_complete, version: A}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, headers: {BACP-Version: A}, body: {violates_protective_check: true}}
+  expect:
+    responses:
+      - {status: 403, count: 1}
+    protective_check: {ran_version: B}
+
+- case_id: T8-EXT-01
+  title: A profile whose third-party declaration carries a schema URL and no schema_digest is invalid, and the extension is not activated
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Profile, vector: [profile.capability-declaration-schema-url.invalid.json, profile.capability-declaration-no-digest.invalid.json, profile.capability-declaration-reserved-key.invalid.json, profile.capability-declaration-unknown-parent.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 4}
+
+- case_id: T8-EXT-02
+  title: A UCP business profile that declares an in.* id with a schema URL gets no fetch and no activation, and the refusal is logged
+  level: bacp.core.1
+  requires_capability: in.bacp.ucp_checkout
+  fixture:
+    platform_profile: {capabilities: [{id: in.upi.circle, schema: "https://upi.in/x.json"}]}
+  steps:
+    - fetch: {url_from: platform_profile}
+  expect:
+    fetches: 0
+    log: {reason: extension_not_registered}
+    state: {handler_active: false}
+
+- case_id: T8-EXT-03
+  title: An active ext member that moves money is refused when no base totals line carries the amount
+  level: bacp.core.1
+  fixture:
+    profile: {capabilities: [com.x.surcharge]}
+    registry: {extension_active: com.x.surcharge}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {ext: {com.x.surcharge: {value: 1000}}}}
+  expect:
+    responses:
+      - {status: 400, param: '$.ext["com.x.surcharge"]', count: 1}
+    state: {session: ready_for_complete, unchanged: true}
+
+- case_id: T8-FETCH-01
+  title: A fetch of an http URL is not made
+  level: bacp.core.1
+  steps:
+    - fetch: {url: "http://profile.example.in/.well-known/bacp"}
+  expect:
+    fetches: 0
+
+- case_id: T8-FETCH-02
+  title: A redirect is not followed
+  level: bacp.core.1
+  fixture:
+    fetch_target: {status: 302, location: "https://other.example.in/bacp"}
+  steps:
+    - fetch: {url: "https://profile.example.in/.well-known/bacp"}
+  expect:
+    fetches: 1
+    state: {document_accepted: false}
+
+- case_id: T8-FETCH-03
+  title: A host that resolves to 169.254.169.254 is not fetched, whatever the name
+  level: bacp.core.1
+  fixture:
+    fetch_target: {resolves_to: "169.254.169.254"}
+  steps:
+    - fetch: {url: "https://profile.example.in/.well-known/bacp"}
+  expect:
+    fetches: 0
+
+- case_id: T8-FETCH-04
+  title: A 200 KiB profile is accepted, because the body bound is at least 128 KiB
+  level: bacp.core.1
+  requirement: SHOULD
+  fixture:
+    fetch_target: {status: 200, body_bytes: 204800, valid_profile: true}
+  steps:
+    - fetch: {url: "https://profile.example.in/.well-known/bacp"}
+  expect:
+    fetches: 1
+    state: {document_accepted: true}
+
+- case_id: T8-QTY-01
+  title: A quantity that is not a multiple of the increment is refused at the quantity's path, and 1500 passes unrounded
+  level: bacp.core.1
+  fixture:
+    catalogue: {I-ATTA-LOOSE: {measure: {unit: KGM, scale: 3, increment: 250}}}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-ATTA-LOOSE, quantity: 1600}]}}
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-ATTA-LOOSE, quantity: 1500}]}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.items[0].quantity, count: 1}
+      - {status: 201, "body.line_items[0].quantity": 1500, count: 1}
+
+- case_id: T8-QTY-02
+  title: The gateway sends quantity.count 6 only where the seller's pack measure equals the increment, and refuses otherwise
+  level: bacp.core.1
+  fixture:
+    catalogue: {I-ATTA-LOOSE: {measure: {unit: KGM, scale: 3, increment: 250}}}
+    bpp_catalogue: {I-ATTA-LOOSE: {unitized_measure: {unit: gram, value: "250"}}, I-ATTA-1KG: {unitized_measure: {unit: kilogram, value: "1"}}}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-ATTA-LOOSE, quantity: 1500}]}}
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-ATTA-1KG, quantity: 1500}]}}
+  expect:
+    beckn: [{action: select, "message.order.items[0].quantity.count": 6, count: 1}]
+    responses:
+      - {status: 201, count: 1}
+      - {status: 400, code: invalid_request, param: $.items[0].quantity, count: 1}
+
+- case_id: T8-ADJ-01
+  title: An upward weight adjustment on a line with no adjustment_band is refused, the order stands at the quoted total, and a downward one is a refund
+  level: bacp.pay.all.1
+  fixture:
+    order: {state: In-progress, line_items: [{id: I-ATTA-LOOSE, quantity: 1500, total: {value: 6600, currency: INR}}]}
+  steps:
+    - seller_callback: {action: on_update, weight_adjustment: {line: I-ATTA-LOOSE, new_total: {value: 6900, currency: INR}}}
+    - seller_callback: {action: on_update, weight_adjustment: {line: I-ATTA-LOOSE, new_total: {value: 6300, currency: INR}}}
+  expect:
+    state: {order_total: {value: 6300, currency: INR}}
+    adjustments: [{type: refund, amount: {value: 300, currency: INR}, count: 1}]
+    rail: {extra_debits: 0}
+
+- case_id: T8-ADJ-02
+  title: A band whose total plus the sum of max_up is above the mandate cap escalates, and the Trusted Surface shows "up to"
+  level: bacp.core.1
+  fixture:
+    mandate: {budgets: [{period: P1M, max: {value: 7000, currency: INR}}]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-ATTA-LOOSE, quantity: 1500, adjustment_band: {max_up: {value: 1000, currency: INR}}}]}}
+  expect:
+    state: {session: requires_escalation}
+    step_up: {kind: confirm, ts_render: {states_up_to_amount: true}}
+
+- case_id: T8-ADJ-03
+  title: A band on a rail with no hold is not accepted, and an upward adjustment makes no second debit and no COD top-up
+  level: bacp.pay.all.1
+  fixture:
+    rail: {hold_at_payment: false}
+    order: {state: In-progress, line_items: [{id: I-ATTA-LOOSE, quantity: 1500, adjustment_band: {max_up: {value: 250, currency: INR}}}]}
+  steps:
+    - seller_callback: {action: on_update, weight_adjustment: {line: I-ATTA-LOOSE, new_total: {value: 6850, currency: INR}}}
+  expect:
+    state: {order_total: {value: 6600, currency: INR}}
+    rail: {extra_debits: 0}
+    adjustments: []
+
+- case_id: T8-SUB-01
+  title: A substitute line on on_confirm with no new checkout_hash is not accepted, whatever the substitution policy
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, state: ready_for_complete, items: [{id: I-1, substitution: {policy: ask}}]}
+  steps:
+    - seller_callback: {action: on_confirm, substitute_line: {replaces: I-1, id: I-2, same_hash: true}}
+  expect:
+    state: {order_created: false}
+    responses: []
+    messages: [{code: quote_mismatch}]
+
+- case_id: T8-FO-01
+  title: An option id that the session did not offer is refused at its path
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, state: ready_for_complete, fulfilment_options: [fo1, fo2]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {fulfilment: {type: Delivery, option_id: fo9}}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.fulfilment.option_id, count: 1}
+
+- case_id: T8-FO-02
+  title: A fulfilment option label and a substitute name from the seller appear on the Trusted Surface only in counterparty_text
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {kind: confirm, counterparty_text: [{label: "Delivery option (seller's text)", text: "Evening slot"}]}
+  steps:
+    - render: {step_up_id: stp_S}
+  expect:
+    verdict: {seller_text_only_in: counterparty_text}
+
+- case_id: T8-MIN-01
+  title: A basket below the provider's min_order is refused at its path and not dropped
+  level: bacp.core.1
+  fixture:
+    catalogue: {provider: {min_order: {value: {value: 20000, currency: INR}}}, I-1: {unit_price: {value: 15000, currency: INR}}}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-1, quantity: 1}]}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, param: $.items, count: 1}
+    sessions: {created: 0}
+
+- case_id: T8-POL-01
+  title: A typed return policy that the binding text contradicts holds the session at requires_escalation until the principal has reviewed
+  level: bacp.core.1
+  fixture:
+    bpp_quote: {policies: [{type: in.bacp.policy.return, allowed: true}], return_terms: "No returns"}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    messages: [{code: policy_text_mismatch, resolution: requires_buyer_review, param: $.policies[0]}]
+    state: {session: requires_escalation}
+
+- case_id: T8-POL-02
+  title: A policy that is neither typed nor stated in text is read out as "not stated", never as "no returns"
+  level: bacp.ts.1
+  system_under_test: agent
+  fixture:
+    session: {policies: [], disclosures: {return_terms: absent}}
+  steps:
+    - webhook: {event: session.updated}
+  expect:
+    agent_says: [{key: policy_not_stated, slot_policy: return}]
+    agent_never_says: ["no returns"]
+
+- case_id: T8-LINE-01
+  title: An agent-signed request that sets added_by to principal is recorded as agent, and the line is in unrequested_lines unless marked principal_requested
+  level: bacp.ts.1
+  fixture:
+    sessions: {count: 1, state: requires_escalation}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-1, quantity: 1, added_by: principal}, {id: I-2, quantity: 1, principal_requested: true}]}}
+  expect:
+    responses:
+      - {status: 201, "body.line_items[0].added_by": agent, "body.line_items[1].added_by": agent, count: 1}
+    ts_render: {"unrequested_lines[*].index": [0], requested_line_count: 1}
+
+- case_id: T8-LINE-02
+  title: A paid line that the seller added puts unrequested_lines in the render and in render_required, and an approval whose renders omits it is refused
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, state: requires_escalation, line_items: [{added_by: seller, paid: true}], step_up: {step_up_id: stp_S, kind: confirm, render_required: [unrequested_lines]}}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_S, presentation: {renders: [plan]}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, count: 1}
+    ts_render: {"unrequested_lines[0].added_by": seller}
+    state: {session: requires_escalation}
+
+- case_id: T8-LINE-03
+  title: A line from an old list with a price now 10 % higher raises discovery_price_changed
+  level: bacp.core.1
+  fixture:
+    discovery: {transaction_id: T1, items: [{id: I-1, discovered_unit_price: {value: 10000, currency: INR}}]}
+    bpp_quote: {I-1: {unit_price: {value: 11000, currency: INR}}}
+  steps:
+    - request: {method: POST, path: /sessions, tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I-1, quantity: 1, transaction_id: T1, source_digest: H_SRC}]}}
+  expect:
+    messages: [{code: discovery_price_changed, param: $.line_items[0].unit_price}]
+
+- case_id: T8-GST-01
+  title: A request that carries a buyer GSTIN under a mandate without ACTING_FOR is refused and nothing reaches the seller
+  level: bacp.core.1
+  fixture:
+    mandate: {data_scopes: [NAME]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {billing: {gstin: "27AAAPL1234C1ZV"}}}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, count: 1}
+    beckn: []
+
+- case_id: T8-GST-02
+  title: A request that names a GSTIN other than the acting_for GSTIN is refused
+  level: bacp.core.1
+  fixture:
+    mandate: {data_scopes: [NAME, GSTIN, ACTING_FOR]}
+    acting_for: {kind: business, gstin: "27AAAPL1234C1ZV"}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {billing: {gstin: "29AAACP1234C1ZY"}}}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, count: 1}
+    beckn: []
+
+- case_id: T8-MKT-01
+  title: With no marketing receipt for a seller, every marketing purpose that the seller asks for is reported as not granted
+  level: bacp.core.1
+  fixture:
+    consent_receipts: []
+    bpp_profile: {marketing_purposes: [order_reminders, offers]}
+  steps:
+    - request: {method: GET, path: "/sessions/{session_id}", tag: bacp-browse}
+  expect:
+    verdict: {marketing_purposes_granted: []}
+
+- case_id: T8-MKT-02
+  title: A Presentation of a bacp-pay step-up that carries a marketing grant is refused, because consent is its own event
+  level: bacp.ts.1
+  fixture:
+    sessions: {count: 1, state: requires_escalation, step_up: {step_up_id: stp_S, kind: confirm}}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, step_up_id: stp_S, presentation: {marketing_grant: {purposes: [offers]}}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, count: 1}
+    state: {session: requires_escalation}
+
+- case_id: T8-MKT-03
+  title: A marketing ConsentReceipt for the class recipient, or one that carries a mandate_ref, is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: consent-receipt.json, vector: [consent-receipt.marketing-class-recipient.invalid.json, consent-receipt.marketing-mandate-ref.invalid.json, consent-receipt.marketing-no-purposes.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 3}
+
+- case_id: T8-LINK-01
+  title: A tool argument or result that carries a seller-account token, OTP or password is refused and never logged
+  level: bacp.core.1
+  fixture:
+    transport: mcp_http
+  steps:
+    - tool_call: {name: bacp_checkout_update, arguments: {session_id: S1, idempotency_key: fresh, seller_account_token: present}}
+  expect:
+    tool_results:
+      - {isError: true, "structuredContent.code": invalid_request}
+    instruction_log: {contains_value: false}
+
+- case_id: T8-LOY-01
+  title: A provisional loyalty benefit is not in total, all_in_total or charge_lines
+  level: bacp.core.1
+  fixture:
+    bpp_quote: {provisional_benefits: [{type: loyalty, amount: {value: 5000, currency: INR}}]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    verdict: {total_includes_provisional: false, charge_lines_include_provisional: false}
+
+- case_id: T8-WH-01
+  title: A webhook signature covers webhook-id and webhook-timestamp, as it did before this release
+  level: bacp.core.1
+  steps:
+    - webhook: {event: order.updated}
+  expect:
+    webhook_signature: {covers: [webhook-id, webhook-timestamp]}
+
+- case_id: T8-SCH-01
+  title: The new schema members reject each of the published invalid vectors
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: common.json#/$defs/QuantityUnit, vector: [common.quantityunit-piece-scale.invalid.json, common.quantityunit-unit-lowercase.invalid.json, common.quantityunit-scale-sixteen.invalid.json, common.quantityunit-increment-zero.invalid.json]}
+    - validate: {schema: ts-render.json, vector: [ts-render.unrequested-lines-not-required.invalid.json, ts-render.unrequested-lines-principal.invalid.json]}
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Session, vector: [session.fulfilment-option-charge-fraction.invalid.json, session.policy-window-text.invalid.json, session.ext-in-namespace.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 9}
+```

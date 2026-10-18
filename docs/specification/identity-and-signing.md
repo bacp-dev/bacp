@@ -153,6 +153,7 @@ The signature MUST cover:
 | `content-digest` | Always (see [Content-Digest](#content-digest)) |
 | `bacp-agent` | Always: the AgentCredential header. Exception: a request under tag `bacp-ts` or `bacp-handoff` is signed with a registry key, carries no `BACP-Agent` header and does not cover `bacp-agent` |
 | `idempotency-key` | On every request other than `GET` and `HEAD` |
+| `bacp-version` | Whenever the request carries a `BACP-Version` header. The header is REQUIRED when the gateway's profile lists more than one version ([Version negotiation](discovery.md#request-version)). A header that is present and not covered is refused with `401 signature_invalid` |
 | `content-type` | SHOULD be covered whenever the request has a body |
 
 A signature that does not cover a required component MUST be rejected with
@@ -317,7 +318,10 @@ Every `POST` and `PUT` MUST carry an `Idempotency-Key`. `GET` requests do not.
   record has expired. The key binds the sellers' `on_search` callbacks to this search
   ([Verifying discovery results](discovery.md#verifying-results)).
 - Keys are scoped to (agent, canonical operation, path parameters). The same key on a different
-  operation, or on the same operation with other path parameters, is a different key.
+  operation, or on the same operation with other path parameters, is a different key. The `BACP-Version` of a request
+  is part of its *fingerprint*, which the gateway compares with the stored request's, and not part of the key's scope:
+  the same key with the same body and another version is not a different key but a conflict (`422 idempotency_conflict`),
+  and the gateway executes nothing a second time.
 - The gateway carries the key end to end: in `context.bacp.idempotency_key`
   and in the derivation of the Beckn `message_id` (see
   [Network leg signing](#network-leg-signing)).
@@ -332,7 +336,7 @@ Every `POST` and `PUT` MUST carry an `Idempotency-Key`. `GET` requests do not.
 | Key missing or malformed on a `POST` or `PUT` | `400` | `idempotency_key_required` |
 | First request with this key | As the operation defines | The response is stored |
 | Same key, same body, after the first response | The stored status | Stored body, plus `Idempotent-Replayed: true` |
-| Same key, different body | `422` | `idempotency_conflict` (`unrecoverable`: use a new key only for a new intent) |
+| Same key, different body, or the same body under another `BACP-Version` | `422` | `idempotency_conflict` (`unrecoverable`: use a new key only for a new intent) |
 | Same key while the first request is still being processed | `409` | `idempotency_in_flight`, with `Retry-After` |
 | Per-agent limit of live keys or in-flight requests exceeded | `429` | `quota_exceeded`, with `Retry-After` |
 | The idempotency store is unavailable | `503` | `idempotency_store_unavailable` (writes fail closed) |

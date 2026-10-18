@@ -56,7 +56,7 @@ tags:
 - name: trade-act
   description: 'Seller-side and buyer-side trade acts: GRN, CRAC, MSMED objection and ledger acknowledgement (capability in.bacp.trade_document)'
 - name: ucp-checkout
-  description: Projection of the checkout session in the shape of UCP checkout, pinned to UCP commit a5e7cfe (capability in.bacp.ucp_checkout)
+  description: Projection of the checkout session in the shape of UCP checkout, pinned to UCP release v2026-08-25 (capability in.bacp.ucp_checkout)
 paths:
   /.well-known/bacp:
     get:
@@ -117,9 +117,11 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_discover
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.discover
       summary: Network discovery (Beckn search / 2.0 discover via gateway and registry)
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -237,6 +239,7 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_discover_source
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.discover
       summary: Fetch the BPP-signed on_search callback behind a discovery result
       description: 'Returns the on_search callback that a source_digest of a discover response names, exactly as the gateway received it, with its
         Beckn Authorization header. The agent checks the sha-256 of body against source_digest, the binding of the callback to its search, and
@@ -249,6 +252,7 @@ paths:
       security:
       - httpSignature: []
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       responses:
@@ -272,6 +276,7 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_checkout_create
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.checkout
       summary: Create checkout session (UCP create_checkout, Beckn select)
       description: 'One session per seller. The sessions of a multi-seller basket share a gateway-local `basket_id`; every session with one
         `basket_id` MUST have the same principal, presence and root open Checkout Mandate, otherwise the gateway returns 400 invalid_request at
@@ -280,6 +285,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -346,8 +352,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_checkout_get
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.checkout
       summary: Get session (UCP get_checkout). Use for lost-response recovery before any retry.
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       responses:
@@ -373,9 +381,11 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_checkout_update
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.checkout
       summary: Update session, full replace (UCP update_checkout). Items trigger select, fulfilment/billing triggers init.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -448,6 +458,7 @@ paths:
       x-bacp-signature-tag: bacp-pay
       x-bacp-mcp-tool: bacp_checkout_complete
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.checkout
       summary: Complete (UCP complete_checkout). Verifies closed mandates, debits the rail, sends Beckn confirm.
       description: 'HNP: body carries the agent-closed Checkout and Payment Mandates (KB-JWT under the open mandates'' cnf key).
 
@@ -459,7 +470,7 @@ paths:
         names an offered option but the tenders hash differently; 409 plan_conflict when another plan is live for the checkout_hash). Each tender
         is debited at most once, under its own closed payment mandate whose tender{plan_hash, tender_id} names it and whose amount is the tender''s
         amount. While any tender is in_doubt no other tender is released or refunded, and the session stays complete_in_progress. A gateway that
-        does not list the capability refuses payment_plan with 400 invalid_request at $.payment_plan.
+        does not list the capability refuses payment_plan with 400 capability_unsupported at $.payment_plan.
 
         Returns `completed` with order and payment receipt, `complete_in_progress` (payment in doubt or awaiting on_confirm),
 
@@ -474,6 +485,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -532,9 +544,11 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_checkout_cancel
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.checkout
       summary: Cancel a session before an order exists (UCP cancel_checkout). No Beckn call is needed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       responses:
@@ -605,6 +619,7 @@ paths:
       - httpSignature: []
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -668,6 +683,7 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_mandate_request
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.mandate
       summary: Request a mandate. Returns PENDING plus a Trusted Surface link. The agent never signs or activates it.
       description: 'With `checkout_mandate_ref` the request asks for a sibling open Payment Mandate under an existing ACTIVE root open Checkout
         Mandate of the same principal (for example a Reserve Pay block for one more seller); the Mandate Manager builds only the Payment Mandate,
@@ -689,6 +705,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -820,8 +837,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_mandate_get
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.mandate
       summary: Get mandate with live status and usage (AA ConsentUse analogue)
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       responses:
@@ -848,9 +867,11 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_mandate_relinquish
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.mandate
       summary: Agent gives up its authority (agent-side revoke). Users revoke or pause on the Trusted Surface only.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1093,6 +1114,7 @@ paths:
       - httpSignature: []
         agentCredential: []
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       responses:
@@ -1127,8 +1149,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_order_get
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.order
       summary: Get order (Beckn status, UCP get_order). Adjustments are the append-only read model.
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - name: bpp_id
@@ -1161,10 +1185,12 @@ paths:
       x-bacp-signature-tag: bacp-post-order
       x-bacp-mcp-tool: bacp_order_cancel
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.order
       summary: Mandate-scoped cancel (Beckn cancel). Requires CANCEL in action_scope.
       description: The mandate of the order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1220,10 +1246,12 @@ paths:
       x-bacp-signature-tag: bacp-post-order
       x-bacp-mcp-tool: bacp_order_return
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.order
       summary: Mandate-scoped return (Beckn update with update_target=item). Requires RETURN in action_scope.
       description: The mandate of the order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1336,10 +1364,12 @@ paths:
       x-bacp-signature-tag: bacp-post-order
       x-bacp-mcp-tool: bacp_issue_raise
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.issue
       summary: Raise an IGM issue as AI_AGENT on behalf of the user (IGM issue). Requires RAISE_ISSUE in action_scope.
       description: The mandate of the order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1405,6 +1435,7 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_issue_status
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.issue
       summary: 'Issue status: the gateway''s snapshot, kept current from IGM 2.0 on_issue callbacks (IGM 2.0 has no issue_status)'
       responses:
         '200':
@@ -1435,10 +1466,12 @@ paths:
       x-bacp-signature-tag: bacp-post-order
       x-bacp-mcp-tool: bacp_issue_action
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.issue
       summary: Complainant action (IGM 2.0 action log). ESCALATE moves ISSUE to GRIEVANCE. ODR is an out-of-protocol reference.
       description: The mandate of the issue's order MUST be ACTIVE, or REVOKED, PAUSED, EXPIRED or EXHAUSTED with presence HP and hp_proof, for every pause reason. Without HP on a mandate that is not ACTIVE the gateway returns 403 presence_not_allowed.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1513,6 +1546,7 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_evidence_get
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.issue
       summary: Evidence bundle for a transaction (mandates, receipts, instruction-log chain). Access-controlled to principal, counterparties of
         record, GRO/ODR.
       responses:
@@ -1591,6 +1625,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1718,6 +1753,7 @@ paths:
         \ so the outcome is accept_revoke_not_allowed (countersigned, logged, refused).\n"
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1817,6 +1853,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1876,6 +1913,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -1944,6 +1982,7 @@ paths:
         their deposits are released.
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -2004,6 +2043,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -2077,6 +2117,7 @@ paths:
         '
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -2123,6 +2164,7 @@ paths:
       summary: Buyer or auctioneer award of the winning bid hash (reverse_l1), or seller acceptance of the highest bid (english)
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -2347,8 +2389,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_ledger_get
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.ledger
       parameters:
       - $ref: '#/components/parameters/LedgerMandateRef'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       responses:
@@ -2381,8 +2425,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_ledger_entries_list
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.ledger
       parameters:
       - $ref: '#/components/parameters/LedgerMandateRef'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - name: after_seq
@@ -2437,8 +2483,10 @@ paths:
       x-bacp-signature-tag: bacp-post-order
       x-bacp-mcp-tool: bacp_ledger_payment_post
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.ledger
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -2490,8 +2538,10 @@ paths:
       x-bacp-signature-tag: bacp-post-order
       x-bacp-mcp-tool: bacp_trade_act_record
       x-bacp-idempotent: true
+      x-bacp-capability: [in.bacp.ledger, in.bacp.trade_document]
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       requestBody:
@@ -2538,7 +2588,9 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: bacp_order_documents_list
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.trade_document
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - name: bpp_id
@@ -2575,8 +2627,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: create_checkout
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.ucp_checkout
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - $ref: '#/components/parameters/UcpAgent'
@@ -2624,7 +2678,9 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: get_checkout
       x-bacp-idempotent: false
+      x-bacp-capability: in.bacp.ucp_checkout
       parameters:
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - $ref: '#/components/parameters/UcpAgent'
@@ -2663,8 +2719,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: update_checkout
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.ucp_checkout
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - $ref: '#/components/parameters/UcpAgent'
@@ -2716,8 +2774,10 @@ paths:
       x-bacp-signature-tag: bacp-pay
       x-bacp-mcp-tool: complete_checkout
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.ucp_checkout
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - $ref: '#/components/parameters/UcpAgent'
@@ -2766,8 +2826,10 @@ paths:
       x-bacp-signature-tag: bacp-browse
       x-bacp-mcp-tool: cancel_checkout
       x-bacp-idempotent: true
+      x-bacp-capability: in.bacp.ucp_checkout
       parameters:
       - $ref: '#/components/parameters/IdempotencyKey'
+      - $ref: '#/components/parameters/BacpVersion'
       - $ref: '#/components/parameters/SignatureInput'
       - $ref: '#/components/parameters/Signature'
       - $ref: '#/components/parameters/UcpAgent'
@@ -3090,6 +3152,16 @@ components:
         by the request signature. The legacy header name BACP-Agent-Credential was accepted only before the first dated release (`2026-10-17`);
         a gateway MUST NOT accept it.
   parameters:
+    BacpVersion:
+      name: BACP-Version
+      in: header
+      required: false
+      description: The BACP version of this request, a dated release identifier or draft. REQUIRED when the gateway's profile lists more than one version
+        (a request without it gets 400 invalid_request at $.headers.BACP-Version), and a covered component of the signature whenever it is present. An
+        unlisted version gets 400 version_unsupported. A session is pinned to the version it was created under; another version gets 409 version_mismatch.
+        The version is part of the idempotency fingerprint.
+      schema:
+        $ref: ../schemas/common.json#/$defs/ProtocolVersion
     IdempotencyKey:
       name: Idempotency-Key
       in: header
@@ -5194,10 +5266,24 @@ components:
           - ledger_head_mismatch
           - settlement_payee_unmatched
           - trusted_surface_unavailable
+          - capability_unsupported
+          - version_unsupported
+          - version_mismatch
         message:
           type: string
         param:
           type: string
+        supported_versions:
+          type: array
+          minItems: 1
+          items:
+            $ref: ../schemas/common.json#/$defs/ProtocolVersion
+          description: REQUIRED on version_unsupported, and absent on every other code. The versions that the gateway lists, so that the agent can choose
+            one.
+        capability:
+          type: string
+          description: REQUIRED on capability_unsupported, and absent on every other code. The id of the capability that owns the refused member,
+            for example in.bacp.discounts.
         reason:
           enum:
           - no_conforming_origin
@@ -5261,6 +5347,42 @@ components:
           description: On 403 presence_not_proven for a post-order write with presence HP and no valid hp_proof, a step-up of kind post_order
             (reason presence_proof) whose ts_render names this write. The principal confirms it on the Trusted Surface, and the agent retries with
             hp_proof naming its step_up_id and the hash of the signed step_up.approved event.
+      allOf:
+      - if:
+          properties:
+            code:
+              const: capability_unsupported
+          required:
+          - code
+        then:
+          required:
+          - param
+          - capability
+          properties:
+            type:
+              const: invalid_request
+          description: A capability_unsupported error is an invalid_request that names the refused member in param and the owning capability in capability.
+        else:
+          not:
+            required:
+            - capability
+      - if:
+          properties:
+            code:
+              const: version_unsupported
+          required:
+          - code
+        then:
+          required:
+          - supported_versions
+          - param
+          properties:
+            type:
+              const: invalid_request
+        else:
+          not:
+            required:
+            - supported_versions
     Message:
       type: object
       description: ACP messages[] entry. resolution tells the agent whether it may self-fix, must ask the user, or must get user review.
@@ -5358,6 +5480,65 @@ components:
           - origin
           description: A message that carries args[] states its origin, so that a reader never has to rely on the default to tell a gateway-written message
             from a counterparty one.
+    CapabilityDeclaration:
+      type: object
+      description: The declaration of a capability that this version defines.
+      required:
+      - version
+      - extends
+      properties:
+        version:
+          $ref: ../schemas/common.json#/$defs/ProtocolVersion
+        extends:
+          oneOf:
+          - $ref: '#/components/schemas/CapabilityId'
+          - type: array
+            minItems: 1
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/CapabilityId'
+      additionalProperties: false
+    ThirdPartyCapabilityDeclaration:
+      type: object
+      description: The declaration of a third-party capability. registry_ref names the entry of the extension registry whose digest-pinned schema governs the
+        capability's ext member, and schema_digest is that schema's digest. There is no schema URL and no runtime fetch.
+      required:
+      - version
+      - extends
+      - registry_ref
+      - schema_digest
+      properties:
+        version:
+          type: string
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          description: The date of the capability's own version.
+        extends:
+          oneOf:
+          - $ref: '#/components/schemas/CapabilityId'
+          - type: array
+            minItems: 1
+            uniqueItems: true
+            items:
+              $ref: '#/components/schemas/CapabilityId'
+        registry_ref:
+          type: string
+          pattern: ^ext/[a-z][a-z0-9_-]*(\.[a-z][a-z0-9_-]*)+$
+        schema_digest:
+          $ref: ../schemas/common.json#/$defs/Hash
+      additionalProperties: false
+    CapabilityId:
+      enum:
+      - in.bacp.discover
+      - in.bacp.checkout
+      - in.bacp.discounts
+      - in.bacp.payment_plan
+      - in.bacp.ledger
+      - in.bacp.trade_document
+      - in.bacp.ucp_checkout
+      - in.bacp.mandate
+      - in.bacp.order
+      - in.bacp.issue
+      description: A capability id that this version of BACP defines.
     Profile:
       type: object
       required:
@@ -5402,6 +5583,43 @@ components:
           then:
             contains:
               const: in.bacp.checkout
+        capability_declarations:
+          type: object
+          description: Optional machine-readable declarations of capabilities, a sibling of capabilities (which stays a list of ids). Every key MUST also appear
+            in capabilities. An in.bacp.* entry carries {version, extends} and its key is a capability id that this version defines. A third-party entry carries
+            {version, extends, registry_ref, schema_digest} and no schema URL, because a gateway never fetches an extension's schema at run time. A third-party
+            entry is valid only once a registry review of extensions exists; until then only in.bacp.* entries are valid.
+          propertyNames:
+            pattern: ^[a-z][a-z0-9_-]*(\.[a-z][a-z0-9_-]*)+$
+            if:
+              pattern: ^in\.bacp\.
+            then:
+              enum:
+              - in.bacp.discover
+              - in.bacp.checkout
+              - in.bacp.discounts
+              - in.bacp.payment_plan
+              - in.bacp.ledger
+              - in.bacp.trade_document
+              - in.bacp.ucp_checkout
+              - in.bacp.mandate
+              - in.bacp.order
+              - in.bacp.issue
+          patternProperties:
+            ^in\.bacp\.:
+              $ref: '#/components/schemas/CapabilityDeclaration'
+          additionalProperties:
+            $ref: '#/components/schemas/ThirdPartyCapabilityDeclaration'
+        mcp_endpoints:
+          type: object
+          description: The MCP endpoint of each protocol version that the gateway lists, keyed by version. A gateway that lists more than one version serves one MCP
+            server for each, because an MCP host may be unable to set the BACP-Version header. A session is pinned to the version it was created under, on
+            every transport.
+          propertyNames:
+            $ref: ../schemas/common.json#/$defs/ProtocolVersion
+          additionalProperties:
+            type: string
+            format: uri
         payment_handlers:
           type: array
           items:
@@ -5543,6 +5761,8 @@ components:
                     type: string
                   rating:
                     type: number
+                  min_order:
+                    $ref: '#/components/schemas/MinOrder'
               items:
                 type: array
                 items:
@@ -5939,6 +6159,18 @@ components:
           type: boolean
         return_window:
           type: string
+        measure:
+          $ref: ../schemas/common.json#/$defs/QuantityUnit
+          description: The unit in which the item is sold and counted. REQUIRED for loose goods in the kirana.khata profile and RECOMMENDED elsewhere. When
+            absent the item is sold by the piece (unit C62, scale 0).
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Policy'
+          description: Typed return, cancellation and cash-on-delivery terms, projected from the seller's tags. They are hashed into disclosures.hash. The
+            gateway checks them against the binding text, and the agent speaks the binding text.
+        min_order:
+          $ref: '#/components/schemas/MinOrder'
         category:
           type: string
         sponsorship:
@@ -5957,6 +6189,113 @@ components:
         - tax_inclusive
         prior_price:
         - tax_inclusive
+    MinOrder:
+      type: object
+      description: The smallest order that the seller or provider accepts, projected from the seller's minimum order value and minimum item quantity.
+        A session below it is refused with 400 invalid_request at $.items and is never silently dropped or padded.
+      properties:
+        value:
+          $ref: ../schemas/common.json#/$defs/Amount
+          description: The smallest basket total, before delivery and fees.
+        item_qty:
+          type: integer
+          minimum: 1
+          description: The smallest total number of units of the item or provider.
+      minProperties: 1
+      additionalProperties: false
+    Policy:
+      type: object
+      description: A typed policy. The typed value is a gateway-checked projection of the seller's tags; the binding text is the disclosure. A typed value that
+        contradicts the binding text raises policy_text_mismatch. An absent policy is "not stated", never "no returns".
+      required:
+      - type
+      properties:
+        type:
+          enum:
+          - in.bacp.policy.return
+          - in.bacp.policy.cancel
+          - in.bacp.policy.cod
+          description: Return (from returnable and return_window), cancellation (from cancellable) or cash on delivery (from available_on_cod).
+        allowed:
+          type: boolean
+        window:
+          $ref: ../schemas/common.json#/$defs/Duration
+          description: How long after delivery (return) or order (cancel) the policy applies.
+        applies_to:
+          type: array
+          items:
+            type: string
+          description: The ids of the items that the policy covers. Absent means every item of the session or provider.
+        description:
+          $ref: ../schemas/common.json#/$defs/LangText
+          description: Counterparty text, shown only as a labelled seller value.
+        url:
+          type: string
+          format: uri
+      additionalProperties: false
+    FulfilmentOption:
+      type: object
+      description: One way that the seller offers to fulfil a session, projected from on_select and on_init. label and pickup_location are counterparty text.
+      required:
+      - id
+      - type
+      properties:
+        id:
+          type: string
+        type:
+          enum:
+          - Delivery
+          - Self-Pickup
+        label:
+          $ref: ../schemas/common.json#/$defs/LangText
+          description: Counterparty text, shown only as a labelled seller value.
+        slot:
+          type: object
+          required:
+          - start
+          - end
+          properties:
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+          additionalProperties: false
+        tat:
+          $ref: ../schemas/common.json#/$defs/Duration
+          description: The seller's promised time to fulfil (from the time_to_ship tag).
+        charge:
+          $ref: ../schemas/common.json#/$defs/Amount
+          description: The charge for this option, in integer paise.
+        pickup_location:
+          type: object
+          description: Where the principal collects the order, for a Self-Pickup option. Counterparty text.
+          properties:
+            name:
+              type: string
+            address:
+              type: string
+            pincode:
+              type: string
+              pattern: ^[1-9][0-9]{5}$
+            gps:
+              type: string
+              pattern: ^-?[0-9]+(\.[0-9]+)?,-?[0-9]+(\.[0-9]+)?$
+          minProperties: 1
+          additionalProperties: false
+      additionalProperties: false
+    Ext:
+      type: object
+      description: 'Members of declared third-party extensions, keyed by the reverse-DNS capability id of the declaration (never an in.* id). A member is
+        accepted only while its capability is listed in the profile''s capabilities and its declaration is in capability_declarations. Otherwise the gateway
+        refuses it with 400 capability_unsupported at $.ext["<id>"] and changes nothing. An ext member that touches an amount, the payee, presence, a mandate
+        or a disclosure is critical: it is refused unless its capability is listed and the amount also appears as a line of the base totals, and it is never a
+        mandate constraint.'
+      propertyNames:
+        pattern: ^(?!in\.)[a-z][a-z0-9_-]*(\.[a-z][a-z0-9_-]*)+$
+      additionalProperties:
+        type: object
     ItemRef:
       type: object
       required:
@@ -5968,6 +6307,55 @@ components:
         quantity:
           type: integer
           minimum: 1
+          description: A whole number of steps of the item's measure. With no measure, or the default measure (unit C62, scale 0), it is a count of
+            pieces. For an item whose measure has scale above 0 it is a count of 10^-scale units (1500 with unit KGM and scale 3 is 1.5 kg) and MUST be a
+            multiple of the measure's increment. An off-increment quantity is refused with 400 invalid_request at $.items[n].quantity and is never rounded.
+        principal_requested:
+          type: boolean
+          description: The agent's claim that the principal asked for this line. It decides only how the Trusted Surface reads the line (counted, not read
+            in full), never its added_by, which the gateway assigns. Absent means false.
+        transaction_id:
+          type: string
+          description: The transaction_id of the discovery search or earlier session in which the item and its price were shown. With source_digest it lets
+            a re-quote from an old list run the discovery_price_changed check against the price that list showed.
+        source_digest:
+          $ref: '#/components/schemas/SourceDigest'
+          description: The source_digest of the discovery result that showed this item, as in the discover response.
+        adjustment_band:
+          $ref: '#/components/schemas/AdjustmentBand'
+        substitution:
+          $ref: '#/components/schemas/Substitution'
+    AdjustmentBand:
+      type: object
+      description: 'For a line sold by weight or measure, how far a post-order adjustment may move the line from the quoted amount. It sits inside
+        checkout_hash and is not a mandate constraint. max_down is the most the amount may fall (always allowed as a refund). max_up is the most it may
+        rise, and the gateway accepts it only when all four hold: (a) the Trusted Surface reads it as "up to ₹X" and the principal confirms; (b) the quote
+        total plus the sum of max_up over all lines is within the approved amount and the mandate''s caps; (c) max_up is at most one increment of the
+        line''s measure; (d) the rail holds the amount at payment, the extra is collected only from that hold, and there is no second debit and no cash-on-delivery
+        top-up. Where the rail has no such hold the band is absent and an adjustment can only reduce the amount.'
+      properties:
+        max_up:
+          $ref: ../schemas/common.json#/$defs/Amount
+        max_down:
+          $ref: ../schemas/common.json#/$defs/Amount
+      minProperties: 1
+      additionalProperties: false
+    Substitution:
+      type: object
+      description: What the seller may do when an item is unavailable. A substitute line never arrives inside the same quote or on on_confirm. It comes only
+        through a new quote with a new checkout_hash, which the principal approves again where the mandate requires it.
+      required:
+      - policy
+      properties:
+        policy:
+          enum:
+          - none
+          - same_brand
+          - ask
+          default: none
+          description: none (the default) allows no substitute. same_brand allows a substitute of the same brand in a new quote. ask asks the principal
+            before any substitute.
+      additionalProperties: false
     SessionCreate:
       type: object
       required:
@@ -6009,6 +6397,11 @@ components:
           $ref: '#/components/schemas/BasketId'
         discounts:
           $ref: '#/components/schemas/DiscountCodes'
+          x-bacp-capability: in.bacp.discounts
+          description: Discount codes. Accepted only by a gateway that lists in.bacp.discounts; any other gateway refuses the member with 400
+            capability_unsupported at $.discounts and creates nothing.
+        ext:
+          $ref: '#/components/schemas/Ext'
       allOf:
       - if:
           properties:
@@ -6048,6 +6441,10 @@ components:
               type: string
             pincode:
               type: string
+            option_id:
+              type: string
+              description: The id of one entry of the session's fulfilment_options[]. It is hashed into checkout_hash. An id that the session did not offer gets
+                400 invalid_request at $.fulfilment.option_id.
         billing:
           type: object
           properties:
@@ -6057,6 +6454,11 @@ components:
               type: string
         discounts:
           $ref: '#/components/schemas/DiscountCodes'
+          x-bacp-capability: in.bacp.discounts
+          description: Discount codes. Accepted only by a gateway that lists in.bacp.discounts; any other gateway refuses the member with 400
+            capability_unsupported at $.discounts and changes nothing.
+        ext:
+          $ref: '#/components/schemas/Ext'
         data_share:
           type: object
           required:
@@ -6094,11 +6496,35 @@ components:
           $ref: '#/components/schemas/LangText'
         quantity:
           type: integer
+        measure:
+          $ref: ../schemas/common.json#/$defs/QuantityUnit
+          description: The measure of the item as the catalogue stated it, echoed so that the quantity is read in its unit. Absent means the default
+            measure (one piece).
         unit_price:
           $ref: '#/components/schemas/Amount'
         total:
           $ref: '#/components/schemas/Amount'
           description: unit_price times quantity, before discounts. Discounts appear in discounts.applied[].allocations.
+        added_by:
+          enum:
+          - principal
+          - agent
+          - seller
+          - assisted_operator
+          description: Who added the line, assigned by the gateway from the signer and the source and never taken from the request. principal only for a
+            line that the principal confirmed on a Trusted Surface or by a human-present render. agent for a line that arrived in the agent's request, seller
+            for a line that the seller's quote added, assisted_operator for a line that an assisted-channel operator added.
+        principal_requested:
+          type: boolean
+          description: The agent's claim, echoed from ItemRef. It changes only how the Trusted Surface reads the line.
+        adjustment_band:
+          $ref: '#/components/schemas/AdjustmentBand'
+        substitution:
+          $ref: '#/components/schemas/Substitution'
+        transaction_id:
+          type: string
+        source_digest:
+          $ref: '#/components/schemas/SourceDigest'
         hsn:
           type: string
         tax_lines:
@@ -6937,6 +7363,7 @@ components:
         plan_options:
           type: array
           minItems: 1
+          x-bacp-capability: in.bacp.payment_plan
           description: On a gateway that lists in.bacp.payment_plan, the ways the gateway offers to pay this session, in the order shown to the
             principal, with no default or preselected entry. The gateway records that order in the evidence bundle.
           items:
@@ -7046,10 +7473,25 @@ components:
         fulfilment:
           type: object
           additionalProperties: true
+        fulfilment_options:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/FulfilmentOption'
+          description: The ways the seller offers to fulfil this session, projected from on_select and on_init. The agent chooses by fulfilment.option_id,
+            and the choice is hashed into checkout_hash.
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Policy'
+          description: Typed policies of the session's seller, hashed into disclosures.hash.
+        ext:
+          $ref: '#/components/schemas/Ext'
         payment:
           $ref: '#/components/schemas/PaymentState'
         payment_plan:
           $ref: ../schemas/payment-plan.json
+          x-bacp-capability: in.bacp.payment_plan
           description: The saga state of the plan the session is paid with, once a complete with payment_plan has been accepted. Each tender
             carries its status (including in_doubt and reversal_pending), rail_ref, reversal_deadline and derived psp_key. While any tender is
             in_doubt the session stays complete_in_progress.
@@ -7098,6 +7540,7 @@ components:
           $ref: '#/components/schemas/BasketId'
         discounts:
           $ref: '#/components/schemas/Discounts'
+          x-bacp-capability: in.bacp.discounts
         messages:
           type: array
           items:
@@ -7106,7 +7549,7 @@ components:
       type: object
       description: 'One of payment_mandate (one tender, paying the whole quote total) or payment_plan (several tenders, or a tranche plan) is
         REQUIRED, never both. payment_plan is accepted only by a gateway that lists the capability in.bacp.payment_plan; a gateway that does
-        not list it MUST refuse a complete that carries payment_plan with 400 invalid_request at $.payment_plan, and MUST NOT ignore it and
+        not list it MUST refuse a complete that carries payment_plan with 400 capability_unsupported at $.payment_plan, and MUST NOT ignore it and
         charge a single tender instead. For a plan, the closed payment mandates travel inside payment_plan.tenders[], one for each tender.'
       required:
       - presence
@@ -7143,6 +7586,7 @@ components:
             the profile's message_id_namespace).
         payment_plan:
           $ref: '#/components/schemas/PlanRequest'
+          x-bacp-capability: in.bacp.payment_plan
           description: 'The plan to pay with, sent in full. Its tenders MUST hash to the plan_hash of an entry in Session.payment.plan_options[]
             or of a plan the principal confirmed on the Trusted Surface; otherwise 400 plan_not_offered at $.payment_plan. A plan_id that names an offered
             option whose tenders hash differently gets 403 mandate_scope_mismatch. Only one live plan exists for a checkout_hash (409 plan_conflict).
@@ -7499,6 +7943,26 @@ components:
         fulfilment_state:
           type: string
           description: ONDC fulfilment state code, e.g. Order-delivered
+        fulfilments:
+          type: array
+          description: Each fulfilment of the order with its own state, so that an order with several fulfilments is read per fulfilment. fulfilment_state is kept.
+          items:
+            type: object
+            required:
+            - id
+            - type
+            - state
+            properties:
+              id:
+                type: string
+              type:
+                enum:
+                - Delivery
+                - Self-Pickup
+              state:
+                type: string
+                description: ONDC fulfilment state code, for example Order-delivered.
+            additionalProperties: false
         line_items:
           type: array
           items:
@@ -7540,6 +8004,9 @@ components:
                 - refund
                 - replacement
                 - dispute
+                - weight_charge
+                description: weight_charge is an upward weight adjustment that an adjustment_band allowed. A downward adjustment is a refund. Without a band no
+                  weight_charge exists.
               status:
                 type: string
               amount:
@@ -8900,6 +9367,7 @@ components:
       properties:
         session_id:
           type: string
+          x-bacp-capability: in.bacp.payment_plan
           description: A plain checkout session of the calling agent. The gateway covers only the session's own sellers.
         negotiation_id:
           type: string
@@ -8917,7 +9385,7 @@ components:
           type: string
           description: Restricts the answer to one seller of the session. A bpp_id that is not a seller of the session gets 404 not_found.
       description: The request body of POST /payment-handlers/intersect. presence and one of negotiation_id or session_id are REQUIRED. session_id
-        alone is accepted only by a gateway that lists in.bacp.payment_plan; any other gateway refuses it with 400 invalid_request at $.negotiation_id.
+        alone is accepted only by a gateway that lists in.bacp.payment_plan; any other gateway refuses a session_id with 400 capability_unsupported at $.session_id.
       anyOf:
       - required:
         - negotiation_id
@@ -9084,16 +9552,18 @@ components:
           $ref: '#/components/schemas/Session/properties/ai_disclosure'
         plan_options:
           type: array
+          x-bacp-capability: in.bacp.payment_plan
           items:
             $ref: '#/components/schemas/PlanOption'
         payment_plan:
           $ref: ../schemas/payment-plan.json
+          x-bacp-capability: in.bacp.payment_plan
         quote:
           $ref: '#/components/schemas/Session/properties/quote'
       additionalProperties: false
     UcpCheckout:
       type: object
-      description: 'A BACP session in the shape of the UCP checkout schema pinned at source/ucp (UCP commit a5e7cfe): every UCP-required member is
+      description: 'A BACP session in the shape of the UCP checkout schema pinned at source/ucp (UCP release v2026-08-25): every UCP-required member is
         present, amounts are integers in paise, the discount lines are negative integers, the status uses UCP''s names, and the BACP-only state is
         under bacp. It validates against the pinned shopping/checkout.json and against this component. This component constrains only the envelope,
         the status, the currency, continue_url and bacp; three rules are enforced only by the pinned UCP schema: the shape of line_items, a subtotal
@@ -9258,8 +9728,15 @@ components:
                 minimum: 1
         buyer:
           type: object
+          description: The UCP buyer. A buyer.consent member is refused (the consent extension of UCP is not defined by BACP).
         context:
           type: object
+        cart_id:
+          description: Not accepted. BACP defines no UCP cart capability, so a request that carries cart_id is refused with 400 capability_unsupported
+            at $.cart_id.
+        loyalty:
+          description: Not accepted. BACP defines no UCP loyalty capability, so a request that carries loyalty is refused with 400 capability_unsupported
+            at $.loyalty.
         bacp:
           type: object
           required:
@@ -9291,6 +9768,18 @@ components:
             discounts:
               $ref: '#/components/schemas/SessionCreate/properties/discounts'
           additionalProperties: false
+      not:
+        anyOf:
+        - required:
+          - cart_id
+        - required:
+          - loyalty
+        - required:
+          - buyer
+          properties:
+            buyer:
+              required:
+              - consent
       additionalProperties: true
     UcpUpdateRequest:
       type: object
@@ -9320,6 +9809,10 @@ components:
                 minimum: 1
         buyer:
           type: object
+          description: The UCP buyer. A buyer.consent member is refused (the consent extension of UCP is not defined by BACP).
+        loyalty:
+          description: Not accepted. BACP defines no UCP loyalty capability, so a request that carries loyalty is refused with 400 capability_unsupported
+            at $.loyalty.
         payment:
           $ref: '#/components/schemas/SessionUpdate/properties/payment'
         bacp:
@@ -9334,6 +9827,16 @@ components:
             data_share:
               $ref: '#/components/schemas/SessionUpdate/properties/data_share'
           additionalProperties: false
+      not:
+        anyOf:
+        - required:
+          - loyalty
+        - required:
+          - buyer
+          properties:
+            buyer:
+              required:
+              - consent
       additionalProperties: true
   examples:
     OpenPaymentMandate:

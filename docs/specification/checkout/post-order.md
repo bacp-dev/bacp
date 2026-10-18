@@ -44,8 +44,9 @@ in its covered components, so the `bpp_id` cannot be changed in transit.
 
 - `state` is the Beckn order state: `Created`, `Accepted`, `In-progress`, `Completed`,
   `Cancelled`.
-- `fulfilment_state` is the ONDC fulfilment state code (for example `Order-delivered`).
-- `adjustments[]` is append-only: `cancellation`, `return`, `refund`, `replacement` and `dispute`
+- `fulfilment_state` is the ONDC fulfilment state code (for example `Order-delivered`). An order with several fulfilments MAY
+  also carry `fulfilments[]{id, type, state}` (SHOULD, where the seller reports them), each with its own state.
+- `adjustments[]` is append-only: `cancellation`, `return`, `refund`, `replacement`, `dispute` and `weight_charge`
   entries, each with `status`, `at`, and where relevant `amount` and `receipt_id`. Nothing is
   rewritten.
 - `return_window_ends` comes from the seller's `@ondc/org/return_window`.
@@ -251,6 +252,24 @@ route: a seller's refusal to take back goods that the principal reports as defec
   ([Refunds](../payments/index.md#refunds)).
 - Every refund appends a `refund` adjustment with its `receipt_id` and sends `payment.receipt` with a
   `ReceiptRef`. A failed refund appends a `refund` adjustment with a `FAILED` status.
+
+### Weighed goods {#weight-adjustment}
+
+A line sold by weight or measure ([Units, quantity and weighed goods](index.md#units)) can be packed heavier or lighter than
+quoted. The order stands at the quoted total unless a rule below moves it:
+
+1. **Down only by default.** A post-order weight adjustment can only reduce the amount: the gateway records it as a `refund`
+   in `adjustments[]`, to the original method, under the rules above. A weight adjustment that raises the amount, when the
+   line carries no `adjustment_band`, is refused: the order stands at the quoted total, nothing is collected and the gateway
+   records the refusal in the InstructionLog.
+2. **A band, only with a hold.** A line whose `adjustment_band` has a `max_up` (accepted only when all four conditions of
+   [Units, quantity and weighed goods](index.md#units) hold) allows an upward adjustment of at most `max_up`, recorded as a
+   `weight_charge` adjustment. The extra is collected only from the hold that was placed at payment: there is no second
+   debit and no cash-on-delivery top-up. Where the rail has no hold, or the hold cannot be captured in part, the band was
+   never accepted and the adjustment is down only. An upward adjustment above `max_up`, or on a rail without a hold, is
+   refused and the order stands.
+3. **Budget.** A downward adjustment is a partial refund after fulfilment and releases no budget
+   ([Usage ledger](../mandates.md#usage-ledger)).
 
 ## Issues and grievances (IGM) {#igm}
 

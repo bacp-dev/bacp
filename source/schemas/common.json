@@ -202,6 +202,59 @@
       "description": "ISO 8601 duration, e.g. P30D, PT15M",
       "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$"
     },
+    "QuantityUnit": {
+      "type": "object",
+      "description": "How an item is sold and counted: the unit of one step, its scale and the ordering increment. unit is a UN/CEFACT Recommendation 20 common code. One step is 10^-scale of the unit, and a line quantity is a whole number of steps and MUST be a multiple of increment. When an item carries no QuantityUnit its unit is C62 (one piece) with scale 0 and increment 1, so the quantity is a count. Where the unit is C62 the scale MUST be 0.",
+      "required": [
+        "unit"
+      ],
+      "properties": {
+        "unit": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{2,3}$",
+          "description": "UN/CEFACT Recommendation 20 common code, for example C62 (one piece), KGM (kilogram), GRM (gram), LTR (litre), MLT (millilitre), DZN (dozen), TNE (tonne). A value that is not a code of that list is invalid."
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "default": 0,
+          "description": "One step is 10^-scale of the unit: with unit KGM and scale 3, one step is a gram. The maximum is 15."
+        },
+        "increment": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "The ordering granularity in steps. A quantity that is not a multiple of it is refused at the quantity's path and is never rounded."
+        },
+        "display_text": {
+          "$ref": "#/$defs/LangText",
+          "description": "The unit label in the languages the seller provides, for example {\"en-IN\": \"kg\", \"hi-IN\": \"किलो\"}. It is counterparty text and is spoken only as a labelled value."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "C62"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scale": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
     "IssueStatus": {
       "enum": [
         "Assert",
@@ -847,10 +900,11 @@
               "catalogue_disclosure",
               "plan",
               "items",
-              "acceptance_revocation"
+              "acceptance_revocation",
+              "unrequested_lines"
             ]
           },
-          "description": "The render fields beyond the base set of this version that the Trusted Surface presented: catalogue_disclosure, plan, items or acceptance_revocation. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure or plan, and on any step-up approval whose ts_render lists a name in render_required (the gateway refuses the event with 400 invalid_request if any such name is missing); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field. renders is the only extension point of Presentation."
+          "description": "The render fields beyond the base set of this version that the Trusted Surface presented: catalogue_disclosure, plan, items, unrequested_lines or acceptance_revocation. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure or plan, and on any step-up approval whose ts_render lists a name in render_required (the gateway refuses the event with 400 invalid_request if any such name is missing); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field. renders is the only extension point of Presentation."
         },
         "checkout_hash": {
           "$ref": "#/$defs/Hash",

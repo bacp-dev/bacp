@@ -11,7 +11,7 @@ This product includes software adapted from the Universal Commerce Protocol
   Version 2.0.
 
   The JSON Schemas under source/ucp/ are unmodified copies of files of the Universal Commerce Protocol
-  repository at commit a5e7cfe3a03392899b2199ff751be6ae7c928c8a, Copyright 2026 UCP Authors, licensed under the
+  repository at release tag v2026-08-25 (commit cd78fb38e819de77d9b527d110476eccb876f1bd), Copyright 2026 UCP Authors, licensed under the
   Apache License, Version 2.0 (see source/ucp/PINNED.txt).
 
 The way this site is built and published (MkDocs Material with mike,
