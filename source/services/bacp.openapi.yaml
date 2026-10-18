@@ -649,6 +649,10 @@ paths:
               groceryReservePay:
                 value:
                   purpose_code: P-GRO-01
+                  operator_compensation:
+                    from_principal:
+                    - basis: none
+                    from_sellers: none
                   rail: upi.reservepay.block
                   presence_allowed:
                   - HNP
@@ -691,6 +695,10 @@ paths:
               siblingReservePay:
                 value:
                   purpose_code: P-GRO-01
+                  operator_compensation:
+                    from_principal:
+                    - basis: none
+                    from_sellers: none
                   rail: in.upi.reservepay
                   checkout_mandate_ref: mdt_CHK7Q2W9X4K1M3
                   payee:
@@ -2135,6 +2143,10 @@ paths:
                           type: string
                         all_in_total:
                           $ref: '#/components/schemas/Amount'
+                        method_charge:
+                          $ref: '#/components/schemas/Amount'
+                          description: The sum of the payer-borne charge lines that apply only to this option's handlers (a convenience fee or a COD fee scoped
+                            to them). The gateway computes it; a value supplied by a counterparty is ignored. It is a log value, and no view labels it as who pays.
                         option_id:
                           type: string
                         chosen:
@@ -3004,6 +3016,14 @@ components:
                 $ref: '#/components/schemas/HandoffRoute'
               description: Typed routes to a human. MUST contain a tel route (with or without DTMF digits) when agent.channels includes voice, ivr
                 or upi123pay. A route stays usable after the principal's mandate is revoked.
+            compensation_model:
+              enum:
+              - none
+              - seller_paid
+              - principal_paid
+              - mixed
+              description: How the agent operator is paid, which is not at all, by sellers, by the principal, or by both. OPTIONAL. When present, the operator_compensation
+                of every mandate request signed with this credential MUST be consistent with it.
         data_residency:
           type: object
           description: "Optional data-residency statement (fail-safe default until Q-15 is settled). A gateway MUST NOT treat a missing or incomplete data_residency statement as permission to send payment data outside India; a gateway, Mandate Manager or PSP adapter stores and processes payment data only in India."
@@ -3303,6 +3323,30 @@ components:
             credit_funding_allowed:
               type: boolean
               description: Credit-funded handlers allowed.
+            convenience_fees:
+              type: object
+              description: Whether the agent may pay a convenience fee on its own, in a human-not-present checkout. When the field is absent, or a convenience
+                fee is not covered by it, a convenience fee line raises a confirm step-up (reason constraint_unresolved) before any money moves. A fee is
+                covered when allowed is true and the fee, in total for the order, is at or below max_per_order (or max_per_order is absent).
+              required:
+              - allowed
+              properties:
+                allowed:
+                  type: boolean
+                max_per_order:
+                  $ref: ../schemas/common.json#/$defs/Amount
+                  description: The largest total of convenience fee lines of one order that the agent may pay without asking. Meaningful only when allowed is true.
+              if:
+                properties:
+                  allowed:
+                    const: false
+                required:
+                - allowed
+              then:
+                not:
+                  required:
+                  - max_per_order
+              additionalProperties: false
           additionalProperties: false
         checkout_hash:
           $ref: '#/components/schemas/Hash'
@@ -3687,6 +3731,7 @@ components:
           required:
           - language
           - hash
+          - operator_compensation
           properties:
             language:
               type: string
@@ -3698,6 +3743,9 @@ components:
               format: uri
             translation_model:
               type: string
+            operator_compensation:
+              $ref: ../schemas/common.json#/$defs/OperatorCompensation
+              description: 'The operator compensation the principal saw in the notice. REQUIRED: a Mandate Manager MUST NOT activate a mandate whose notice did not state it.'
         captured_via:
           type: object
           required:
@@ -4339,6 +4387,9 @@ components:
           - discount_code_combination_disallowed
           - discount_code_user_ineligible
           - discount_code_unsupported
+          - payment_mode_fee_inconsistent
+          - refund_short_of_terms
+          - charge_recipient_unmapped
         origin:
           enum:
           - gateway
@@ -4522,6 +4573,13 @@ components:
                   $ref: '#/components/schemas/CatalogItem'
               within_mandate:
                 type: boolean
+              needs_principal_factor:
+                type: boolean
+                description: true when the seller accepts no handler that a human-not-present payment can use (it has no rung for a payment without
+                  the principal's own factor). The seller stays in the results and keeps its rank; the flag only tells the agent that the principal
+                  must pay it herself.
+              requires_principal_confirmation:
+                $ref: '#/components/schemas/PrincipalConfirmation'
               source_digest:
                 $ref: '#/components/schemas/SourceDigest'
               offers:
@@ -5107,9 +5165,202 @@ components:
           - tax
           - discount
           - cod_fee
+          - other_charge
           - total
         amount:
           $ref: '#/components/schemas/Amount'
+        applies_to_handlers:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            $ref: ../schemas/common.json#/$defs/HandlerRef
+          description: The payment handlers this line applies to. Allowed only when type is convenience_fee or cod_fee. A line without it applies to
+            every handler. A fee that applies to several handlers but not all is written as one line carrying them all.
+        recipient:
+          $ref: ../schemas/common.json#/$defs/ChargeRecipient
+          description: Who receives the line from the payer's money, as the seller's side signed it. REQUIRED when type is delivery, packing, convenience_fee,
+            cod_fee or other_charge. The gateway fills it from the BPP's signed value and never infers it from the type.
+        refund_rule:
+          enum:
+          - always
+          - before_dispatch
+          - never
+          description: Whether the line is refunded on a cancellation or return, as disclosed before commitment.
+      allOf:
+      - if:
+          required:
+          - applies_to_handlers
+        then:
+          properties:
+            type:
+              enum:
+              - convenience_fee
+              - cod_fee
+      - if:
+          properties:
+            type:
+              enum:
+              - delivery
+              - packing
+              - convenience_fee
+              - cod_fee
+              - other_charge
+          required:
+          - type
+        then:
+          required:
+          - recipient
+    OperatorCharge:
+      type: object
+      description: A per-order fee the principal pays to the agent operator, an assisted operator or the buyer app. The gateway asserts it, outside the
+        BPP quote and outside all_in_total. It discloses a fee; it is not a licence to charge one.
+      required:
+      - code
+      - amount
+      - recipient
+      properties:
+        code:
+          enum:
+          - agent_fee
+          - service
+        amount:
+          $ref: '#/components/schemas/Amount'
+        recipient:
+          enum:
+          - agent_operator
+          - assisted_operator
+          - buyer_app
+      additionalProperties: false
+    IntermediaryCompensation:
+      type: object
+      description: What a seller or the principal pays an intermediary for this order, copied by the gateway from the ONDC buyer finder fee, from np_fees
+        or from the operator's own declaration. It is a log and on-request value. It is never read out per order on the Trusted Surface and never added
+        to a total.
+      required:
+      - payee_role
+      - source
+      - basis
+      - value
+      - origin
+      properties:
+        payee_role:
+          enum:
+          - bap
+          - agent_operator
+        source:
+          enum:
+          - seller
+          - principal
+        basis:
+          enum:
+          - pct
+          - flat
+        value:
+          type: integer
+          minimum: 0
+          description: In basis points when basis is pct, and in integer paise when basis is flat.
+        amount:
+          $ref: '#/components/schemas/Amount'
+          description: The amount for this order, where it is known.
+        origin:
+          enum:
+          - ondc_bff
+          - np_fees
+          - operator_declared
+      additionalProperties: false
+    ChargeLine:
+      type: object
+      description: One line of the fee read-out of a ts_render. The lines of charge_lines[] add up to the ts_render total.
+      required:
+      - code
+      - amount
+      properties:
+        code:
+          enum:
+          - convenience
+          - platform
+          - payment_handling
+          - handling
+          - cod_fee
+          - agent_fee
+          - service
+          - remainder
+          description: Every fee line the Trusted Surface reads one at a time, whoever receives it, and remainder for everything else (goods, delivery,
+            packing and tax) as one figure.
+        amount:
+          $ref: '#/components/schemas/Amount'
+        recipient:
+          $ref: ../schemas/common.json#/$defs/ChargeRecipient
+          description: Who receives the line, where the quote or the gateway states it.
+      additionalProperties: false
+    RefundCharge:
+      type: object
+      description: A charge line of an order that a refund returned or kept.
+      required:
+      - code
+      - amount
+      properties:
+        code:
+          enum:
+          - delivery
+          - packing
+          - convenience
+          - platform
+          - handling
+          - cod_fee
+          - payment_handling
+          - insurance
+          - installation
+          - loading
+          - market_fee
+          - commission
+          - rto_fee
+          - restocking_fee
+          - return_shipping
+          - agent_fee
+          - service
+          - other
+        amount:
+          $ref: '#/components/schemas/Amount'
+        refund_rule:
+          enum:
+          - always
+          - before_dispatch
+          - never
+          description: The rule disclosed for the line before the principal committed. REQUIRED on a line in charges_retained.
+      additionalProperties: false
+    PrincipalConfirmation:
+      type: object
+      description: A seller's declaration that it wants the principal to confirm certain orders herself. It MUST NOT change a price or a handler. The
+        gateway raises a confirm step-up (reason constraint_unresolved) for an order it covers, and logs how often each seller does so.
+      required:
+      - reason
+      properties:
+        reason:
+          enum:
+          - made_to_order
+          - age_restricted
+          - high_value_cod
+        above_amount:
+          $ref: '#/components/schemas/Amount'
+          description: For high_value_cod, the order amount above which the seller wants the confirmation. REQUIRED for high_value_cod and absent
+            for the other reasons.
+      allOf:
+      - if:
+          properties:
+            reason:
+              const: high_value_cod
+          required:
+          - reason
+        then:
+          required:
+          - above_amount
+        else:
+          not:
+            required:
+            - above_amount
+      additionalProperties: false
     Disclosures:
       type: object
       description: Mandatory pre-commit disclosures as given by the BPP, hashed into accepted_disclosures_hash
@@ -5392,7 +5643,16 @@ components:
           $ref: '#/components/schemas/Hash'
         total:
           $ref: '#/components/schemas/Amount'
-          description: The total as one figure. On a summary step-up, the sum of basket[].amount.
+          description: The total the principal pays, as one figure. It is the quote total plus the sum of the session's operator_charges. On a summary
+            step-up, the sum of basket[].amount.
+        charge_lines:
+          type: array
+          minItems: 1
+          description: The fee read-out of a step-up that pays for an order, before the factor. One entry for each fee line (convenience, platform, payment_handling,
+            handling, cod_fee, and every operator charge), then one remainder entry for everything else. The amounts add up to total. The Trusted
+            Surface reads each line from its own templates, never from seller text. An order with no fee line has no charge_lines.
+          items:
+            $ref: '#/components/schemas/ChargeLine'
         price_breakup_hash:
           $ref: '#/components/schemas/Hash'
         seller_name:
@@ -5676,6 +5936,19 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Total'
+        operator_charges:
+          type: array
+          description: Per-order fees the principal pays to the agent operator, an assisted operator or the buyer app. The gateway asserts them; they
+            are never inside the BPP quote, and all_in_total and the quote total stay equal to the Beckn quote.price. The amount the principal pays,
+            the ts_render total and the amount checked against the mandate are the quote total plus the sum of these lines.
+          items:
+            $ref: '#/components/schemas/OperatorCharge'
+        intermediary_compensation:
+          type: array
+          description: What a seller or the principal pays an intermediary for this order, copied unchanged from the ONDC buyer finder fee and np_fees,
+            or from the operator's declaration. It is logged at the disclosure stage and given to the principal on request.
+          items:
+            $ref: '#/components/schemas/IntermediaryCompensation'
         quote:
           type: object
           properties:
@@ -5782,7 +6055,14 @@ components:
       - presence_allowed
       - proposed_constraints
       - validity
+      - operator_compensation
       properties:
+        operator_compensation:
+          $ref: ../schemas/common.json#/$defs/OperatorCompensation
+          description: What the agent operator, an assisted operator or the buyer app is paid for acting for the principal. REQUIRED. The Mandate Manager
+            shows it in the notice, hashes it into the ConsentReceipt notice and refuses to activate the mandate without it (400 invalid_request at
+            $.operator_compensation). When the signing AgentCredential has disclosure.compensation_model, the value MUST be consistent with it, or the
+            request is refused with 400 invalid_request at $.operator_compensation.
         purpose_code:
           type: string
           description: "Code from the BACP purpose-code registry (Sahamati Fair Use analogue), e.g. P-GRO-01 household grocery replenishment. The purpose fixes the categories, maximum validity, monetary bounds and data scopes the mandate may request. The registry is governed by the BACP working group: a new code or a changed bound ships only in a dated release. A purpose_code that is not in the registry MUST be refused with 403 mandate_scope_mismatch (settled in Q-47)."
@@ -6097,6 +6377,18 @@ components:
                 type: string
               amount:
                 $ref: '#/components/schemas/Amount'
+              charges_refunded:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RefundCharge'
+              charges_retained:
+                type: array
+                items:
+                  allOf:
+                  - $ref: '#/components/schemas/RefundCharge'
+                  - required:
+                    - refund_rule
+                description: On a cancellation or refund adjustment, the charge lines kept, each disclosed before commitment and carrying its refund_rule.
               receipt_id:
                 type: string
               at:
@@ -6211,6 +6503,20 @@ components:
               - FAILED
             amount:
               $ref: '#/components/schemas/Amount'
+            charges_refunded:
+              type: array
+              items:
+                $ref: '#/components/schemas/RefundCharge'
+              description: The charge lines the refund returns.
+            charges_retained:
+              type: array
+              items:
+                allOf:
+                - $ref: '#/components/schemas/RefundCharge'
+                - required:
+                  - refund_rule
+              description: The charge lines the refund keeps. Each was disclosed before commitment and carries its refund_rule. A refund below the amount
+                paid that does not match these lines gets the refund_short_of_terms message.
             to:
               const: original_method
             receipt:
@@ -7068,6 +7374,10 @@ components:
           language: hi-IN
           hash: sha-256:c29tAz3q3Uw5cyPEZkdHi7vjmlitXMTweOjGCPxYMgU
           uri: https://mm.psp.example.in/notices/n-551
+          operator_compensation:
+            from_principal:
+            - basis: none
+            from_sellers: none
         captured_via:
           surface: psp.example.in/app
           user_action: upi_pin
@@ -7255,6 +7565,7 @@ components:
             value: 26700
             currency: INR
         - type: delivery
+          recipient: seller
           amount:
             value: 3500
             currency: INR

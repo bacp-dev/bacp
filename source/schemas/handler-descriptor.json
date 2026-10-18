@@ -467,10 +467,12 @@
               "cheque_no",
               "uetr",
               "ledger_entry_id",
+              "payee_mcc",
               "awb",
               "none"
             ]
-          }
+          },
+          "description": "The keys a receipt of this handler may carry (the others in rail.evidence). payee_mcc, carried in rail.evidence, is the merchant category code of the UPI merchant tag (NPCI/UPI/CC/01 para 7.2), listed only where a payer PSP can pass it on; it lets a receipt show whether the payee was categorised as a small merchant (P2PM). It is optional, and an absent value means unknown, not a small merchant."
         },
         "escrow": {
           "enum": [

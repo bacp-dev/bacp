@@ -110,7 +110,8 @@
    "mechanism": "NPCI UPI settlement cycles (10 authorisation cycles a day, separate dispute cycles OC 222)",
    "evidence_refs": [
     "rrn",
-    "utr"
+    "utr",
+    "payee_mcc"
    ],
    "escrow": "pa_escrow"
   },
@@ -268,7 +269,8 @@
    "mechanism": "NPCI UPI settlement cycles (10 authorisation cycles a day, separate dispute cycles OC 222)",
    "evidence_refs": [
     "rrn",
-    "utr"
+    "utr",
+    "payee_mcc"
    ],
    "escrow": "pa_escrow"
   },
@@ -419,7 +421,8 @@
    "mechanism": "NPCI UPI settlement cycles (10 authorisation cycles a day, separate dispute cycles OC 222)",
    "evidence_refs": [
     "rrn",
-    "utr"
+    "utr",
+    "payee_mcc"
    ],
    "escrow": "pa_escrow"
   },
@@ -1799,7 +1802,8 @@
    "mechanism": "NPCI UPI settlement cycles (10 authorisation cycles a day, separate dispute cycles OC 222)",
    "evidence_refs": [
     "rrn",
-    "utr"
+    "utr",
+    "payee_mcc"
    ],
    "escrow": "pa_escrow"
   },

@@ -52,7 +52,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-17](#q-17) | DPDP forward compliance (May 2027 duties) | MeitY/DPDP | Open |
 | [Q-18](#q-18) | Machine-readable list of authorised payment aggregators | RBI | Open |
 | [Q-19](#q-19) | Waiver of the right to revoke an acceptance | Legal counsel | Open |
-| [Q-20](#q-20) | Fees and the MRP ceiling; Rule 3 exemption | Legal counsel | Open, fail-safe default |
+| [Q-20](#q-20) | Fees and the MRP ceiling; Rule 3 and Rule 26 exemptions | Legal counsel | Open, fail-safe default |
 | [Q-21](#q-21) | MSMED coverage of traders; deemed acceptance | Legal counsel | Open |
 | [Q-22](#q-22) | Penalty for breach of a firm offer | ONDC | Open |
 | [Q-23](#q-23) | Escrow key for negotiation transcripts | ONDC | Open |
@@ -83,7 +83,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-48](#q-48) | Agent signature on negotiation message bodies | BACP WG | Open |
 | [Q-49](#q-49) | Signal for refund settlement | NPCI | Open |
 | [Q-50](#q-50) | Cross-seller split-order detection | BACP WG | Open |
-| [Q-51](#q-51) | Payment aggregator marketplace limits and settlement ETA | RBI | Open |
+| [Q-51](#q-51) | Payment aggregator marketplace limits | RBI | Open |
 | [Q-52](#q-52) | Indian Contract Act timing rules | Legal counsel | Open, fail-safe default |
 | [Q-53](#q-53) | Final DPDP commencement dates | MeitY/DPDP | Settled |
 | [Q-54](#q-54) | BACP operator as card token requestor | RBI | Open |
@@ -110,6 +110,10 @@ are involved, the owner is the one that must give the answer.
 | [Q-75](#q-75) | Zero-payable orders | BACP WG | Open |
 | [Q-76](#q-76) | Gateway-funded and buyer-app-funded discounts | BACP WG | Open |
 | [Q-77](#q-77) | Whether a standing open mandate on UPI Circle is "explicit user action" (NPCI OC 201B) | NPCI, Legal counsel | Open, fail-safe default |
+| [Q-78](#q-78) | Where a convenience fee must be disclosed when an agent selects the payment mode (NPCI/UPI/CC/01 para 7.5) | NPCI, Legal counsel | Open, fail-safe default |
+| [Q-79](#q-79) | Operator fees and commissions: duty to disclose, FAQ Q17, Rules r.5(7), tax | Legal counsel | Open |
+| [Q-80](#q-80) | ONDC recipient on the breakup, `misc` and the collector's MDR | ONDC | Open, fail-safe default |
+| [Q-81](#q-81) | Retained payment charges, MDR on refunds and on UPI mandates | Legal counsel, NPCI | Open, fail-safe default |
 
 ## Questions {#questions}
 
@@ -394,21 +398,25 @@ REST, MCP or A2A no value is permitted, so only non-firm offers are possible the
     to T1-32 cover the six fail-safe defaults).
 
 **Question.** Do delivery, packing or convenience fees count toward the MRP? What exactly is the Legal Metrology
-Rule 3 exemption (industrial or institutional packs, packs above 25 kg)?<br>
+exemptions: Rule 3 (application of Chapter II: packs above 25 kg or 25 L, cement, fertiliser and farm produce in bags
+above 50 kg, packs for industrial or institutional consumers) and Rule 26 (exemption from the Rules as a whole, for
+example packs of 10 g or 10 ml or less, and loose commodities ordered through e-commerce channels)?<br>
 **Owner.** Legal counsel.
 
 **Findings.** Rule 18(2) of the Legal Metrology (Packaged Commodities) Rules, 2011 bars selling a packaged commodity
-above its MRP (Lok Sabha Unstarred Question 4362, answered 26-03-2025). The Rule 3 exemptions (packages above
-25 kg or 25 L; cement, fertiliser and agricultural farm produce in bags above 50 kg; packages for industrial or
-institutional consumers) come only from a 2022 secondary consolidation; the Rules text was not verified against the
-Gazette as of 17-10-2026. No official source was found on whether delivery, packing or convenience fees count toward
+above its MRP (Lok Sabha Unstarred Question 4362, answered 26-03-2025). Rule 3, as substituted by G.S.R. 629(E)
+(23-06-2017), takes three classes out of Chapter II only: packages above 25 kg or 25 L; cement, fertiliser and
+agricultural farm produce in bags above 50 kg; and packages for industrial or institutional consumers. Rule 26 exempts
+certain packages from the Rules as a whole. Both were read in the official PDFs and, per the Department of Consumer
+Affairs list of amendments, Rule 3 is unchanged since 2017 (checked 18-10-2026; the Gazette portal itself was not
+searched). No official source was found on whether delivery, packing or convenience fees count toward
 the MRP.
 
 **Fail-safe default.** Until Q-20 is settled, the MRP ceiling (validator V-01) is applied in its stricter reading:
 
 - In a B2C negotiation, every line that carries an `mrp` is checked against it, whatever its
-  `retail_package_mrp_required` value. The Rule 3 exemptions, signalled by `retail_package_mrp_required: false`,
-  are honoured only in B2B.
+  `retail_package_mrp_required` value. The Rule 3 and Rule 26 exemptions, signalled by
+  `retail_package_mrp_required: false`, are honoured only in B2B.
 - Mandatory `packing` and `convenience` charges count toward the MRP: for the lines checked against MRP, the sum of
   unit price including tax times quantity, plus every mandatory `packing` and `convenience` charge of the term
   sheet, MUST NOT exceed the sum of `mrp` times quantity.
@@ -652,11 +660,13 @@ the seller?<br>
 
 ### Q-51 PA marketplace limits {#q-51}
 
-**Question.** How are the payment aggregator marketplace limits (PA Master Direction paras 10(b), 13(f)) and a
-`settlement_eta` from the PA–merchant agreement represented, and what is the "only onboarded sellers" check?<br>
+**Question.** How are the payment aggregator marketplace limits (PA Master Direction paras 10(b), 13(f)) represented,
+and what is the "only onboarded sellers" check?<br>
 **Owner.** RBI.
 
-**Working position.** None yet.
+**Working position (18-10-2026).** BACP has no `settlement_eta`. The seller's settlement terms are ONDC's
+`settlement_basis`, `settlement_window` and `withholding_amount`, carried unchanged ([Who pays](payments/economics.md#settlement)).
+The question stays open with RBI only for the marketplace limits.
 
 ### Q-52 Contract Act timing {#q-52}
 
@@ -970,6 +980,63 @@ whose scope includes it is listed and the gateway's attestation lists it, until 
 answer. A Mandate Manager refuses an open mandate request on `in.upi.circle` with `rail_binding_not_open_eligible`. A
 human-present payment through Circle is unaffected. See [UPI Circle](payments/rails.md#upi-circle-delegate).
 
+### Q-78 Where a convenience fee is disclosed when an agent selects the payment mode {#q-78}
+
+**Question.** NPCI/UPI/CC/01 para 7.5 asks the Payee PSP to disclose a convenience fee "upfront to the User on the merchant
+payment page(s) prior to the selection of the payment mode", and to keep it consistent across the available debit
+payment modes (net banking, debit card, UPI and credit card). When an agent selects the mode, is a Trusted Surface
+reading, or the mandate notice with a `convenience_fees` constraint, disclosure "to the User" before that selection?
+Does "credit card" sit inside "debit payment modes", are PPI wallets debit payment modes, and does para 7.5 reach
+`in.cod.upi`?<br>
+**Owner.** NPCI, Legal counsel.
+
+**Working position (fail-safe default).** The gateway warns with `payment_mode_fee_inconsistent` and never refuses.
+In human-present checkouts the Trusted Surface shows the fee before the factor. In HNP the warning raises a `confirm`
+step-up, and a convenience fee that the mandate's `convenience_fees` does not cover raises one too. A warning that
+proves a false positive is narrowed by data, and no money moves on it. See
+[Fees on the payer's screen](checkout/index.md#fee-lines).
+
+### Q-79 Operator fees and commissions {#q-79}
+
+**Question.** Must an agent acting for a buyer disclose a commission that a seller pays it? Does NPCI FAQ Q17 ("UPI App
+providers shall NOT charge Platform Fee or any other charge") reach an agent operator that is a UPI application
+provider? Is a per-order operator fee a "bundled fee" under rule 5(7) of the Consumer Protection (E-Commerce) Rules,
+2020 (from 01-01-2027), and is a BACP gateway or agent operator an "e-commerce entity" or "marketplace e-commerce
+entity" (rule 3(1)(b), (g))? What is the GST treatment of an operator fee line, and which BACP party is the "operator"
+for CGST s.52 TCS and Income-tax Act s.194-O TDS?<br>
+**Owner.** Legal counsel.
+
+**Working position.** No Indian rule was found that requires an operator to disclose a seller-paid commission (not
+verified as of 18-10-2026). BACP requires the declaration in the mandate notice as its own policy
+([Operator compensation](mandates.md#operator-compensation)), and the `operator_charges[]` line discloses a fee without
+licensing one.
+
+### Q-80 ONDC recipient on the breakup {#q-80}
+
+**Question.** Does the ONDC breakup carry a recipient for a charge line? Is `misc` the carrier for convenience fees, and
+is the `np_fees` channel margin payer-borne? Who bears the collector's P2M MDR when the buyer app collects
+(`collected_by: BAP`), and does RSF carry it as a deduction line? Does a P2PM seller keep zero MDR on orders that a
+network participant collects?<br>
+**Owner.** ONDC.
+
+**Working position (fail-safe default).** BACP publishes its own `title_type` to `recipient` mapping
+([Charge recipient mapping](transports/beckn.md#recipient-mapping)). An unmapped type is kept with `recipient: other`
+and a warning, never a refusal. The mapping changes when ONDC answers; the field names stay.
+
+### Q-81 Retained payment charges, MDR on refunds and on UPI mandates {#q-81}
+
+**Question.** May a disclosed non-refundable payment charge (`convenience`, `payment_handling`, `platform`) be kept,
+including on a return for a defective, deficient, spurious or late item, and how does the symmetry of rule 4(8) of the
+Rules apply? Does netting MDR off a refund breach rule 6(3) or 7(4)? Is MDR reversed on refunds and on TAT reversals?
+Do Reserve Pay and OTM count as "UPI Mandates" under NPCI FAQ Q22 (no prescribed MDR)? Is splitting a payment below
+₹2,000 permitted, and is the pricing circular behind FAQ Q17 and Q34 binding?<br>
+**Owner.** Legal counsel, NPCI.
+
+**Working position (fail-safe default).** A refund below the amount paid must match the lines in `charges_retained[]`,
+or the gateway returns `refund_short_of_terms` without blocking the refund. No conformance case passes a retained
+payment-related charge, or a retention on a return for a defect, until this is answered. A refund is never reduced by
+MDR or aggregator fees. See [Refunds](payments/index.md#refunds).
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
@@ -1257,4 +1324,6 @@ action is open ([Q-65](#q-65)).
 | Is a rail-cap breach an escalation or an error? | Only AFA thresholds escalate; other caps return 403 `rail_limit_exceeded` ([Errors](errors.md#registry-mandate)). |
 | How are colliding handler aliases resolved? | Exact beats glob; see [Handler Registry](payments/handler-registry.md). Naming governance is settled in [Q-28](#q-28). |
 | What evidence do non-UPI receipts carry? | `rail.evidence` keyed by the descriptor's evidence references; see [Rail Bindings](payments/rails.md). |
+| Does BACP carry fee allocation (MDR, aggregator commission, finder fee, `settlement_eta`)? | No (18-10-2026). BACP makes normative what the principal pays and to whom, and keeps the seller's own costs informative ([Who pays](payments/economics.md)). |
+| Is a seller or agent `human_confirmation_required` field adopted? | No (18-10-2026). Sellers already refuse unattended payment through `accepted_handlers` and COD refusal. The guarded alternative is the seller `requires_principal_confirmation` profile, which MUST NOT change a price or a handler ([Discovery](discovery.md#principal-confirmation)). |
 | Is per-mandate evaluation atomic? | Yes, within one gateway, keyed on the root open checkout mandate ([Security and Privacy](security-and-privacy.md#atomic-reservation)); across gateways see [Q-36](#q-36). |

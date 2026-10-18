@@ -296,6 +296,41 @@
         "credit_funding_allowed": {
           "type": "boolean",
           "description": "Credit-funded handlers allowed."
+        },
+        "convenience_fees": {
+          "type": "object",
+          "description": "Whether the agent may pay a convenience fee on its own, in a human-not-present checkout. When the field is absent, or a convenience fee is not covered by it, a convenience fee line raises a confirm step-up (reason constraint_unresolved) before any money moves. A fee is covered when allowed is true and the fee, in total for the order, is at or below max_per_order (or max_per_order is absent).",
+          "required": [
+            "allowed"
+          ],
+          "properties": {
+            "allowed": {
+              "type": "boolean",
+              "description": "true: the agent may pay a convenience fee up to max_per_order without asking. false: every convenience fee raises the step-up."
+            },
+            "max_per_order": {
+              "$ref": "common.json#/$defs/Amount",
+              "description": "The largest total of convenience fee lines of one order that the agent may pay without asking. Meaningful only when allowed is true."
+            }
+          },
+          "if": {
+            "properties": {
+              "allowed": {
+                "const": false
+              }
+            },
+            "required": [
+              "allowed"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "max_per_order"
+              ]
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false

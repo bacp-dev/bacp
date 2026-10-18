@@ -434,6 +434,7 @@ one deliberate exception: authority is never extended silently.
 | [Handler Registry](../payments/handler-registry.md) | Payment handlers, binding classes, alias resolution, intersection |
 | [Rail Bindings](../payments/rails.md) | UPI Reserve Pay, Circle, AutoPay and other rail rules |
 | [Credit and Split Tender](../payments/credit-and-split-tender.md) | Split tender, credit ledgers, loans, COD |
+| [Who Pays](../payments/economics.md) | What the principal pays and to whom; MDR, fees and refunds (informative) |
 | [Evidence and Instruction Log](../evidence.md) | Instruction log, receipts, evidence bundle, grievances |
 | [Trade Profiles](../trade-profiles.md) | Roles and profiles for Indian trade models |
 | [Errors](../errors.md) | Error model and code registry |

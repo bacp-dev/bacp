@@ -58,6 +58,7 @@ nav:
           - Handler Registry: specification/payments/handler-registry.md
           - Rail Bindings: specification/payments/rails.md
           - Credit and Split Tender: specification/payments/credit-and-split-tender.md
+          - Who Pays: specification/payments/economics.md
       - Evidence and Instruction Log: specification/evidence.md
       - Trade Profiles: specification/trade-profiles.md
       - Errors: specification/errors.md

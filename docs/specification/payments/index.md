@@ -135,10 +135,12 @@ The presence filter is:
 The eligible set is then ordered by:
 
 1. the user's own designated preference. The order MUST NOT be steered by incentives to the platform, network or PSP;
-2. the lowest all-in total, including method-specific fees and discounts (a COD fee, a convenience fee);
+2. the lowest all-in total, counting only the payer-borne lines that apply to the handler (a COD fee or a convenience fee
+   scoped to it by `applies_to_handlers`, an unscoped line, and the session's operator charges), and discounts. The seller's
+   own costs are never in the total ([Fees on the payer's screen](../checkout/index.md#fee-lines));
 3. the lowest authentication friction at this presence.
 
-Every excluded handler is reported with a reason, for example `not_in_registry`, `pilot_not_attested`, `not_accepted_by_seller`, `not_in_mandate`, `presence_handler_mismatch`, `above_limit`, `instrument_unavailable`, `card_not_enabled_for_cnp`, `reservepay_block_wrong_payee`, `cod_open_orders_cap` or `credit_funding_not_allowed`. The response also carries a `comparison[]` of every option and its total, and the comparison is written to the instruction log so that the user can see why a method was chosen.
+Every excluded handler is reported with a reason, for example `not_in_registry`, `pilot_not_attested`, `not_accepted_by_seller`, `not_in_mandate`, `presence_handler_mismatch`, `above_limit`, `instrument_unavailable`, `card_not_enabled_for_cnp`, `reservepay_block_wrong_payee`, `cod_open_orders_cap` or `credit_funding_not_allowed`. The response also carries a `comparison[]` of every option and its total, and the comparison is written to the instruction log so that the user can see why a method was chosen. Each entry may carry a `method_charge`: the sum of the scoped payer-borne lines for that option, computed by the gateway. A `method_charge` or `fee_bearer` value that a counterparty supplies is ignored, and the value is a log value that no view labels as "who pays". The gateway MUST NOT put the merchant discount rate, the payment aggregator's commission, the finder fee or a net-settlement amount in a `comparison[]` total, and gives the warning `payment_mode_fee_inconsistent` where [convenience fees differ across debit modes](../checkout/index.md#fee-lines).
 
 - An empty intersection returns 200 with message `handlers_incompatible` (`requires_buyer_input`). The same code is a 403 when it blocks the caller's own ACCEPT.
 - A Reserve Pay block is payable only to one seller. The intersection MUST exclude `in.upi.reservepay` unless a block payable to this seller exists. A seller that lacks only a block keeps its rank and is offered a human-present payment; it is not dropped.
@@ -171,6 +173,7 @@ Every money movement is evidenced by a receipt signed by the party that acted, n
 - **UPI family** (`in.upi.*`, `in.cod.upi`, `in.pos.tap`, `in.pos.dynamic_qr` and their aliases): a successful receipt MUST carry a 12-digit `rrn`, and MUST carry `utr` whenever the descriptor's `settlement.evidence_refs` lists `utr`. `in.upi.lite` and `in.upi.intl` list RRN only.
 - **Other handlers**: a successful receipt MUST carry at least one of `rrn`, `utr` or `rail.evidence`. The keys of `rail.evidence` MUST come from the descriptor's `settlement.evidence_refs`, for example `arn` and `auth_code` for cards, `umrn` for NACH, `voucher_id` for e-RUPI, `loan_id` for credit, `ledger_entry_id` for store credit and the credit ledger, `bconnect_txn_id` for BBPS, `cbdc_txn_id`, `uetr` and `pa_order_id`.
 - `rail.evidence` MUST NOT contain anything in the descriptor's `never_collect` list.
+- A receipt that the principal can see, and `rail.evidence`, never carry the merchant discount rate, the payment aggregator's commission or a net-settlement amount. This follows from the rule that evidence keys come from `settlement.evidence_refs`, and no descriptor lists a fee key. `payee_mcc`, the merchant category code of the UPI merchant tag, is an optional evidence key that a UPI merchant-payment descriptor may list; it lets a receipt show whether the payee was categorised as a small merchant. An absent value means unknown. Whether a payer PSP can see the tag is not verified as of 18-10-2026.
 - Cash COD moves no money through a rail, so it has no payment receipt. The order records the collection against the AWB, with no escrow reference.
 - The remaining mandate budget (`budget_after`) is computed by the gateway after it applies a signed receipt, and is returned unsigned on the session. It MUST NOT appear inside a signed receipt.
 - Webhooks never embed a signed receipt. They carry a `ReceiptRef` with `receipt_hash`, and the agent fetches the full receipt and checks the hash. See [Evidence and Instruction Log](../evidence.md).
@@ -190,6 +193,15 @@ A refund receipt MUST identify the original payment (`original_rrn`, `original_u
 ## Refunds
 
 **Default: to the original method.** A refund goes back to the instrument that paid (RBI PA Master Direction 2025 para 10(f)), routed through the PA escrow. A refund goes to store credit or to another mode owned by the payer only on the payer's explicit instruction; otherwise the gateway refuses it with `refund_not_to_source`. Refunds do not restore a mandate budget.
+
+**What a refund returns.** BACP states what the principal gets back as charge lines, not as a rate.
+
+- A reversal (`debited_not_confirmed`, a failed debit) **MUST** credit the full debit.
+- A cancellation or return refund below the amount paid **MUST** match lines in `charges_retained[]` of the refund record. Each retained line was disclosed before commitment, carries a `refund_rule` (`always`, `before_dispatch` or `never`), and is a retention that the Consumer Protection (E-Commerce) Rules, 2020 permit. The record also carries `charges_refunded[]`.
+- Otherwise the gateway returns the message `refund_short_of_terms` (`requires_buyer_review`, with the IGM route). The gateway never blocks the refund or holds the money: refund routing is the aggregator's and the banks' duty (PA Master Direction 2025 para 8(b)).
+- A refund is never reduced by the merchant discount rate or the aggregator's fees.
+- Rules 6(3) and 7(4) of the Rules bar a refusal to refund for defective, deficient, spurious or late goods, and rule 4(8) makes cancellation charges symmetric. Whether a disclosed non-refundable payment charge (`convenience`, `payment_handling`, `platform`) may be kept at all, including on a return for a defect, is open with counsel ([Q-81](../open-questions.md#q-81)). Until it is answered, no conformance case passes a retained payment-related charge as valid, and none passes a retention on a return for defective, deficient, spurious or late goods.
+- This holds whatever NPCI decides about MDR on refunds. No public NPCI or RBI text found says whether MDR is reversed on a refund (not verified as of 18-10-2026).
 
 **Never into a PPI where the PPI rules forbid it.** Refunds of card, UPI or net-banking payments MUST NOT be credited to an RBI-regulated PPI (wallet, PPI card, gift PPI), even if the user asks (PPI Master Direction 2021 para 14.3 has no consent exception). The gateway refuses with `refund_to_ppi_forbidden`. In the other direction, a refund of a PPI-funded payment MUST go back to the same PPI immediately, even if this takes it above the PPI's limits (para 14.3).
 

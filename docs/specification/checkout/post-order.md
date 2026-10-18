@@ -182,7 +182,11 @@ principal's protective write.
 - **Partial quantities** are allowed. Each item **MUST** be on the order, and for each item the
   quantity in this request plus the quantities in earlier returns on the same order **MUST NOT**
   exceed the ordered quantity. Otherwise `403 return_not_allowed` at `$.items[i]`.
-- The refund amount is the item's unit price times the returned quantity.
+- The refund amount is the item's unit price times the returned quantity, plus the charge lines the order's terms refund
+  and less any charge line the terms disclosed as retained. The refund record carries `charges_refunded[]` and
+  `charges_retained[]`; a retained line carries the `refund_rule` that was disclosed before commitment. A refund that is
+  below the amount paid and does not match `charges_retained[]` gets the message `refund_short_of_terms`
+  ([Refunds](../payments/index.md#refunds)).
 - `reason_code` comes from the seller's `get_return_reasons`. Evidence is carried as hashes and
   URIs; the media stays with the agent operator.
 - The gateway sends Beckn `update` with `update_target: item` and returns `202` with a
@@ -233,6 +237,10 @@ receipt) or `FAILED`. A rejected return sets `refund.status: FAILED`. Each chang
   as `pending_cardholder_consent` and `adjusted_against_dues`; see
   [Payments](../payments/index.md) and [Credit and Split Tender](../payments/credit-and-split-tender.md).
 - A refund **MUST NOT** restore any mandate budget ([Mandates](../mandates.md#usage-ledger)).
+- A refund below the amount paid **MUST** match the lines in `charges_retained[]` (the same rule on a cancellation
+  adjustment); otherwise the gateway returns `refund_short_of_terms` (`requires_buyer_review`, with the IGM route) and does
+  not block or hold the refund. A refund is never reduced by the merchant discount rate or the aggregator's fees
+  ([Refunds](../payments/index.md#refunds)).
 - Every refund appends a `refund` adjustment with its `receipt_id` and sends `payment.receipt` with a
   `ReceiptRef`. A failed refund appends a `refund` adjustment with a `FAILED` status.
 

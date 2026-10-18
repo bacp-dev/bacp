@@ -89,6 +89,7 @@
     "charges": [
       {
         "code": "delivery",
+        "recipient": "seller",
         "amount": {
           "value": {
             "value": 6000,

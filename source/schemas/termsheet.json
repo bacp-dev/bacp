@@ -283,8 +283,12 @@
               "loading",
               "market_fee",
               "commission",
+              "rto_fee",
+              "restocking_fee",
+              "return_shipping",
               "other"
-            ]
+            ],
+            "description": "What the charge is. These are charges the payer owes. The seller's own costs (merchant discount rate, payment aggregator commission, finder fee) are never charge codes."
           },
           "amount": {
             "allOf": [
@@ -306,7 +310,29 @@
             "type": "boolean"
           },
           "payment_method_specific": {
-            "$ref": "common.json#/$defs/HandlerRef"
+            "$ref": "common.json#/$defs/HandlerRef",
+            "description": "The one payment handler this charge applies to. A charge with neither this nor applies_to_handlers applies to every handler. Use applies_to_handlers for a charge that applies to several handlers but not all."
+          },
+          "applies_to_handlers": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "$ref": "common.json#/$defs/HandlerRef"
+            },
+            "description": "The payment handlers this charge applies to. A charge with neither this nor payment_method_specific applies to every handler. It MUST NOT appear together with payment_method_specific."
+          },
+          "recipient": {
+            "$ref": "common.json#/$defs/ChargeRecipient",
+            "description": "Who receives the charge from the payer's money, as the seller's side signed it. REQUIRED. The gateway never infers it from the charge code; for a charge that arrives over Beckn it applies the published title_type mapping of the Beckn binding."
+          },
+          "refund_rule": {
+            "enum": [
+              "always",
+              "before_dispatch",
+              "never"
+            ],
+            "description": "Whether the charge is refunded on a cancellation or return: always, only before dispatch, or never. It MUST have been disclosed before the principal committed. A refund below the amount paid is lawful only for a charge disclosed as retained and only where the Consumer Protection (E-Commerce) Rules, 2020 permit it."
           },
           "first_disclosed_round": {
             "type": "integer",
@@ -317,8 +343,15 @@
         "required": [
           "code",
           "amount",
-          "mandatory"
+          "mandatory",
+          "recipient"
         ],
+        "not": {
+          "required": [
+            "payment_method_specific",
+            "applies_to_handlers"
+          ]
+        },
         "additionalProperties": false
       }
     },

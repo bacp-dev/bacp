@@ -172,6 +172,7 @@ the mapping below is normative.
 | `tax_inclusive` | item TagGroup `bacp.disclosure`, tag `tax_inclusive` (`"true"` or `"false"`) | An absent tag means an absent field |
 | `prior_price.amount`, `.basis`, `.announced_on` | `bacp.disclosure` tags `prior_price`, `prior_price_basis`, `prior_price_announced_on` | `basis` MUST be `lowest_30d`; the date is an ISO `YYYY-MM-DD` date |
 | `sponsorship`, party `bpp` | `bacp.disclosure` tags `sponsored` (`"true"`) and `sponsored_by` (`bpp`) | Combined with the gateway's own statements by the monotone OR rule |
+| `requires_principal_confirmation` | provider TagGroup `bacp.confirmation`, tags `reason` (`made_to_order`, `age_restricted` or `high_value_cod`) and `above_amount` (a decimal rupees string) | `above_amount` is REQUIRED for `high_value_cod` and absent otherwise; it follows the decimal rule below. The same tags in an `on_init` order that the seller did not declare at discovery are an undeclared confirmation ([Seller confirmation profile](../discovery.md#principal-confirmation)) |
 
 `price.listed_value` and `price.offered_value` never map to `prior_price`, and the gateway MUST NOT derive a `prior_price`
 from any Beckn `Price` field. Until ONDC publishes catalogue tags for sponsored listings and prior prices
@@ -191,6 +192,31 @@ normalisation.
 is the integer part times 100 plus the fractional part right-padded to two digits, computed on the string and never in
 floating point. Any other form (a JSON number, a sign, an exponent, a leading zero, more than two decimals) makes the
 field absent, and the gateway reports `prior_price_invalid` when the field was `prior_price`.
+
+### Charge recipient mapping {#recipient-mapping}
+
+A BACP quote line that is not goods carries a `recipient`. ONDC's breakup has no recipient: the `@ondc/org/title_type`
+enum is `item`, `delivery`, `packing`, `tax`, `misc`, `discount` and `offer` (read from ONDC's validator, not a policy
+text; as of 18-10-2026). BACP therefore publishes its own mapping, and the gateway applies it. The mapping is a published
+rule, not an inference from the charge's code. It is BACP's and is open with ONDC ([Q-80](../open-questions.md#q-80)).
+
+| `title_type` | BACP line | `recipient` |
+|---|---|---|
+| `item`, `discount`, `offer` | Goods or discount; not a charge line | none |
+| `delivery` | Total type `delivery` | `seller` |
+| `packing` | Total type `packing` | `seller` |
+| `tax` | Total type `tax` | `government` |
+| `misc`, or any other value | Total type `other_charge` | `other`, with the warning `charge_recipient_unmapped` |
+
+- `delivery` and `packing` map to `seller` because the quote is the seller's, and it does not say whether a logistics
+  provider is paid on from the delivery charge. A seller that wants a different recipient states it in the breakup item
+  TagGroup `bacp.charge`, tag `recipient` (a value of the `ChargeRecipient` enum). A stated value takes precedence over
+  the table, and the gateway never rewrites it.
+- An unmapped type is a **warning, never a refusal**: the line is kept with `recipient: other`, and the gateway adds the
+  message `charge_recipient_unmapped` (`warning`, `recoverable`) at the line. It does not by itself make a price change
+  or a drip-pricing finding.
+- Until ONDC answers whether `misc` carries convenience fees (Q-80), a convenience fee that arrives as `misc` stays
+  `other_charge`, and the Trusted Surface counts it in the remainder figure, not as a fee line.
 
 ### Offers and discount codes {#offers}
 
@@ -289,8 +315,18 @@ and a settlement ETA are represented is open ([Q-51](../open-questions.md#q-51))
 
 The buyer app's finder fee is an ONDC term (`@ondc/org/buyer_app_finder_fee_type` and `_amount`), declared in
 `search` and kept unchanged through `on_init`, `confirm` and `on_confirm`. The gateway MUST carry it unchanged. It is
-part of the seller's economics, not a charge to the buyer. Disclosure of any agent or operator fee to the buyer is
-not yet modelled.
+part of the seller's economics, not a charge to the buyer, and it is never a line in the buyer's quote.
+
+The gateway **MUST** copy the finder fee and the `np_fees` channel margin, unchanged, into the session's
+`intermediary_compensation[]` with `source: seller` and `origin: ondc_bff` or `np_fees`. It writes them to the
+InstructionLog at stage `disclosure` and gives them to the principal on request, never per order on the Trusted
+Surface. The label for the principal is "fee paid by the seller to the buyer's app", never "seller's cost".
+
+A per-order fee that the principal pays to the agent operator, an assisted operator or the buyer app is a
+gateway-asserted `operator_charges[]` line, outside the BPP quote and outside `all_in_total`
+([Fees on the payer's screen](../checkout/index.md#fee-lines)). It never travels inside the Beckn `quote`, so a
+Beckn log-validator sees the BPP's quote unchanged. A fee that an operator declares for itself, rather than one that
+ONDC carries, has `origin: operator_declared`.
 
 ## ONDC log-validation compatibility {#log-validation}
 

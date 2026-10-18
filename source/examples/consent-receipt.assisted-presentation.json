@@ -35,7 +35,19 @@
   "notice": {
     "language": "hi-IN",
     "hash": "sha-256:kQjXdlwqRyFLW56p7AS8q374BSOL7RSzVQXuJIO88cg",
-    "uri": "https://mm.psp.example.in/notices/cr_A1B2C3D4E5F6G7"
+    "uri": "https://mm.psp.example.in/notices/cr_A1B2C3D4E5F6G7",
+    "operator_compensation": {
+      "from_principal": [
+        {
+          "basis": "per_order",
+          "amount": {
+            "value": 2000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "from_sellers": "none"
+    }
   },
   "captured_via": {
     "surface": "mm.psp.example.in",

@@ -75,7 +75,12 @@ A Trusted Surface **MUST** meet all five:
   and expiry means decline.
 - **TS-3. The principal's language and modality.** It renders in the principal's language (English or a language
   of the Eighth Schedule) and modality (`visual`, `audio` or `both`). Audio is read in full before the principal
-  enters the factor.
+  enters the factor. On every modality, before the factor, from its own templates and never from seller text, it
+  presents a step-up that pays for an order in this order: (1) the total; (2) each fee line one at a time, with its
+  recipient where `charge_lines[]` states one; (3) everything else (goods, delivery, packing and tax) as one figure. Fee
+  lines are the codes `convenience`, `platform`, `payment_handling`, `handling` and `cod_fee`, and every operator charge,
+  whoever receives them. An order with no fee line adds no audio. It does not read a per-handler comparison on an IVR
+  or audio-only surface. It never reads `intermediary_compensation[]` per order.
 - **TS-4. No urgency.** It shows no urgency or countdown text. It computes any timing it shows from `expires_at`
   itself.
 - **TS-5. Record a Presentation.** It records a [`Presentation`](#presentation) for every approval and decline, and
@@ -109,7 +114,8 @@ The payload is described as data by the OpenAPI component `TsRender`.
 | `subject_hash` | For the issue actions `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED` only: the sha-256 over the JCS form of the issue's `resolution` as the gateway showed it in `summary`. Absent for every other action, including `ESCALATED`, `INFO_PROVIDED` and `CLOSED`, and when the issue has no `resolution`. |
 | `language` | The principal's language, as a BCP 47 tag (`LanguageTag`). |
 | `checkout_hash` | The `checkout_hash` of the quote the step-up is about. For `post_order` it is the `checkout_hash` of the order's closed Checkout Mandate (the hash of the BPP-signed quote the order was placed under, also on the order's `Receipt`); an `Order` carries no `checkout_hash` of its own. |
-| `total` | The total price as a single figure (`Amount`, integer paise). On a summary step-up, the sum of `basket[].amount`. |
+| `total` | The total the principal pays, as a single figure (`Amount`, integer paise): the quote total plus the sum of the session's `operator_charges[]`. On a summary step-up, the sum of `basket[].amount`. |
+| `charge_lines[]` | Optional. On a step-up that pays for an order, one entry `{code, amount, recipient?}` for each fee line, then one `remainder` entry for everything else. The amounts add up to `total`. Absent when the order has no fee line. The Trusted Surface reads them by [TS-3](#ts-requirements) from its own templates. |
 | `price_breakup_hash` | The hash of the BPP-signed price breakup and disclosures (`disclosures.hash`). |
 | `seller_name` | The payee seller, from the BPP-signed quote. Absent on a summary step-up, whose sellers are in `basket[]`. |
 | `assisted_operators[]` | On an assisted session only: the `participant_id` and `ref` of each `assisted_operator` in the session's `participants[]`. |
@@ -126,7 +132,8 @@ The payload is described as data by the OpenAPI component `TsRender`.
 
 Content rules for `ts_render` and every Trusted Surface template:
 
-1. The total is one figure, with the breakup reachable through its hash.
+1. The total is one figure, with the breakup reachable through its hash. Its fee lines are read separately
+   ([TS-3](#ts-requirements)), and their amounts, with the `remainder`, add up to it.
 2. A revoke or cancel route and a grievance contact are always present. BACP requires the grievance contact in every
    case. From 13-05-2027 the DPDP Act, 2023, s.6(3) requires a request for consent to give the contact details of the
    Data Protection Officer or another person authorised to answer the Data Principal, and the DPDP Rules, 2025,
@@ -389,6 +396,9 @@ The agent's first message in every session is the AI disclosure, with typed rout
   ([RFC 3966](https://www.rfc-editor.org/rfc/rfc3966)), optionally with DTMF digits (for example "press 0"), because a
   feature-phone caller cannot open a web link. A route with DTMF digits is always a `tel:` route. The schema rejects a
   credential that lists only `https:` routes, and a route that pairs DTMF digits with an `https:` URI.
+- An agent **SHOULD NOT** split one intended order into several payments to change the fee that a seller bears. The
+  gateway's suspected-split-order check enforces it ([Split-order detection](mandates.md#step-up)); BACP adds no new
+  trigger for it.
 - The gateway writes an InstructionLog entry at stage **`ai_disclosure`**, `actor: agent`. It is the first entry whose
   actor is `agent`, before `intent`. The stage `disclosure` is the seller's quote, not the AI disclosure.
 - On the network, `context.bacp.ai_disclosure: true` is REQUIRED, and the gateway **MUST** mirror it into the `bacp`

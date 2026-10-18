@@ -5042,3 +5042,364 @@ Amounts are integer paise.
     responses:
       - {status: 429, code: quota_exceeded, count: 2}
 ```
+
+## Who-pays cases {#who-pays-cases}
+
+The cases below cover [Fees on the payer's screen](checkout/index.md#fee-lines), the
+[fee-bearer change](mandates.md#fee-bearer-change), [refunds](payments/index.md#refunds), the fee read-out of the
+Trusted Surface, [operator compensation](mandates.md#operator-compensation), the
+[ranking rule](discovery.md#ranking-by-payment-rungs), the convenience-fee mandate constraint and the seller
+confirmation profile. They use the manifest form above, and their ids use the prefix `WP-`. Amounts are integer paise.
+Until counsel answers [Q-81](open-questions.md#q-81), no case passes a retained payment-related charge (`convenience`,
+`payment_handling`, `platform`), and none passes a retention on a return for defective, deficient, spurious or late goods
+(WP-14). WP-15 passes a delivery line only, subject to counsel's answer on rule 4(8).
+
+```yaml
+- case_id: WP-01
+  title: A fallback from UPI to COD with a COD fee changes the fee-bearer and raises a rail_fallback step-up
+  level: bacp.pay.all.1
+  fixture:
+    leg: {planned: in.upi.intent, replacement: in.cod}
+    totals: [{type: cod_fee, applies_to_handlers: [in.cod], recipient: seller, amount: {value: 5000, currency: INR}}]
+  steps:
+    - fallback: {leg: L1}
+  expect:
+    sessions: {count: 1, state: requires_escalation, step_up: {kind: confirm, reason: rail_fallback}}
+    settled_debits: 0
+
+- case_id: WP-02
+  title: An unscoped convenience fee on every handler does not change the fee-bearer
+  level: bacp.pay.all.1
+  fixture:
+    totals: [{type: convenience_fee, recipient: seller, amount: {value: 2000, currency: INR}}]
+    leg: {planned: in.upi.intent, replacement: in.card.token}
+  steps:
+    - fallback: {leg: L1}
+  expect:
+    sessions: {count: 1, step_up: none}
+    log: {"comparison[0].method_charge": 0, "comparison[1].method_charge": 0}
+
+- case_id: WP-03
+  title: An operator charge that appears on fallback, with scoped lines unchanged, raises a rail_fallback step-up
+  level: bacp.pay.all.1
+  fixture:
+    leg: {planned: in.upi.intent, replacement: in.upi.collect}
+    operator_charges_on_replacement: [{code: service, recipient: assisted_operator, amount: {value: 2000, currency: INR}}]
+  steps:
+    - fallback: {leg: L1}
+  expect:
+    sessions: {count: 1, state: requires_escalation, step_up: {kind: confirm, reason: rail_fallback}}
+
+- case_id: WP-04
+  title: A convenience fee scoped to UPI only gives payment_mode_fee_inconsistent, in HP and in HNP, and is never a refusal
+  level: bacp.pay.upi.1
+  fixture:
+    seller_accepts: [in.upi.intent, in.card.token]
+    totals: [{type: convenience_fee, applies_to_handlers: [in.upi.intent], recipient: seller, amount: {value: 4000, currency: INR}}]
+    amount: {value: 300000, currency: INR}
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.comparison[0].all_in_total.value": 304000, "body.comparison[1].all_in_total.value": 300000, messages: [payment_mode_fee_inconsistent], count: 1}
+    sessions: {hp: {fee_shown_before_factor: true}, hnp: {state: requires_escalation, step_up: {kind: confirm, reason: constraint_unresolved}}}
+
+- case_id: WP-05
+  title: A convenience fee on cards only gives payment_mode_fee_inconsistent
+  level: bacp.pay.upi.1
+  fixture:
+    seller_accepts: [in.upi.intent, in.card.token]
+    totals: [{type: convenience_fee, applies_to_handlers: [in.card.token], recipient: seller, amount: {value: 4000, currency: INR}}]
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, messages: [payment_mode_fee_inconsistent], count: 1}
+
+- case_id: WP-06
+  title: Equal convenience fees on every debit mode, or one unscoped line, give no warning
+  level: bacp.pay.upi.1
+  fixture:
+    seller_accepts: [in.upi.intent, in.card.token]
+    totals: [{type: convenience_fee, recipient: seller, amount: {value: 4000, currency: INR}}]
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, messages_none_of: [payment_mode_fee_inconsistent], count: 1}
+
+- case_id: WP-07
+  title: A COD fee scoped to COD gives no warning and a method_charge on COD
+  level: bacp.pay.all.1
+  fixture:
+    seller_accepts: [in.upi.intent, in.cod]
+    totals: [{type: cod_fee, applies_to_handlers: [in.cod], recipient: seller, amount: {value: 5000, currency: INR}}]
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.comparison[1].method_charge.value": 5000, messages_none_of: [payment_mode_fee_inconsistent], count: 1}
+
+- case_id: WP-08
+  title: A scoped convenience line first disclosed after the round the intersection used is drip pricing
+  level: bacp.pay.all.1
+  fixture:
+    term_sheet: {charges: [{code: convenience, payment_method_specific: in.upi.intent, recipient: seller, first_disclosed_round: 3}]}
+    intersection_round: 2
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    messages: [drip_pricing_detected]
+    sessions: {count: 1, state: requires_escalation}
+
+- case_id: WP-09
+  title: A method_charge or fee_bearer supplied by a counterparty is ignored
+  level: bacp.pay.all.1
+  fixture:
+    bpp_tags: {method_charge: "9999", fee_bearer: seller}
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.comparison[0].method_charge.value": computed_by_gateway, count: 1}
+
+- case_id: WP-10
+  title: A charge code mdr, pa_fee or finder_fee, or a receipt carrying rail.evidence.mdr, is rejected
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: termsheet.charge-code-mdr.invalid.json
+  steps:
+    - validate: {schema: termsheet.json}
+  expect:
+    verdict: {code: schema_invalid, path: "$.charges[1].code"}
+
+- case_id: WP-11
+  title: A full return refunded in full is accepted with no retained charge
+  level: bacp.core.1
+  fixture:
+    order: {paid: {value: 300000, currency: INR}}
+  steps:
+    - refund_receipt: {amount: {value: 300000, currency: INR}}
+  expect:
+    refund: {accepted: true, charges_retained: []}
+
+- case_id: WP-12
+  title: A cancellation refund below the amount paid with no retained line gets refund_short_of_terms and is not blocked
+  level: bacp.core.1
+  fixture:
+    order: {paid: {value: 300000, currency: INR}, charges_retained: []}
+  steps:
+    - refund_receipt: {amount: {value: 298800, currency: INR}}
+  expect:
+    messages: [refund_short_of_terms]
+    refund: {blocked: false}
+
+- case_id: WP-13
+  title: A debited_not_confirmed reversal below the debit gets refund_short_of_terms whatever charges_retained says
+  level: bacp.pay.all.1
+  fixture:
+    session: {payment: {status: debited_not_confirmed, debit: {value: 300000, currency: INR}}}
+  steps:
+    - reversal_receipt: {amount: {value: 298800, currency: INR}}
+  expect:
+    messages: [refund_short_of_terms]
+    sessions: {state_not: reversed}
+
+- case_id: WP-14
+  title: A return for a defective item with "convenience non-refundable" in the terms gets refund_short_of_terms
+  level: bacp.core.1
+  fixture:
+    order: {paid: {value: 300000, currency: INR}, return_reason: defective, charges: [{code: convenience, amount: {value: 2000, currency: INR}, refund_rule: never}]}
+  steps:
+    - refund_receipt: {amount: {value: 298000, currency: INR}}
+  expect:
+    messages: [refund_short_of_terms]
+
+- case_id: WP-15
+  title: A change-of-mind cancellation after dispatch may retain a delivery line disclosed in round 1 with refund_rule before_dispatch
+  level: bacp.core.1
+  fixture:
+    order: {paid: {value: 300000, currency: INR}, dispatched: true, charges: [{code: delivery, amount: {value: 1200, currency: INR}, refund_rule: before_dispatch, first_disclosed_round: 1}]}
+  steps:
+    - refund_receipt: {amount: {value: 298800, currency: INR}}
+  expect:
+    refund: {accepted: true, charges_retained: [{code: delivery, amount: {value: 1200, currency: INR}, refund_rule: before_dispatch}]}
+
+- case_id: WP-16
+  title: An IVR ts_render reads each fee line with its recipient, then everything else as one figure, and the sum equals the total
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {total: {value: 50000, currency: INR}, charge_lines: [{code: convenience, amount: {value: 2000, currency: INR}, recipient: seller}, {code: service, amount: {value: 2000, currency: INR}, recipient: assisted_operator}, {code: remainder, amount: {value: 46000, currency: INR}}]}
+    modality: audio
+  steps:
+    - render: {before: factor}
+  expect:
+    output:
+      contains: ["convenience", "service"]
+    ts_render: {charge_lines_sum_equals_total: true}
+
+- case_id: WP-17
+  title: An order with no fee line adds no fee audio
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    ts_render: {total: {value: 48000, currency: INR}}
+    modality: audio
+  steps:
+    - render: {before: factor}
+  expect:
+    output: {fee_prompts: 0}
+
+- case_id: WP-18
+  title: A complete whose payment mandate leaves out an operator charge gets 400
+  level: bacp.pay.all.1
+  fixture:
+    session: {operator_charges: [{code: service, recipient: assisted_operator, amount: {value: 2000, currency: INR}}], quote_total: {value: 48000, currency: INR}}
+    payment_mandate_amount: {value: 48000, currency: INR}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, path: "$.payment_mandate", count: 1}
+    settled_debits: 0
+
+- case_id: WP-19
+  title: A mandate request with no operator_compensation is refused and the mandate never becomes ACTIVE
+  level: bacp.core.1
+  fixture:
+    mandate_request: {omit: operator_compensation}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, path: "$.operator_compensation", count: 1}
+    mandates: {active: 0}
+
+- case_id: WP-20
+  title: The ONDC buyer finder fee is copied unchanged into intermediary_compensation and logged, not read as a charge line
+  level: bacp.core.1
+  fixture:
+    bpp: {on_search_bff: "3.00%", on_init_bff: "3.00%"}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.intermediary_compensation[0].origin": ondc_bff, "body.intermediary_compensation[0].source": seller, count: 1}
+    log: {"disclosure.stage": present}
+    ts_render: {charge_lines_exclude: [intermediary_compensation]}
+
+- case_id: WP-21
+  title: Two otherwise equal sellers, one with no HNP rung, rank equally and the second carries needs_principal_factor
+  level: bacp.core.1
+  fixture:
+    sellers: [{bpp_id: A, rungs: [in.upi.reservepay]}, {bpp_id: B, rungs: [in.upi.intent]}]
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[1].needs_principal_factor": true, ranks_equal: [A, B], count: 1}
+
+- case_id: WP-22
+  title: A principal's "pay without a PIN" filter is applied and logged, and is not a default in the next session
+  level: bacp.core.1
+  fixture:
+    principal_filter: pay_without_pin_only
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh, filter: none}
+  expect:
+    log: {"discover.filter": pay_without_pin_only}
+    responses:
+      - {status: 200, count: 2}
+
+- case_id: WP-23
+  title: An agent that splits one ₹4,500 order into three debits under ₹2,000 to change the fee raises the suspected-split confirm step-up
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {step_up: {above_amount: {value: 200000, currency: INR}}}
+    orders_same_bpp_10min: 3
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+  expect:
+    sessions: {count: 1, state: requires_escalation, step_up: {kind: confirm, reason: above_step_up_threshold}}
+
+- case_id: WP-24
+  title: An AgentCredential with compensation_model commission is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: agent-credential.compensation-commission.invalid.json
+  steps:
+    - validate: {schema: agent-credential.json}
+  expect:
+    verdict: {code: schema_invalid, path: "$.disclosure.compensation_model"}
+
+- case_id: WP-25
+  title: A Total delivery line with no recipient is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: total.delivery-no-recipient.invalid.json
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Total}
+  expect:
+    verdict: {code: schema_invalid, path: "$.recipient"}
+
+- case_id: WP-26
+  title: An ONDC breakup line with title_type misc is kept with recipient other and the warning charge_recipient_unmapped, not refused
+  level: bacp.core.1
+  fixture:
+    bpp_on_init: {breakup: [{title_type: misc, price: {value: "20.00"}}]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.totals[0].type": other_charge, "body.totals[0].recipient": other, messages: [charge_recipient_unmapped], count: 1}
+
+- case_id: WP-27
+  title: An ONDC delivery breakup line maps to recipient seller, and a seller-stated bacp.charge recipient takes precedence
+  level: bacp.core.1
+  fixture:
+    bpp_on_init: {breakup: [{title_type: delivery, price: {value: "30.00"}, tags: {bacp.charge: {recipient: logistics}}}]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.totals[0].type": delivery, "body.totals[0].recipient": logistics, count: 1}
+
+- case_id: WP-I1
+  title: An HNP checkout with a convenience fee that the mandate's convenience_fees does not cover raises a confirm step-up
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {constraints: {convenience_fees: {allowed: false}}}
+    totals: [{type: convenience_fee, recipient: seller, amount: {value: 2000, currency: INR}}]
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    sessions: {count: 1, state: requires_escalation, step_up: {kind: confirm, reason: constraint_unresolved}}
+    settled_debits: 0
+
+- case_id: WP-I1b
+  title: With convenience_fees allowed up to a cap, a fee at or below the cap raises no step-up
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {constraints: {convenience_fees: {allowed: true, max_per_order: {value: 2000, currency: INR}}}}
+    totals: [{type: convenience_fee, recipient: seller, amount: {value: 2000, currency: INR}}]
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    sessions: {count: 1, state: ready_for_complete}
+
+- case_id: WP-I2
+  title: A seller confirmation that was not declared at discovery, asked for at on_init, raises constraint_unresolved and changes no price or handler
+  level: bacp.core.1
+  fixture:
+    bpp_on_init: {tags: {bacp.confirmation: {reason: made_to_order}}}
+    declared_at_discovery: false
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    sessions: {count: 1, state: requires_escalation, step_up: {kind: confirm, reason: constraint_unresolved}, price_unchanged: true, handler_unchanged: true}
+```

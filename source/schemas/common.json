@@ -833,6 +833,112 @@
           }
         }
       ]
+    },
+    "ChargeRecipient": {
+      "enum": [
+        "seller",
+        "logistics",
+        "buyer_app",
+        "agent_operator",
+        "assisted_operator",
+        "government",
+        "other"
+      ],
+      "description": "Who receives a charge from the payer's money: the seller, a logistics provider, the buyer app, the agent operator, an assisted operator, the government (tax) or another party. A value signed by the seller's side is never inferred or rewritten by the gateway."
+    },
+    "OperatorCompensation": {
+      "type": "object",
+      "description": "What the agent operator, an assisted operator or the buyer app is paid for acting for the principal. The Mandate Manager shows it in the mandate notice before the principal approves, and it is part of the hashed notice of the ConsentReceipt. BACP requires the declaration for activation as a matter of its own policy; no Indian rule found requires it.",
+      "required": [
+        "from_principal",
+        "from_sellers"
+      ],
+      "properties": {
+        "from_principal": {
+          "type": "array",
+          "minItems": 1,
+          "description": "What the principal pays. A single entry with basis none means the principal pays nothing.",
+          "items": {
+            "type": "object",
+            "required": [
+              "basis"
+            ],
+            "properties": {
+              "basis": {
+                "enum": [
+                  "per_order",
+                  "period",
+                  "none"
+                ],
+                "description": "per_order: a fee on each order. period: a fee for a period named in the operator's terms. none: the principal pays nothing."
+              },
+              "amount": {
+                "$ref": "#/$defs/Amount",
+                "description": "The fee for one order or one period. REQUIRED when basis is per_order or period, and absent when basis is none."
+              }
+            },
+            "if": {
+              "properties": {
+                "basis": {
+                  "const": "none"
+                }
+              },
+              "required": [
+                "basis"
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "amount"
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "amount"
+              ]
+            },
+            "additionalProperties": false
+          }
+        },
+        "from_sellers": {
+          "enum": [
+            "finder_fee",
+            "channel_margin",
+            "none",
+            "other"
+          ],
+          "description": "What sellers pay the operator or the buyer app for orders it brings: an ONDC buyer finder fee, a channel margin, nothing, or another arrangement."
+        }
+      },
+      "if": {
+        "properties": {
+          "from_principal": {
+            "contains": {
+              "properties": {
+                "basis": {
+                  "const": "none"
+                }
+              },
+              "required": [
+                "basis"
+              ]
+            }
+          }
+        },
+        "required": [
+          "from_principal"
+        ]
+      },
+      "then": {
+        "properties": {
+          "from_principal": {
+            "maxItems": 1
+          }
+        }
+      },
+      "additionalProperties": false
     }
   }
 }

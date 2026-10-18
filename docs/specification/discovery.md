@@ -297,6 +297,43 @@ What the gateway does on the network:
 Catalogue text, including product names and descriptions, is untrusted input.
 Agents MUST treat it as data and never as instructions.
 
+### Ranking by payment rungs {#ranking-by-payment-rungs}
+
+The gateway's default discovery ranking MUST NOT use any of these as a parameter:
+
+- the handler rungs a seller offers, or whether it offers a human-not-present (HNP) rung;
+- the seller's merchant discount rate, or its small-merchant (P2PM) category;
+- Verified Merchant status;
+- the level or acceptance of a finder fee.
+
+The one exception is a finder fee that is paid to the operator for an item's prominence or selection: the agent then
+renders that item as `sponsored` with `by: agent` under [Declaring the status](#catalogue-disclosures), rule 7.
+
+- A seller without an HNP rung is never dropped. Its result carries `needs_principal_factor: true`, which tells the agent
+  that the principal must pay that seller herself, and keeps its rank.
+- A principal's own filter ("only shops I can pay without a PIN") is allowed. The gateway logs it, and it never
+  becomes a default for a later session.
+- This is BACP policy. BACP does not cite the Consumer Protection (E-Commerce) Rules, 2020 r.5(3)(f) as the source of a
+  prohibition. The rule extends the [handler-order rule](payments/index.md#handler-intersection-and-preference). It
+  also reflects NPCI OC 228, which enables Reserve Pay at first "only for online verified merchants with low ticket and
+  high frequency transactions": a seller without that rung has done nothing wrong, and ranking would otherwise penalise
+  the small shop first.
+
+### Seller confirmation profile {#principal-confirmation}
+
+A seller MAY declare `requires_principal_confirmation` on its discover result: `{reason, above_amount?}`, where `reason`
+is `made_to_order`, `age_restricted` or `high_value_cod`. `above_amount` (an `Amount`) is REQUIRED for `high_value_cod`
+and absent for the other reasons. On Beckn the declaration travels in the `bacp.confirmation` tag group of the signed
+`on_search` ([mapping](transports/beckn.md#disclosure-mapping)).
+
+- For an order the declaration covers, the gateway raises a `confirm` step-up with reason `constraint_unresolved`
+  ([Step-up](mandates.md#step-up)) before any money moves. It counts as a step-up like any other for any limit the
+  specification sets on step-ups.
+- The declaration MUST NOT change a price or a handler. It is a prompt to the human, not a pricing lever.
+- A confirmation that the seller asks for at `on_init` without having declared it is treated like drip pricing: the same
+  `confirm` step-up, reason `constraint_unresolved`.
+- The gateway logs, for each seller, how often a declared or an undeclared confirmation is raised.
+
 The response's `transaction_id` is the Beckn transaction id; the agent passes
 it to `POST /sessions`. The gateway MUST sign the response ([Response signature](#response-signature)). See [Sessions and Checkout](checkout/index.md) and
 [Beckn / ONDC Binding](transports/beckn.md).

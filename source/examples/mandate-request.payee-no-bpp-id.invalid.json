@@ -55,5 +55,13 @@
   "validity": "P30D",
   "language": "hi-IN",
   "channel": "app",
-  "webhook_url": "https://agents.vaani.example.in/bacp/hooks"
+  "webhook_url": "https://agents.vaani.example.in/bacp/hooks",
+  "operator_compensation": {
+    "from_principal": [
+      {
+        "basis": "none"
+      }
+    ],
+    "from_sellers": "none"
+  }
 }

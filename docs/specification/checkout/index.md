@@ -77,7 +77,11 @@ Each result is flagged `within_mandate` when the request names a `mandate_ref`. 
 `sponsorship` (`sponsored`, `not_sponsored` or `undeclared`) and, where the seller sent them, `mrp`,
 `tax_inclusive` and `prior_price`, and every result carries a `source_digest`. The response carries the ranking
 parameters in descending order of importance (for example distance, price and seller rating), and `ranking.sponsored`
-is true if and only if some item is `sponsored`. Discovery moves no money and shares no personal data. See
+is true if and only if some item is `sponsored`. A result also carries `needs_principal_factor: true` when the seller
+accepts no handler that a human-not-present payment can use, and `requires_principal_confirmation` when the seller
+declares that it wants the principal to confirm certain orders. The default ranking never uses the seller's payment
+rungs, merchant discount rate or finder fee ([Ranking by payment rungs](../discovery.md#ranking-by-payment-rungs)).
+Discovery moves no money and shares no personal data. See
 [Discovery and Profiles](../discovery.md#catalogue-disclosures).
 
 ## Session create and update
@@ -169,7 +173,14 @@ gateway:
    `preticked_addon_removed` (`warning`, `recoverable`). A seller that keeps a declined add-on is
    treated as a NACK;
 5. compares prices against `on_select`. A changed unit price or a new fee line (packing,
-   convenience, COD fee) gives `drip_pricing_detected` (`requires_buyer_review`);
+   convenience, COD fee) gives `drip_pricing_detected` (`requires_buyer_review`). A fee line whose
+   `first_disclosed_round` comes after the round that the handler intersection consumed is drip pricing under this
+   rule. It then runs the [convenience-fee consistency check](#fee-lines) across the debit modes the seller accepts:
+   a `payment_mode_fee_inconsistent` warning (a SHOULD, never a refusal), which in HNP also raises a `confirm`
+   step-up with reason `constraint_unresolved`. It fills `recipient` on each line from the BPP's signed value, or from
+   the [Beckn mapping](../transports/beckn.md#recipient-mapping) (an unmapped type gives `recipient: other` and the
+   warning `charge_recipient_unmapped`), and copies the buyer finder fee and `np_fees` unchanged into
+   `intermediary_compensation[]` ([Buyer finder fee](../transports/beckn.md#finder-fee));
 6. compares each line's `unit_price` in the `on_select` quote with the unit price that the discover response of the
    session's `transaction_id` showed for the same item (`discovered_unit_price`). A higher price gives
    `discovery_price_changed`. Where that item was shown with a `prior_price`, the message is `requires_buyer_review`
@@ -232,7 +243,7 @@ Response (`200`, abridged):
   ],
   "totals": [
     {"type": "subtotal", "amount": {"value": 26700, "currency": "INR"}},
-    {"type": "delivery", "amount": {"value": 3500, "currency": "INR"}},
+    {"type": "delivery", "recipient": "seller", "amount": {"value": 3500, "currency": "INR"}},
     {"type": "total", "amount": {"value": 30200, "currency": "INR"}}
   ],
   "quote": {
@@ -284,6 +295,64 @@ It is the anchor that binds every later artefact to one basket and one price:
 
 `checkout_hash` is the hash of the quote, **not** of an accepted negotiation offer. Nothing in
 BACP asserts that `checkout_hash` equals an `offer_hash`.
+
+### Fees on the payer's screen {#fee-lines}
+
+BACP makes normative what the principal pays and to whom. It leaves informative how sellers, payment aggregators and
+banks split their own costs ([Who pays](../payments/economics.md)).
+
+**Payer-borne lines.** Every quote line the principal pays, other than goods, carries a `code` or `type`, an `amount`
+in integer paise and a `recipient` (`seller`, `logistics`, `buyer_app`, `agent_operator`, `assisted_operator`,
+`government` or `other`). The `recipient` is the value that the seller's side signed. The gateway never infers it from
+the line's code; for a charge that arrives over Beckn it uses the published
+[mapping](../transports/beckn.md#recipient-mapping). A `convenience_fee` or `cod_fee` line MAY carry
+`applies_to_handlers`, the handlers it applies to; a line without it applies to every handler, and a fee that applies to
+several handlers but not all is one line that lists them. The intersect response's `comparison[]` records, for each
+option, a gateway-computed `method_charge`: the sum of the scoped payer-borne lines for that option. A `method_charge`
+from a counterparty is ignored, and no view labels it as "who pays".
+
+**What never reaches the principal.** The merchant discount rate (MDR), the payment aggregator's commission, the finder
+fee and net-settlement amounts **MUST NOT** appear in a payer line, in `all_in_total`, in a `comparison[]` total, in
+`ts_render`, in any principal-facing message or in `rail.evidence` of a receipt. They are not in the charge vocabulary,
+and BACP adds no `payer` field, because every quote line is borne by the buyer. NPCI's FAQ (15-10-2026) Q34 says that
+on-boarded merchants cannot pass MDR on to customers on UPI; it is an FAQ, not a circular.
+
+**Operator charges.** A per-order fee that the principal pays to the agent operator, an assisted operator or the buyer
+app is a gateway-asserted line in the session's `operator_charges[]` (`{code, amount, recipient}`, `code` `agent_fee` or
+`service`, `recipient` `agent_operator`, `assisted_operator` or `buyer_app`). It is never inside the BPP quote: the quote
+total and `all_in_total` stay equal to Beckn `quote.price`. The amount the principal pays, the `ts_render` total and the
+amount checked against the mandate are the quote total plus the sum of `operator_charges[]`. This line discloses a fee;
+it is not a licence to charge one. NPCI's FAQ Q17 says that UPI application providers shall not charge a platform fee or
+any other charge, and the Consumer Protection (E-Commerce) Rules, 2020 r.5(7) (from 01-01-2027) restrict a bundled fee
+of a marketplace e-commerce entity. Whether either reaches an agent operator is open
+([Q-79](../open-questions.md#q-79)). How the operator collects the fee is outside BACP.
+
+**Intermediary compensation.** The gateway copies the ONDC buyer finder fee and `np_fees` unchanged into the
+session's `intermediary_compensation[]`, writes them to the InstructionLog at stage `disclosure`, and gives them to the
+principal on request. They are never read out per order on the Trusted Surface and never added to a total. The label for
+the principal is "fee paid by the seller to the buyer's app", never "seller's cost".
+
+**Convenience-fee consistency (SHOULD, never a refusal).** NPCI/UPI/CC/01 para 7.5 binds the **Payee PSP**, not the
+seller, the agent or the gateway. It asks that no surcharge is levied on users for UPI transactions, and that any
+convenience fee is disclosed upfront and remains consistent across the available debit payment modes (net banking, debit
+card, UPI and credit card). The gateway **SHOULD** warn when this is not so. Let D be the debit-mode handlers the seller
+accepts in this option set: the `in.upi.*` family including credit-funded UPI, `in.card.*` and `in.netbanking`. The
+gateway **SHOULD** give the warning `payment_mode_fee_inconsistent` (`warning`, `requires_buyer_review`) when a
+payer-borne scoped line (any code except `cod_fee` on `in.cod`) applies to a strict subset of D, or when the scoped
+amounts differ between any two handlers in D. It does not fire on a uniform unscoped fee. COD is outside the test, and
+PPI wallets and `in.cod.upi` stay outside D until counsel answers ([Q-78](../open-questions.md#q-78)). In human-present
+checkouts the Trusted Surface shows the fee before the factor. In HNP the warning raises a `confirm` step-up with reason
+`constraint_unresolved`, and no money moves until the principal decides. The text cites para 7.5 first, then
+the Payment Aggregators Master Direction 2025 para 10(c) ("charges, other than the price ... distinctly displayed to
+the payer prior to the transaction"), and NPCI's FAQ Q17 and Q34 as an FAQ; RBI's Card Directions 2025 para 77 is
+context (it binds issuers). It **MUST NOT** cite S.O. 5067(E) against merchants, because that order binds a "bank or
+system provider". Whether a Trusted Surface reading meets "to the User ... prior to the selection of the payment mode"
+is open ([Q-78](../open-questions.md#q-78)); the mandate constraint
+[`convenience_fees`](../mandates.md#constraints) records the principal's consent in HNP.
+
+**Splitting.** An agent **SHOULD NOT** split one intended order into several payments to change the fee a seller bears.
+Enforcement rides on the existing suspected-split-order `confirm` trigger
+([Split-order detection](../mandates.md#step-up)); BACP adds no new trigger.
 
 ## Discounts {#discounts}
 
@@ -537,7 +606,10 @@ The gateway, in order:
 3. **Checks the quote TTL.** If the quote's `expires_at` has passed, the session returns to
    `incomplete` with `quote_expired` and nothing else happens.
 4. **Checks the collector and bindings**: the collecting party is an authorised PA or bank, and
-   `checkout_hash`, disclosures hash, closed-mandate amounts and `auth_binding` all match.
+   `checkout_hash`, disclosures hash, closed-mandate amounts and `auth_binding` all match. The amount of the
+   closed Payment Mandate is the quote total plus the sum of the session's `operator_charges[]`
+   ([Fees on the payer's screen](#fee-lines)). A mandate amount that leaves an operator charge out gets
+   `400 invalid_request` at `$.payment_mandate` and nothing changes.
 5. **Verifies the InstructionLog chain** (`403 log_chain_invalid`).
 6. **Runs the atomic section**, keyed on the root open Checkout Mandate: split-order detection,
    the authoritative evaluation against exposure, consumption of the closed Payment Mandate, the

@@ -1,0 +1,8 @@
+{
+  "type": "cod_fee",
+  "recipient": "psp",
+  "amount": {
+    "value": 5000,
+    "currency": "INR"
+  }
+}

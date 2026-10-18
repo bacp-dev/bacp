@@ -39,6 +39,20 @@ Binding rules:
 - Agent-originated in-person or doorstep UPI payments MUST use a dynamic QR (or intent) carrying the exact amount and a transaction reference equal to, or mapped to, the BACP order id. A static QR MUST be rejected for an agent cart, because it breaks the binding between order and payment.
 - The gateway MUST enforce the P2M per-transaction cap by merchant category (₹1 lakh by default, ₹5 lakh for notified categories) and refuse locally above it.
 
+### Charges on UPI {#upi-charges}
+
+These rows state what the sources say as of 18-10-2026. BACP does not carry the merchant discount rate (MDR) or the
+other costs the seller bears; it carries what the principal pays and to whom ([Who pays](economics.md)).
+
+| Item | Rule | Source and status |
+|---|---|---|
+| MDR on P2M | 0.4% on person-to-merchant (P2M) transactions above ₹2,000, capped at ₹300 per transaction for ₹75,000 and above. A flat ₹5 applies to listed categories (the FAQ names railways, telecom services, insurance and fuel, among others). AutoPay carries no prescribed MDR. Not yet in force: NPCI decided on 13-10-2026 that it starts "immediately post Diwali at a date to be notified separately", and no date was found as of 18-10-2026. | NPCI FAQ updated 15-10-2026, Q3, Q5, Q22, Q33; NPCI press release 13-10-2026. An FAQ and a press release, not a circular. Whether the Q22 AutoPay rule reaches Reserve Pay and OTM is open with NPCI ([Q-81](../open-questions.md#q-81)). |
+| P2PM (small merchant) | Two texts that BACP quotes and does not reconcile. The FAQ says small merchants receiving "up to ₹1 lakh per month" get zero MDR, and that those above ₹1 lakh per month for three consecutive months move to P2M (Q24, Q29). The circular says "less than or equal to ₹1 lakh", with no period (para 7.2). | NPCI FAQ 15-10-2026; NPCI/UPI/CC/01 (18-09-2026) para 7.2 |
+| Convenience fee | The Payee PSP ensures that no surcharge is levied on users for UPI transactions, that a convenience fee is disclosed upfront on the merchant payment page prior to the selection of the payment mode, and that it remains consistent across the available debit payment modes (net banking, debit card, UPI and credit card). The duty binds the Payee PSP, not the seller, the agent or the gateway. | NPCI/UPI/CC/01 (18-09-2026) para 7.5 |
+| No charge by banks and system providers | "No bank or system provider shall impose ... any charge" on RuPay debit cards and UPI up to ₹2,000 (Payment and Settlement Systems Act, 2007, s.10A). It binds banks and system providers; its reach to merchants is interpretation. | Gazette S.O. 5067(E), 14-09-2026 |
+| UPI app fees | The FAQ says UPI application providers shall not charge a platform fee or any other charge for a UPI payment. | NPCI FAQ Q17 (an FAQ) |
+| Merchants and MDR | The FAQ says on-boarded merchants cannot pass MDR on to customers on UPI. | NPCI FAQ Q34 (an FAQ) |
+
 ### UPI Circle delegate
 
 Handler: `in.upi.circle` (alias `upi.circle.delegate`). Class O. Status **pilot**.

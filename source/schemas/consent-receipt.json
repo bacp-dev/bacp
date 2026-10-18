@@ -127,7 +127,8 @@
       "type": "object",
       "required": [
         "language",
-        "hash"
+        "hash",
+        "operator_compensation"
       ],
       "properties": {
         "language": {
@@ -143,6 +144,10 @@
         },
         "translation_model": {
           "type": "string"
+        },
+        "operator_compensation": {
+          "$ref": "common.json#/$defs/OperatorCompensation",
+          "description": "The operator compensation the principal saw in the notice. REQUIRED: a Mandate Manager MUST NOT activate a mandate whose notice did not state it."
         }
       }
     },

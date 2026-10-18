@@ -42,6 +42,7 @@
     },
     {
       "type": "delivery",
+      "recipient": "seller",
       "amount": {
         "value": 2500,
         "currency": "INR"

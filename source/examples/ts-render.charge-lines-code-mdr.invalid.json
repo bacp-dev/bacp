@@ -1,0 +1,42 @@
+{
+  "step_up_id": "stp_01HZXL",
+  "session_id": "ses_01HZXE",
+  "kind": "confirm",
+  "reason": "constraint_unresolved",
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+  "total": {
+    "value": 50000,
+    "currency": "INR"
+  },
+  "charge_lines": [
+    {
+      "code": "mdr",
+      "amount": {
+        "value": 2000,
+        "currency": "INR"
+      },
+      "recipient": "seller"
+    },
+    {
+      "code": "service",
+      "amount": {
+        "value": 2000,
+        "currency": "INR"
+      },
+      "recipient": "assisted_operator"
+    },
+    {
+      "code": "remainder",
+      "amount": {
+        "value": 46000,
+        "currency": "INR"
+      }
+    }
+  ],
+  "price_breakup_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4",
+  "seller_name": "Nandini Dairy Store",
+  "revoke_route": "https://mm.psp.example.in/revoke/mdt_CHK7Q2W9X4K1M3",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-18T10:15:00+05:30"
+}

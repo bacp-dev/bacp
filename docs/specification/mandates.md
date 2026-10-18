@@ -167,7 +167,8 @@ Manager** (MM) issues it.
 1. The agent calls `POST /mandates` (tag `bacp-browse`) with a `MandateRequest`:
    `purpose_code`, `rail`, `presence_allowed`, `proposed_constraints`, `data_scopes`,
    `action_scope`, `validity` (an ISO 8601 duration), `language`, `channel` (the channel on which the
-   principal will approve) and `webhook_url`. The gateway
+   principal will approve) and `webhook_url`, and REQUIRED `operator_compensation`
+   ([Operator compensation](#operator-compensation)). The gateway
    **MUST** accept `webhook_url`, so that `mandate.status_changed` can reach the agent before any
    session exists. To add a seller to an existing root open Checkout Mandate, the request also
    carries `checkout_mandate_ref` (pattern `^mdt_[A-Za-z0-9]{12,40}$`). A request for a
@@ -183,6 +184,9 @@ Manager** (MM) issues it.
       attestation does not list ([Handler binding](#handler-binding));
     - with `403 constraint_unknown` if `proposed_constraints` has a key this page does not define
       (see [Fail-closed handling](#unknown-constraints));
+    - with `400 invalid_request` at `$.operator_compensation` if the request has no `operator_compensation`, or one that
+      is not consistent with the `disclosure.compensation_model` of the signing AgentCredential
+      ([Operator compensation](#operator-compensation));
     - with `403 mandate_scope_mismatch` if it has no `amount_per_txn`; has no periodic budget; has
       no `categories_allow`, or one outside the purpose's categories; asks for a longer validity
       than the purpose allows; exceeds any per-transaction or per-period bound of the purpose
@@ -209,7 +213,9 @@ Manager** (MM) issues it.
    `trusted_surface_url` deep link. The link expires after at most 15 minutes.
 4. The principal opens the link. The Trusted Surface shows the notice in the principal's language
    (English or a language of the Eighth Schedule): limits, categories, data items, recipient class,
-   withdrawal route and grievance route. For a payee-bound primitive the notice also shows the
+   withdrawal route and grievance route, and the [operator compensation](#operator-compensation): what the
+   principal pays the operator, and what sellers pay the operator or the buyer app. The notice, with the
+   compensation, is hashed into the ConsentReceipt `notice`. For a payee-bound primitive the notice also shows the
    payee name the bank returns for `payee.vpa` and the seller's `bpp_id`. For a Reserve Pay block it
    shows the requested block amount and, unless the payer PSP attests a block-debit feed, the
    unseen-draw statement ([Usage ledger](#usage-ledger)). For a sibling Payment Mandate it shows the
@@ -288,6 +294,39 @@ sequenceDiagram
     G->>G: InstructionLog entry at stage mandate
     G-->>A: Webhook mandate.status_changed ACTIVE
 ```
+
+### Operator compensation {#operator-compensation}
+
+A principal who knows how the operator behind her agent is paid can discount its advice. The mandate request
+therefore carries `operator_compensation`, and the Trusted Surface shows it in the notice before the principal
+approves.
+
+```json
+{
+  "from_principal": [{"basis": "per_order", "amount": {"value": 2000, "currency": "INR"}}],
+  "from_sellers": "finder_fee"
+}
+```
+
+| Field | Content |
+|---|---|
+| `from_principal[]` | What the principal pays: one or more `{basis, amount?}`. `basis` is `per_order` (a fee on each order), `period` (a fee for a period named in the operator's terms) or `none`. `amount` is REQUIRED for `per_order` and `period`, and absent for `none`. A `none` entry stands alone. |
+| `from_sellers` | What sellers pay the operator or the buyer app for orders it brings: `finder_fee` (an ONDC buyer finder fee), `channel_margin`, `none` or `other`. |
+
+- The Mandate Manager **MUST NOT** activate a mandate whose request has no `operator_compensation`
+  (`400 invalid_request` at `$.operator_compensation`; the mandate never becomes `ACTIVE`), and
+  **MUST** show the value in the notice and hash it into the ConsentReceipt `notice`
+  (`notice.operator_compensation` is REQUIRED).
+- The source of the declaration is the operator. When the AgentCredential carries `disclosure.compensation_model`,
+  the request **MUST** be consistent with it: `none` means every `from_principal` basis is `none` and
+  `from_sellers` is `none`; `seller_paid` means `from_principal` is `none` and `from_sellers` is not `none`;
+  `principal_paid` means a `from_principal` entry is not `none` and `from_sellers` is `none`; `mixed` means both.
+  Otherwise the request is refused with `400 invalid_request` at `$.operator_compensation`.
+- This is BACP policy, not a statutory duty. No Indian rule found requires an agent operator to disclose a
+  seller-paid commission (not verified as of 18-10-2026), and BACP cites no law for it
+  ([Q-79](open-questions.md#q-79)).
+- Per-order amounts are shown again at the time of the order as an [operator charge](checkout/index.md#fee-lines).
+  What sellers pay is carried per order in `intermediary_compensation[]` and is never read out per order.
 
 ### Sibling Payment Mandates {#sibling-payment-mandates}
 
@@ -402,8 +441,19 @@ never against agent claims.
 | `cod_allowed` | boolean | Cash-on-delivery orders are allowed HNP only when `true`. | `403 cod_not_allowed` |
 | `cod_max_open_orders` | integer ≥ 0 | Maximum open COD orders the agent may hold HNP. Where a negotiation mandate also sets a cap, the stricter wins. | `403 cod_open_orders_cap` |
 | `credit_funding_allowed` | boolean | A credit-funded handler (BNPL, cardless EMI, a credit line) is refused unless this is `true`. | `403 credit_funding_not_allowed` |
+| `convenience_fees` | `{allowed, max_per_order?}` | In a human-not-present checkout, the agent may pay a convenience fee only when `allowed` is `true` and the total of the order's `convenience` lines is at or below `max_per_order` (when it is set). With `allowed: false`, `max_per_order` MUST be absent. | `confirm` step-up, reason `constraint_unresolved`, before any money moves |
 
 COD and credit funding are described in [Credit and Split Tender](payments/credit-and-split-tender.md).
+
+**Convenience fees in a human-not-present checkout.** NPCI/UPI/CC/01 para 7.5 asks the Payee PSP to disclose a
+convenience fee "upfront to the User on the merchant payment page(s) prior to the selection of the payment mode". When
+the agent selects the mode and no human sees a payment page, the mandate is where the principal's consent to such a fee
+is recorded. In HNP, if the order has a `convenience_fee` line (a `convenience` charge) that `convenience_fees` does not
+cover, because the field is absent, `allowed` is `false` or the total of those lines is above `max_per_order`, the
+gateway raises a `confirm` step-up with reason `constraint_unresolved` and moves no money. This is a mandate constraint,
+so a verifier that does not know the key fails closed
+([Fail-closed handling](#unknown-constraints)). Whether disclosure through the Trusted Surface meets para 7.5 is
+open ([Q-78](open-questions.md#q-78)).
 
 ### Budgets {#budgets}
 
@@ -682,7 +732,7 @@ Rules on the order:
   ([Sibling Payment Mandates](#sibling-payment-mandates)).
 - **Fallback is a step-up.** When a leg cannot be paid with the handler first planned for it (the
   principal's preference, or the rung the principal last approved), and the replacement changes the
-  leg's funding (deposit or credit), fee-bearer, payee or collector, the gateway raises a
+  leg's funding (deposit or credit), [fee-bearer](#fee-bearer-change), payee or collector, the gateway raises a
   `rail_fallback` step-up and moves no money. A change of rail alone, with none of those changing, is
   logged in `comparison[]` and raises no step-up.
 - **No re-route of an in-doubt leg.** A leg whose payment is `in_doubt` **MUST NOT** be re-routed to
@@ -693,6 +743,17 @@ Rules on the order:
     The per-leg rule settles [design choice (d)](open-questions.md#proposed-d) in `2026-10-17`. Whether an
     agent-initiated draw on a Reserve Pay block counts as a customer action on the merchant's platform is
     open ([Q-65](open-questions.md#q-65)).
+
+### Fee-bearer change {#fee-bearer-change}
+
+The payer-borne lines that apply to a handler are the session's
+`totals[]` lines of type `convenience_fee` or `cod_fee` whose `applies_to_handlers` lists the handler or is absent,
+and every line of the session's `operator_charges[]`. A replacement **changes the leg's fee-bearer** when the
+payer-borne lines that apply to the replacement handler differ from those that apply to the planned handler in
+`code` (the line type), `amount` or `recipient`. A line with no handler scope applies to every handler, so on its own
+it never changes the fee-bearer. The merchant discount rate, the payment aggregator's commission, the finder fee and
+every other cost the seller bears are never in the comparison. The trigger therefore fires mainly on a fallback to or
+from COD, on a change of operator fee and on a quote that charges one debit mode more than another.
 
 ## Step-up {#step-up}
 
@@ -706,7 +767,7 @@ There are three kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
-| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, fee-bearer, payee or collector ([Per-leg rule](#per-leg-rule)). |
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), a convenience fee that the mandate's [`convenience_fees`](#constraints) does not cover in HNP, the HNP `payment_mode_fee_inconsistent` warning ([Fees on the payer's screen](checkout/index.md#fee-lines)), an order that a seller's [`requires_principal_confirmation`](discovery.md#principal-confirmation) covers, or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, [fee-bearer](#fee-bearer-change), payee or collector ([Per-leg rule](#per-leg-rule)). |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
 | `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`); a replacement for a step-up voided after a counterparty revised the issue's `resolution` is not counted ([Presence proof](human-participants.md#hp-proof)). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 

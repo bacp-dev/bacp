@@ -1,0 +1,30 @@
+{
+  "return_id": "ret_01HZXF",
+  "order_id": "ORD-DAIRY-5521",
+  "status": "RETURN_APPROVED",
+  "items": [
+    {
+      "id": "I-CURD-1KG",
+      "quantity": 1
+    }
+  ],
+  "refund": {
+    "status": "INITIATED",
+    "amount": {
+      "value": 19800,
+      "currency": "INR"
+    },
+    "charges_refunded": [],
+    "charges_retained": [
+      {
+        "code": "mdr",
+        "amount": {
+          "value": 1200,
+          "currency": "INR"
+        },
+        "refund_rule": "before_dispatch"
+      }
+    ],
+    "to": "original_method"
+  }
+}
