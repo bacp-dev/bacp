@@ -1,0 +1,307 @@
+# Bharat Agentic Commerce Protocol (BACP)
+
+> BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.
+
+BACP (Bharat Agentic Commerce Protocol) is an open protocol for AI agents to transact in Indian commerce on ONDC/Beckn, UPI and other Indian payment rails, with mandate-bound authority, DPDP-compliant consent, signed requests and verifiable evidence.
+
+# Overview
+
+# Bharat Agentic Commerce Protocol
+
+**BACP lets an AI agent discover, negotiate, buy, pay for, return and raise grievances about goods and services in India, on behalf of a person or a business, within limits that person or business has signed.**
+
+Version 2026-10-18
+
+BACP `2026-10-18` is the first dated release of the specification, and implementers can target it. Rules marked **Proposed** depend on an [open question](/latest/specification/open-questions/) and may change in a later dated release. The conformance test suite is not yet published, so no participant can hold a conformance attestation yet. BACP is an independent proposal: it is not issued or endorsed by NPCI, ONDC, RBI or any other public body. Send feedback on [GitHub](https://github.com/bacp-dev/bacp).
+
+[Read the specification](/latest/specification/overview/) [Core concepts](https://spec.bacp.dev/documentation/core-concepts/index.md) [View on GitHub](https://github.com/bacp-dev/bacp)
+
+## Why BACP
+
+India already has the rails that agentic commerce needs. ONDC and Beckn provide an open commerce network with order, cancel, return and grievance flows. UPI moves money at population scale and already has standing-authority primitives such as UPI Circle, Reserve Pay and AutoPay. Account Aggregator consent shows how to make permission explicit, purpose-bound and revocable. The DPDP Act sets the rules for personal data.
+
+As of 17-10-2026, none of these rails has a published, standard way to identify agents. A network message identifies the buyer app, not the agent that acted. A payment carries no record of what the user allowed the agent to do. Nothing standard says whether a human was present, how a user revokes an agent, or how a dispute can reconstruct what the agent was told.
+
+Global agentic-commerce protocols solve parts of this problem, but, as of 17-10-2026, they are built mainly around cards and around single merchants. None of them defines how to use UPI, cash on delivery, GST, Indian-language voice or the ONDC network.
+
+BACP is a thin agent layer over the Indian rails. It replaces none of them. It adds four things to every transaction:
+
+- **who** the agent is, as a signed and registered credential;
+- **on whose authority** it acts, and within what limits, as a signed mandate;
+- **whether a human was present** when it acted;
+- **what the user agreed to share**, as a DPDP consent receipt.
+
+Every step leaves verifiable evidence, so that a dispute can be traced from the user's instruction to the UPI reference number.
+
+## What the first release covers
+
+BACP `2026-10-18` leads with marketplace and quick commerce (`b2c.ecom`), and launches with kirana khata, subscriptions and ticketing. These four trade profiles are stable. Distributor schemes and B2B procurement, services and social commerce are in the release as proposed profiles: attestable, but their rules MAY change in a later dated release. GeM, agri and mandi trade, cross-border trade, high-value purchases, rentals and assisted rural commerce are in review: described so that readers can comment, outside the conformance scope of this release, and open to change or removal. [Trade profiles](/latest/specification/trade-profiles/#profile-table) lists the maturity of each.
+
+## Who it is for
+
+| You are                          | What BACP gives you                                                                                                                                                                          |
+| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **An agent builder**             | One way to discover, check out, negotiate, pay and raise grievances across the ONDC network, over REST, MCP or A2A, without a separate integration for each seller.                          |
+| **A buyer app (BAP)**            | A gateway model for hosting agents safely: a deterministic mandate verifier, signed agent requests, and idempotency and replay protection on top of Beckn.                                   |
+| **A seller or seller app (BPP)** | Agent orders you can trust: a declared and signed agent, a mandate reference, a hash of the cart the user approved, and structured negotiation that never leaks the buyer's walk-away price. |
+| **A PSP, bank or issuer**        | A clean binding between an agent mandate and the UPI and other Indian payment primitives you already run, with a basket-blind payment leg and signed receipts.                               |
+| **A regulator or policy team**   | A concrete, reviewable proposal for how agent commerce can meet RBI authentication rules, DPDP consent, e-commerce consumer protection and grievance timelines.                              |
+
+## Key features
+
+- **Mandate-bound agents**
+
+  ______________________________________________________________________
+
+  An agent acts only under a signed mandate, open or closed, with budgets, allow-lists, step-up thresholds and fast revocation. The agent is never an authentication factor.
+
+  [Mandates and consent →](/latest/specification/mandates/)
+
+- **Native UPI and all Indian rails**
+
+  ______________________________________________________________________
+
+  Open mandates bind to UPI Circle, Reserve Pay, AutoPay and One-Time Mandate. (As of 17-10-2026, NPCI lists AI-driven payments through UPI Circle as a closed-user-group pilot.) A registry of payment handlers covers cards, net banking, wallets, BBPS, e-RUPI, NACH, cash on delivery and B2B credit.
+
+  [Payments →](/latest/specification/payments/)
+
+- **Built on ONDC/Beckn**
+
+  ______________________________________________________________________
+
+  BACP rides on Beckn's search, select, init, confirm, cancel, update and IGM flows. Agent data travels in a namespaced extension that existing network participants can ignore.
+
+  [Beckn / ONDC binding →](/latest/specification/transports/beckn/)
+
+- **Negotiation the way India trades**
+
+  ______________________________________________________________________
+
+  Mol-bhav, B2B price rounds, RFQs, reverse auctions and schemes. The language model proposes and a deterministic guard decides. The reservation price never leaves the buyer's side.
+
+  [Negotiation →](/latest/specification/negotiation/)
+
+- **DPDP-grade consent**
+
+  ______________________________________________________________________
+
+  Mandates follow Account Aggregator consent semantics: immutable, purpose-bound, use-counted and revocable. Every data share produces a consent receipt in the user's language.
+
+  [Security and privacy →](/latest/specification/security-and-privacy/)
+
+- **Verifiable evidence and IGM**
+
+  ______________________________________________________________________
+
+  A hash-chained instruction log and rail-anchored receipts link the prompt, intent, cart, mandate and UPI RRN. Agents raise grievances through ONDC IGM with that evidence attached.
+
+  [Evidence →](/latest/specification/evidence/)
+
+## How it fits together
+
+```
+flowchart LR
+    U["User"] -->|"approves mandate on the Trusted Surface"| MM["Mandate Manager"]
+    A["Agent"] -->|"signed request with mandate"| G["BACP gateway<br/>in a buyer app"]
+    MM -.->|"mandate status"| G
+    G -->|"Beckn with context.bacp"| S["Seller apps on ONDC"]
+    G -->|"basket-blind payment leg"| P["Payer PSP and UPI"]
+    P -->|"signed receipt with RRN"| G
+    G -->|"instruction log and receipts"| E["Evidence bundle"]
+```
+
+[Core concepts](https://spec.bacp.dev/documentation/core-concepts/index.md) explains each part. [BACP and India's DPI](https://spec.bacp.dev/documentation/india-dpi/index.md) explains what BACP takes from each rail, and [BACP and other protocols](https://spec.bacp.dev/documentation/other-protocols/index.md) explains how it relates to UCP, AP2, ACP, A2A and MCP.
+
+## An independent, open proposal
+
+BACP is an independent open proposal. It is not issued, endorsed or operated by NPCI, ONDC, RBI or any other public body. As of 17-10-2026, no production deployments have been announced. Where it relies on a rail or a regulation, it describes that rail as publicly documented and leaves the rail's own rules in charge.
+
+The specification, schemas and tools are developed in the open at [github.com/bacp-dev/bacp](https://github.com/bacp-dev/bacp) under the Apache License 2.0. See [Status and Roadmap](https://spec.bacp.dev/documentation/roadmap/index.md) for what comes next.
+
+# Core Concepts
+
+This page explains the main ideas in BACP in plain terms. The [specification](/latest/specification/overview/) gives the normative rules. Where this page and the specification differ, the specification wins.
+
+Version 2026-10-18
+
+This page describes BACP version `2026-10-18`. Rules marked **Proposed** in the specification depend on an open question and may change in a later dated release. They are listed on the [open questions](/latest/specification/open-questions/) page.
+
+## The idea in one paragraph
+
+An AI agent that shops for someone in India needs to do four things the existing rails do not support: prove **who it is**, prove **what it is allowed to do**, show **whether its principal was present**, and show **what personal data the principal agreed to share**. BACP adds these four things as signed artefacts that travel with ordinary ONDC/Beckn messages and ordinary UPI payments. The rails stay in charge of what they already do. BACP adds the agent layer and the evidence.
+
+## Layers
+
+BACP is built in layers. Each layer reuses an existing standard or rail where one exists.
+
+```
+flowchart TB
+    T["Transport bindings<br/>REST, MCP, A2A"]
+    F["BACP session facade<br/>checkout, negotiation, post-order, evidence"]
+    B["ONDC / Beckn network<br/>search, select, init, confirm, cancel, update, IGM"]
+    R["Payment rails<br/>UPI and other Indian rails"]
+    C["Consent<br/>mandates and consent receipts"]
+    I["Identity<br/>agent credentials and request signatures"]
+    T --> F
+    F --> B
+    F --> R
+    C -.-> F
+    I -.-> T
+```
+
+Solid arrows are calls. Dotted arrows are trust dependencies: every call is checked against a mandate and a signed agent identity.
+
+## Actors
+
+| Actor                                   | Role in BACP                                                                                                                                                                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **User** (principal)                    | The person or business the agent acts for. Approves mandates, answers step-ups and enters the UPI PIN or other authentication factor. Can pause or revoke a mandate at any time.                                          |
+| **Agent**                               | The AI runtime, text or voice. It finds products, builds carts, negotiates and asks for payment. BACP treats it as **untrusted**: it never holds a PIN or OTP, never signs consent and is never an authentication factor. |
+| **Agent operator**                      | The legal entity that operates the agent. It holds the agent's credential, keeps the signing key out of the agent's reach, discloses that the user is dealing with an AI, and offers a human handoff.                     |
+| **Buyer app (BAP) with a BACP gateway** | The registered ONDC buyer app that hosts the gateway. It verifies agent signatures and mandates in deterministic code, talks Beckn to the network and keeps the evidence.                                                 |
+| **Seller app (BPP) and seller**         | Publish catalogues, quote, fulfil, handle cancellations and returns, issue GST invoices and respond to grievances.                                                                                                        |
+| **Mandate Manager**                     | Turns the user's approval into a signed mandate and consent receipt, tracks use and revocation, and publishes status. It does not see order or payment payloads.                                                          |
+| **Trusted Surface**                     | A non-agentic screen, usually the user's UPI or banking app, where the user reviews and approves a mandate and authenticates.                                                                                             |
+| **Payer PSP, issuer and NPCI**          | Execute the payment and enforce rail limits. In BACP the payer PSP also returns a signed receipt with the UPI RRN. They see the payee and amount, not the basket.                                                         |
+
+See the [glossary](/latest/specification/glossary/) for the full list of terms.
+
+## Mandates
+
+A **mandate** is a signed, immutable statement of what an agent may do for its principal. It is the centre of BACP. Every action the gateway takes is checked against one.
+
+BACP's mandates are wire-compatible with the open and closed mandates of the Agent Payments Protocol (AP2), and follow the consent-artefact model of Account Aggregator.
+
+- An **open** mandate sets constraints for future actions when the user will not be present: a budget per day, week or month, allowed categories, sellers and delivery PIN codes, a step-up threshold, and an expiry.
+- A **closed** mandate approves one exact cart or one exact payment.
+- A **Checkout Mandate** authorises what may be bought. A **Payment Mandate** authorises how it may be paid. A separate **negotiation** mandate holds bargaining bounds, including the walk-away price, which never leaves the buyer's side.
+- Each mandate records whether the human was **present (HP)** or **not present (HNP)**.
+- A mandate can be **paused, revoked or exhausted**. Revocation reaches the gateway quickly, and the gateway stops all in-flight sessions under that mandate.
+
+```
+sequenceDiagram
+    participant U as User
+    participant TS as Trusted Surface
+    participant MM as Mandate Manager
+    participant A as Agent
+    participant G as BACP gateway
+    U->>TS: Approve "groceries, up to ₹3,000 a month"
+    TS->>MM: Approval with UPI PIN
+    MM-->>A: Signed open mandate
+    A->>G: Cart of ₹850 with mandate reference
+    G->>G: Verify budget, category, PIN code, step-up rule
+    G-->>A: Within mandate, proceed
+    A->>G: Cart of ₹2,400
+    G-->>A: Above step-up threshold, ask the user
+```
+
+Read more: [Mandates and Consent](/latest/specification/mandates/).
+
+## The gateway: an agent layer over Beckn
+
+ONDC and Beckn are asynchronous. A buyer app sends `search` or `select` and receives `on_search` or `on_select` later, from many sellers. Agents work better with a synchronous session that always returns the full, authoritative state.
+
+The **BACP gateway** provides that. It runs inside, or on behalf of, a registered buyer app and:
+
+- exposes checkout sessions with familiar verbs (create, update, complete, cancel) and full-state responses;
+- turns each call into the matching Beckn messages, carrying agent data in a namespaced `context.bacp` extension that existing network participants can ignore;
+- verifies the agent's signature, credential and mandate before anything leaves the gateway;
+- adds what Beckn leaves optional: mandatory idempotency keys, a replay cache, and request signatures bound to callbacks;
+- records every step in the instruction log.
+
+```
+sequenceDiagram
+    participant A as Agent
+    participant G as BACP gateway
+    participant BG as Beckn gateway
+    participant S as Seller app
+    A->>G: Create checkout session
+    G->>BG: search with context.bacp
+    BG->>S: search
+    S-->>G: on_search
+    G->>S: select
+    S-->>G: on_select with signed quote
+    G-->>A: Session with full state and quote
+```
+
+The gateway does not change Beckn. A seller app that does not understand BACP can still serve an agent order, because the core Beckn messages are unchanged. Read more: [Sessions and Checkout](/latest/specification/checkout/) and [Beckn / ONDC Binding](/latest/specification/transports/beckn/).
+
+## Payment handlers
+
+India has many ways to pay, and they have very different rules about when a human must be present. BACP describes each one as a **payment handler**: a data record that states the rail, the regulator, the limits, the authentication model, the refund route and the settlement evidence. Limits are configuration, not code.
+
+Handlers fall into binding classes:
+
+| Class                            | Meaning                                                                                                                       | Examples                                                                                     |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| **O** (open-eligible)            | A standing authority whose limits the rail enforces. May back an open mandate, so the agent can pay without the user present. | UPI Reserve Pay, UPI Circle, UPI AutoPay, UPI One-Time Mandate, card e-mandate, NACH, e-RUPI |
+| **C** (closed)                   | Needs the user's own authentication for this one payment.                                                                     | UPI intent and QR, cards, net banking, BNPL, 123PAY                                          |
+| **A** (assisted or device-bound) | Only on the payer's own device or at an assisted counter. Never usable by a remote agent.                                     | UPI Lite, card present, UPI Tap & Pay                                                        |
+| **D** (deferred)                 | The order can be placed now, and payment happens later with a human.                                                          | Cash on delivery, pay on delivery by UPI                                                     |
+| **N** (non-paying)               | Financing, verification or tracking only.                                                                                     | TReDS, letter of credit, GeM payment tracking                                                |
+
+The agent never sees a PIN, OTP, card number or bank credential. The payment leg sent to the PSP carries only the payee, amount, mandate reference and a hash of the checkout, so the payment rail stays basket-blind.
+
+Read more: [Payments](/latest/specification/payments/), [Handler Registry](/latest/specification/payments/handler-registry/) and [Rail Bindings](/latest/specification/payments/rails/).
+
+## Negotiation
+
+Much of Indian trade is negotiated: mol-bhav in a market, price rounds with a distributor, an RFQ to several suppliers, a reverse auction for a public buyer. BACP supports these as declared **modes**: fixed price, posted dynamic price, alternating offers, sealed and iterated RFQs, English, reverse-L1 and Dutch auctions, and scheme claims such as bank offers and slab discounts.
+
+Three rules make agent negotiation safe:
+
+1. **Only structured, signed and expiring messages bind.** Chat, voice and model explanations are advisory and are logged, but they never form a contract.
+1. **The language model proposes and a deterministic guard decides.** Every firm counter, acceptance or bid is checked against the negotiation mandate outside the model. The model sees only a verdict: acceptable, not acceptable, or needs escalation.
+1. **The reservation price never leaves the buyer's side.** The seller sees only a signed attestation that the deal is within bounds.
+
+Silence is never acceptance: a negotiation that gets no reply expires. Indian commercial rules such as MRP ceilings and the MSMED payment-days limit are checked as validators, not left as guidance.
+
+```
+sequenceDiagram
+    participant A as Buyer agent
+    participant G as Guard in gateway
+    participant S as Seller
+    S->>A: Offer ₹1,450, valid 10 minutes
+    A->>G: Draft counter ₹1,200
+    G-->>A: Acceptable
+    G->>S: Signed counter ₹1,200
+    S->>A: Counter ₹1,320
+    A->>G: Draft accept ₹1,320
+    G-->>A: Needs escalation
+    A->>A: Ask the principal on the Trusted Surface
+```
+
+Read more: [Negotiation](/latest/specification/negotiation/) and [RFQ and Auctions](/latest/specification/negotiation/rfq-and-auctions/).
+
+## Evidence
+
+When an agent makes a mistake, someone has to work out what happened. BACP makes that possible by design.
+
+- The **instruction log** is a hash-chained record of each stage: the user's prompt, the agent's interpreted intent, the cart, the mandate checks, the step-ups and the payment.
+- **Receipts** are signed by the party that acted. A payment receipt is signed by the PSP and carries the UPI RRN and UTR, or the equivalent reference for other rails.
+- An **evidence bundle** joins these together. An agent can attach it when it raises a grievance through ONDC's Issue and Grievance Management (IGM) flow, and it can be joined to the RRN for a UPI dispute.
+
+```
+flowchart LR
+    P["Prompt"] --> I["Intent"] --> C["Cart and quote"] --> M["Mandate check"] --> Y["Payment receipt with RRN"]
+    P -.-> L["Hash-chained instruction log"]
+    I -.-> L
+    C -.-> L
+    M -.-> L
+    Y -.-> L
+    L --> B["Evidence bundle for IGM or UPI dispute"]
+```
+
+BACP does not decide who is liable when an agent errs within a valid mandate. It makes the evidence complete so that the parties, the networks and the regulators can decide. Read more: [Evidence and Instruction Log](/latest/specification/evidence/).
+
+## Identity and signing
+
+Every agent carries an **agent credential** bound to its operator's legal entity and to the buyer app that hosts it. Every agent request is signed with HTTP Message Signatures (RFC 9421), with separate signature tags for browsing, paying and post-order actions. On the network leg, the buyer app still signs Beckn messages with its registry key as usual.
+
+Read more: [Identity and Request Signing](/latest/specification/identity-and-signing/).
+
+## Where to go next
+
+- [Getting Started](/latest/specification/getting-started/) walks through a first integration.
+- [BACP and India's DPI](https://spec.bacp.dev/documentation/india-dpi/index.md) explains how BACP uses each Indian rail.
+- [BACP and other protocols](https://spec.bacp.dev/documentation/other-protocols/index.md) compares BACP with UCP, AP2, ACP and others.

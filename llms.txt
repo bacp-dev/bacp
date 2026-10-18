@@ -1,0 +1,11 @@
+# Bharat Agentic Commerce Protocol (BACP)
+
+> BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.
+
+BACP (Bharat Agentic Commerce Protocol) is an open protocol for AI agents to transact in Indian commerce on ONDC/Beckn, UPI and other Indian payment rails, with mandate-bound authority, DPDP-compliant consent, signed requests and verifiable evidence.
+
+## Overview
+
+- [Home](https://spec.bacp.dev/index.md)
+- [Core Concepts](https://spec.bacp.dev/documentation/core-concepts/index.md)
+
