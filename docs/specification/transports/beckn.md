@@ -218,9 +218,9 @@ or `on_init`, with a value of `first_cod_order`, `above_seller_threshold`, `new_
     | Value | `en-IN` | `hi-IN` |
     |---|---|---|
     | `first_cod_order` | "The seller asks you to confirm this order: it is your first cash-on-delivery order with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह इस विक्रेता के साथ आपका पहला कैश-ऑन-डिलीवरी ऑर्डर है।" |
-    | `above_seller_threshold` | "The seller asks you to confirm this order: it is above the amount the seller wants you to confirm." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह उस राशि से ऊपर है जिस पर विक्रेता आपकी पुष्टि माँगता है।" |
-    | `new_credit_line` | "The seller asks you to confirm this order: it opens a new credit line with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: इससे इस विक्रेता के साथ उधार की नई सीमा खुलती है।" |
-    | `credit_limit_exceeded` | "The seller asks you to confirm this order: it is above your credit limit with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह इस विक्रेता के साथ आपकी उधार सीमा से ऊपर है।" |
+    | `above_seller_threshold` | "The seller asks you to confirm this order: it is above the amount above which the seller asks you to confirm." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह उस रक़म से ज़्यादा है जिसके ऊपर विक्रेता आपकी पुष्टि माँगता है।" |
+    | `new_credit_line` | "The seller asks you to confirm this order: it opens a new credit line with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: इससे इस विक्रेता के यहाँ आपका नया उधार खाता शुरू होता है।" |
+    | `credit_limit_exceeded` | "The seller asks you to confirm this order: it is above your credit limit with this seller." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें: यह इस विक्रेता के यहाँ आपकी उधार सीमा से ज़्यादा है।" |
     | `other` | "The seller asks you to confirm this order." | "विक्रेता चाहता है कि आप इस ऑर्डर की पुष्टि करें।" |
 
   The `hi-IN` sentences say, in English, what the `en-IN` sentences say.

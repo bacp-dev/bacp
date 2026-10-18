@@ -63,6 +63,16 @@ proves little. So:
 | `bacp.ts.1` | **Trusted Surface** | — | Requirements TS-1 to TS-6 of a Mandate Manager's or payer PSP's Trusted Surface ([Human participants](human-participants.md#ts-requirements)): signed and templated content only, decline as easy as approve, language and modality, no urgency, a recorded `Presentation`, rendering only to the principal or payer that the render names, the typed `ts_render` and `render_required[]`, the language fail-safe, the TS-drawn voice challenge with keypad equal to speech, no PIN on a call the Trusted Surface places, and the assisted announcement. Exercised with `system_under_test: trusted_surface`. |
 | `bacp.auction.1` | **Auctions** | Negotiation | A neutral auctioneer, a signed and frozen auction specification, anti-sniping, commit–reveal with deposits and forfeits, reverse (L1), English and Dutch rules, retraction rules, shill-bid refusal, and award rules. |
 
+### Profile maturity {#profile-maturity}
+
+Each [trade profile](trade-profiles.md#profile-table) carries a **maturity** label (as of 18-10-2026). The label changes no case. It says whether a conformance attestation can cover the profile.
+
+| Maturity | Profiles | Conformance scope of this release |
+|---|---|---|
+| **launch** | `b2c.ecom` (marketplace and quick commerce), `kirana.khata`, `subscription`, `ticketing` | Stable. An attestation MAY cover the levels the profile needs. |
+| **proposed** | `fmcg.distribution`, `b2b.procurement`, `services`, `social` | In the release. An attestation MAY cover the levels the profile needs, and the rules MAY change in a later dated release. |
+| **experimental** | `gem`, `agri`, `crossborder`, `high_value`, `c2c.rental`, `assisted.rural` | Outside the scope. No attestation covers the profile, and a verifier MUST NOT treat a claim of one of these profiles as conformance. A party MAY refuse it with `capabilities_incompatible`, reason `profile_not_supported`. |
+
 ### Claiming a level
 
 - A participant declares the levels it claims in its
@@ -92,8 +102,8 @@ is refused. All fields below are REQUIRED, and no other claim is allowed.
 | Field | Content |
 |---|---|
 | `iss` | The `ca_id` of the entry in the [conformance-authority list](#conformance-authority-list) whose key signed the attestation. |
-| `sub` | The participant the attestation is about: the gateway's subscriber id, the agent id or the Mandate Manager's registry id. |
-| `subject_role` | `gateway`, `agent` or `mm`. Only a gateway may list pilot handlers: for `agent` and `mm`, `pilots[]` is empty. |
+| `sub` | The participant the attestation is about: the gateway's subscriber id, the agent id or the Mandate Manager's registry id. For a `trusted_surface`, the subscriber id of the Mandate Manager or payer PSP that operates the Trusted Surface. |
+| `subject_role` | `gateway`, `agent`, `mm` or `trusted_surface`. `trusted_surface` is the Trusted Surface of a Mandate Manager or a payer PSP, attested at level `bacp.ts.1` (`system_under_test: trusted_surface`). Only a gateway may list pilot handlers: for `agent`, `mm` and `trusted_surface`, `pilots[]` is empty. |
 | `scope` | The constant `bacp-protocol-conformance`. It states that the attestation covers BACP protocol conformance and nothing else. |
 | `iat`, `exp` | Issue and expiry time, as NumericDates (seconds since the epoch; NumericDate is defined in RFC 7519 §2, `exp` in §4.1.4 and `iat` in §4.1.6). `exp` is at most 180 days after `iat`. After `exp`, no verifier may rely on the attestation. |
 | `jti` | The attestation's unique id (`^[A-Za-z0-9_-]{8,64}$`). A mandate's `rail_binding.conformance` records it, and a pause for a lapsed attestation logs it. |
@@ -317,7 +327,7 @@ A BACP gateway MUST:
   (a seller gateway too), keep one linearisable chain per `negotiation_id`, and fill `sender_log_seq`,
   `sender_log_prev` and `protocol_terms` itself
   ([Signed seller acceptance and clock skew](negotiation/index.md#signed-seller-acceptance-and-clock-skew); cases T5-07
-  to T5-17, T5-19 to T5-24, T5-42, T5-45).
+  to T5-17, T5-19 to T5-24, T5-42, T5-45, T5-50).
 - Raise a negotiation step-up only on an outgoing accept or firm-counter attempt, treat an absent
   `accept_confirmation` as `ask`, honour `autonomous` only with a usable `notice_route`, deliver the notice of an
   autonomous act through that route and not through the agent, accept a purchase-offer withdrawal, and accept a decline
@@ -7590,6 +7600,18 @@ only to a refusal or to contested.
     - validate: {}
   expect:
     verdict: {code: schema_invalid, path: $.log_seq}
+
+- case_id: T5-50
+  title: The first entry of a negotiation chain carries the sha-256 of the negotiation_id as its genesis hash, for the sender chain and the receiver chain
+  level: bacp.neg.1
+  system_under_test: verifier
+  fixture:
+    vector: {message: offer.accept-genesis.json, receipt: counter-signature-payload.genesis.json}
+  steps:
+    - verify_chain: {}
+  expect:
+    verdict: {ok: true}
+    checks: {sender_log_prev: "sha-256 of negotiation_id as UTF-8 bytes", prev_entry_hash: "sha-256 of negotiation_id as UTF-8 bytes"}
 ```
 
 ## Trusted Surface and human-participant cases {#ts-residual-cases}
@@ -9542,4 +9564,126 @@ Case T8-CAP-05 is [BND-UCPF-06](#binding-cases).
     - validate: {schema: bacp.openapi.yaml#/components/schemas/Session, vector: [session.fulfilment-option-charge-fraction.invalid.json, session.policy-window-text.invalid.json, session.ext-in-namespace.invalid.json]}
   expect:
     verdict: {code: schema_invalid, count: 9}
+```
+
+## R2 residual cases {#r2-residual-cases}
+
+The cases below cover the residual decisions of the second review round. They use the manifest form above, their ids use the prefix `R2-`, and amounts are integer paise.
+
+```yaml
+- case_id: R2-AFA-01
+  title: The NCMC top-up descriptor carries no Annexure-1 exemption, and the NETC top-up descriptor keeps row 4
+  level: bacp.core.1
+  system_under_test: registry
+  steps:
+    - read_descriptor: {handler: [in.ppi.ncmc_topup, in.ppi.netc_topup]}
+  expect:
+    verdict:
+      in.ppi.ncmc_topup: {afa_model: per_txn_2fa, rbi_annex1_item: absent, pre_debit_notice: exempt}
+      in.ppi.netc_topup: {afa_model: exempt, rbi_annex1_item: 4}
+
+- case_id: R2-CREF-01
+  title: A step-up approval names its render by a JSON Pointer fragment into the bundle, and a URL or a leading-zero index is rejected
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/TrustedSurfaceEvent, vector: trusted-surface-event.step-up-approved.json}
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/TrustedSurfaceEvent, vector: trusted-surface-event.step-up-approved-content-ref-url.invalid.json}
+    - validate: {schema: common.json#/$defs/Presentation, vector: common.presentation-content-ref-leading-zero.invalid.json}
+  expect:
+    verdict: {code: schema_invalid, count: 2, path: $.presentation.content_ref}
+
+- case_id: R2-CREF-02
+  title: A verifier resolves content_ref against the bundle, and an index outside ts_renders[] makes the bundle unverifiable
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    bundle:
+      ts_renders: [R0]
+      trusted_surface_events: [{event: step_up.approved, presentation: {content_ref: "#/ts_renders/1"}}]
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: R2-SUBJ-01
+  title: A Trusted Surface attestation takes subject_role trusted_surface with an empty pilots list, and one that lists pilot handlers is schema-invalid
+  level: bacp.ts.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: conformance-attestation.json, vector: conformance-attestation.trusted-surface.json}
+    - validate: {schema: conformance-attestation.json, vector: conformance-attestation.trusted-surface-with-pilots.invalid.json}
+  expect:
+    verdict: {code: schema_invalid, count: 1, path: $.pilots}
+
+- case_id: R2-HI-01
+  title: A fixed hi-IN template in the published examples and the specification is Devanagari and has no gendered verb addressed to the principal
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    templates: [assisted_operator_present, offer_lapsed, crossing_withdraw_won, crossing_accept_won, crossing_contested, crossing_impossible, autopay_basis, above_seller_threshold, new_credit_line, credit_limit_exceeded]
+  steps:
+    - render: {language: hi-IN}
+  expect:
+    verdict:
+      script: Devanagari
+      english_words: acronyms_and_names_only
+      gendered_verb_to_principal: false
+      preselected_choice: none
+
+- case_id: R2-ALIAS-01
+  title: The projection declares each handler under dev.bacp.<handler id> with a schema served from bacp.dev, and never declares an in.* key with a schema
+  level: bacp.core.1
+  system_under_test: gateway
+  requires_capability: in.bacp.ucp_checkout
+  steps:
+    - request: {method: GET, path: "/checkout-sessions/{session_id}", tag: bacp-browse}
+  expect:
+    verdict:
+      ucp_payment_handler_keys: {all_match: "^dev\\.bacp\\."}
+      entry_schema: {all_match: "^https://bacp\\.dev/schemas/ucp/[a-z0-9_.]+\\.json$"}
+      in_key_with_schema: none
+
+- case_id: R2-ALIAS-02
+  title: A projected envelope whose alias schema is served from another origin, or whose in.* key carries a schema, is rejected
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/UcpCheckout, vector: [ucp-checkout.alias-foreign-schema.invalid.json, ucp-checkout.in-key-with-schema.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 2, path: $.ucp.payment_handlers}
+
+- case_id: R2-ALIAS-03
+  title: A complete whose instrument names the handler by the BACP id or by the dev.bacp alias key is the same handler
+  level: bacp.core.1
+  system_under_test: gateway
+  requires_capability: in.bacp.ucp_checkout
+  steps:
+    - request: {method: POST, path: "/checkout-sessions/{session_id}/complete", tag: bacp-pay, body: {payment: {instruments: [{handler_id: in.upi.circle}]}}}
+    - request: {method: POST, path: "/checkout-sessions/{session_id}/complete", tag: bacp-pay, body: {payment: {instruments: [{handler_id: dev.bacp.in.upi.circle}]}}}
+  expect:
+    verdict: {same_handler: true}
+
+- case_id: R2-ALIAS-04
+  title: Every handler of the registry has a UCP alias schema with an unversioned $id, and no schema exists for an unknown handler
+  level: bacp.core.1
+  system_under_test: registry
+  steps:
+    - read_files: {path: schemas/ucp/}
+  expect:
+    verdict: {schemas_equal_handlers: true, id_pattern: "https://bacp.dev/schemas/ucp/<handler id>.json"}
+
+- case_id: R2-MAT-01
+  title: A party that does not support an experimental profile refuses it with profile_not_supported, and nothing becomes LIVE
+  level: bacp.neg.1
+  fixture:
+    leg: beckn
+    profile: gem
+    profiles_supported: [b2c.ecom, kirana.khata]
+    negotiation: {state: OPEN}
+  steps:
+    - incoming: {type: offer, firm: true, param: $.context.bacp.profile}
+  expect:
+    messages: [{code: capabilities_incompatible, reason: profile_not_supported}]
+    state: {live_offer: none}
 ```

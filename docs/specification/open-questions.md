@@ -135,6 +135,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-100](#q-100) | Purchasable ranking parameters | BACP WG | Open, fail-safe default |
 | [Q-101](#q-101) | Counsel flags from the UCP capability parity rules | Legal counsel | Open, fail-safe default |
 | [Q-102](#q-102) | ONDC and NPCI points of the UCP capability parity rules | ONDC, NPCI | Open, fail-safe default |
+| [Q-103](#q-103) | Annexure-1 treatment of a FASTag top-up and an NCMC top-up | RBI, NPCI | Open, fail-safe default |
 
 ## Questions {#questions}
 
@@ -1254,6 +1255,17 @@ capability exists. (4) An adjustment can only reduce the amount unless the princ
 otherwise ([Quantity and units](transports/beckn.md#quantity-units)). The gateway projects `acting_for.gstin` into `buyer_id` and sends nothing else
 as a buyer identity. A band is accepted only where the rail holds the amount and the hold can be captured in part; otherwise adjustments are down only.
 
+### Q-103 Annexure-1 treatment of a FASTag top-up and an NCMC top-up {#q-103}
+
+**Question.** Does Annexure-1 of the RBI authentication directions (RBI/2025-26/79) exempt from two-factor authentication (1) a top-up of a FASTag, as an
+"NETC transaction" under row 4, and (2) a top-up of an NCMC card, which no row names?<br>
+**Owner.** RBI, NPCI.
+
+**Working position (fail-safe default).** Row 4 reads "NETC transactions" and the source circular (RBI/2019-20/126, 30-12-2019, para 4) exempts
+transactions in the NETC system; neither names a top-up. The registry keeps `rbi_annex1_item: 4` for `in.ppi.netc_topup` as a reading (as of 18-10-2026).
+No row names an NCMC top-up, so `in.ppi.ncmc_topup` carries no exemption and no `rbi_annex1_item`, and authentication applies under para 6(a)
+(`afa.model: per_txn_2fa`). The pre-debit notice exemption for both handlers is a separate rule from the e-mandate framework.
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
@@ -1770,8 +1782,10 @@ which is 39 commits after the tag; four of the 41 pinned files differ, so the mo
 `policy.json`, `warning_code.json` and `ucp.json`. Three changes that UCP made on `main` after the tag are not in the pinned
 release, and BACP does not depend on them: the Ask capability, the cart rule that `line_items` SHOULD be `[]`, and the
 registry of policy types (the tagged text lists `dev.ucp.shopping.policy.return` and `.warranty`). A gateway MUST NOT claim
-UCP compatibility on any other UCP version. A later re-pin to a newer tag re-runs the projection checks. See
-[UCP checkout projection](transports/ucp-checkout.md).
+UCP compatibility on any other UCP version. A later re-pin to a newer tag re-runs the projection checks. The projection's handler keys are the UCP aliases
+`dev.bacp.<handler id>`, each with a schema at `https://bacp.dev/schemas/ucp/<handler id>.json` (decided 18-10-2026, after the owner confirmed that
+BACP holds `bacp.dev`); the old keys stay accepted for the dated release that introduces the alias. See
+[UCP checkout projection](transports/ucp-checkout.md#namespaces).
 
 ### Other settled points {#settled-other}
 

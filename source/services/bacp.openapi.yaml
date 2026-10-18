@@ -997,7 +997,7 @@ paths:
                     language: hi-IN
                     modality: visual
                     content_hash: sha-256:t1dVn6mjcxJp1xBJ6Q1uN3lvlK1D5oQh0pX8wv5cY4E
-                    content_ref: https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZXAq8W3nK5vRt7YcLm2
+                    content_ref: '#/ts_renders/0'
                     template_id: psp.example.in/app/step-up-confirm/3
                     checkout_hash: sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ
                     user_action: upi_pin
@@ -7890,6 +7890,22 @@ components:
       - if:
           properties:
             event:
+              enum:
+              - step_up.approved
+              - negotiation.step_up.approved
+          required:
+          - event
+        then:
+          properties:
+            presentation:
+              properties:
+                content_ref:
+                  pattern: '^#/ts_renders/(0|[1-9][0-9]*)$'
+                  description: 'For a step-up approval, an RFC 3986 fragment holding an RFC 6901 JSON Pointer into the evidence bundle, #/ts_renders/<index>,
+                    where <index> is the zero-based position of the step-up''s ts_render in the bundle''s ts_renders array.'
+      - if:
+          properties:
+            event:
               const: negotiation.step_up.approved
           required:
           - event
@@ -9581,7 +9597,7 @@ components:
         ucp:
           type: object
           description: The UCP envelope. It declares dev.ucp.shopping.checkout and the BACP handlers of the session as payment_handlers, keyed by
-            their BACP handler id. It never declares dev.ucp.common.payment.ap2_mandate.
+            the alias dev.bacp.<BACP handler id>. It never declares dev.ucp.common.payment.ap2_mandate.
           required:
           - version
           - capabilities
@@ -9596,6 +9612,27 @@ components:
                 - dev.ucp.common.payment.ap2_mandate
             payment_handlers:
               type: object
+              description: 'The handlers of the session, keyed by the UCP alias dev.bacp.<BACP handler id>. Each entry carries the BACP handler id as id
+                and a schema served from https://bacp.dev/schemas/ucp/<BACP handler id>.json, so that the origin of the schema matches the
+                namespace authority of the key. A key that starts with in. never carries a schema.'
+              patternProperties:
+                '^dev\.bacp\.':
+                  type: array
+                  items:
+                    type: object
+                    required:
+                    - id
+                    - schema
+                    properties:
+                      schema:
+                        type: string
+                        pattern: '^https://bacp\.dev/schemas/ucp/[a-z0-9_.]+\.json$'
+                '^in\.':
+                  type: array
+                  items:
+                    not:
+                      required:
+                      - schema
         id:
           type: string
         status:
@@ -9648,7 +9685,7 @@ components:
                     description: The tender_id of the BACP payment plan, or any id for a single tender.
                   handler_id:
                     type: string
-                    description: The BACP handler id of the tender, as declared in the envelope's payment_handlers.
+                    description: The BACP handler id of the tender, as declared in the envelope's payment_handlers (the id member of the entry). The alias key dev.bacp.<BACP handler id> is also accepted.
                   type:
                     const: in.bacp.tender
                   amount:

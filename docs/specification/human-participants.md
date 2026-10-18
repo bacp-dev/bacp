@@ -144,7 +144,7 @@ A Trusted Surface **MUST** meet all six:
 | Language | Sentence |
 |---|---|
 | `en-IN` | "This request is for a different account. Do not enter anything here." |
-| `hi-IN` | "यह अनुरोध किसी दूसरे खाते के लिए है। यहाँ कुछ न डालें।" |
+| `hi-IN` | "यह अनुरोध किसी दूसरे खाते के लिए है। यहाँ कुछ भी न डालें।" |
 
 The `hi-IN` sentence says, in English: "This request is for a different account. Do not enter anything here." A Trusted
 Surface in another language uses a fixed translation of the same sentence from its own templates. TS-6 closes the
@@ -243,8 +243,7 @@ value, not a field of the render and not transmitted, and it is subject to these
 - It is shown on an app or web delivery only. On IVR and `upi123pay` it is not read, so that the principal hears one number only, the voice
   challenge ([Voice confirmation](#voice)).
 - It is never a voice challenge, never a control and never evidence. No gateway or verifier relies on it.
-- The text beside it says "A matching code does not make a link safe; only your bank's own app is safe" (`hi-IN`: "कोड मिलने का मतलब यह नहीं कि लिंक
-  सुरक्षित है; सिर्फ़ आपके बैंक का अपना ऐप सुरक्षित है।", which says the same in English). The wording is a draft, under review.
+- The text beside it says "A matching code does not make a link safe; only your bank's own app is safe" (`hi-IN`: "कोड मेल खाने से लिंक सुरक्षित नहीं हो जाता; सिर्फ़ आपके बैंक का अपना ऐप सुरक्षित है।", which says the same in English). The wording is a draft, under review.
 - It is a MAY and not a SHOULD. A phishing page shows no code, so comparing two displays does not stop a phisher, and "the codes match, so it is safe"
   is a compromised agent's best phishing line. It helps against a look-alike page that an honest agent relays and against a mix-up between concurrent
   step-ups, and it adds nothing to the wire.
@@ -274,7 +273,7 @@ Content rules for `ts_render` and every Trusted Surface template:
    style, so that a screen reader announces it as a list with a count.
 7. On an assisted session (`assisted_operators[]` present), before the factor, the Trusted Surface states from its
    own templates that an assisted operator is present and that only the principal enters the factor (`hi-IN`:
-   "आपकी मदद एक सहायक कर रहे हैं। PIN सिर्फ़ आप डालें, किसी को न बताएँ।", in English: "An assistant is helping you.
+   "आपकी मदद के लिए एक व्यक्ति आपके साथ है। PIN सिर्फ़ आप डालें, किसी को न बताएँ।", in English: "Someone is helping you.
    Only you enter the PIN; tell it to no one."). The Trusted Surface does not read "unverified" aloud: the
    [evidence summary](#evidence-summary) and the evidence bundle flag an operator reference as asserted, never
    verified ([Assisted channel](#assisted)).
@@ -300,7 +299,7 @@ These rules apply to the negotiation renders and notices of [Negotiation](negoti
 - **The acceptance choice.** At mandate set-up the Trusted Surface presents the two values of `process.accept_confirmation`, `ask` and `autonomous`, with equal weight, and preselects neither (TS-2). A mandate-setup `Presentation` that shows either value preselected is refused with `403 ts_render_mismatch`. The set-up also captures `process.notice_route`, the route by which the gateway tells the principal about each autonomous act through a channel the agent does not control. In a consumer session this is the explicit and affirmative action that Rule 4(9) of the Consumer Protection (E-Commerce) Rules, 2020 asks for.
 - **Notice of an autonomous act (`kind: notice`).** The gateway builds the notice of `agreed_by_agent` and `purchase_offered_by_agent` from its own templates, in the principal's language, and signs it as a render. It is not a step-up: the principal approves nothing. It states the seller or buyer name, `offeror_kind`, the all-in total (₹ with Indian digit grouping, spoken in words on a voice surface), the quantity and unit, the current-stage cancellation charge, the stop route available in that state, `revoke_route`, `grievance_contact` and its `content_hash`. It carries no URI other than those routes and no urgency text (TS-4), and never reaches the principal through the agent's output, where counterparty text could imitate it. The render and the receipt of its delivery go into the bundle as `notice_renders[]`.
 - **Decline of an `AGREED` or `BOUND` deal.** The render shows the current-stage charge under the agreed `cancellation.terms` before the factor is taken, and the principal's confirmation is posted as the distinct event `negotiation.agreed.declined`, never `negotiation.step_up.declined`: one verb with two consequences cannot be told apart on a voice channel. The signed event with its `Presentation` is the proof of presence for the decline; no agent carries an `hp_proof` for it ([Presence proof](#hp-proof)).
-- **Offer that ran out.** When an offer lapses during approval, or the acceptor's gateway refuses to dispatch within 5 seconds of `expires_at`, the Trusted Surface says that the offer ran out while the principal was approving, never that the principal declined. The `hi-IN` sentence says, in English, "The offer ran out while you were approving": "आप मंज़ूरी दे रहे थे, तभी ऑफ़र की अवधि समाप्त हो गई।" (`offer_expired_during_approval`).
+- **Offer that ran out.** When an offer lapses during approval, or the acceptor's gateway refuses to dispatch within 5 seconds of `expires_at`, the Trusted Surface says that the offer ran out while the principal was approving, never that the principal declined. The `hi-IN` sentence says, in English, "The offer ran out while you were approving": "आपकी मंज़ूरी पूरी होने से पहले ही ऑफ़र का समय ख़त्म हो गया।" (`offer_expired_during_approval`).
 - **IST.** Every time that the Trusted Surface shows or tells a person is in IST, in the person's language. This is a MUST. It is separate from the machine values in signed bytes, which SHOULD carry `+05:30`.
 - **Contested crossing.** Each principal is asked on their own surface in one plain question, whether to proceed with the deal, with the same weight for each answer and neither preselected. Declining and silence have the same effect.
 
@@ -368,7 +367,7 @@ Trusted Surface showed, how, and what the principal did:
 | `language` | yes | `LanguageTag`, for example `hi-IN`. A language name such as `"Hindi"` is invalid. |
 | `modality` | yes | `visual`, `audio` or `both`. |
 | `content_hash` | yes | For a step-up, the sha-256 of the compact JWS `ts_render`. Otherwise the hash of the content the Trusted Surface rendered from its templates (for a mandate approval, the notice whose hash the ConsentReceipt carries in `notice.hash`). |
-| `content_ref` | yes | Where a party entitled to the evidence fetches that content to recompute the hash. For a step-up, it names the entry of the bundle's `ts_renders[]` that holds the render, never the Mandate Manager and PSP only `GET /trusted-surface/step-ups/{step_up_id}`. |
+| `content_ref` | yes | Where a party entitled to the evidence fetches that content to recompute the hash. For a step-up, it is an RFC 3986 fragment that holds an RFC 6901 JSON Pointer into the evidence bundle, `#/ts_renders/<index>`, where `<index>` is the zero-based position of the render in the bundle's `ts_renders[]`, written without leading zeros. The bundle is signed and immutable, so the index is stable. It never points at the Mandate Manager and PSP only `GET /trusted-surface/step-ups/{step_up_id}`. For any other content it is an absolute URI. |
 | `user_action` | yes | `tap_confirm`, `upi_pin`, `biometric`, `passkey`, `voice_confirm_plus_device` or `decline`. `biometric` is the principal's own biometric enrolled for the principal on the Trusted Surface device, never an operator's. |
 | `shown_at`, `acted_at` | yes | When it was shown and when the principal acted. |
 | `template_id` | no | The Trusted Surface template and its version. |
@@ -743,7 +742,7 @@ conformance fixture sets.
   replacement. Replacements are counted per `(principal, issue_id)` under the published limit. Past it, the gateway
   creates no new step-up, answers the agent `409 session_state_conflict`, shows the principal no prompt, and the issue goes
   to the grievance route. Each render of a replacement carries the template sentence "the seller has changed this offer
-  N times" (`hi-IN`: "विक्रेता ने यह प्रस्ताव N बार बदला है।"; draft wording), never seller text. Without the cap a
+  N times" (`hi-IN`: "विक्रेता ने यह ऑफ़र N बार बदला है।"; draft wording), never seller text. Without the cap a
   seller could revise again and again until a tired principal accepts a worse remedy. Past the cap a principal can no
   longer accept a later, better offer in the flow and uses the grievance route.
 
@@ -831,10 +830,10 @@ complainant's language. The profile **`in.bacp.evidence.summary.1`** is an infor
   verified.
 - It carries the `bundle_hash` (sha-256 over the JCS form of the bundle) that it summarises.
 - For a negotiation it states the outcome of a crossing in one sentence, in English and `hi-IN`, built from signed artefacts alone (four integers: the two `sender_log_seq` and the two `log_seq`):
-    - withdraw won: "The seller's withdrawal reached the buyer's system before the buyer sent the acceptance, so there is no agreement." / "विक्रेता की वापसी (withdraw) ख़रीदार के सिस्टम तक स्वीकृति भेजे जाने से पहले पहुँच गई, इसलिए कोई समझौता नहीं हुआ।"
-    - accept won: "The buyer's acceptance reached the seller's system before the seller sent the withdrawal, so the agreement stands." / "ख़रीदार की स्वीकृति विक्रेता के सिस्टम तक वापसी (withdraw) भेजे जाने से पहले पहुँच गई, इसलिए समझौता क़ायम है।"
-    - contested: "The order and the withdrawal crossed: confirm or cancel. No breach is recorded either way." / "ऑर्डर और वापसी (withdraw) आपस में टकरा गए: पुष्टि करें या रद्द करें। दोनों स्थितियों में कोई उल्लंघन दर्ज नहीं होता।"
-    - impossible: "Both systems show they received the other's message first, so the record cannot be relied on and is treated as contested." / "दोनों सिस्टम दर्शाते हैं कि उन्हें दूसरे का संदेश पहले मिला, इसलिए रिकॉर्ड पर भरोसा नहीं किया जा सकता और इसे विवादित माना गया।"
+    - withdraw won: "The seller's withdrawal reached the buyer's system before the buyer sent the acceptance, so there is no agreement." / "ख़रीदार के मंज़ूरी भेजने से पहले ही, विक्रेता का ऑफ़र वापस लेने का संदेश ख़रीदार के सिस्टम तक पहुँच गया, इसलिए कोई सौदा नहीं हुआ।"
+    - accept won: "The buyer's acceptance reached the seller's system before the seller sent the withdrawal, so the agreement stands." / "विक्रेता के ऑफ़र वापस लेने का संदेश भेजने से पहले ही, ख़रीदार की मंज़ूरी विक्रेता के सिस्टम तक पहुँच गई, इसलिए सौदा पक्का है।"
+    - contested: "The order and the withdrawal crossed: confirm or cancel. No breach is recorded either way." / "ऑर्डर और ऑफ़र वापस लेने का संदेश, दोनों एक-दूसरे के पहुँचने से पहले ही भेजे गए: पुष्टि करें या रद्द करें। आप जो भी चुनें, किसी पर सौदा तोड़ने का मामला दर्ज नहीं होता।"
+    - impossible: "Both systems show they received the other's message first, so the record cannot be relied on and is treated as contested." / "दोनों सिस्टम दिखाते हैं कि दूसरे का संदेश उन्हें पहले मिला, इसलिए इस रिकॉर्ड पर भरोसा नहीं किया जा सकता और इसे विवादित माना जाता है।"
 - It is **never evidence**. A reviewer verifies the bundle, not the summary.
 
 **Requesting a summary.** `GET /evidence/{transaction_id}/summary?language=` (tag `bacp-browse`; MCP tool

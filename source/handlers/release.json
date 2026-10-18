@@ -5,7 +5,7 @@
   "files": [
     {
       "uri": "registry.json",
-      "digest": "sha-256:6eTOMdHWNO9Lxe3UOapXtAuQXYuabQYnG8Aq8JcV1U4"
+      "digest": "sha-256:q5zjoupiGPGaoqVGflq9JpoAZ706eXrXoEnmKyqd-j4"
     },
     {
       "uri": "../registry/conformance-authorities.json",

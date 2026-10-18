@@ -9,7 +9,7 @@
     "language": "hi-IN",
     "modality": "visual",
     "content_hash": "sha-256:T9L5DCDq-5e0R-HEe-xg_B-ZPpk2EtZqmVQ_S--eesE",
-    "content_ref": "https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZYNq8W3nK5vRt7YcLm2",
+    "content_ref": "#/ts_renders/0",
     "template_id": "mm.example.in/app/negotiation-confirm/1",
     "offer_hash": "sha-256:WKKmq8K0e3cRnS6iOO5kEBXsGKuGOw9FdzlnlmLsPgA",
     "user_action": "decline",

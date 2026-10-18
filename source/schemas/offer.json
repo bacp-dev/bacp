@@ -76,7 +76,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -448,7 +448,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -640,7 +640,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -810,7 +810,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -971,7 +971,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -1123,7 +1123,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -1272,7 +1272,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -1425,7 +1425,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -1582,7 +1582,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -1739,7 +1739,7 @@
         },
         "sender_log_prev": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (the chain's genesis hash for sender_log_seq 1). Inside the signed bytes."
+          "description": "The log_entry_hash of the sender's chain entry at sender_log_seq - 1 (for sender_log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes). Inside the signed bytes."
         },
         "protocol_terms": {
           "$ref": "#/$defs/ProtocolTerms"
@@ -1945,7 +1945,7 @@
         },
         "prev_entry_hash": {
           "$ref": "common.json#/$defs/Hash",
-          "description": "The log_entry_hash of the receiver's chain entry at log_seq - 1 (the chain's genesis hash for log_seq 1), so that a fork is provable from two receipts alone."
+          "description": "The log_entry_hash of the receiver's chain entry at log_seq - 1 (for log_seq 1, the genesis hash: sha-256 of the negotiation_id as UTF-8 bytes), so that a fork is provable from two receipts alone."
         }
       },
       "required": [

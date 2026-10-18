@@ -36,8 +36,8 @@ labels for traceability between this page, the open questions and conformance re
 
 | Status | Requirements |
 |---|---|
-| Covered | 178 |
-| Partial | 69 |
+| Covered | 177 |
+| Partial | 70 |
 | Gap | 15 |
 | N/A | 6 |
 | **Total** | **268** |
@@ -126,7 +126,7 @@ RBI directions, master directions and circulars on authentication, e-mandates, p
 | **PAY-214** Compile mandate constraints into e₹ rules; refuse conflicts | RBI Digital Rupee FAQ Q22 | Mandate constraints compiled into e₹ programmability rules; conflicts refused ([Rail Bindings](payments/rails.md)) | Covered |
 | **PAY-216** AePS human-present; summary shown and spoken; ATO ID and RRN logged; agent never triggers biometrics | RBI ATO Directions 2025 (RBI/2025-26/63); the summary, logging and no-agent-trigger rules are BACP policy | AePS is class A; assisted session binding; agent never triggers biometrics ([Handler Registry](payments/handler-registry.md)) | Covered |
 | **PAY-217** Reject ATOs inactive for 3 months or more | RBI ATO Directions 2025 para 2.2 | Sessions from an ATO flagged inactive for 3 months or more are rejected ([Rail Bindings](payments/rails.md)) | **Partial**: Check applies only where the acquirer exposes the inactivity flag |
-| **PAY-218** FASTag/NCMC top-ups under an AFA mandate; post-debit notice | RBI E-mandate Framework 2026 paras 6–7 | FASTag and NCMC top-ups under AFA mandates with post-debit notice ([Rail Bindings](payments/rails.md)) | Covered |
+| **PAY-218** FASTag/NCMC top-ups under an AFA mandate; post-debit notice | RBI E-mandate Framework 2026 paras 6–7 | FASTag and NCMC top-ups under AFA mandates with post-debit notice ([Rail Bindings](payments/rails.md)); an NCMC top-up claims no Annexure-1 exemption and a FASTag top-up keeps row 4 as a reading | **Partial**: Annexure-1 names neither top-up → [Q-103](open-questions.md#q-103) |
 | **PAY-219** Stored-value caps configurable (MTS ₹3,000; NCMC offline ₹500 / ₹2,000) | RBI PPI Master Direction 10.2; offline framework Annex para 5 (general offline caps; NCMC not named) | Stored-value caps configurable in descriptors ([Handler Registry](payments/handler-registry.md)) | Covered |
 | **PAY-221** TReDS bound to IRN and acceptance; refuse duplicate IRN | RBI TReDS Directions 2026 (RBI/DPSS/2026-27/406) paras 13–15; IRN binding is BACP policy | TReDS bound to IRN and acceptance; duplicate IRN refused ([Credit and Split Tender](payments/credit-and-split-tender.md)) | Covered |
 | **PAY-223** OCEN and dealer-line offers: lender, APR, tenure, repayment mandate type, KFS; human acceptance | RBI Digital Lending Directions (withdrawn; paragraph not identified); OCEN | OCEN and dealer-line offers carry lender, APR, tenure, repayment mandate type and KFS; human acceptance ([Credit and Split Tender](payments/credit-and-split-tender.md)) | Covered |

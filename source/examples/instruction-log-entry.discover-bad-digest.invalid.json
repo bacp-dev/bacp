@@ -11,7 +11,7 @@
   "content_ref": "https://logs.vaani.example.in/blobs/ses_01HZXB/5",
   "summary": {
     "en-IN": "Searched for atta and ghee; the seller's signed callback was verified.",
-    "hi-IN": "आटा और घी खोजा; विक्रेता का हस्ताक्षरित कॉलबैक सत्यापित हुआ।"
+    "hi-IN": "आटा और घी खोजा गया; विक्रेता के हस्ताक्षर वाले कॉलबैक की जाँच हुई और वह सही निकला।"
   },
   "refs": {
     "idempotency_key": "01HZX8W3T6Q9M2R7C4B1N8K5D0",

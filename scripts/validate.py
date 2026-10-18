@@ -196,6 +196,23 @@ def main() -> int:
         if errs:
             fail(f"registry {e.get('handler_id')}: {errs[0].message} at {errs[0].json_path}")
     print("PASS", f"handler registry ({n} handlers)")
+    # each handler has one UCP alias schema, schemas/ucp/<handler_id>.json, with a stable unversioned $id
+    alias_dir = SRC / "schemas" / "ucp"
+    alias_files = {p.name for p in alias_dir.glob("*.json")} if alias_dir.is_dir() else set()
+    want_files = {f"{i}.json" for i in ids}
+    for missing in sorted(want_files - alias_files):
+        fail(f"schemas/ucp/{missing}: no UCP alias schema for this registry handler")
+    for extra in sorted(alias_files - want_files):
+        fail(f"schemas/ucp/{extra}: no registry handler of this id")
+    for name in sorted(alias_files & want_files):
+        sch = json.loads((alias_dir / name).read_text())
+        if sch.get("$id") != f"https://bacp.dev/schemas/ucp/{name}":
+            fail(f"schemas/ucp/{name}: $id {sch.get('$id')!r} is not https://bacp.dev/schemas/ucp/{name}")
+        try:
+            Draft202012Validator.check_schema(sch)
+        except Exception as e:  # noqa: BLE001
+            fail(f"schemas/ucp/{name}: not a valid 2020-12 schema: {e}")
+    print("PASS", f"UCP alias schemas ({len(alias_files & want_files)} of {len(want_files)} handlers)")
     # a binding.open_primitives entry is a primitive of the descriptor that a rail or an issuer enforces
     for e in entries:
         enforced = {p["type"] for p in e.get("mandate_primitives", []) if p.get("limits_enforced_by") in ("rail", "issuer")}

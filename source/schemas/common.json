@@ -884,8 +884,16 @@
         },
         "content_ref": {
           "type": "string",
-          "format": "uri",
-          "description": "Where a party entitled to the evidence can fetch the presented content (for a step-up, the ts_render) to recompute content_hash."
+          "anyOf": [
+            {
+              "pattern": "^#/ts_renders/(0|[1-9][0-9]*)$"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:",
+              "format": "uri"
+            }
+          ],
+          "description": "Where a party entitled to the evidence can fetch the presented content to recompute content_hash. For a step-up it is an RFC 3986 fragment that holds an RFC 6901 JSON Pointer into the evidence bundle, #/ts_renders/<index>, where <index> is the zero-based position of the ts_render in the bundle's ts_renders array without leading zeros. The bundle is signed and immutable, so the index is stable. Otherwise it is an absolute URI of the operator-held content."
         },
         "template_id": {
           "type": "string",

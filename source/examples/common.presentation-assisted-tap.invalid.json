@@ -4,7 +4,7 @@
   "language": "hi-IN",
   "modality": "both",
   "content_hash": "sha-256:Bm827PMImR-m3T6Og1qtyYWbfP6FnGgvFauB-iWKvhI",
-  "content_ref": "https://gw.bap.example.in/bacp/trusted-surface/step-ups/stp_01HZXAq8W3nK5vRt7YcLm2",
+  "content_ref": "#/ts_renders/0",
   "template_id": "psp.example.in/assisted/step-up-confirm/3",
   "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
   "user_action": "tap_confirm",

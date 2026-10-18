@@ -29,15 +29,16 @@
     "sub": {
       "type": "string",
       "minLength": 1,
-      "description": "The participant that the attestation is about: the gateway's subscriber id, the agent id or the Mandate Manager's registry id, as subject_role says."
+      "description": "The participant that the attestation is about: the gateway's subscriber id, the agent id or the Mandate Manager's registry id, as subject_role says; for a trusted_surface, the subscriber id of the Mandate Manager or payer PSP that operates it."
     },
     "subject_role": {
       "enum": [
         "gateway",
         "agent",
-        "mm"
+        "mm",
+        "trusted_surface"
       ],
-      "description": "What the subject is. Only a gateway may list pilot handlers."
+      "description": "What the subject is: gateway, agent, mm (a Mandate Manager) or trusted_surface (the Trusted Surface of a Mandate Manager or a payer PSP, attested at level bacp.ts.1). Only a gateway may list pilot handlers."
     },
     "scope": {
       "const": "bacp-protocol-conformance",
@@ -111,7 +112,8 @@
           "subject_role": {
             "enum": [
               "agent",
-              "mm"
+              "mm",
+              "trusted_surface"
             ]
           }
         }

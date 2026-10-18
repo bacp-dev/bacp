@@ -506,15 +506,15 @@ Handlers: `in.ppi.netc_topup`, `in.ppi.ncmc_topup` (class O) and `in.ppi.transit
 
 | Item | Rule | Source |
 |---|---|---|
-| FASTag | NETC FASTags are bank-issued PPIs; KYC at issue. NETC transactions are exempt from AFA. | NPCI NETC *(not verified as of 17-10-2026)*; RBI Authentication Directions 2025, Annexure-1 item 4 |
-| Auto top-up notice | E-mandates that auto-replenish FASTag and NCMC balances need no pre-transaction notification. A post-transaction notification is still required. | E-mandate Framework 2026 paras 6(d), 7 |
+| FASTag | NETC FASTags are bank-issued PPIs; KYC at issue. NETC transactions are exempt from AFA (Annexure-1 row 4). BACP reads a FASTag top-up made inside NETC as an NETC transaction, because neither Annexure-1 nor the RBI circular of 30-12-2019 names a top-up (as of 18-10-2026; [Q-103](../open-questions.md#q-103)). | NPCI NETC *(not verified as of 17-10-2026)*; RBI Authentication Directions 2025, Annexure-1 item 4; RBI/2019-20/126, 30-12-2019, para 4 |
+| Auto top-up notice | E-mandates that auto-replenish FASTag and NCMC balances need no pre-transaction notification. A post-transaction notification is still required. This notice rule is separate from authentication: no Annexure-1 row names an NCMC top-up, so an NCMC top-up claims no authentication exemption and is authenticated under para 6(a) of the Directions ([Q-103](../open-questions.md#q-103)). | E-mandate Framework 2026 paras 6(d), 7 |
 | FASTag Annual Pass | ₹3,000 for one year or 200 trips at NH and NE fee plazas from 15-08-2025, bought only through the Rajmargyatra app or the NHAI site | *(press; NPCI and NHAI text not verified as of 17-10-2026)* |
 | NCMC offline wallet | ₹500 per offline transaction and ₹2,000 in total per instrument at any time (the 2024 uplift to ₹1,000 and ₹5,000 is for UPI Lite only) | RBI/2023-24/57, 24-08-2023, para 2; RBI/2024-25/93 para 1 |
 | PPI-MTS (transit PPI) | Outstanding balance ≤ ₹3,000, no KYC, no AFA, reloadable, perpetual validity; no cash-out, refund or transfer | PPI MD para 10.2 |
 
 Binding rules:
 
-- A FASTag, NCMC or transit top-up by an agent MUST run under an AFA-registered top-up mandate with threshold and amount fields. BACP MUST NOT require or send a pre-debit notice where the issuer claims the exemption, but MUST send a post-debit notice.
+- A FASTag, NCMC or transit top-up by an agent MUST run under an AFA-registered top-up mandate with threshold and amount fields. BACP MUST NOT require or send a pre-debit notice where the e-mandate framework exempts it, but MUST send a post-debit notice. An NCMC top-up carries no `rbi_annex1_item` and takes authentication under the descriptor's `per_txn_2fa` model.
 - Transit and NCMC offline caps are configurable, defaulting to the values above. A ₹3,001 PPI-MTS load and a ₹501 NCMC offline debit are refused.
 - The toll or transit spend itself is tag- or card-present and involves no agent. Buying the FASTag Annual Pass is a human-present payment on the official channels.
 

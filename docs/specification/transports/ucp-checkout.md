@@ -60,18 +60,35 @@ checks and the same state machine; only the request and response shape differ. T
   additional members): the BACP `status`, `checkout_hash`, `all_in_total`, every language of every message, the
   `step_up`, `plan_options` and `payment_plan`. A UCP client ignores it.
 - The `ucp` envelope declares `dev.ucp.shopping.checkout` at version `2026-08-25` (the UCP version of the pinned
-  release) and the session's BACP handlers as `payment_handlers`, each keyed by its BACP handler id. It never
+  release) and the session's BACP handlers as `payment_handlers`, each keyed by its UCP alias `dev.bacp.<handler id>`
+  and carrying the BACP handler id as `id` ([Namespaces and the handler keys](#namespaces)). It never
   declares `dev.ucp.common.payment.ap2_mandate` ([No AP2](#no-ap2)).
 
-**Namespaces and the handler keys.** The projection never declares an `in.*` id together with a `schema` in the profile
+<a id="namespaces"></a>**Namespaces and the handler keys.** The projection never declares an `in.*` id together with a `schema` in the profile
 or envelope that a UCP platform reads, and a BACP gateway MUST NOT accept or fetch a schema for an `in.*` id from a UCP
 business profile or from any other source: it logs `extension_not_registered` and does not activate the handler or
-capability. UCP wants a handler key to be a reverse-DNS id whose schema is served from the same authority, and the
-BACP handler ids are not DNS-bound ([Extensibility](../overview/index.md#extensibility)), so the keys of
-`ucp.payment_handlers` stay schema-less. On 18-10-2026 the owner confirmed that BACP holds the domain `bacp.dev`, whose
-reverse-DNS authority is `dev.bacp`, so the projection MAY move its handler keys to aliases under that authority, with a
-schema served from `https://bacp.dev/`, once BACP publishes the handler configuration schema that such an alias needs.
-This version publishes none, and the `in.bacp.*` capability ids do not change.
+capability. The BACP handler ids are not DNS-bound ([Extensibility](../overview/index.md#extensibility)), whereas UCP
+requires the `schema` URL of a handler or capability to be served from the namespace authority in its name (UCP
+overview, Authority Binding, at release `v2026-08-25`). BACP holds the domain `bacp.dev` (owner confirmation of 18-10-2026), whose
+reverse-DNS authority is `dev.bacp`. The projection therefore applies UCP's own rule and adds no grammar to it:
+
+- **Handler keys.** The key of each entry of `ucp.payment_handlers` is `dev.bacp.<handler id>`, where `<handler id>` is the
+  canonical id of the [registry](../payments/handler-registry.md) descriptor (`dev.bacp.in.upi.circle`,
+  `dev.bacp.bacp.credit_ledger`). UCP treats the labels after the authority as opaque, and the full handler id keeps the
+  mapping one to one. The entry carries the BACP handler id as `id` and a `schema` of
+  `https://bacp.dev/schemas/ucp/<handler id>.json`, whose host reversed (`dev.bacp`) is a label-aligned prefix of the key. Each
+  schema is published in the specification repository under `source/schemas/ucp/`, with an unversioned `$id` that the build rewrites per version
+  like every BACP schema. It describes a handler entry with no `config`: the limits and rules of the handler are
+  registry data, not UCP handler configuration (loss-table row 7).
+- **Extension keys.** The projection declares no extension today (its `ucp.capabilities` holds `dev.ucp.shopping.checkout`
+  only). A key that BACP adds later is `dev.bacp.<service>.<capability>`, the shape of UCP's naming convention for capabilities, with its
+  `schema` under `https://bacp.dev/schemas/ucp/`.
+- **Old keys.** A BACP handler id used as a key, as in a profile that was written before the alias, is accepted as an alias of its
+  `dev.bacp.` key for the dated release that introduces the alias, and a later dated release MAY stop accepting it
+  ([versioning policy](https://bacp.dev/versioning/#deprecation)). The `handler_id` of a `complete` instrument is the BACP handler id,
+  and the alias key is accepted there as well. The projection emits only the alias keys.
+- A gateway does not need to fetch these schemas: they are for a UCP platform that validates the envelope. The `in.bacp.*`
+  capability ids do not change.
 
 **Parked UCP operations.** The projection answers `404` for the UCP cart operations and for every other UCP operation
 that this page does not list; the cart ([Q-95](../open-questions.md#q-95)), account linking ([Q-96](../open-questions.md#q-96)),
@@ -138,7 +155,7 @@ loses something. The rows are in the order in which a UCP client fails.
 | 4 | `complete` takes mandates (JWS) | `payment.instruments[]` with a BACP closed payment mandate as the credential, and the checkout mandate in `bacp` | UCP's own payment instruments and AP2 |
 | 5 | `step_up.trusted_surface_url` | `continue_url`, only that URL, else absent | Any seller-supplied handoff URL |
 | 6 | `human_handoff` | `requires_escalation`, with the detail in `bacp.status` | The distinct status |
-| 7 | Handlers are in the gateway profile | `ucp.payment_handlers`, keyed by BACP handler id, with no UCP `config` | UCP handler configuration |
+| 7 | Handlers are in the gateway profile | `ucp.payment_handlers`, keyed by the alias `dev.bacp.<handler id>` with the BACP handler id as `id`, with no UCP `config` | UCP handler configuration |
 | 8 | `Amount` is `{value, currency}` | An integer in paise, with `currency` at the root (`INR`) | Nothing |
 | 9 | `/sessions` | `/checkout-sessions` | Nothing |
 | 10 | MCP tools take the body's properties, path parameters and `idempotency_key` | UCP's tool names, with the same arguments plus UCP's `id` | `meta` is not used |

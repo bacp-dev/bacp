@@ -4229,7 +4229,8 @@
     "section": "para 6(d)",
     "label": "RBI"
    }
-  ]
+  ],
+  "notes": "Reading, not stated text: Annexure-1 row 4 reads 'NETC transactions' and the source circular (RBI/2019-20/126, 30-12-2019, para 4) says that transactions in the NETC system can be performed without an additional factor of authentication or a pre-transaction notification. Neither text names a FASTag top-up, so BACP reads a top-up made inside NETC as an NETC transaction (fact-check of 18-10-2026). The registry keeps row 4 on that reading. An RBI or NPCI answer that a top-up is not an NETC transaction would withdraw the exemption (Q-103)."
  },
  {
   "handler_id": "in.ppi.ncmc_topup",
@@ -4316,14 +4317,14 @@
    }
   ],
   "afa": {
-   "model": "exempt",
-   "rbi_annex1_item": 4,
+   "model": "per_txn_2fa",
    "pre_debit_notice": "exempt",
    "source": {
     "file": "RBI Authentication Directions 2025 (RBI/2025-26/79), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=12898",
-    "section": "Annexure-1, item 4",
+    "section": "para 6(a); no Annexure-1 row names NCMC top-up",
     "label": "RBI"
-   }
+   },
+   "verification": "verified"
   },
   "refund": {
    "route": "issuer_or_sponsor",
@@ -4380,7 +4381,8 @@
     "section": "para 6(d)",
     "label": "RBI"
    }
-  ]
+  ],
+  "notes": "No Annexure-1 row of RBI/2025-26/79 names an NCMC top-up: row 4 covers NETC transactions only, and rows 3 and 5 (select PPIs, small-value offline payments) do not name it (fact-check of 18-10-2026). BACP therefore claims no exemption and applies authentication under para 6(a) as the fail-safe default, so the handler carries no rbi_annex1_item. The pre-debit notice exemption is a separate rule, from the e-mandate framework (paras 6(d) and 7). An RBI or NPCI answer is sought in Q-103."
  },
  {
   "handler_id": "in.ppi.transit",

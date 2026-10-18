@@ -33,6 +33,10 @@ BACP is a thin agent layer over the Indian rails. It replaces none of them. It a
 
 Every step leaves verifiable evidence, so that a dispute can be traced from the user's instruction to the UPI reference number.
 
+## What the first release covers
+
+BACP `2026-10-17` leads with marketplace and quick commerce (`b2c.ecom`), and launches with kirana khata, subscriptions and ticketing. These four trade profiles are stable. Distributor schemes and B2B procurement, services and social commerce are in the release as proposed profiles: attestable, but their rules MAY change in a later dated release. GeM, agri and mandi trade, cross-border trade, high-value purchases, rentals and assisted rural commerce are in review: described so that readers can comment, outside the conformance scope of this release, and open to change or removal. [Trade profiles](specification/trade-profiles.md#profile-table) lists the maturity of each.
+
 ## Who it is for
 
 | You are | What BACP gives you |

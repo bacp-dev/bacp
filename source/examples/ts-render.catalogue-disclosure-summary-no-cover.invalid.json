@@ -89,7 +89,7 @@
     }
   ],
   "summary": {
-    "hi-IN": "3 दुकानें, कुल ₹932। एक दुकान आपके रिज़र्व से ₹302 लेगी; बाकी 2 भुगतानों के लिए UPI PIN चाहिए। वह दुकान BACP को दिखे बिना ₹3,000 तक निकाल सकती है।",
+    "hi-IN": "3 दुकानें, कुल ₹932। एक दुकान आपके रिज़र्व से ₹302 लेगी; बाक़ी 2 भुगतानों के लिए UPI PIN चाहिए। वह दुकान BACP के देखे बिना ₹3,000 तक निकाल सकती है।",
     "en-IN": "3 sellers, ₹932 in all. One seller takes ₹302 from your reserve; the other 2 payments need your UPI PIN. That seller can draw up to ₹3,000 unseen by BACP."
   },
   "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",

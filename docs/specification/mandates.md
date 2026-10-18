@@ -587,8 +587,7 @@ and every post-order write, and travels on the network in `context.bacp.presence
   to the registry descriptor at that version, not a copy. Only the gateway sets it, and an agent that supplies it gets
   `400 invalid_request`. The principal's post-debit notice and the [evidence summary](human-participants.md#evidence-summary)
   render the basis from the descriptor through a fixed template, so that support staff need no registry lookup. For the
-  `hi-IN` notice of a recurring AutoPay debit the sentence is "यह कटौती आपके पहले से मंज़ूर ऑटो-पे से है, इसलिए PIN नहीं माँगा
-  गया।", which says in English "This debit is under the AutoPay you approved earlier, so no PIN was asked." The basis records
+  `hi-IN` notice of a recurring AutoPay debit the sentence is "यह पैसा उस ऑटो-पे से कटा है जिसे आपने पहले मंज़ूरी दी थी, इसलिए PIN नहीं माँगा गया।", which says in English "This debit is under the AutoPay you approved earlier, so no PIN was asked." The basis records
   which rule the debit relies on. It does not make the debit lawful: the issuer remains liable under RBI/2025-26/79 para 9(b) for a
   non-compliant debit. The descriptor's `afa.rbi_annex1_item` names the Annexure-1 row where the handler relies on an RBI
   exemption, and a handler that relies on authentication at block creation or registration (Reserve Pay, OTM, UPI Circle) has
