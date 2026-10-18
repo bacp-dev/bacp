@@ -1,0 +1,82 @@
+{
+  "subscriber_id": "psp.example.in",
+  "bacp_role": "psp",
+  "keys": [
+    {
+      "kid": "psp.example.in|ukid-7|es256",
+      "jwk": {
+        "kty": "EC",
+        "crv": "P-256",
+        "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+        "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+        "kid": "psp.example.in|ukid-7|es256"
+      }
+    }
+  ],
+  "valid_from": "2026-10-01T00:00:00+05:30",
+  "valid_until": "2027-10-01T00:00:00+05:30",
+  "status": "active",
+  "ts_origins": [
+    "https://app.psp.example.in",
+    "https://pay.psp.example.in:8443"
+  ],
+  "ts_notify_url": "https://push.psp.example.in/bacp/step-ups",
+  "ts_call_numbers": [
+    "+918071234567"
+  ],
+  "ts_languages": [
+    "en-IN",
+    "hi-IN",
+    "ta-IN"
+  ],
+  "ts_modalities": [
+    "visual",
+    "audio",
+    "both"
+  ],
+  "operator": {
+    "legal_name": "Example Payments Pvt Ltd",
+    "entity_ids": [
+      {
+        "type": "CIN",
+        "value": "U65999MH2016PLC000000"
+      },
+      {
+        "type": "PAN",
+        "value": "AAACE1234F"
+      }
+    ],
+    "assertion": "self",
+    "group_id": "grp-example-payments"
+  },
+  "regulatory_status": [
+    {
+      "regime": "rbi_pa",
+      "category": "non-bank payment aggregator",
+      "reference": "example authorisation listing",
+      "source": {
+        "file": "RBI list of authorised payment aggregators, https://www.rbi.org.in",
+        "section": "entry for Example Payments Pvt Ltd",
+        "label": "RBI"
+      },
+      "verified_on": "2026-10-15",
+      "status": "verified"
+    },
+    {
+      "regime": "npci_member",
+      "category": "third-party application provider",
+      "source": {
+        "file": "NPCI member listing, https://www.npci.org.in",
+        "section": "UPI third-party application providers",
+        "label": "NPCI"
+      },
+      "verified_on": "2026-10-15",
+      "status": "declared"
+    }
+  ],
+  "data_residency": {
+    "payment_data": "India",
+    "llm_region": "India",
+    "log_region": "India"
+  }
+}

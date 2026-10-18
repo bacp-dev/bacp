@@ -51,6 +51,64 @@
       ],
       "description": "Open mandate this one narrows (closed mandate or sub-agent delegation). Scope and expiry may only narrow."
     },
+    "supersedes": {
+      "type": "object",
+      "required": [
+        "mandate_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mandate_id": {
+          "type": "string",
+          "pattern": "^mdt_[A-Za-z0-9]{12,40}$"
+        }
+      },
+      "description": "The open mandate that this one replaces when the principal ports it to another gateway or re-issues it. It is set only on a request that the principal originates on the Trusted Surface: a request from an agent or a gateway that carries it is refused with 403 trusted_surface_only. The Mandate Manager revokes the superseded mandate before this one becomes ACTIVE."
+    },
+    "carried_exposure": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "period",
+          "window_start",
+          "amount",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "enum": [
+              "P1D",
+              "P7D",
+              "P1M",
+              "FIRST_24H",
+              "LIFETIME"
+            ],
+            "description": "The budget period of the window, as in constraints.budgets[].period."
+          },
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "\\+05:30$",
+            "description": "When the open window began, as an RFC 3339 timestamp in IST (+05:30)."
+          },
+          "amount": {
+            "$ref": "common.json#/$defs/Amount",
+            "description": "The spend already made in the window, in paise."
+          },
+          "source": {
+            "enum": [
+              "mm_events",
+              "incomplete"
+            ],
+            "description": "mm_events: the Mandate Manager's own use events cover the window. incomplete: they have a gap."
+          }
+        }
+      },
+      "description": "The spend that the principal has already made under the superseded mandate, in each budget window that is still open, as the Mandate Manager derived it from its own use events and signed it into this mandate. It starts the successor's windows at that spend, so that a port never restores budget. An entry with source incomplete marks a window for which the Mandate Manager's record has a gap: the Trusted Surface says so in the principal's language and pre-fills that window at the superseded mandate's max, which the principal may change before approving, because the cap is the principal's own. No signature of the gateway that is being left is ever needed. An agent or a gateway never supplies it."
+    },
     "checkout_mandate_ref": {
       "type": "string",
       "description": "Payment mandates only: the checkout mandate this payment authority is bound to (AP2 payment.reference, REQUIRED)"
@@ -124,6 +182,11 @@
         },
         "credential_hash": {
           "$ref": "common.json#/$defs/Hash"
+        },
+        "bap_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The subscriber id of the BAP, and so of the one gateway, that this mandate is bound to. The Mandate Manager copies it from the verified AgentCredential's bap.subscriber_id, never from the request, so it is no weaker than credential_hash, and it survives a credential re-issue that keeps cnf. A gateway whose BAP is not this value refuses the mandate with 403 mandate_scope_mismatch at $.agent.bap_id, so that one open mandate is spent through one gateway only; cross-gateway moves only by a successor mandate. A mandate issued without it (before this field) is bound by credential_hash alone: the gateway then requires the hash of the presented credential to equal credential_hash. A gateway on an earlier release does not enforce it."
         }
       }
     },
@@ -414,6 +477,11 @@
         "bpp_id": {
           "type": "string",
           "description": "The seller app (BPP subscriber id) of the payee seller, for a payee-bound primitive such as a Reserve Pay block."
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e) and 13(f)). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
         }
       }
     },
@@ -441,7 +509,10 @@
         },
         "primitive": {
           "$ref": "common.json#/$defs/MandatePrimitiveType",
-          "description": "The mandate primitive that carries this standing authority: one of the bound handler's mandate_primitives[].type, for example sbmd_block or ppi_emandate. Covered by the PSP attestation. It MUST be listed in the handler descriptor's binding.open_primitives; otherwise the Mandate Manager refuses issuance and the gateway refuses the binding with rail_binding_not_open_eligible."
+          "not": {
+            "const": "none"
+          },
+          "description": "The mandate primitive that carries this standing authority: one of the bound handler's mandate_primitives[].type, for example sbmd_block or ppi_emandate. Covered by the PSP attestation. It MUST be listed in the handler descriptor's binding.open_primitives; otherwise the Mandate Manager refuses issuance and the gateway refuses the binding with rail_binding_not_open_eligible. The value none is never valid here: a handler whose only primitive is none has no standing authority to bind."
         },
         "rail_ref": {
           "type": "string",
@@ -452,12 +523,22 @@
         },
         "attestation": {
           "$ref": "common.json#/$defs/Jws",
-          "description": "PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee, funding} hashed into this mandate. funding is deposit or credit: the source of funds behind the primitive (for a Reserve Pay block, a savings, current or overdraft account is deposit; a RuPay credit card or a pre-sanctioned credit line is credit)."
+          "description": "PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee, funding} hashed into this mandate; for a gift PPI it also states custody. funding is deposit or credit: the source of funds behind the primitive. A savings or current account is deposit. A RuPay credit card or a pre-sanctioned credit line is credit. An overdraft account is credit unless the PSP attests deposit. A missing funding is treated as credit. An attested credit without credit_funding_allowed: true on the root gets 403 credit_funding_not_allowed at issuance and at complete. custody (gift PPI only) is principal_side when the vault of the gift code is on the principal's side (the Trusted Surface or the payer PSP), and gateway_side otherwise; a gift PPI is open-eligible only on principal_side, and the Mandate Manager refuses issuance with rail_binding_not_open_eligible otherwise."
         },
         "registry_version": {
           "type": "string",
           "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
-          "description": "The handler-registry version against which the Mandate Manager checked this binding's eligibility at issuance: the identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A version format for registry-signed snapshots is not yet defined, so only a release date is valid. A record of the issuance check only; the gateway re-checks eligibility against the current registry at every complete."
+          "description": "The handler-registry version against which the Mandate Manager checked this binding's eligibility at issuance: the identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A record of the issuance check only; the gateway re-checks eligibility against the current registry at every complete."
+        },
+        "registry_digest": {
+          "$ref": "common.json#/$defs/Hash",
+          "pattern": "^sha-256:",
+          "description": "OPTIONAL. The digest, as the release manifest (source/handlers/release.json) gives it for the handler registry file, that the Mandate Manager checked this binding against: sha-256 over the JCS form of the file. It pins the exact publication when a dated release has been amended in place. A record of the issuance check only."
+        },
+        "registry_serial": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "OPTIONAL. The registry_serial of the release manifest that the Mandate Manager checked this binding against at issuance. A record of the issuance check only; the serial recorded for a pause is what orders a later lift."
         },
         "conformance": {
           "type": "object",
@@ -500,7 +581,7 @@
             },
             "block_amount": {
               "$ref": "common.json#/$defs/Amount",
-              "description": "The amount of a Reserve Pay block as the payer PSP attests it. It is at most the block_amount the mandate request asked for; under a root open Checkout Mandate it counts as reserved spend at its full amount until its revocation at the rail is confirmed or it expires."
+              "description": "The amount of a Reserve Pay block as the payer PSP attests it. It is at most the block_amount the mandate request asked for. Under a root open Checkout Mandate its exposure is the larger of this amount and the settled debits matched to the block plus the reservations on it, from activation until its revocation at the rail is confirmed or it expires. The principal can change a block's amount or validity through the seller's platform (NPCI UPI Consolidated Circular v1.0, para 16.9), and BACP sees such a change only where the payer PSP attests a block-debit feed."
             },
             "expires_at": {
               "type": "string",
@@ -840,6 +921,14 @@
         "required": [
           "form",
           "kind"
+        ]
+      }
+    },
+    {
+      "description": "carried_exposure only accompanies supersedes.",
+      "dependentRequired": {
+        "carried_exposure": [
+          "supersedes"
         ]
       }
     }

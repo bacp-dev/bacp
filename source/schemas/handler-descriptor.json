@@ -184,7 +184,10 @@
           "type": "array",
           "uniqueItems": true,
           "items": {
-            "$ref": "common.json#/$defs/MandatePrimitiveType"
+            "$ref": "common.json#/$defs/MandatePrimitiveType",
+            "not": {
+              "const": "none"
+            }
           },
           "description": "The mandate primitives that may back an open (human-not-present) payment mandate on this handler. Each entry MUST be a mandate_primitives[].type of this descriptor whose limits_enforced_by is rail or issuer. An open payment mandate whose rail_binding.primitive is not listed here is refused with rail_binding_not_open_eligible. For example, in.ppi.wallet lists only ppi_emandate, so a wallet balance never backs an open mandate."
         },
@@ -254,9 +257,11 @@
               "single_creditor",
               "any_merchant",
               "purpose_locked",
+              "issuer_contracted",
               "lender",
               "n_a"
-            ]
+            ],
+            "description": "Who the primitive may pay. issuer_contracted: any merchant that has a contract with the issuer of the instrument to accept it (RBI Master Direction on Prepaid Payment Instruments, paras 2.6 and 11.4.3), so that acceptance depends on the seller and is checked per seller before the rung is ranked. any_merchant is for a primitive that the rail lets pay any payee."
           },
           "multi_capture": {
             "type": "boolean"
@@ -323,6 +328,13 @@
           },
           "configurable": {
             "type": "boolean"
+          },
+          "bound": {
+            "enum": [
+              "min",
+              "max"
+            ],
+            "description": "Whether the value of this limit is a floor (min) or a ceiling (max). Absent means a ceiling, except for validity, where an absent bound means the limit is a fixed value. For example, the validity of a gift PPI is a minimum of one year (RBI Master Direction on Prepaid Payment Instruments, para 13.1)."
           }
         },
         "required": [
@@ -376,6 +388,16 @@
         },
         "source": {
           "$ref": "common.json#/$defs/Citation"
+        },
+        "verification": {
+          "enum": [
+            "verified",
+            "secondary",
+            "vendor",
+            "unverified",
+            "conflict"
+          ],
+          "description": "How well the afa.source citation was checked, on the same scale as limits[].verification. It grades the NPCI or RBI text that the authentication model relies on, so that a registry reader can tell a verified citation from a vendor or unverified one."
         }
       },
       "required": [
@@ -598,6 +620,25 @@
         "n_a"
       ]
     },
+    "funding_sources": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "debit",
+          "credit",
+          "prepaid",
+          "cash",
+          "voucher",
+          "loan",
+          "cbdc",
+          "trade_credit",
+          "n_a"
+        ]
+      },
+      "description": "OPTIONAL. Every source of funds that a payer can bring to this handler, when it is more than the primary funding. It MUST contain funding. For example, a UPI Reserve Pay block can sit on a savings, current or overdraft account (debit) or on a RuPay credit card or a pre-sanctioned credit line (credit), so in.upi.reservepay lists debit and credit. The source that a given mandate actually uses is the one the payer PSP attests, never the one listed here."
+    },
     "credit_disclosure_required": {
       "type": "boolean"
     },
@@ -739,6 +780,252 @@
         "required": [
           "credit_disclosure_required"
         ]
+      }
+    },
+    {
+      "description": "A descriptor that says a rail or issuer enforces the limits of a standing authority names a primitive that the rail or the issuer enforces. A merchant-enforced or BACP-enforced primitive alone is not hnp rail_enforced.",
+      "if": {
+        "properties": {
+          "presence": {
+            "properties": {
+              "hnp": {
+                "const": "rail_enforced"
+              }
+            },
+            "required": [
+              "hnp"
+            ]
+          }
+        },
+        "required": [
+          "presence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "mandate_primitives": {
+            "contains": {
+              "properties": {
+                "limits_enforced_by": {
+                  "enum": [
+                    "rail",
+                    "issuer"
+                  ]
+                }
+              },
+              "required": [
+                "limits_enforced_by"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (debit).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "debit"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "debit"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (credit).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "credit"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "credit"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (prepaid).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "prepaid"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "prepaid"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (cash).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "cash"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "cash"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (voucher).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "voucher"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "voucher"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (loan).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "loan"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "loan"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (cbdc).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "cbdc"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "cbdc"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (trade_credit).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "trade_credit"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "trade_credit"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (n_a).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "n_a"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "n_a"
+            }
+          }
+        }
       }
     }
   ]

@@ -484,7 +484,7 @@
    },
    {
     "body": "NPCI",
-    "instrument": "OTM circular (not verified as of 17-10-2026)"
+    "instrument": "UPI Consolidated Circular v1.0 s.15"
    }
   ],
   "presence": {
@@ -549,7 +549,8 @@
     "file": "NPCI UPI Consolidated Circular v1.0 (NPCI/UPI/CC/01), 18-09-2026, https://www.npci.org.in/uploads/UPI_Consolidated_Circular_0641e910f7.pdf",
     "section": "paras 15.2 and 15.4",
     "label": "NPCI"
-   }
+   },
+   "verification": "verified"
   },
   "refund": {
    "route": "release_block_or_source",
@@ -614,7 +615,7 @@
     "label": "VENDOR"
    }
   ],
-  "notes": "Fits 'buy this, final price <= X' and post-negotiation capture after delivery."
+  "notes": "Fits 'buy this, final price <= X' and post-negotiation capture after delivery. UPI Consolidated Circular v1.0 s.15: the mandate is registered only after AFA (15.2); the remitter bank posts success only after blocking the funds and bears liability if they do not remain blocked (15.3); the remitter bank and payer PSP validate the digital signature and parameters at execution (15.4); execution is only up to the authorised amount and a partial execution unblocks the rest (15.5); post-debit SMS and notification for create, update, revoke and debit (15.7); the block period for the Bima-ASBA use case is at most 14 days (15.9). The circular has no pre-debit notice for OTM, and the scope of the E-mandate Framework 2026 para 2 (recurring) for OTM is not confirmed (Q-03). The limits stay vendor-sourced. RBI layer: no RBI exemption basis for the debit of an OTM block was found (not verified as of 18-10-2026; asked of RBI under AJD-37)."
  },
  {
   "handler_id": "in.upi.reservepay",
@@ -656,7 +657,7 @@
    "closed_auth": [
     "upi.pin"
    ],
-   "open_requires": "One block at a time per merchant per mobile number. An open mandate names the block's payee seller (payee.vpa and payee.bpp_id); a block payable to the buyer app does not back human-not-present payment."
+   "open_requires": "One block at a time per merchant per mobile number. An open mandate names the block's payee seller (payee.vpa and payee.bpp_id); a block payable to the buyer app does not back human-not-present payment. The authentication of a Reserve Pay block is validated at block creation (OC 200 item 3); each later debit is made without a fresh factor."
   },
   "mandate_primitives": [
    {
@@ -671,8 +672,8 @@
    {
     "name": "block_amount",
     "source": {
-     "file": "NPCI UPI Reserve Pay product page, https://www.npci.org.in/product/upi-reserve-pay",
-     "section": "Transaction Limits",
+     "file": "NPCI UPI Reserve Pay product page, https://www.npci.org.in/product/upi-reserve-pay; NPCI UPI OC No. 228 (FY 2025-26) 'Enhancements in UPI Single Block Multiple Debits (UPI Reserve Pay)', 08-10-2025, https://www.npci.org.in/uploads/UPI_OC_No_228_FY_2025_26_Enhancement_in_UPI_Single_Block_Multiple_Debits_UPI_Reserve_Pay_a9095c181d.pdf",
+     "section": "Transaction Limits; and OC 228 Issuer Banks para 5",
      "label": "NPCI"
     },
     "verification": "verified",
@@ -681,7 +682,7 @@
      "value": 1000000,
      "currency": "INR"
     },
-    "applies_to": "maximum per block ('Maximum amount you can reserve: Rs 10,000 per block')"
+    "applies_to": "maximum per block ('Maximum amount you can reserve: Rs 10,000 per block'; OC 228 Issuer Banks para 5: block of at most Rs 10,000 and up to 90 days)"
    },
    {
     "name": "validity",
@@ -703,7 +704,8 @@
     "file": "NPCI UPI OC 200 'Enablement of UPI Mandate feature of Single Block Multiple Debits (SBMD)', 31-07-2024, https://www.npci.org.in/uploads/UPI_OC_No_200_FY_24_25_Enablement_of_UPI_Mandate_feature_of_Single_Block_Multiple_Debits_f2f9bc9230.pdf",
     "section": "item 3, para (d)",
     "label": "NPCI"
-   }
+   },
+   "verification": "verified"
   },
   "refund": {
    "route": "source",
@@ -755,6 +757,10 @@
    "basket_blind": true
   },
   "funding": "debit",
+  "funding_sources": [
+   "debit",
+   "credit"
+  ],
   "credit_disclosure_required": false,
   "segments": [
    "b2c"
@@ -795,7 +801,7 @@
     "label": "RBI"
    }
   ],
-  "notes": "NPCI UPI OC 228 (08-10-2025) and the UPI Consolidated Circular v1.0 para 16.1 extend Reserve Pay to all UPI-permitted sources of funds, naming savings, current and overdraft accounts, RuPay credit cards and pre-sanctioned credit lines; the extant pricing of RuPay credit cards and credit lines on UPI applies to executed debits. funding stays debit for this descriptor: a block on a RuPay credit card or a credit line is a credit-funded leg (funding credit, in.upi.rupay_cc or in.upi.credit_line), which the PSP attestation states and which needs credit_funding_allowed. Acquirer eligibility: OC 228 enables Reserve Pay to begin with only for 'online verified merchants with low ticket and high frequency transactions'. One mobile number may hold only one block at a time for a particular merchant (OC 228 Issuer Banks para 4; Consolidated Circular para 16.4); no NPCI text caps blocks per user across merchants. A block is not a guarantee of payment. A timeout on a debit is a decline, reversed in real time and not settled; for timeouts only, acquiring entities may retry at most 3 times in 24 hours (OC 228 Acquiring entities para 3). The payer is notified of block creation, modification, debit, revoke and expiry (OC 228 Issuer Banks para 2; Consolidated Circular para 16.11); no NPCI text found states whether a pre-debit notice applies (Q-03). The payee PSP and the UPI app must give the user a facility to revoke the block (Consolidated Circular para 16.10); the merchant gives the facility to modify its amount or validity (para 16.9). No public NPCI list of the issuers that support Reserve Pay was found as of 17-10-2026 (an absence finding; Q-04). NPCI product page: block set up with UPI PIN; unused money is released on expiry or cancellation."
+  "notes": "NPCI UPI OC 228 (08-10-2025) and the UPI Consolidated Circular v1.0 para 16.1 extend Reserve Pay to all UPI-permitted sources of funds, naming savings, current and overdraft accounts, RuPay credit cards and pre-sanctioned credit lines; the extant pricing of RuPay credit cards and credit lines on UPI applies to executed debits. funding stays debit for this descriptor: a block on a RuPay credit card or a credit line is a credit-funded leg (funding credit, in.upi.rupay_cc or in.upi.credit_line), which the PSP attestation states and which needs credit_funding_allowed. Acquirer eligibility: OC 228 enables Reserve Pay to begin with only for 'online verified merchants with low ticket and high frequency transactions'. One mobile number may hold only one block at a time for a particular merchant (OC 228 Issuer Banks para 4; Consolidated Circular para 16.4); no NPCI text caps blocks per user across merchants. A block is not a guarantee of payment. A timeout on a debit is a decline, reversed in real time and not settled; for timeouts only, acquiring entities may retry at most 3 times in 24 hours (OC 228 Acquiring entities para 3). The payer is notified of block creation, modification, debit, revoke and expiry (OC 228 Issuer Banks para 2; Consolidated Circular para 16.11); no NPCI text found states whether a pre-debit notice applies (Q-03). The payee PSP and the UPI app must give the user a facility to revoke the block (Consolidated Circular para 16.10); the merchant gives the facility to modify its amount or validity (para 16.9). No public NPCI list of the issuers that support Reserve Pay was found as of 17-10-2026 (an absence finding; Q-04). NPCI product page: block set up with UPI PIN; unused money is released on expiry or cancellation. Deemed debit, by date and side: a timeout on the debit with the issuer or payer PSP is a decline, reversed in real time and not deemed (OC 228, 08-10-2025, Acquiring entities para 3); a credit-side timeout after a successful debit is deemed (OC 200, 31-07-2024, para (d); Consolidated Circular para 32.3) and follows TAT row 4(b) of RBI/2019-20/67. The scope of deemed debit after OC 228 is not public (OC 88/2020-21 and OC 128/2021-22 are member-only; not verified as of 18-10-2026; AJD-26). RBI layer: no RBI exemption basis for the later debits of a block was found; the Authentication Directions Annexure-1 lists no SBMD item (not verified as of 18-10-2026; asked of RBI under AJD-37). The afa.verification grade covers the NPCI text only."
  },
  {
   "handler_id": "in.upi.circle",
@@ -3507,7 +3513,7 @@
    "pre_debit_notice": "required_24h",
    "source": {
     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
-    "section": "para 15.3(3)",
+    "section": "para 15.3(c)",
     "label": "RBI"
    }
   },
@@ -3527,7 +3533,7 @@
   },
   "dispute": {
    "channels": [
-    "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
+    "issuer (48 h preferred, 30 days max, PPI MD 16.2(e))",
     "RBI Integrated Ombudsman"
    ]
   },
@@ -3642,7 +3648,7 @@
    "pre_debit_notice": "not_applicable",
    "source": {
     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
-    "section": "para 15.3(3)",
+    "section": "para 15.3(c)",
     "label": "RBI"
    }
   },
@@ -3661,7 +3667,7 @@
   },
   "dispute": {
    "channels": [
-    "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
+    "issuer (48 h preferred, 30 days max, PPI MD 16.2(e))",
     "RBI Integrated Ombudsman"
    ]
   },
@@ -3727,7 +3733,7 @@
   "regulator": [
    {
     "body": "RBI",
-    "instrument": "PPI MD 2021 para 10.1, 15.3(5)"
+    "instrument": "PPI MD 2021 paras 2.6, 10.1, 11.4.3, 15.3(e)"
    }
   ],
   "presence": {
@@ -3746,14 +3752,14 @@
    "closed_auth": [
     "voucher_code"
    ],
-   "open_requires": "Balance is the cap. No reload, no cash-out."
+   "open_requires": "Balance is the cap. No reload, no cash-out. A gift PPI is accepted only by a seller that has a contract with the issuer to accept it (PPI MD para 2.6), and by any merchant only where the issuer offers interoperability, which is its option (PPI MD para 11.4.3), so the seller's acceptance is checked before the rung is ranked. Open only when the PSP attestation states that the gift code vault is on the principal's side (the Trusted Surface or the payer PSP); otherwise the Mandate Manager refuses issuance."
   },
   "mandate_primitives": [
    {
     "type": "balance_cap",
     "limits_enforced_by": "issuer",
     "ref_name": "gift instrument id",
-    "payee_scope": "any_merchant",
+    "payee_scope": "issuer_contracted",
     "multi_capture": true
    }
   ],
@@ -3776,12 +3782,14 @@
     "name": "validity",
     "source": {
      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
-     "section": "para 13",
+     "section": "para 13.1",
      "label": "RBI"
     },
     "verification": "verified",
     "configurable": false,
-    "duration": "P1Y"
+    "duration": "P1Y",
+    "bound": "min",
+    "applies_to": "minimum validity of one year (PPI MD para 13.1)"
    }
   ],
   "afa": {
@@ -3790,9 +3798,10 @@
    "pre_debit_notice": "not_applicable",
    "source": {
     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
-    "section": "para 15.3(5)",
+    "section": "para 15.3(e)",
     "label": "RBI"
-   }
+   },
+   "verification": "verified"
   },
   "refund": {
    "route": "same_ppi",
@@ -3805,12 +3814,13 @@
    "compensation_per_day": {
     "value": 10000,
     "currency": "INR"
-   }
+   },
+   "notes": "Refunds to a gift PPI go back to the same PPI immediately, even above the limits (PPI MD para 14.3(a)); a payment made with another instrument is never refunded to a PPI (14.3(b)). A transfer back to the source account needs the holder's consent (10.1(c)). A non-bank issuer pays a balance left after expiry to the holder in a bank account on request (13.3). failed_txn_tat of P1D applies on-us; off-us follows the rail. Whether a refund can be credited to a non-reloadable gift PPI is not verified as of 18-10-2026."
   },
   "dispute": {
    "channels": [
-    "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
-    "RBI Integrated Ombudsman"
+    "issuer (48 h preferred, 30 days max, PPI MD 16.2(e))",
+    "RBI Integrated Ombudsman (RB-IOS 2026)"
    ]
   },
   "settlement": {
@@ -3854,6 +3864,16 @@
     "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
     "section": "para 10.1",
     "label": "RBI"
+   },
+   {
+    "file": "RBI Authentication Directions 2025 (RBI/2025-26/79)",
+    "section": "Annexure-1, item 3",
+    "label": "RBI"
+   },
+   {
+    "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+    "section": "paras 2.6, 11.4.3, 13.1, 13.3, 14.3(a) and (b), 15.3(e), 16.2(e)",
+    "label": "RBI"
    }
   ]
  },
@@ -3878,14 +3898,14 @@
   "presence": {
    "human_presence": "none",
    "hp": true,
-   "hnp": "rail_enforced",
+   "hnp": "none",
    "device_bound": false,
    "assisted_only": false
   },
   "binding": {
    "class": "O",
    "open_eligible": false,
-   "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Held pending Q-59 and Q-46."
+   "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
   },
   "mandate_primitives": [
    {
@@ -3996,14 +4016,14 @@
   "presence": {
    "human_presence": "none",
    "hp": true,
-   "hnp": "rail_enforced",
+   "hnp": "none",
    "device_bound": false,
    "assisted_only": false
   },
   "binding": {
    "class": "O",
    "open_eligible": false,
-   "open_requires": "Only where the programme allows API redemption. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Held pending Q-59 and Q-46."
+   "open_requires": "Only where the programme allows API redemption. Not open-eligible in BACP 2026-10-17: its limits are enforced by the merchant, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
   },
   "mandate_primitives": [
    {
@@ -4439,7 +4459,7 @@
   },
   "dispute": {
    "channels": [
-    "issuer (48 h preferred, 30 days max, PPI MD 16.2(5))",
+    "issuer (48 h preferred, 30 days max, PPI MD 16.2(e))",
     "RBI Integrated Ombudsman"
    ]
   },
@@ -4509,6 +4529,10 @@
    {
     "body": "RBI",
     "instrument": "Digital Lending Directions 2025"
+   },
+   {
+    "body": "RBI",
+    "instrument": "Commercial Banks (Credit Facilities) Directions 2025, Chapter III"
    }
   ],
   "presence": {
@@ -4616,8 +4640,14 @@
     "file": "RBI Digital Lending Directions 2025 (RBI/2025-26/36)",
     "section": "whole instrument",
     "label": "RBI"
+   },
+   {
+    "file": "RBI Commercial Banks (Credit Facilities) Directions 2025, updated 01-10-2026, https://rbidocs.rbi.org.in/rdocs/notification/PDFs/154MD.PDF",
+    "section": "Chapter III paras 4(1)(xxii), 7, 9(1), 10(1) and 11",
+    "label": "RBI"
    }
-  ]
+  ],
+  "notes": "Status of the Digital Lending Directions 2025 citations after the consolidation of 28-11-2025 into the Commercial Banks (Credit Facilities) Directions is not verified as of 18-10-2026; both are cited."
  },
  {
   "handler_id": "in.credit.cardless_emi",
@@ -7595,14 +7625,14 @@
   "presence": {
    "human_presence": "mandate",
    "hp": true,
-   "hnp": "rail_enforced",
+   "hnp": "none",
    "device_bound": false,
    "assisted_only": false
   },
   "binding": {
    "class": "O",
    "open_eligible": false,
-   "open_requires": "Within a both-party-signed credit_limit. No money moves at order. Settlement entries cite another handler's receipt. Not open-eligible in BACP 2026-10-17: its limits are enforced by BACP, not by a rail or issuer. Held pending Q-59 and Q-46."
+   "open_requires": "Within a both-party-signed credit_limit. No money moves at order. Settlement entries cite another handler's receipt. Not open-eligible in BACP 2026-10-17: its limits are enforced by BACP, not by a rail or issuer. Closed in this release (Q-59 and Q-46, settled); opening it later is a registry change plus an owner decision, on the conditions in Q-59."
   },
   "mandate_primitives": [
    {

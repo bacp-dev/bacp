@@ -149,14 +149,27 @@ ledger.
    rail authority may legitimately exceed the BACP caps, and the multi-seller rails (UPI Circle, agentic card
    tokens) are exactly the loose ones.
 6. **Replicas.** A gateway running as several instances MUST share a ledger that is linearisable per root open
-   checkout mandate. A per-process lock is not enough. Cross-gateway atomicity is open ([Q-36](open-questions.md#q-36)).
+   checkout mandate. A per-process lock is not enough. Atomicity is per root inside one gateway, and one open mandate
+   belongs to one gateway (`agent.bap_id`), so there is no cross-gateway section to take; a mandate moves between
+   gateways only by a successor root ([Porting a mandate](mandates.md#port), [Q-36](open-questions.md#q-36), settled).
 7. **Negotiation exposure.** The guard's cross-session exposure check, and the emission of the firm COUNTER, ACCEPT
    or bid it guards, MUST run in the same kind of atomic section, keyed on the principal. Each outstanding firm
    commitment holds a reservation until it is rejected, expires, is withdrawn or superseded, or is paid.
-8. **Split-order scope.** Split-order detection is per (open mandate, seller) within 10 minutes and MUST count
-   completed and in-flight orders. Cross-seller velocity is bounded only by the budgets
-   ([Q-50](open-questions.md#q-50)).
-9. **Pre-checks.** The `PUT /sessions/{id}` pre-check is advisory and MUST NOT create reservations. A step-up or a
+8. **Lock order.** There are two levels, the principal (K1) and the root open checkout mandate (K2), and a gateway
+   MUST take them in this order and never the reverse. The idempotency in-flight marker is written before K1 and is a
+   write, not a held lock. A K1 section that guards several roots takes their K2 sections in ascending `mandate_id`
+   order. Inside K2, the ledger's chain-head compare-and-swap and the receipt-uniqueness insert-if-absent do not
+   block: if either fails, the whole K2 operation aborts with nothing reserved. No rail, Beckn or webhook I/O runs
+   inside either level. K2 does not see a K1 reservation by taking K1: the guard writes each firm ACCEPT, counter-offer
+   or bid it emits into the root's ledger as a reservation keyed by `offer_hash`, so that exposure in K2 counts it, and
+   a `complete` of the negotiated deal converts that reservation in K2 in one step. The per-root check that no
+   reservation or settled debit exists for a `checkout_hash` also runs in K2
+   ([Deterministic evaluation](mandates.md#evaluation), step 4).
+9. **Split-order scope.** Split-order detection is per (root open checkout mandate, seller) within 10 minutes and MUST
+   count completed and in-flight orders. The seller is identified by the tax id in the BPP-signed terms, else by the payee
+   VPA, else by the pair `bpp_id` and `provider_id`, and the `covers[]` legs of a summary-approved basket are exempt.
+   Cross-seller velocity is bounded only by the budgets ([Q-50](open-questions.md#q-50), settled).
+10. **Pre-checks.** The `PUT /sessions/{id}` pre-check is advisory and MUST NOT create reservations. A step-up or a
    rejection MUST NOT create a reservation.
 
 **Conformance requirement.** N concurrent `complete` calls on one open mandate MUST NOT settle more than any budget

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/conformance-authority-list.json",
   "title": "Conformance-authority list",
-  "description": "The public, dated list of conformance authorities: the only way to admit a signer of conformance attestations. Each dated BACP release publishes it as source/registry/conformance-authorities.json, or a registry-signed snapshot carries it. It ships empty. An entry is added only as GOVERNANCE.md requires. A Mandate Manager may narrow the list by publishing an exclusion list and MUST NOT add to it.",
+  "description": "The public, dated list of conformance authorities: the only way to admit a signer of conformance attestations. Each dated BACP release publishes it as source/registry/conformance-authorities.json, and the release manifest source/handlers/release.json records its digest. It ships empty. An entry is added only as GOVERNANCE.md requires. A Mandate Manager may narrow the list by publishing an exclusion list and MUST NOT add to it.",
   "type": "array",
   "items": {
     "$ref": "#/$defs/ConformanceAuthority"
@@ -20,7 +20,9 @@
         "report_uri_template",
         "valid_from",
         "valid_until",
-        "status"
+        "status",
+        "fee_model",
+        "publishes_all_runs"
       ],
       "properties": {
         "ca_id": {
@@ -144,6 +146,46 @@
         "status": {
           "$ref": "conformance-attestation.json#/$defs/StatusListRef",
           "description": "Where the entry's revocation status is published. The registry publishes and signs it, never the authority itself."
+        },
+        "funder_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.json#/$defs/EntityId"
+          },
+          "description": "OPTIONAL. The registration identifiers of the funders, when they have them. The separation check covers every funder: a Mandate Manager refuses an attestation when the operator of the gateway, of the payer PSP or of the Mandate Manager shares an entity with a funder, as it does for the operator."
+        },
+        "fee_model": {
+          "type": "object",
+          "required": [
+            "basis",
+            "outcome_contingent",
+            "terms_uri"
+          ],
+          "additionalProperties": false,
+          "description": "How the authority is paid for a run. No fee depends on the result, and no fee is payable to the project for a list entry.",
+          "properties": {
+            "basis": {
+              "enum": [
+                "per_run",
+                "subscription"
+              ],
+              "description": "per_run: a fee for each conformance run. subscription: a fixed fee for a period, whatever the number of runs."
+            },
+            "outcome_contingent": {
+              "const": false,
+              "description": "Always false: the authority's fee never depends on whether the subject passes."
+            },
+            "terms_uri": {
+              "type": "string",
+              "format": "uri",
+              "description": "Where the authority publishes its fee terms."
+            }
+          }
+        },
+        "publishes_all_runs": {
+          "const": true,
+          "description": "Always true: the authority publishes the report of every run it conducts, passes and failures alike, so that a verifier can see how often a subject needed more than one run."
         }
       },
       "additionalProperties": false

@@ -133,7 +133,7 @@ flowchart LR
     IDN -.-> OP
     IDN -.-> REGS
     IDN -.-> Q02["Agent identity anchor<br/>Q-02"]
-    CONS -.-> Q36["Exposure ledger across gateways<br/>Q-36"]
+    CONS -.-> Q36["One gateway per open mandate<br/>Q-36, settled"]
     RAILS -.-> UAP["in.upi.uap<br/>reserved"]
     RAILS -.-> AGT["in.card.agentic<br/>pilot, Q-39"]
     RAILS -.-> CIR["in.upi.circle<br/>pilot, closed, Q-77"]

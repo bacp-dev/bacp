@@ -70,7 +70,7 @@ are involved, the owner is the one that must give the answer.
 | [Q-33](#q-33) | GRN and CRAC on Beckn | ONDC | Open |
 | [Q-34](#q-34) | REQUEST_EXTENSION within ONDC's ttl | ONDC | Open |
 | [Q-35](#q-35) | Bid retraction in e-auctions | Legal counsel | Open |
-| [Q-36](#q-36) | Atomic budgets across gateways and replicas | BACP WG | Open |
+| [Q-36](#q-36) | Atomic budgets across gateways and replicas | BACP WG | Settled |
 | [Q-37](#q-37) | RTO fee on refused COD orders | Legal counsel | Open |
 | [Q-38](#q-38) | e-RUPI agent redemption and refunds | NPCI | Open |
 | [Q-39](#q-39) | Agentic card tokens in India | RBI | Open |
@@ -78,11 +78,11 @@ are involved, the owner is the one that must give the answer.
 | [Q-41](#q-41) | Interoperable encoding for closing open mandates | BACP WG | Settled |
 | [Q-42](#q-42) | Mandatory signature algorithm | BACP WG | Settled |
 | [Q-43](#q-43) | Signing profile on the Beckn leg | ONDC | Settled |
-| [Q-46](#q-46) | Exposure accounting for credit-ledger deals | BACP WG | Open |
+| [Q-46](#q-46) | Exposure accounting for credit-ledger deals | BACP WG | Settled |
 | [Q-47](#q-47) | Governance of purpose codes and bounds | BACP WG | Settled |
 | [Q-48](#q-48) | Agent signature on negotiation message bodies | BACP WG | Open |
 | [Q-49](#q-49) | Signal for refund settlement | NPCI | Open |
-| [Q-50](#q-50) | Cross-seller split-order detection | BACP WG | Open |
+| [Q-50](#q-50) | Cross-seller split-order detection | BACP WG | Settled |
 | [Q-51](#q-51) | Payment aggregator marketplace limits | RBI | Open |
 | [Q-52](#q-52) | Indian Contract Act timing rules | Legal counsel | Open, fail-safe default |
 | [Q-53](#q-53) | Final DPDP commencement dates | MeitY/DPDP | Settled |
@@ -91,9 +91,9 @@ are involved, the owner is the one that must give the answer.
 | [Q-56](#q-56) | Retention of negotiation transcripts | Legal counsel | Open |
 | [Q-57](#q-57) | IGM SLA timelines and auto-escalation | ONDC | Open |
 | [Q-58](#q-58) | Signature tag for gateway-signed webhooks | BACP WG | Open, fail-safe default |
-| [Q-59](#q-59) | Open mandates on merchant- and BACP-enforced handlers | BACP WG | Open, fail-safe default |
+| [Q-59](#q-59) | Open mandates on merchant- and BACP-enforced handlers | BACP WG | Settled |
 | [Q-60](#q-60) | Issuer and payload of the conformance attestation | BACP WG | Settled |
-| [Q-61](#q-61) | Gateway-to-MM mandate events | BACP WG | Open |
+| [Q-61](#q-61) | Gateway-to-MM mandate events | BACP WG | Settled |
 | [Q-62](#q-62) | Who certifies assisted operators | ONDC | Open |
 | [Q-63](#q-63) | PSP rendering of a third-party `ts_render`; IVR callbacks | NPCI | Open |
 | [Q-64](#q-64) | Registry enrolment and revocation of `support_operator` keys | BACP WG | Settled |
@@ -121,6 +121,11 @@ are involved, the owner is the one that must give the answer.
 | [Q-86](#q-86) | Counsel flags from the Trusted Surface and human-participant rules | Legal counsel | Open, fail-safe default |
 | [Q-87](#q-87) | Registry carriage of the Trusted Surface and support-operator fields, and the ONDC refusal codes | ONDC | Open, fail-safe default |
 | [Q-88](#q-88) | RBI treatment of a Reserve Pay block debit and an OTM execution under the AFA directions | RBI | Open |
+| [Q-89](#q-89) | TAT row 4(b) and a payment that the rail completed | Legal counsel, RBI | Open, fail-safe default |
+| [Q-90](#q-90) | What a payer PSP can sign about a refund credit and about a deemed or pending debit | NPCI | Open, fail-safe default |
+| [Q-91](#q-91) | Re-attestation of a Reserve Pay block under a successor root | NPCI | Open, fail-safe default |
+| [Q-92](#q-92) | Deemed-debit scope after OC 228, and overdraft funding attested as deposit | NPCI | Open, fail-safe default |
+| [Q-93](#q-93) | Gift PPI refund after expiry or closure, and to a non-reloadable instrument | RBI, Legal counsel | Open |
 
 ## Questions {#questions}
 
@@ -151,7 +156,9 @@ each time money is deducted" and mentions no pre-debit notice.<br>
 **Owner.** NPCI.
 
 **Working position.** Fail-safe: an unknown pre-debit-notice status is treated as "required 24 h" from the second
-unattended debit on the block. See [Rail Bindings](payments/rails.md).
+unattended debit on the block. See [Rail Bindings](payments/rails.md). Findings of 18-10-2026: the UPI Consolidated Circular v1.0
+section 15 (OTM) has no pre-debit notice (it requires post-debit notices, para 15.7), section 16 (Reserve Pay) has no authentication-factor clause, and the
+scope of the E-mandate Framework 2026 para 2 (recurring payments) for OTM is not confirmed.
 
 ### Q-04 Reserve Pay issuers and account types {#q-04}
 
@@ -216,7 +223,8 @@ full-delegation release says only "a short cooling period".<br>
 **Working position.** A PSP adapter inside the gateway's trust zone signs attestations. Start with a pilot with one
 PSP. Whether a payer PSP can report every debit on a Reserve Pay block to the gateway (a block-debit feed), and in what
 form, is part of this question; until it is answered, the pause reason `unmatched_rail_debit` applies only where a PSP
-attests such a feed ([Usage ledger](mandates.md#usage-ledger)).
+attests such a feed ([Usage ledger](mandates.md#usage-ledger)). The scope includes a modification of a block that the principal
+makes on the seller's platform (Consolidated Circular para 16.9): the optional `rail.block_modified` event is defined, and is used only where a feed is attested.
 
 ### Q-11 `AI_AGENT` in IGM {#q-11}
 
@@ -367,7 +375,7 @@ question for counsel ([Q-66](#q-66)). The list does not empty for want of a stat
 against, or must the buyer app attest?<br>
 **Owner.** RBI.
 
-**Working position.** The gateway checks a registry `pa_authorisation` attribute, attested at onboarding.
+**Working position.** The gateway checks a `verified` `rbi_pa` or `bank` entry in the `regulatory_status` of the collector's registry record, attested at onboarding. A `declared` entry is never treated as verified.
 
 ### Q-19 Waiver of acceptance revocation {#q-19}
 
@@ -586,16 +594,6 @@ governs `bid_retract`: a bid's retraction follows the auction's `retraction_rule
 `acceptance_revocation` value ([Acceptance revocation](negotiation/index.md#acceptance-revocation)). Also asked of
 counsel: does the Sale of Goods Act, 1930, s.62 reach a bidder's retraction before the sale is complete?
 
-### Q-36 Atomicity across gateways {#q-36}
-
-**Question.** How are budgets and negotiation exposure kept atomic across gateways (a principal with two buyer apps)
-and across replicas of one gateway? Should the Mandate Manager hold the authoritative reservation ledger?<br>
-**Owner.** BACP WG.
-
-**Working position.** A single gateway is atomic per mandate; replicas MUST share a linearisable ledger. Proposed:
-the Mandate Manager publishes outstanding exposure. See
-[Security and Privacy](security-and-privacy.md#atomic-reservation).
-
 ### Q-37 RTO fee {#q-37}
 
 **Question.** Can a return-to-origin fee be charged to a consumer for a refused COD order?<br>
@@ -629,15 +627,6 @@ para 10(f)?<br>
 
 **Working position.** LIFO by default; `tender_specific` where lines were bound to a tender.
 
-### Q-46 Exposure of credit-ledger deals {#q-46}
-
-**Question.** Should the cross-session exposure check count B2B credit-ledger deals against the checkout mandate's
-budgets or against `credit_ledger.max_outstanding`?<br>
-**Owner.** BACP WG.
-
-**Working position.** Count against both `total_max` and the checkout mandate's budgets. `bacp.credit_ledger` is not
-open-eligible until this question and [Q-59](#q-59) are settled.
-
 ### Q-48 Agent signature on negotiation messages {#q-48}
 
 **Question.** Should an agent also sign the negotiation message body with its `cnf` key, so that signed messages stay
@@ -653,16 +642,10 @@ agent's act is evidenced by its RFC 9421 request signature. See [MCP and A2A](tr
 `reversed` (and the saga extend to IMPS and PPI)?<br>
 **Owner.** NPCI.
 
-**Working position.** The `reversed` state is normative; its trigger is not yet defined.
-
-### Q-50 Cross-seller split detection {#q-50}
-
-**Question.** Should split-order detection add a cross-seller velocity signal keyed on (mandate, window) instead of
-the seller?<br>
-**Owner.** BACP WG.
-
-**Working position.** Per-seller detection plus atomic budgets. See
-[Security and Privacy](security-and-privacy.md#atomic-reservation).
+**Working position.** The `reversed` state is normative; its trigger is not yet defined. The evidence that releases a budget once a refund has
+settled is defined: a refund receipt signed by the payer PSP of the debit that cites `original_rrn` for the full amount, or a collector-PSP receipt
+plus the principal's confirmation on the Trusted Surface ([Usage ledger](mandates.md#usage-ledger)). Whether a payer PSP can sign such evidence is
+[Q-90](#q-90).
 
 ### Q-51 PA marketplace limits {#q-51}
 
@@ -771,48 +754,6 @@ gateway's profile, so that a webhook signature can never be confused with any ot
 verify every webhook against a key in the gateway profile's `keys` and MUST NOT act on a webhook that fails
 verification; it MUST NOT reject a webhook only because its signature has no `tag` or an unknown one. See
 [Identity and Request Signing](identity-and-signing.md#signature-tags) and [REST](transports/rest.md).
-
-### Q-59 Merchant- and BACP-enforced handlers {#q-59}
-
-**Question.** May an open payment mandate bind to `in.store_credit`, `in.loyalty` or `bacp.credit_ledger`, whose
-limits are enforced by the merchant or by BACP rather than by a rail or an issuer? If so, who may sign their
-attestations and receipts when the payee is also the party that acts, and how does a credit-ledger sale, which has no
-payment receipt, resolve its budget reservation?<br>
-**Owner.** BACP WG.
-
-**Working position.** Fail-safe default: the three handlers have `open_eligible: false` in `2026-10-17` and back no
-open payment mandate. Candidate conditions for opening them, not rules of this version: attestations and receipts for
-a merchant-enforced handler are never signed by the payee's key, and a failure receipt signed by the payee keeps the
-reservation counted as spent until the principal confirms; a credit-ledger sale under an open mandate is settled
-spend when posted, released only by a `credit_note` or a resolved dispute, and is acknowledged with the principal's
-or the Mandate Manager's key, never the agent's `cnf` key. Depends on [Q-46](#q-46). See
-[Mandates and Consent](mandates.md#handler-binding) and [Conformance](conformance.md#handler-binding-cases).
-
-### Q-61 Gateway-to-MM mandate events {#q-61}
-
-**Question.** Should a gateway tell the Mandate Manager that issued a mandate when it pauses that mandate because its
-rail binding is no longer eligible (`binding_ineligible`, `reissue_required`) or lifts such a pause, so that the
-Trusted Surface can show the principal why the agent cannot pay and can offer re-issue? If so, through which signed
-event and endpoint? `POST /trusted-surface/events` runs from the MM or PSP to the gateway, and every webhook runs from
-the gateway to the agent, so BACP `2026-10-17` has no channel in this direction.<br>
-**Owner.** BACP WG.
-
-**Working position.** A gateway-to-MM event is not defined in `2026-10-17`. The MM reads the same registry as the
-gateway and can detect a status change itself. The gateway writes every addition and removal of a binding pause
-reason to the InstructionLog with the `registry_version`, and sends `mandate.status_changed` to the agent. No money
-moves on the MM's view: every gateway re-derives eligibility at step 1 of evaluation. See
-[Mandates and Consent](mandates.md#handler-binding). The same gap means that a relinquishment of a root open Checkout
-Mandate at the gateway does not reach the MM, which revokes the root's Reserve Pay blocks at the rail; the gateway
-treats the siblings as revoked at once and keeps each block as exposure until its revocation is confirmed or it
-expires ([Revocation](mandates.md#revocation)). The same gap covers the status of a gateway's conformance attestation: the MM
-reads the attestation's status list itself ([Q-60](#q-60)), and a gateway-to-MM event for it is part of this question.
-
-**Notice route (18-10-2026).** BACP defines no gateway-to-Trusted-Surface notice event either. `StepUp.delivery:
-app_push` is a content-free push from the gateway to the signer's `ts_notify_url`, with only a `step_up_id` and an expiry
-([Origins and delivery](human-participants.md#ts-origins)); it carries no notice text, so it is not a `notice_route`. The
-negotiation mandate therefore carries `process.notice_route` (`mm_event`, `tel` or `sms`), and `autonomous` takes effect
-only with a usable one. If this question defines a gateway-to-Mandate-Manager event for a notice, it becomes an allowed
-`mm_event` value.
 
 ### Q-62 Certification of assisted operators {#q-62}
 
@@ -1166,7 +1107,7 @@ key, never Aadhaar.
 
 ### Q-87 Registry carriage of the Trusted Surface and support-operator fields, and the ONDC refusal codes {#q-87}
 
-**Question.** Can the ONDC network registry carry `bacp_role`, `operator_id`, `person_ref`, `ts_origins` and `ts_notify_url`
+**Question.** Can the ONDC network registry carry `bacp_role`, `operator_id`, `person_ref`, `ts_origins`, `ts_notify_url`, and the legal `operator` (`entity_ids[]`, `assertion`), `regulatory_status[]` and `data_residency`
 ([`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json))? Which ONDC error code maps to each
 `seller_reason.code` (the code 40002 is unlabelled in the ONDC build file)? Is there a seller code for "agent orders not accepted"? Who is the certifier
 of assisted operators ([Q-62](#q-62))?<br>
@@ -1175,7 +1116,9 @@ of assisted operators ([Q-62](#q-62))?<br>
 **Working position (fail-safe default).** Beckn's `Subscriber.type` is BAP, BPP or BG only. Until ONDC answers, a gateway that cannot read a
 signer's `ts_origins` from the registry mints no `trusted_surface_url` for it and answers `503 trusted_surface_unavailable`, and a side registry would be a
 second trust root that this version does not define. An unmapped refusal code gives `seller_reason.code: other`. Principals of an
-unregistered signer lose link-based step-ups until it registers.
+unregistered signer lose link-based step-ups until it registers. An operator that the registry does not assert is unknown and fails every separation
+check closed, so pilot handlers that need a conformance attestation stay unavailable for open mandates, as today, and a collector with no `verified`
+`regulatory_status` entry gets `403 collector_not_authorised`.
 
 ### Q-88 RBI treatment of a Reserve Pay block debit and an OTM execution {#q-88}
 
@@ -1186,12 +1129,67 @@ exempt from two-factor authentication under the AFA Directions (RBI/2025-26/79),
 **Working position.** Neither appears in Annexure-1 of RBI/2025-26/79, so the registry sets no `afa.rbi_annex1_item` for `in.upi.reservepay`, `in.upi.otm` or
 `in.upi.circle`, and the schema forbids it for a handler that relies on authentication at block creation or registration. The basis of such a debit is
 cited to NPCI OC 200 item 3, para (d) (Reserve Pay) and to UPI Consolidated Circular v1.0 paras 15.2 and 15.4 (OTM). The answer decides whether a
-future `rbi_annex1_item` is ever set on these handlers.
+future `rbi_annex1_item` is ever set on these handlers. The registry grades only the NPCI layer of the basis (`afa.verification`), and notes
+that no RBI exemption basis for the later debits was found.
 
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
 [(d)](#proposed-d) are settled.
+
+### Q-89 TAT row 4(b) and a payment that the rail completed {#q-89}
+
+**Question.** Does row 4(b) of the Annex of RBI/2019-20/67 ("Account debited but transaction confirmation not received at merchant location",
+auto-reversal within T+5, ₹100 a day beyond it) apply to a UPI P2M payment whose payee credit the rail confirmed, where only the seller's
+application-level order confirmation (the Beckn `on_confirm`) never arrives?<br>
+**Owner.** Legal counsel, RBI.
+
+**Working position (fail-safe default).** The message states the T+5 turnaround and the ₹100 a day only where the payer PSP reports the debit as
+pending or deemed (`reversal_basis: rbi_tat`). Where the PSP reports the credit as completed (`bacp_policy`) it states no RBI compensation, and where the
+response does not say (`unknown`) it names the refund, UDIR and Ombudsman routes and adds that RBI's rules apply if the bank shows the payment as failed or
+pending. If row 4(b) does apply, the bank pays on its own and the message adds nothing; if it does not, BACP promises no remedy that may not exist.
+Principals lose nothing they hold today except a promise that may be false. See [Debited but not confirmed](checkout/index.md#debited-not-confirmed).
+
+### Q-90 What a payer PSP can sign about a refund credit and about a deemed or pending debit {#q-90}
+
+**Question.** Can a payer PSP sign refund-credit evidence that cites `original_rrn` for a refund that the acquirer initiated through URCS (NPCI OC 165)?
+Do PSP response codes tell a deemed or pending debit from a completed one at the moment `on_confirm` goes missing? Does NPCI de-duplicate a debit on the
+gateway's PSP idempotency key?<br>
+**Owner.** NPCI, through a member bank.
+
+**Working position (fail-safe default).** The budget is released on evidence (a) from the bound payer PSP, or on evidence (b), a collector-PSP receipt plus
+the principal's confirmation on the Trusted Surface, so that a seller with an insider at its payment aggregator cannot restore the budget. If no payer PSP can
+sign the evidence, path (b) needs one confirmation for each refunded order, and without it the spend stays, as before. If the codes do not tell, every case
+reads `reversal_basis: unknown`. BACP asserts no de-duplication by the rail: the gateway allows at most one debit per `checkout_hash`.
+
+### Q-91 Re-attestation of a Reserve Pay block under a successor root {#q-91}
+
+**Question.** Will payer PSPs sign a fresh attestation for an existing Reserve Pay block, so that a successor root can re-bind it without revoking it?<br>
+**Owner.** NPCI.
+
+**Working position (fail-safe default).** A successor root MAY re-bind a block that its predecessor held when the payer PSP re-attests it. Where no PSP
+does, the old blocks are revoked and created again, the principal enters the UPI PIN once for each seller, and both blocks count as exposure while a revocation is
+unconfirmed ([Porting a mandate](mandates.md#port)).
+
+### Q-92 Deemed-debit scope after OC 228, and overdraft funding {#q-92}
+
+**Question.** What is the scope of a deemed debit for UPI Reserve Pay after NPCI OC 228 (08-10-2025), given that OC 88/2020-21 and OC 128/2021-22, which OC 200
+recites, are member-only? Should a payer PSP attest an overdraft account as `deposit` or as `credit`?<br>
+**Owner.** NPCI.
+
+**Working position (fail-safe default).** A credit-side timeout after a successful debit is read as deemed (OC 200 para (d); Consolidated Circular para 32.3), and a
+timeout on the debit side is a decline (OC 228). An overdraft account is credit unless the PSP attests deposit, and a missing funding is credit, so that a
+block on such an account needs `credit_funding_allowed: true`.
+
+### Q-93 Gift PPI refund after expiry or closure, and to a non-reloadable instrument {#q-93}
+
+**Question.** Where does a refund go when a gift PPI has expired or been closed? Does PPI Master Direction para 14.3(a) let a refund be credited to a
+non-reloadable gift PPI above the limits of para 10.1?<br>
+**Owner.** RBI, Legal counsel.
+
+**Working position.** The registry records refund to the same PPI immediately (para 14.3(a)), a transfer back to the source with the holder's consent (10.1(c)),
+and, for a balance left after expiry, a payment to the holder in a bank account on request for a non-bank issuer (13.3). The gap is not verified as of
+18-10-2026.
 
 ## Settled {#settled}
 
@@ -1461,7 +1459,7 @@ from several sellers with no human present, and what does each fallback mean for
 - Every sibling Payment Mandate sits under one root open Checkout Mandate; a block names its payee
   (`payee{vpa, bpp_id}`), bound to the seller's signed payment terms; the blocks under a root sum to no more than its
   smallest budget; each block counts as reserved spend at its full amount; revoking the root revokes each block.
-- A change of a leg's funding, fee-bearer, payee or collector raises a `rail_fallback` step-up; an `in_doubt` leg is
+- A change of a leg's funding class (own deposit, prepaid or borrowed), fee-bearer, payee or collector raises a `rail_fallback` step-up; an `in_doubt` leg is
   never re-routed.
 
 See [Mandates and Consent](mandates.md#per-leg-rule) and
@@ -1530,6 +1528,110 @@ a handoff, so a principal who asks for a human waits until the operator enrols t
 operator's duty under its own HR process; counsel's question on whether a gateway that reads these records is a fiduciary
 or a processor of the employees' personal data is open with counsel ([Q-86](#q-86)). Whether the ONDC network registry
 can carry `operator_id` and `person_ref` is a question for ONDC.
+
+### Q-61 Gateway-to-MM mandate events {#q-61}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T7).
+
+**Question.** Should a gateway tell the Mandate Manager that issued a mandate when it pauses that mandate because its
+rail binding is no longer eligible (`binding_ineligible`, `reissue_required`) or lifts such a pause, so that the
+Trusted Surface can show the principal why the agent cannot pay and can offer re-issue? If so, through which signed
+event and endpoint? `POST /trusted-surface/events` runs from the MM or PSP to the gateway, and every webhook runs from
+the gateway to the agent, so BACP `2026-10-17` has no channel in this direction.<br>
+**Owner.** BACP WG.
+
+**Answer.** Yes, on the `audit_uri` that the mandate already carries, with no new Mandate Manager endpoint. The gateway
+reports a use, a relinquishment and every addition or removal of a gateway-originated pause reason as a `MandateEvent`
+(`use`, `relinquished`, `pause_changed`), numbered per mandate by `seq` and chained by `prev_hash`, signed under RFC 9421 by the
+registry key of its BAP with the tag `bacp-mm-event`, and delivered within 60 seconds and retried with the same
+`event_id`. The Mandate Manager accepts an event only from the BAP of the mandate's `agent.bap_id`, and records
+`event_gap` on a missing `seq`. A delivery failure never blocks a refund, a reversal or a post-order write, and no money
+moves on the event: every gateway still re-derives eligibility at step 1 of evaluation. The Mandate Manager derives the
+change of registry status and its own issuance record itself, and learns an attestation swap and `unmatched_rail_debit`
+(which needs a block-debit feed, [Q-10](#q-10)) only from the event. A relinquishment of a root with blocks is not
+complete for the principal until the Mandate Manager reports `rail_revocation`, and the agent delivers the Trusted
+Surface revoke route until then. A `MandateEvent` carries no text for the principal, so it is not a notice: BACP still defines no gateway-to-Trusted-Surface notice event, and a `process.notice_route` of `tel` or `sms` remains the way to meet the condition for `autonomous` ([Negotiation](negotiation/index.md)). See
+[Mandate events](mandates.md#mandate-events) and [Handler binding](mandates.md#handler-binding).
+
+### Q-36 Atomicity across gateways {#q-36}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T7).
+
+**Question.** How are budgets and negotiation exposure kept atomic across gateways (a principal with two buyer apps)
+and across replicas of one gateway? Should the Mandate Manager hold the authoritative reservation ledger?<br>
+**Owner.** BACP WG.
+
+**Answer.** Budgets are atomic per root inside one gateway, and each open mandate belongs to one gateway: the mandate
+carries `agent.bap_id`, copied by the Mandate Manager from the verified AgentCredential, and any other gateway refuses
+it with `403 mandate_scope_mismatch` at `$.agent.bap_id` (a mandate without `bap_id` is bound by `credential_hash`, which the
+gateway compares). A mandate moves to another gateway only by a principal-initiated successor root on the Trusted
+Surface, which carries the spend already made and revokes the old root first. The earlier working position, that the
+Mandate Manager publishes outstanding exposure, is replaced: nobody proposed a Mandate-Manager-held ledger, and a
+synchronous one would put every `complete` on the Mandate Manager's availability. Replicas of one gateway keep sharing a
+linearisable ledger. The gateway takes the principal-keyed section before the root's section, never the reverse, and a
+firm commitment of the negotiation guard is written into the root's ledger as a reservation keyed by `offer_hash`. See
+[Atomic reservation](security-and-privacy.md#atomic-reservation) and [Porting a mandate](mandates.md#port).
+
+### Q-50 Cross-seller split detection {#q-50}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T7).
+
+**Question.** Should split-order detection add a cross-seller velocity signal keyed on (mandate, window) instead of
+the seller?<br>
+**Owner.** BACP WG.
+
+**Answer.** Split-order detection is keyed on the root open Checkout Mandate and the seller, within 10 minutes, and counts
+completed and in-flight orders. The seller is identified by the tax id in the BPP-signed terms, else by the payee VPA, else by
+the pair `bpp_id` and `provider_id`. The `covers[]` legs of a summary-approved basket are exempt, because the principal has
+approved each of them. A cross-seller velocity signal is not added: velocity across different sellers is bounded by the
+budgets. See [Step-up](mandates.md#step-up) and [Atomic reservation](security-and-privacy.md#atomic-reservation).
+
+### Q-46 Exposure of credit-ledger deals {#q-46}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T7).
+
+**Question.** Should the cross-session exposure check count B2B credit-ledger deals against the checkout mandate's
+budgets or against `credit_ledger.max_outstanding`?<br>
+**Owner.** BACP WG.
+
+**Answer.** A credit-ledger sale counts against the checkout mandate's budgets and against `credit_ledger.max_outstanding` only when
+it is booked by a gateway `complete` under the buyer's mandate, inside the root's atomic section. A sale that the creditor posts
+never touches the budgets. A disputed entry keeps its count until it is resolved or credit-noted. A `payment` that settles a sale counts
+within the sale, never on top of it, and releases `max_outstanding` only; a `credit_note` releases both. See
+[Booking and settling](payments/credit-and-split-tender.md#booking-and-settling).
+
+### Q-59 Merchant- and BACP-enforced handlers {#q-59}
+
+!!! success "Settled"
+    Settled on 18-10-2026 (owner decision, panel round R2, topic T7), as closed: not open-eligible in this release.
+
+**Question.** May an open payment mandate bind to `in.store_credit`, `in.loyalty` or `bacp.credit_ledger`, whose
+limits are enforced by the merchant or by BACP rather than by a rail or an issuer? If so, who may sign their
+attestations and receipts when the payee is also the party that acts, and how does a credit-ledger sale, which has no
+payment receipt, resolve its budget reservation?<br>
+**Owner.** BACP WG.
+
+**Answer.** `in.store_credit`, `in.loyalty` and `bacp.credit_ledger` are not open-eligible in this release, and their descriptors have
+`presence.hnp: none`, because the limits of each are enforced by the merchant or by BACP and not by a rail or an issuer. A principal who wants
+to pay human-not-present from store credit, loyalty or a khata ledger cannot yet; human-present payment is unaffected. The conditions for
+opening them are written down now, so that opening later is a registry change plus an owner decision:
+
+!!! warning "Proposed"
+    A handler whose limits a merchant or BACP enforces MAY back an open mandate only when all of these hold, each tested by a conformance case
+    (T7-40 and the cases of the [handler-binding cases](conformance.md#handler-binding-cases)):
+
+    1. Attestations and receipts are never signed by a key of the payee's operator.
+    2. A failure receipt signed by the payee keeps the reservation counted as spent until the principal confirms on the Trusted Surface.
+    3. A credit-ledger acknowledgement comes from the principal's or the Mandate Manager's key, never the agent's `cnf` key.
+    4. A store-credit debit carries the merchant-signed `balance_before` and `balance_after`.
+    5. A loyalty redemption carries a programme-signed `conversion_value`.
+
+Whether a gateway that funds a ledger needs RBI registration under the RBI Act, 1934, s.45-IA is a question for counsel (not verified as of
+18-10-2026). See [Handler binding](mandates.md#handler-binding) and [Booking and settling](payments/credit-and-split-tender.md#booking-and-settling).
 
 ### Other settled points {#settled-other}
 

@@ -74,6 +74,7 @@ operation without it.
 | `bacp-negotiate` | Binding negotiation acts: firm offers and counters, ACCEPT, bids, awards, and the acts that undo them (WITHDRAW, ACCEPT_REVOKE) | `POST /negotiations/{negotiation_id}/offers` when the message is firm or is a `withdraw` or `accept_revoke`, `POST /negotiations/{negotiation_id}/accept`, `POST /rfqs/{rfq_id}/award`, `POST /auctions`, `POST /auctions/{auction_id}/bids`, `POST /auctions/{auction_id}/award` |
 | `bacp-ts` | Trusted Surface events and render fetches, signed by the step-up's Mandate Manager or payer PSP, never by an agent | `POST /trusted-surface/events`, `GET /trusted-surface/step-ups/{step_up_id}` |
 | `bacp-handoff` | A human support operator accepting or releasing a handoff, signed by a registry key of role support operator, never by an agent | `POST /sessions/{session_id}/handoff` with `action: accept` or `release` |
+| `bacp-mm-event` | A gateway reporting a mandate event to the Mandate Manager, signed by the registry key of the gateway's BAP, never by an agent | The webhook `mandate.event`, delivered to the mandate's `audit_uri` ([Mandate events](../mandates.md#mandate-events)); it is not an operation of this API |
 
 `GET /.well-known/bacp`, `GET /payment-handlers` and `GET /payment-handlers/{handler_id}` are public and need no
 signature.
@@ -140,6 +141,10 @@ The gateway pushes state changes to the agent's webhook URL, given as `webhook_u
 | `step_up.updated` | A step-up that the agent credential's request created reached a final state (`approved`, `declined`, `expired`, `voided` or `superseded`). `data` is the `StepUpStatus`, with `ts_event_hash` once approved ([Presence proof](../human-participants.md#hp-proof)). It carries no render and no text for the principal. |
 
 Each delivery is a `WebhookEvent`: `event_id`, `type`, `created_at` and `data`.
+
+A `MandateEvent` is not one of these deliveries: the gateway sends it to the mandate's `audit_uri`, the endpoint of the
+Mandate Manager, under the tag `bacp-mm-event` ([Mandate events](../mandates.md#mandate-events)). The agent never receives
+it, and the Mandate Manager refuses one whose signer's BAP is not the mandate's `agent.bap_id`.
 
 **Signing and delivery.**
 

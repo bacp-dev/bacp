@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://bacp.dev/schemas/registry-record.json",
   "title": "RegistryRecord",
-  "description": "The part of a network registry record that BACP reads about one subscriber: its id, its BACP role, its signing keys and their validity, and, for a Mandate Manager or a PSP, the Trusted Surface origins, the notify endpoint, the numbers it calls from, the languages and the modalities it serves. For a human support operator it names the operator and the person. A registry may carry more fields, and a reader ignores any field it does not know. Whether a given registry, such as the ONDC network registry, can carry these fields is not settled.",
+  "description": "The part of a network registry record that BACP reads about one subscriber: its id, its BACP role, its signing keys and their validity, and, for a Mandate Manager or a PSP, the Trusted Surface origins, the notify endpoint, the numbers it calls from, the languages and the modalities it serves. For a human support operator it names the operator and the person. For any subscriber it may carry the legal operator, the regulatory status of that operator and a data-residency statement. A registry may carry more fields, and a reader ignores any field it does not know. Whether a given registry, such as the ONDC network registry, can carry these fields is not settled.",
   "type": "object",
   "required": [
     "subscriber_id",
@@ -118,6 +118,125 @@
           "both"
         ]
       }
+    },
+    "operator": {
+      "type": "object",
+      "required": [
+        "legal_name",
+        "entity_ids",
+        "assertion"
+      ],
+      "additionalProperties": false,
+      "description": "The legal entity that operates the subscriber, as the network registry's lookup response carries it. A Mandate Manager compares operators to check the separation rules, for example that a conformance authority is not run or funded by the gateway's operator. It is not the same as operator_id, which names the agent operator that a support key serves.",
+      "properties": {
+        "legal_name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The operator's legal name."
+        },
+        "entity_ids": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "common.json#/$defs/EntityId"
+          },
+          "description": "The operator's registration identifiers. Two operators are the same entity when they share a CIN, an LLPIN or a PAN. A GSTIN alone never makes two operators the same or different, because one entity can hold several GSTINs."
+        },
+        "assertion": {
+          "enum": [
+            "registry",
+            "declared"
+          ],
+          "description": "registry: the network registry's lookup response itself carries this operator, so a verifier can rely on it for a separation check. declared: the subscriber stated it and the registry did not. A declared operator, or an absent operator, is unknown, and a separation check that meets an unknown operator fails closed."
+        },
+        "group_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "OPTIONAL. A registry-assigned identifier shared by operators that belong to one corporate group. Two operators that share a group_id are the same operator for a separation check. When a conformance-authority entry names a group_id, a compared record without a group_id counts as unknown."
+        }
+      }
+    },
+    "regulatory_status": {
+      "type": "array",
+      "minItems": 1,
+      "description": "What the subscriber's operator is authorised to do under Indian payment regulation, each as a dated, sourced statement. A reader MUST NOT treat a statement whose status is declared as verified. This is also where the payment-aggregator authorisation that the gateway checks for collected_by is carried: an entry of regime rbi_pa (or bank) with status verified.",
+      "items": {
+        "type": "object",
+        "required": [
+          "regime",
+          "source",
+          "verified_on",
+          "status"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "regime": {
+            "enum": [
+              "rbi_pa",
+              "rbi_ppi",
+              "bank",
+              "npci_member",
+              "ondc_np"
+            ],
+            "description": "rbi_pa: authorised payment aggregator. rbi_ppi: authorised prepaid payment instrument issuer. bank: a bank. npci_member: an NPCI member. ondc_np: an ONDC network participant."
+          },
+          "category": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The category within the regime. NPCI member roles go here as free text until a public source for the list of roles is recorded."
+          },
+          "reference": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The authorisation reference, such as a certificate or listing number, as the source gives it."
+          },
+          "source": {
+            "$ref": "common.json#/$defs/Citation",
+            "description": "The public source that the entry was taken from."
+          },
+          "verified_on": {
+            "type": "string",
+            "format": "date",
+            "description": "The date on which the registry checked the source."
+          },
+          "status": {
+            "enum": [
+              "verified",
+              "declared"
+            ],
+            "description": "verified: the registry checked the source on verified_on. declared: the subscriber stated it and it is not verified."
+          }
+        }
+      }
+    },
+    "data_residency": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "description": "OPTIONAL. Where the subscriber's operator processes and stores payment data. A gateway MUST NOT treat a missing or incomplete statement as permission to send payment data outside India.",
+      "properties": {
+        "payment_data": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where payment data is stored, for example 'India'."
+        },
+        "llm_region": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where a model that processes payment data runs."
+        },
+        "log_region": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Where logs that can contain payment data are kept."
+        },
+        "transfer_basis": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The legal basis for any transfer of payment data outside India."
+        }
+      }
     }
   },
   "allOf": [
@@ -140,6 +259,60 @@
         "properties": {
           "keys": {
             "maxItems": 1
+          }
+        }
+      }
+    },
+    {
+      "description": "A subscriber whose operator holds an RBI payment aggregator or prepaid payment instrument issuer authorisation has a company: its entity_ids contain a CIN of 21 characters. This is scoped by regime, because the registry role has no payment-aggregator or issuer value. No character pattern is set until a public Ministry of Corporate Affairs source for the format is recorded.",
+      "if": {
+        "required": [
+          "regulatory_status"
+        ],
+        "properties": {
+          "regulatory_status": {
+            "contains": {
+              "required": [
+                "regime"
+              ],
+              "properties": {
+                "regime": {
+                  "enum": [
+                    "rbi_pa",
+                    "rbi_ppi"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "operator"
+        ],
+        "properties": {
+          "operator": {
+            "properties": {
+              "entity_ids": {
+                "contains": {
+                  "required": [
+                    "type",
+                    "value"
+                  ],
+                  "properties": {
+                    "type": {
+                      "const": "CIN"
+                    },
+                    "value": {
+                      "type": "string",
+                      "minLength": 21,
+                      "maxLength": 21
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

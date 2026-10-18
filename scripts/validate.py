@@ -8,8 +8,11 @@ Checks
   3. every source/examples/<schema>.<case>.json validates against <schema>; files named *.invalid.json MUST fail;
      a <component>.<case>.json whose <component> names no schema file is checked against the OpenAPI component
      schema of that name in PascalCase (mandate-request -> #/components/schemas/MandateRequest);
-  4. source/handlers/registry.json entries validate against handler-descriptor.json;
+  4. source/handlers/registry.json entries validate against handler-descriptor.json, and every binding.open_primitives entry
+     is a mandate_primitives[].type of its descriptor whose limits_enforced_by is rail or issuer;
   5. source/services/bacp.openapi.yaml is a valid OpenAPI 3.1 document;
+  4b. source/handlers/release.json validates against registry-release.json, and each digest equals the JCS digest of the
+     file it names (scripts/registry_release.py --write refreshes them);
   6. source/registry/conformance-authorities.json validates against conformance-authority-list.json;
   7. every OpenAPI operation carries x-bacp-signature-tag, x-bacp-idempotent (true exactly for the operations that take an
      Idempotency-Key) and, where it is an MCP tool, x-bacp-mcp-tool; the tool table of docs/specification/transports/mcp-a2a.md
@@ -34,6 +37,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 from openapi_spec_validator import validate as validate_openapi
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
+
+from registry_release import digest_of, resolve as resolve_release_uri
 
 class _UniqueKeyLoader(yaml.SafeLoader):
     """A safe loader that refuses a repeated mapping key instead of silently keeping the last."""
@@ -188,6 +193,28 @@ def main() -> int:
         if errs:
             fail(f"registry {e.get('handler_id')}: {errs[0].message} at {errs[0].json_path}")
     print("PASS", f"handler registry ({n} handlers)")
+    # a binding.open_primitives entry is a primitive of the descriptor that a rail or an issuer enforces
+    for e in entries:
+        enforced = {p["type"] for p in e.get("mandate_primitives", []) if p.get("limits_enforced_by") in ("rail", "issuer")}
+        extra = sorted(set(e.get("binding", {}).get("open_primitives", [])) - enforced)
+        if extra:
+            fail(f"registry {e.get('handler_id')}: open_primitives {extra} are not mandate_primitives enforced by rail or issuer")
+    print("PASS", "open_primitives are rail- or issuer-enforced primitives of their descriptors")
+
+    # 4b. the registry release manifest: valid, and every digest matches the JCS form of the file it names
+    rel_path = SRC / "handlers" / "release.json"
+    rel = json.loads(rel_path.read_text())
+    errs = list(validators["registry-release"].iter_errors(rel))
+    if errs:
+        fail(f"{rel_path.name}: {errs[0].message} at {errs[0].json_path}")
+    else:
+        for entry in rel["files"]:
+            target = resolve_release_uri(entry["uri"])
+            if not target.is_file():
+                fail(f"{rel_path.name}: {entry['uri']} names no file")
+            elif digest_of(target) != entry["digest"]:
+                fail(f"{rel_path.name}: digest of {entry['uri']} is stale; run scripts/registry_release.py --write")
+        print("PASS", rel_path.name)
 
     # 5. OpenAPI
     try:

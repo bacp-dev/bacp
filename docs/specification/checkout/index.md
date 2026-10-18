@@ -291,7 +291,7 @@ It is the anchor that binds every later artefact to one basket and one price:
 - if `accepted_disclosures_hash` is sent, it **MUST** equal `disclosures.hash`;
 - the payment leg to the PSP carries `checkout_hash` instead of the basket, and the PSP's Receipt
   repeats it;
-- the rail allows at most one debit per `checkout_hash` (under a payment plan, at most one per tender, and never more in total than `all_in_total`; see [Wire binding of plans](../payments/credit-and-split-tender.md#plan-wire));
+- the gateway allows at most one debit per `checkout_hash` (under a payment plan, at most one per tender, and never more in total than `all_in_total`; see [Wire binding of plans](../payments/credit-and-split-tender.md#plan-wire));
 - the evidence bundle recomputes it from the BPP-signed quote ([Evidence](../evidence.md#bundle)).
 
 `checkout_hash` is the hash of the quote, **not** of an accepted negotiation offer. Nothing in
@@ -789,12 +789,30 @@ If the debit succeeds but `on_confirm` does not arrive, the gateway re-sends the
   (`original_rrn` for UPI). Issuing the refund Receipt does not by itself end the session;
 - when the PSP reports the refund credit as settled, `payment.status` **MUST** become `reversed`
   and the session **MUST** become `cancelled`;
-- the `debited_not_confirmed` message **SHOULD** state the rail's turnaround time and the
-  principal's entitlement to compensation of ₹100 per day of delay for a failed UPI merchant
-  payment not reversed in time.
+- `payment.reversal_basis` and `payment.refund_route` **MUST** be set. `reversal_basis` is `rbi_tat` when the payer PSP
+  reports the debit as pending or as deemed (a credit-side timeout after a successful debit; NPCI UPI Consolidated
+  Circular para 32.3), `bacp_policy` when the PSP reports the payee credit as completed and only the seller's `on_confirm`
+  is missing, and `unknown` when the PSP's response does not say. `refund_route` is `gateway_collector` when the gateway's
+  own payment aggregator collected the money, and `seller_collector` when the seller's collector holds it;
+- the `debited_not_confirmed` message **MUST** follow the basis. For `rbi_tat` it states the rail's turnaround time (T+5) and
+  the compensation of ₹100 a day beyond it (RBI/2019-20/67, Annex, row 4(b): "Account debited but transaction
+  confirmation not received at merchant location"). For `bacp_policy` it **MUST NOT** state an RBI compensation
+  entitlement: `reversal_deadline` is then BACP's own policy of the debit time plus 5 days. For `unknown` it names the
+  routes that certainly exist, namely the refund to source, a complaint through UDIR in the payer's UPI app
+  (Consolidated Circular para 32.2) and, after 30 days, the RBI Integrated Ombudsman, and adds: "if your bank shows
+  this payment as failed or pending, RBI's automatic-reversal and compensation rules apply". Whether row 4(b) reaches a
+  payment that the rail completed, where only the seller's confirmation is missing, is not verified as of 18-10-2026 and is
+  asked of counsel and RBI, so BACP promises no statutory remedy that may not exist;
+- the message **MUST** say what the gateway actually did. For `gateway_collector` the gateway's refund has "started". For
+  `seller_collector` the gateway **MUST** request the refund from the collector through IGM, citing `original_rrn`, and tell
+  the principal how to raise a complaint through UDIR, and the message says "requested", never "started" (on UPI a refund
+  is an acquirer function: NPCI OC 165);
+- a late `on_confirm`, after the reversal has begun, is answered with a Beckn `cancel`, logged, and never debited again.
 
-The signal that confirms refund settlement, and the saga for rails other than UPI, are open
-([Q-49](../open-questions.md#q-49)).
+When the refund is settled, the spend is released only under the [exception to "refunds do not restore
+budget"](../mandates.md#usage-ledger), and while the reversal is unresolved the gateway makes no further human-not-present
+debit to that seller under the root. The signal that confirms refund settlement, and the saga for rails other than UPI, are
+open ([Q-49](../open-questions.md#q-49)); the rule above states which evidence releases the budget once it exists.
 
 ### Deferred settlement after a pre-debit notice {#pre-debit-notice}
 
@@ -885,7 +903,7 @@ retrievable; the agent GETs it and retries with the same key.
 - With the **same** key, exactly one executes; the others get `409 idempotency_in_flight` or the
   replayed response.
 - With **different** keys on the same session, at most one debit happens: the closed Payment
-  Mandate is consumed atomically and the rail accepts one debit per `checkout_hash`. The losers get
+  Mandate is consumed atomically and the gateway allows one debit per `checkout_hash`. The losers get
   `403 mandate_scope_mismatch`.
 - Across **different sessions** under one open mandate, the atomic section serialises evaluation
   and reservation, so the settled total never exceeds any budget; the calls that would exceed it

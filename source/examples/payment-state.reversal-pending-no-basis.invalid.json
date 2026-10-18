@@ -1,0 +1,7 @@
+{
+  "handler": "in.upi.reservepay",
+  "collected_by": "BAP",
+  "type": "ON-ORDER",
+  "status": "reversal_pending",
+  "reversal_deadline": "2026-10-30T19:02:11+05:30"
+}

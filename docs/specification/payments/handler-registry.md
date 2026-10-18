@@ -25,28 +25,31 @@ A descriptor has the fields below. Required fields are marked **R**.
 | `regulator[]` | R | One or more `{body, instrument, ref}`, e.g. `{"body": "RBI", "instrument": "E-mandate Framework 2026"}`. |
 | `presence` | R | `human_presence` (`required`, `mandate` or `none`), `hp` (may run with a human present), `hnp` (`none`, `rail_enforced` or `order_only`), `device_bound`, `assisted_only`. `rail_enforced` means a standing authority whose limits the rail or issuer enforces. `order_only` means the order may be placed HNP but payment happens later with a human (COD). |
 | `binding` | R | `class` (`O`, `C`, `A`, `D` or `N`; see [handler classes](index.md#handler-classes)), `open_eligible`, `open_primitives[]` (the `mandate_primitives[].type` values that may back an open mandate; only primitives whose `limits_enforced_by` is `rail` or `issuer`, and at least one when `open_eligible` is `true`), `open_requires` (a condition in words, e.g. "only with an AFA-registered PPI e-mandate"), and `closed_auth[]`: the per-transaction authorisations a closed HP payment may use (`upi.pin`, `upi.biometric`, `card.3ds`, `card.otp`, `card.passkey`, `netbanking.login_otp`, `maker_checker`, `aadhaar_biometric`, `voucher_code`, `wallet_pin`, `kfs_esign`, `dsc`, `cash_at_door`, `parent_rail_binding`). |
-| `mandate_primitives[]` | R | The rail object that carries the standing authority: `type` (e.g. `sbmd_block`, `otm_block`, `circle_delegation`, `upi_autopay_umn`, `card_emandate`, `agentic_token_intent`, `nach_umrn`, `ppi_emandate`, `balance_cap`, `voucher`, `programmability_rules`, `upms_registration`, `topup_mandate`, `loan_sanction`, `payee_binding`, `approval_policy`, `assisted_session`, `credit_limit`, `factoring_unit`, `gpa_block`, `pps_registration`), `ref_name` (what `rail_binding.rail_ref` holds, e.g. UMN, UMRN, SBMD block id), `limits_enforced_by` (`rail`, `issuer`, `merchant`, `lender`, `bacp`, `none`), `payee_scope` (`single_merchant`, `single_biller`, `single_creditor`, `any_merchant`, `purpose_locked`, `lender`, `n_a`) and `multi_capture`. |
-| `limits[]` | R | Each limit has a `name` (`per_txn`, `per_txn_min`, `per_day`, `per_month`, `per_year`, `first_24h`, `balance`, `block_amount`, `mandate_max`, `voucher_max`, `no_afa_debit`, `no_afa_debit_special_categories`, `validity`, `devices`, `pps_threshold`, `cash_threshold`), one of `amount` (integer paise), `duration` (ISO 8601) or `count`, an `applies_to` note, a `source` citation, a `verification` grade (`verified`, `secondary`, `vendor`, `unverified`, `conflict`), a `conflict_note` where sources disagree, and `configurable`. |
-| `afa` | R | `model` (`per_txn_2fa`, `at_registration_and_first_debit`, `at_registration_only`, `at_block_creation`, `at_provisioning`, `exempt`, `exempt_below_threshold`, `biometric_assisted`, `maker_checker`, `loan_acceptance`, `voucher_code`, `none_cash`, `n_a`), `threshold` and `threshold_special` (amounts above which AFA is needed), `pre_debit_notice` (`required_24h`, `bacp_policy_24h`, `exempt`, `unknown`, `not_applicable`) and `rbi_annex1_item` (the row of Annexure-1 of RBI/2025-26/79 that exempts the handler: REQUIRED when `model` is `exempt` or `exempt_below_threshold`, FORBIDDEN when it is `at_block_creation` or `at_registration_only`, so that Reserve Pay or UPI Circle is never labelled an RBI exemption; the upper bound is kept by the registry, because Annexure-1 says that later additions also apply). |
+| `mandate_primitives[]` | R | The rail object that carries the standing authority: `type` (e.g. `sbmd_block`, `otm_block`, `circle_delegation`, `upi_autopay_umn`, `card_emandate`, `agentic_token_intent`, `nach_umrn`, `ppi_emandate`, `balance_cap`, `voucher`, `programmability_rules`, `upms_registration`, `topup_mandate`, `loan_sanction`, `payee_binding`, `approval_policy`, `assisted_session`, `credit_limit`, `factoring_unit`, `gpa_block`, `pps_registration`), `ref_name` (what `rail_binding.rail_ref` holds, e.g. UMN, UMRN, SBMD block id), `limits_enforced_by` (`rail`, `issuer`, `merchant`, `lender`, `bacp`, `none`), `payee_scope` (`single_merchant`, `single_biller`, `single_creditor`, `any_merchant`, `purpose_locked`, `issuer_contracted`, `lender`, `n_a`) and `multi_capture`. `issuer_contracted` means that a seller accepts the instrument only through a contract with its issuer, as for a gift PPI (RBI Master Direction on Prepaid Payment Instruments, paras 2.6 and 11.4.3), so that a gateway checks the seller's acceptance before it ranks the rung. |
+| `limits[]` | R | Each limit has a `name` (`per_txn`, `per_txn_min`, `per_day`, `per_month`, `per_year`, `first_24h`, `balance`, `block_amount`, `mandate_max`, `voucher_max`, `no_afa_debit`, `no_afa_debit_special_categories`, `validity`, `devices`, `pps_threshold`, `cash_threshold`), one of `amount` (integer paise), `duration` (ISO 8601) or `count`, an `applies_to` note, a `source` citation, a `verification` grade (`verified`, `secondary`, `vendor`, `unverified`, `conflict`), a `conflict_note` where sources disagree, `configurable`, and an optional `bound` (`min` or `max`) that says whether the value is a floor or a ceiling, for example the one-year minimum validity of a gift PPI. |
+| `afa` | R | `model` (`per_txn_2fa`, `at_registration_and_first_debit`, `at_registration_only`, `at_block_creation`, `at_provisioning`, `exempt`, `exempt_below_threshold`, `biometric_assisted`, `maker_checker`, `loan_acceptance`, `voucher_code`, `none_cash`, `n_a`), `threshold` and `threshold_special` (amounts above which AFA is needed), `pre_debit_notice` (`required_24h`, `bacp_policy_24h`, `exempt`, `unknown`, `not_applicable`) `verification` (optional; how well the `source` citation was checked, on the scale of `limits[].verification`, so that an NPCI-layer citation is graded separately from the RBI layer), and `rbi_annex1_item` (the row of Annexure-1 of RBI/2025-26/79 that exempts the handler: REQUIRED when `model` is `exempt` or `exempt_below_threshold`, FORBIDDEN when it is `at_block_creation` or `at_registration_only`, so that Reserve Pay or UPI Circle is never labelled an RBI exemption; the upper bound is kept by the registry, because Annexure-1 says that later additions also apply). |
 | `refund` | R | `route` (`source`, `source_with_card_credit_consent`, `same_ppi`, `release_block_or_source`, `lender`, `user_elected_account`, `same_balance`, `issuer_or_sponsor`, `new_credit_push`, `ledger_credit_note`, `n_a`, `unverified`), `failed_txn_tat` (ISO 8601 duration), `compensation_per_day`, `notes`. See [refunds](index.md#refunds). |
 | `dispute` | R | `channels[]` (e.g. UDIR, issuer billing dispute, RBI Integrated Ombudsman, Bharat Connect complaints, GeM incident management) and `window`. |
 | `settlement` | R | `mechanism` (free text), `evidence_refs[]` (the keys a receipt may carry: `rrn`, `utr`, `umn`, `umrn`, `arn`, `auth_code`, `bconnect_txn_id`, `voucher_id`, `cbdc_txn_id`, `factoring_unit_id`, `loan_id`, `lc_no`, `ebg_no`, `gem_order_no`, `crac_no`, `pfms_payment_id`, `pa_order_id`, `cheque_no`, `uetr`, `ledger_entry_id`, `awb`, `none`), `escrow` (`pa_escrow`, `none`, `gem_pool_account`, `platform`, `n_a`) and `timeline_source`. The PA-to-merchant timeline follows the PA–merchant agreement; there is no RBI T+N. |
 | `data_minimisation` | R | `payment_leg_fields` (by default `payee`, `amount`, `mandate_ref`, `checkout_hash`), `never_collect` (always includes `pin`, `otp`, `card_pan`, `cvv`, `card_expiry`, `netbanking_credentials`, `aadhaar_number`, `biometric` and `basket`; vouchers add `voucher_code_plaintext`), `retain_only` (cards: last four digits and issuer) and `basket_blind`. |
 | `funding` | R | `debit`, `credit`, `prepaid`, `cash`, `voucher`, `loan`, `cbdc`, `trade_credit` or `n_a`. |
+| `funding_sources[]` | | Every source of funds a payer can bring to the handler, when it is more than `funding`. It MUST contain `funding`. UPI Reserve Pay lists `debit` and `credit`, because a block can sit on a savings, current or overdraft account or on a RuPay credit card or a pre-sanctioned credit line (NPCI Consolidated Circular para 16.1). The source of a given mandate is the one its payer PSP attests, never the list. |
 | `credit_disclosure_required` | | MUST be `true` when `funding` is `credit` or `loan`: the agent discloses that the payment is credit and holds the user's prior consent. |
 | `segments[]` | | `b2c`, `b2b`, `g2b`, `c2c`, `assisted`, `cross_border`. |
 | `requirements[]` | | Identifiers of the requirements the descriptor implements (see [Regulatory Mapping](../regulatory-mapping.md)). |
 | `sources[]` | R | Citations for the descriptor's content. |
 | `notes` | | Free text. |
 
-The schema enforces four cross-field rules:
+The schema enforces these cross-field rules:
 
 1. `binding.open_eligible: true` requires `presence.hnp: rail_enforced`.
 2. `binding.open_eligible: true` requires a non-empty `binding.open_primitives`.
 3. `presence.device_bound: true` requires `binding.open_eligible: false`.
 4. `funding` of `credit` or `loan` requires `credit_disclosure_required: true`.
+5. `presence.hnp: rail_enforced` requires at least one entry of `mandate_primitives` whose `limits_enforced_by` is `rail` or `issuer`. A descriptor whose limits only a merchant or BACP enforces is `hnp: none`.
+6. `funding_sources`, when present, contains `funding`, and `binding.open_primitives` never lists `none`.
 
-That every `binding.open_primitives` entry is one of the descriptor's own `mandate_primitives[].type` values with `limits_enforced_by` `rail` or `issuer` cannot be expressed in JSON Schema; registry review MUST check it.
+That every `binding.open_primitives` entry is one of the descriptor's own `mandate_primitives[].type` values with `limits_enforced_by` `rail` or `issuer` cannot be expressed in JSON Schema. `scripts/validate.py` checks it for the registry, and registry review MUST check it for a proposed descriptor.
 
 An abridged descriptor (the `in.upi.autopay` entry, with optional fields and the per-field citations shortened) looks like this:
 
@@ -100,7 +103,17 @@ Rules for registry content:
 - A registry in which an exact alias maps to two descriptors, or a canonical id is also declared as an alias, MUST be rejected at load.
 - Every descriptor MUST validate against [`handler-descriptor.json`](https://bacp.dev/schemas/handler-descriptor.json).
 - Status changes (`pilot` to `live`, `reserved` to `pilot`) are registry changes and follow the [proposal process](#proposing-a-new-handler).
-- Eligibility is evaluated against the current registry at every `complete`, not when a mandate was issued. A change that makes an active mandate's binding ineligible (a downgrade from `live` to `pilot`, `reserved` or `deprecated`, or a primitive removed from `binding.open_primitives`) pauses the affected mandates ([Handler binding](../mandates.md#handler-binding)). Mandate Managers and gateways take the registry from the dated release or a registry-signed snapshot, never from a gateway's `GET /payment-handlers`, and a gateway adopts a downgrade within 24 hours of the release.
+- Eligibility is evaluated against the current registry at every `complete`, not when a mandate was issued. A change that makes an active mandate's binding ineligible (a downgrade from `live` to `pilot`, `reserved` or `deprecated`, or a primitive removed from `binding.open_primitives`) pauses the affected mandates ([Handler binding](../mandates.md#handler-binding)). Mandate Managers and gateways take the registry from the dated release, never from a gateway's `GET /payment-handlers`, and a gateway adopts a downgrade within 24 hours of the `published_at` of the publication that makes it. There is no registry-signed snapshot: no party holds a registry key.
+
+### Release manifest {#release-manifest}
+
+Each publication of the registry files has a release manifest, `source/handlers/release.json`, valid against
+[`registry-release.json`](https://bacp.dev/schemas/registry-release.json). It names the `registry_version`, a strictly
+increasing `registry_serial` (backports included), the `published_at` instant in IST and the `sha-256` digest, over the
+JCS form, of `registry.json` and of the conformance-authority list. A copy is newer than another when its serial is
+greater. `scripts/validate.py` recomputes the digests, and `scripts/registry_release.py --write` refreshes them after a
+registry change. The rules that use the serial and `published_at` are in
+[Handler binding](../mandates.md#handler-binding) and the [versioning policy](https://bacp.dev/versioning/#registry-release-manifest).
 
 ### Conformance authorities {#conformance-authorities}
 
@@ -190,8 +203,8 @@ The table below is generated from `source/handlers/registry.json`. "Presence all
 | 24 | `in.ppi.wallet` | PPI wallet (small or full KYC) | O | HP, HNP (rail-enforced) | `ppi_emandate`, `balance_cap` | `same_ppi` | live |
 | 25 | `in.ppi.card` | PPI card | C | HP | — | `same_ppi` | live |
 | 26 | `in.ppi.gift` | Gift PPI (open or semi-closed gift card) | O | HP, HNP (rail-enforced) | `balance_cap` | `same_ppi` | live |
-| 27 | `in.store_credit` | Closed-system store credit | O | HP, HNP (rail-enforced) | `balance_cap` | `same_balance` | live |
-| 28 | `in.loyalty` | Loyalty / reward points | O | HP, HNP (rail-enforced) | `balance_cap` | `same_balance` | live |
+| 27 | `in.store_credit` | Closed-system store credit | O | HP | `balance_cap` | `same_balance` | live |
+| 28 | `in.loyalty` | Loyalty / reward points | O | HP | `balance_cap` | `same_balance` | live |
 | 29 | `in.ppi.netc_topup` | FASTag (NETC) auto top-up | O | HP, HNP (rail-enforced) | `topup_mandate` | `issuer_or_sponsor` | live |
 | 30 | `in.ppi.ncmc_topup` | NCMC auto top-up | O | HP, HNP (rail-enforced) | `topup_mandate` | `issuer_or_sponsor` | live |
 | 31 | `in.ppi.transit` | Transit PPI (PPI-MTS) | C | HP | `balance_cap` | `same_ppi` | live |
@@ -220,7 +233,7 @@ The table below is generated from `source/handlers/registry.json`. "Presence all
 | 54 | `in.gov.gem` | GeM order and payment tracker (PFMS, GPA) | N | none (non-paying) | `gpa_block` | `n_a` | live |
 | 55 | `in.pa.settlement` | PA settlement status (read-only) | N | none (non-paying) | — | `source` | live |
 | 56 | `in.cheque.positive_pay` | Cheque with Positive Pay (record and track) | C | HP | `pps_registration` | `n_a` | live |
-| 57 | `bacp.credit_ledger` | Bilateral credit ledger (khata, net-N trade credit) | O | HP, HNP (rail-enforced) | `credit_limit` | `ledger_credit_note` | live |
+| 57 | `bacp.credit_ledger` | Bilateral credit ledger (khata, net-N trade credit) | O | HP | `credit_limit` | `ledger_credit_note` | live |
 
 ### Open-eligible primitives {#open-primitives}
 
@@ -237,7 +250,7 @@ Generated from `binding.open_primitives` in the same file. An open payment manda
 | `in.card.agentic` | `agentic_token_intent` | `pilot`: only when attested |
 | `in.nach.debit` | `nach_umrn` | — |
 | `in.ppi.wallet` | `ppi_emandate` | A wallet balance (`balance_cap`) never backs an open mandate |
-| `in.ppi.gift` | `balance_cap` | — |
+| `in.ppi.gift` | `balance_cap` | Only with a seller contracted with the issuer ([`issuer_contracted`](#descriptor-format)), and only when the PSP attestation states that the gift code vault is on the principal's side |
 | `in.store_credit` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
 | `in.loyalty` | — | not open-eligible in `2026-10-17` ([Q-59](../open-questions.md#q-59), [Q-46](../open-questions.md#q-46)) |
 | `in.ppi.netc_topup` | `topup_mandate` | — |

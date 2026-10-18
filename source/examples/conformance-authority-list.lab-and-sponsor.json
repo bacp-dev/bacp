@@ -32,7 +32,13 @@
         "uri": "https://testlab.example.in/status/authority/1",
         "idx": 0
       }
-    }
+    },
+    "fee_model": {
+      "basis": "per_run",
+      "outcome_contingent": false,
+      "terms_uri": "https://testlab.example.in/fees"
+    },
+    "publishes_all_runs": true
   },
   {
     "ca_id": "ca.sponsorbank.example.in",
@@ -68,6 +74,12 @@
         "uri": "https://sponsorbank.example.in/status/authority/1",
         "idx": 0
       }
-    }
+    },
+    "fee_model": {
+      "basis": "per_run",
+      "outcome_contingent": false,
+      "terms_uri": "https://testlab.example.in/fees"
+    },
+    "publishes_all_runs": true
   }
 ]

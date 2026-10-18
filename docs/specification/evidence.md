@@ -187,7 +187,11 @@ Rail references let receipts be joined with the rail's own dispute channel (UDIR
 
 ### Refund receipts
 
-A refund receipt **MUST** identify the original payment (`original_rrn`, `original_utr`, or an
+A refund receipt **MUST** be signed by a registered PSP, and the gateway applies it only to a payment of the same
+`checkout_hash` and payee. A payment success or failure receipt is applied only when it is signed by the PSP of the closed
+Payment Mandate's `auth_binding.psp_id` (HNP: the open Payment Mandate's `rail_binding.psp_id`), and each `receipt_id` and
+rail reference is applied once; otherwise the gateway answers `400 receipt_invalid` and the reservation stays
+([Usage ledger](mandates.md#usage-ledger)). A refund receipt **MUST** identify the original payment (`original_rrn`, `original_utr`, or an
 `original_*` key in `rail.evidence`), proving the refund went back to the original method, and
 **MUST** carry `refund_state`: `refunded_to_source` (the default for a completed refund to
 source), `released_block`, `pending_cardholder_consent`, `reversed_to_bank_account`,

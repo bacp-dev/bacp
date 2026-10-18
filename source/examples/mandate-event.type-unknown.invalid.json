@@ -1,0 +1,18 @@
+{
+  "event_id": "evt_01HZXWk1",
+  "type": "usage",
+  "mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "root_mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "gateway": "bap.vaani.example.in",
+  "created_at": "2026-12-16T09:41:12+05:30",
+  "seq": 3,
+  "prev_hash": "sha-256:Vk2fQeRz0b3dYk7pLmN4tHq8sXw1cUa5JrZ9oEi6GfA",
+  "use": {
+    "closed_mandate_id": "mdt_PAYCLOSED7Q2W9X4",
+    "amount": {
+      "value": 29000,
+      "currency": "INR"
+    },
+    "session_id": "ses_01HZXD"
+  }
+}

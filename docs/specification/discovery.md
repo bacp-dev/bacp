@@ -241,7 +241,8 @@ to:
 | Mandate Manager and PSP keys | Verifying mandates, rail-binding attestations, receipts and Trusted Surface events |
 | Trusted Surface origins, notify endpoint and languages of a Mandate Manager or PSP | Minting `trusted_surface_url` only on an origin of the step-up's signer, sending the content-free `app_push`, and refusing to offer a language the signer does not claim ([Origins and delivery](human-participants.md#ts-origins)) |
 | `support_operator` keys | Accepting a handoff only from a key whose record names its agent operator and one person ([Human handoff](human-participants.md#handoff)) |
-| Payment-aggregator authorisation (`pa_authorisation`) | Checking, before money moves, that the party in `collected_by` is an RBI-authorised payment aggregator or a bank |
+| Regulatory status (`regulatory_status`) | Checking, before money moves, that the party in `collected_by` has a `verified` `rbi_pa` or `bank` entry, so that it is an RBI-authorised payment aggregator or a bank |
+| Operator (`operator`) | Checking that two participants are not the same operator, for the separation rules of [conformance attestations](conformance.md#attestation-rules) and of discovery lookups |
 | Conformance attestations | Checking which [conformance levels](conformance.md) a counterparty has passed |
 
 Rules:
@@ -259,6 +260,9 @@ Rules:
 5. An agent that verifies a discovery source MUST resolve the BPP's key from the network registry's own endpoint, or
    through a lookup service whose operator is neither the gateway's operator nor shares an operator with the gateway's
    BAP. An agent operator that also operates, or shares an operator with, the gateway's BAP MUST use the network
+   registry's own endpoint. Operators are compared as in [Conformance attestation](conformance.md#attestation-rules): by
+   the `operator` of the registry record with `assertion: registry`, never by a profile or a response that the gateway
+   supplies, and an operator that is not asserted by the registry is unknown, which means the agent uses the network
    registry's own endpoint. The agent MUST NOT use a key, a registry record or a lookup response that the gateway
    supplies. The agent records the lookup source in the `discover` InstructionLog entry.
 
@@ -266,7 +270,13 @@ Rules:
 [`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json): `subscriber_id`, `bacp_role` (the
 `Signature.role` value), `keys[]`, `valid_from`, `valid_until` and `status`; for a Mandate Manager or a PSP, `ts_origins[]`,
 `ts_notify_url`, `ts_call_numbers[]`, `ts_languages[]` and `ts_modalities[]`; and for a `support_operator`, `operator_id` and
-`person_ref`, with exactly one key. A registry may carry more fields, and a reader ignores any it does not know. Whether the
+`person_ref`, with exactly one key. Any record may also carry the legal `operator` (`legal_name`, `entity_ids[]`, `assertion`
+and an optional `group_id`), `regulatory_status[]` (each entry a dated, sourced statement with `regime`, `verified_on` and
+`status` of `verified` or `declared`) and a `data_residency` statement. `assertion: registry` means that the network
+registry's own lookup response carries the operator, which is the only form a separation check relies on; a `declared`
+or absent operator is unknown, and an unknown operator fails closed. A `declared` regulatory status is never treated as
+verified. A record whose `regulatory_status` has an `rbi_pa` or `rbi_ppi` entry has a company: its `entity_ids[]` contain a
+21-character CIN. A registry may carry more fields, and a reader ignores any it does not know. Whether the
 ONDC network registry can carry `bacp_role`, `operator_id`, `person_ref` and the Trusted Surface fields is not settled
 (a question for ONDC). Where it cannot, BACP needs a side registry, which is a second trust root that this version does
 not define.

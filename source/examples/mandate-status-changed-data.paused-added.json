@@ -1,0 +1,14 @@
+{
+  "mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "status": "PAUSED",
+  "reason": "binding_ineligible",
+  "change": "added",
+  "pause_reasons": [
+    "binding_ineligible"
+  ],
+  "registry_version": "2026-10-17",
+  "registry_serial": 2,
+  "affected_sessions": [
+    "ses_01HZXD"
+  ]
+}

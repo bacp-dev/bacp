@@ -923,6 +923,13 @@ paths:
 
         the agent (webhook mandate.status_changed) within 60 s.
 
+        rail.block_modified is an optional event of the payer PSP, signed by the registry key of the PSP named in `rail_binding.psp_id`, and is
+        meaningful only where that PSP attests a block-debit feed (it carries mandate_id and the new block_amount). The gateway applies it inside the
+        atomic section keyed on the root: the block counts at the larger of block_amount and its matched debits plus reservations. An increase
+        that breaks the sum-of-blocks rule or the root''s headroom adds the pause reason block_modified, which only the principal removes on the
+        Trusted Surface by approving the modified block against a fresh PSP attestation. An agent never requests a modification: a request from an
+        agent to modify a block gets 403 trusted_surface_only.
+
         '
       security:
       - httpSignature: []
@@ -2164,7 +2171,7 @@ paths:
       x-bacp-idempotent: false
       summary: The handler registry (HandlerDescriptor[]). Public, cacheable for at most 24 hours.
       description: A convenience copy of the registry for agents and tools. It is unsigned, so a Mandate Manager or gateway
-        MUST NOT use it as the registry source for open-mandate eligibility; that source is the dated BACP release or a registry-signed snapshot.
+        MUST NOT use it as the registry source for open-mandate eligibility; that source is the dated BACP release and its release manifest.
       security: []
       parameters:
       - name: presence
@@ -2841,6 +2848,51 @@ webhooks:
       responses:
         '200':
           description: Acknowledged
+  mandate.event:
+    post:
+      summary: A mandate event that the gateway reports to the audit_uri of the mandate, which is the endpoint of the Mandate Manager that issued it.
+      description: Sent by the gateway to the audit_uri of the open Payment Mandate (and of its root) for a use of the mandate, a relinquishment
+        at the gateway and a change to the set of gateway-originated pause reasons. It is signed under RFC 9421 with the registry key of the gateway's
+        BAP, under the tag bacp-mm-event, never an agent tag and never an agent key; the Mandate Manager refuses an event whose signer's BAP is not the
+        mandate's agent.bap_id and records nothing. Delivery is due within 60 s of the change and is retried with the same event_id, which the Mandate
+        Manager de-duplicates. seq counts the events of one mandate_id from 0 with no gap, and prev_hash chains them, so that the Mandate Manager records
+        event_gap when a seq is missing. A delivery failure never blocks a refund, a reversal or a post-order write. mandate.status_changed to the agent is a separate webhook
+        and is due within the same 60 s.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MandateEvent'
+            examples:
+              pause_added:
+                summary: A gateway pause because the binding stopped being eligible, with the registry serial that caused it
+                value:
+                  event_id: evt_01HZXWm4
+                  type: pause_changed
+                  mandate_id: mdt_PAY7Q2W9X4K1M3
+                  root_mandate_id: mdt_CHK7Q2W9X4K1M3
+                  gateway: bap.vaani.example.in
+                  created_at: '2026-12-16T10:00:03+05:30'
+                  seq: 4
+                  prev_hash: sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM
+                  pause:
+                    change: added
+                    reason: binding_ineligible
+                    registry_version: '2026-10-17'
+                    registry_serial: 2
+              relinquished:
+                value:
+                  event_id: evt_01HZXWm9
+                  type: relinquished
+                  mandate_id: mdt_CHK7Q2W9X4K1M3
+                  root_mandate_id: mdt_CHK7Q2W9X4K1M3
+                  gateway: bap.vaani.example.in
+                  created_at: '2026-12-16T10:05:41+05:30'
+                  seq: 5
+                  prev_hash: sha-256:9fQ1b7mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM
+      responses:
+        '200':
+          description: Acknowledged. A repeated event_id is acknowledged and not recorded twice.
   mandate.status_changed:
     post:
       summary: Mandate status changed (ACTIVE, PAUSED, REVOKED, EXPIRED, EXHAUSTED). Delivered within 60 s of the Trusted Surface event.
@@ -3876,6 +3928,50 @@ components:
           - string
           - 'null'
           description: Open mandate this one narrows (closed mandate or sub-agent delegation). Scope and expiry may only narrow.
+        supersedes:
+          type: object
+          required:
+          - mandate_id
+          additionalProperties: false
+          properties:
+            mandate_id:
+              type: string
+              pattern: ^mdt_[A-Za-z0-9]{12,40}$
+          description: "The open mandate that this one replaces when the principal ports it to another gateway or re-issues it. It is set only on a request that the principal originates on the Trusted Surface: a request from an agent or a gateway that carries it is refused with 403 trusted_surface_only. The Mandate Manager revokes the superseded mandate before this one becomes ACTIVE."
+        carried_exposure:
+          type: array
+          uniqueItems: true
+          description: "The spend that the principal has already made under the superseded mandate, in each budget window that is still open, as the Mandate Manager derived it from its own use events and signed it into this mandate. It starts the successor's windows at that spend, so that a port never restores budget. An entry with source incomplete marks a window for which the Mandate Manager's record has a gap: the Trusted Surface says so in the principal's language and pre-fills that window at the superseded mandate's max, which the principal may change before approving, because the cap is the principal's own. No signature of the gateway that is being left is ever needed. An agent or a gateway never supplies it."
+          items:
+            type: object
+            required:
+            - period
+            - window_start
+            - amount
+            - source
+            additionalProperties: false
+            properties:
+              period:
+                enum:
+                - P1D
+                - P7D
+                - P1M
+                - FIRST_24H
+                - LIFETIME
+                description: The budget period of the window, as in constraints.budgets[].period.
+              window_start:
+                type: string
+                format: date-time
+                pattern: \+05:30$
+                description: When the open window began, as an RFC 3339 timestamp in IST (+05:30).
+              amount:
+                $ref: '#/components/schemas/Amount'
+                description: The spend already made in the window, in paise.
+              source:
+                enum:
+                - mm_events
+                - incomplete
+                description: 'mm_events: the Mandate Manager''s own use events cover the window. incomplete: they have a gap.'
         checkout_mandate_ref:
           type: string
           description: 'Payment mandates only: the checkout mandate this payment authority is bound to (AP2 payment.reference, REQUIRED)'
@@ -3922,6 +4018,10 @@ components:
               type: string
             credential_hash:
               $ref: '#/components/schemas/Hash'
+            bap_id:
+              type: string
+              minLength: 1
+              description: "The subscriber id of the BAP, and so of the one gateway, that this mandate is bound to. The Mandate Manager copies it from the verified AgentCredential's bap.subscriber_id, never from the request, so it is no weaker than credential_hash, and it survives a credential re-issue that keeps cnf. A gateway whose BAP is not this value refuses the mandate with 403 mandate_scope_mismatch at $.agent.bap_id, so that one open mandate is spent through one gateway only; cross-gateway moves only by a successor mandate. A mandate issued without it (before this field) is bound by credential_hash alone: the gateway then requires the hash of the presented credential to equal credential_hash. A gateway on an earlier release does not enforce it."
         purpose:
           type: object
           required:
@@ -4114,6 +4214,10 @@ components:
             bpp_id:
               type: string
               description: The seller app (BPP subscriber id) of the payee seller, for a payee-bound primitive such as a Reserve Pay block.
+            provider_id:
+              type: string
+              minLength: 1
+              description: "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e) and 13(f)). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
         rail_binding:
           type: object
           required:
@@ -4132,9 +4236,12 @@ components:
                 Schema validity is not eligibility: the resolved descriptor''s open_eligible, open_primitives and status decide.'
             primitive:
               $ref: ../schemas/common.json#/$defs/MandatePrimitiveType
+              not:
+                const: none
               description: 'The mandate primitive that carries this standing authority: one of the bound handler''s mandate_primitives[].type, for
                 example sbmd_block or ppi_emandate. Covered by the PSP attestation. It MUST be listed in the handler descriptor''s binding.open_primitives;
-                otherwise the Mandate Manager refuses issuance and the gateway refuses the binding with rail_binding_not_open_eligible.'
+                otherwise the Mandate Manager refuses issuance and the gateway refuses the binding with rail_binding_not_open_eligible. The value none
+                is never valid here: a handler whose only primitive is none has no standing authority to bind.'
             rail_ref:
               type: string
               description: UMN / SBMD block id / Circle delegation id as issued by the payer PSP
@@ -4142,16 +4249,24 @@ components:
               type: string
             attestation:
               $ref: '#/components/schemas/Jws'
-              description: 'PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee, funding} hashed into this mandate. funding is
-                deposit or credit: the source of funds behind the primitive (for a Reserve Pay block, a savings, current or overdraft account is
-                deposit; a RuPay credit card or a pre-sanctioned credit line is credit).'
+              description: "PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee, funding} hashed into this mandate; for a gift PPI it also states custody. funding is deposit or credit: the source of funds behind the primitive. A savings or current account is deposit. A RuPay credit card or a pre-sanctioned credit line is credit. An overdraft account is credit unless the PSP attests deposit. A missing funding is treated as credit. An attested credit without credit_funding_allowed: true on the root gets 403 credit_funding_not_allowed at issuance and at complete. custody (gift PPI only) is principal_side when the vault of the gift code is on the principal's side (the Trusted Surface or the payer PSP), and gateway_side otherwise; a gift PPI is open-eligible only on principal_side, and the Mandate Manager refuses issuance with rail_binding_not_open_eligible otherwise."
             registry_version:
               type: string
               pattern: ^\d{4}-\d{2}-\d{2}$
               description: 'The handler-registry version against which the Mandate Manager checked this binding''s eligibility at issuance: the
-                identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A version format for
-                registry-signed snapshots is not yet defined, so only a release date is valid. A record of the issuance check only; the gateway
-                re-checks eligibility against the current registry at every complete.'
+                identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-17), never a copy served by a gateway. A record of the
+                issuance check only; the gateway re-checks eligibility against the current registry at every complete.'
+            registry_digest:
+              $ref: '#/components/schemas/Hash'
+              pattern: '^sha-256:'
+              description: OPTIONAL. The digest, as the release manifest (source/handlers/release.json) gives it for the handler registry file,
+                that the Mandate Manager checked this binding against - sha-256 over the JCS form of the file. It pins the exact publication when
+                a dated release has been amended in place. A record of the issuance check only.
+            registry_serial:
+              type: integer
+              minimum: 1
+              description: OPTIONAL. The registry_serial of the release manifest that the Mandate Manager checked this binding against at issuance.
+                A record of the issuance check only; the serial recorded for a pause is what orders a later lift.
             conformance:
               type: object
               required:
@@ -5134,7 +5249,8 @@ components:
           description: 'Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors (rail_limit_exceeded). On
             rail_binding_not_open_eligible the reasons include binding_ineligible, reissue_required, registry_copy_stale, attestation_status_stale
             (a conformance-attestation status list that is more than 24 hours old or unreachable; recoverable, no pause; a revoked or expired attestation gives binding_ineligible) and
-            attester_not_accepted (the attestation''s signer is in the Mandate Manager''s published exclusion list).'
+            attester_not_accepted (the attestation''s signer is in the Mandate Manager''s published exclusion list) and attester_not_independent
+            (the authority or a funder is the same operator as the gateway, the payer PSP or the Mandate Manager, or an operator is unknown).'
         step_up_kind:
           enum:
           - confirm
@@ -6363,6 +6479,10 @@ components:
         bpp_id:
           type: string
           description: The seller app (BPP subscriber id) of the payee seller.
+        provider_id:
+          type: string
+          minLength: 1
+          description: "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e) and 13(f)). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
     CoverEntry:
       type: object
       description: One leg covered by a summary step-up approval.
@@ -6657,9 +6777,10 @@ components:
           - accept_confirmation
           - rfq_prescribes_waiver
           - seller_confirmation
-          description: seller_confirmation is the reason of a confirm step-up that the gateway raises when a BPP-signed on_select or on_init carries the bacp tag seller_confirmation, so that the seller's own request for the buyer's confirmation reaches the principal as a template sentence and never as seller text. accept_confirmation is the reason of a negotiation confirm step-up raised when the guard returned acceptable and the mandate's accept_confirmation is ask (or absent) and the agent calls accept. rfq_prescribes_waiver is the reason of a negotiation confirm step-up raised when an agent creates an RFQ that sets acceptance_revocation_required waived, because that waives the principal's own ICA s.5 right. presence_proof is the reason of a post_order step-up. rail_fallback is a confirm step-up raised when a leg of a
-            multi-seller basket has no human-not-present handler, or when the planned payment of a leg changes its funding, fee-bearer, payee or
-            collector; a rail-only change is logged in comparison[] and raises no step-up.
+          - refund_received
+          description: refund_received is the reason of a confirm step-up that the gateway raises when it holds a refund receipt of the order's collector's PSP and not of the payer PSP, so that the principal can confirm on the Trusted Surface that the credit arrived ("I have received ₹X"); the spend of a debited_not_confirmed debit is released only after that approval. seller_confirmation is the reason of a confirm step-up that the gateway raises when a BPP-signed on_select or on_init carries the bacp tag seller_confirmation, so that the seller's own request for the buyer's confirmation reaches the principal as a template sentence and never as seller text. accept_confirmation is the reason of a negotiation confirm step-up raised when the guard returned acceptable and the mandate's accept_confirmation is ask (or absent) and the agent calls accept. rfq_prescribes_waiver is the reason of a negotiation confirm step-up raised when an agent creates an RFQ that sets acceptance_revocation_required waived, because that waives the principal's own ICA s.5 right. presence_proof is the reason of a post_order step-up. rail_fallback is a confirm step-up raised when a leg of a
+            multi-seller basket has no human-not-present handler, or when the planned payment of a leg changes its funding class (own_deposit, prepaid
+            or borrowed), fee-bearer, payee or collector; a rail-only change is logged in comparison[] and raises no step-up.
         summary:
           $ref: '#/components/schemas/LangText'
         trusted_surface_url:
@@ -6801,7 +6922,18 @@ components:
         reversal_deadline:
           type: string
           format: date-time
-          description: T+5 for UPI P2M debited-not-confirmed
+          description: T+5 for UPI P2M debited-not-confirmed. It is the RBI turnaround only when reversal_basis is rbi_tat; otherwise it is BACP's own policy.
+        reversal_basis:
+          enum:
+          - rbi_tat
+          - bacp_policy
+          - unknown
+          description: "Why the reversal of a debit that the seller never confirmed is due when it is: rbi_tat, when the payer PSP reports the debit as pending or as deemed (a credit-side timeout); then the message states the T+5 turnaround and the compensation of ₹100 a day that the RBI circular (RBI/2019-20/67, Annex, row 4(b)) sets. bacp_policy, when the PSP reports the payee credit as completed and only the seller's Beckn on_confirm is missing; then the deadline is BACP's own policy, and the message never states an RBI compensation entitlement. unknown, when the PSP's response does not say; then the message names the routes that certainly exist and says that if the payer's bank shows the payment as failed or pending, RBI's automatic-reversal and compensation rules apply. Present with refund_route."
+        refund_route:
+          enum:
+          - gateway_collector
+          - seller_collector
+          description: "Who refunds a debit that the seller never confirmed: gateway_collector, when the gateway's own payment aggregator collected the money, so that the gateway can start the refund itself and the message may say 'started'; seller_collector, when the seller's collector holds it, so that the gateway can only request the refund from that collector through IGM, citing original_rrn, and tells the principal how to raise a complaint through UDIR; the message then says 'requested', never 'started'. Present with reversal_basis."
         plan_options:
           type: array
           minItems: 1
@@ -6822,6 +6954,22 @@ components:
                 type: string
               remaining:
                 $ref: '#/components/schemas/Amount'
+      dependentRequired:
+        reversal_basis:
+        - refund_route
+        refund_route:
+        - reversal_basis
+      allOf:
+      - if:
+          properties:
+            status:
+              const: reversal_pending
+          required:
+          - status
+        then:
+          required:
+          - reversal_basis
+          - refund_route
     Session:
       type: object
       required:
@@ -7071,6 +7219,9 @@ components:
         parent_mandate_id:
           type: string
           description: For sub-agent delegation. May only narrow.
+        supersedes:
+          $ref: '#/components/schemas/Mandate/properties/supersedes'
+          description: "The open mandate that this one replaces when the principal ports it to another gateway or re-issues it. It is set only on a request that the principal originates on the Trusted Surface: a request from an agent or a gateway that carries it is refused with 403 trusted_surface_only. The Mandate Manager revokes the superseded mandate before this one becomes ACTIVE. The Mandate Manager derives carried_exposure itself; a request that carries it is refused."
         checkout_mandate_ref:
           type: string
           pattern: ^mdt_[A-Za-z0-9]{12,40}$
@@ -7110,6 +7261,9 @@ components:
             signing key is in an entry of the public conformance-authority list, the attestation lists the handler in pilots[], and its sub is the
             subscriber that the request''s signing key resolves to. A request without it, or with one that does not verify, is refused with 400
             rail_binding_not_open_eligible.'
+      not:
+        required:
+        - carried_exposure
     MandateHandle:
       type: object
       required:
@@ -7151,6 +7305,7 @@ components:
           - step_up.approved
           - step_up.declined
           - rail.safety_switch
+          - rail.block_modified
           - rail.pre_debit_notice
           - rail.debit_opt_out
           - consent.withdrawn
@@ -7214,11 +7369,28 @@ components:
           type: string
           description: On mandate.revoked of a sibling open Payment Mandate, the mandate_id of the root open Checkout Mandate whose revocation
             caused it. The Mandate Manager sends one mandate.revoked per sibling Payment Mandate.
+        block_amount:
+          $ref: ../schemas/common.json#/$defs/PositiveAmount
+          description: On rail.block_modified, the amount of the Reserve Pay block after the modification, as the payer PSP reports it.
+        block_expires_at:
+          type: string
+          format: date-time
+          description: On rail.block_modified, the expiry of the block after the modification, when the modification changed it.
         rail_revocation:
           $ref: '#/components/schemas/RailRevocation'
           description: On mandate.revoked of a sibling open Payment Mandate, and on mandate.rejected or mandate.revoked after a refusal that came
             after the rail primitive was created, whether that primitive is revoked at the rail.
       allOf:
+      - if:
+          properties:
+            event:
+              const: rail.block_modified
+          required:
+          - event
+        then:
+          required:
+          - mandate_id
+          - block_amount
       - if:
           properties:
             event:
@@ -7874,20 +8046,28 @@ components:
           type: string
           description: The reason for this event, for example user_revoked_on_trusted_surface, principal_paused, binding_ineligible or
             reissue_required. For a PAUSED mandate it names the reason added or removed by this event; the full set is in pause_reasons.
+        change:
+          enum:
+          - added
+          - removed
+          description: Whether the reason names a pause reason that this event added or removed. REQUIRED with reason on a PAUSED event, and
+            absent otherwise.
         pause_reasons:
           type: array
           uniqueItems: true
           description: Every reason for which the mandate is paused. The mandate stays PAUSED while this set is not empty. Only the principal,
-            on the Trusted Surface, removes principal_paused; the gateway removes only binding_ineligible, and only on a strictly newer registry
-            version (or conformance attestation) in which the binding is eligible; reissue_required is never removed, and the mandate is
+            on the Trusted Surface, removes principal_paused; the gateway removes only binding_ineligible, and only on a strictly greater registry_serial
+            (or a newer conformance attestation) in which the binding is eligible; reissue_required is never removed, and the mandate is
             re-issued instead. unmatched_rail_debit (a debit on a Reserve Pay block that matches no BACP payment, reported by a payer PSP that
-            attests a block-debit feed) is removed only by the principal on the Trusted Surface. Empty or absent when the status is not PAUSED.
+            attests a block-debit feed) is removed only by the principal on the Trusted Surface. block_modified (the payer PSP reported, through a block-debit feed, an increase of a Reserve Pay block that breaks the sum-of-blocks rule or the root's headroom) is removed only by the principal on the Trusted Surface, by approving the modified block. At least one reason when the status is PAUSED,
+            and empty or absent otherwise.
           items:
             enum:
             - principal_paused
             - binding_ineligible
             - reissue_required
             - unmatched_rail_debit
+            - block_modified
         cascade_of:
           type: string
           description: For a REVOKED sibling open Payment Mandate, the root open Checkout Mandate whose revocation caused it.
@@ -7898,10 +8078,176 @@ components:
           pattern: ^\d{4}-\d{2}-\d{2}$
           description: For a pause or lift of binding_ineligible, the handler-registry release (YYYY-MM-DD) that made the binding ineligible
             or eligible again.
+        registry_serial:
+          type: integer
+          minimum: 1
+          description: For a pause or lift of binding_ineligible, the registry_serial of the publication that made the binding ineligible or
+            eligible again. A lift carries a serial greater than the one recorded for the pause.
         affected_sessions:
           type: array
           items:
             type: string
+      dependentRequired:
+        change:
+        - reason
+      allOf:
+      - if:
+          properties:
+            status:
+              const: PAUSED
+          required:
+          - status
+        then:
+          required:
+          - pause_reasons
+          properties:
+            pause_reasons:
+              minItems: 1
+        else:
+          properties:
+            pause_reasons:
+              maxItems: 0
+    MandateEvent:
+      type: object
+      description: 'An event that a gateway reports to the audit_uri of a mandate, signed under RFC 9421 by the registry key of the gateway''s BAP
+        with the tag bacp-mm-event. The events of one mandate_id form a chain: seq counts from 0 with no gap, and prev_hash is the sha-256 over the
+        JCS form of the previous event of that mandate (for seq 0, the sha-256 over the mandate_id as UTF-8 bytes), as the InstructionLog does for
+        a session. A Mandate Manager that finds a seq missing records event_gap, shows the principal the mandate as unreconciled and loses nothing
+        else: no payment depends on an event.'
+      required:
+      - event_id
+      - type
+      - mandate_id
+      - root_mandate_id
+      - gateway
+      - created_at
+      - seq
+      - prev_hash
+      properties:
+        event_id:
+          type: string
+          minLength: 1
+          description: Unique per event. A retry carries the same event_id, and the Mandate Manager de-duplicates on it.
+        type:
+          enum:
+          - use
+          - relinquished
+          - pause_changed
+          description: use, a use of the mandate at step 13 of evaluation. relinquished, the agent gave up the mandate (or the root) at the
+            gateway. pause_changed, a gateway-originated pause reason was added or removed.
+        mandate_id:
+          type: string
+          pattern: ^mdt_[A-Za-z0-9]{12,40}$
+        root_mandate_id:
+          type: string
+          pattern: ^mdt_[A-Za-z0-9]{12,40}$
+          description: The root open Checkout Mandate of mandate_id (the mandate itself when it is the root).
+        gateway:
+          type: string
+          minLength: 1
+          description: The BAP subscriber id of the reporting gateway. The Mandate Manager refuses the event unless it equals the mandate's
+            agent.bap_id (or, for a mandate without one, the BAP of the credential whose hash the mandate carries) and is the BAP of the signing key.
+        created_at:
+          type: string
+          format: date-time
+          pattern: \+05:30$
+          description: When the gateway made the change, as an RFC 3339 timestamp in IST (+05:30).
+        seq:
+          type: integer
+          minimum: 0
+          description: Counts the events of this mandate_id from 0, with no gap.
+        prev_hash:
+          $ref: '#/components/schemas/Hash'
+          pattern: '^sha-256:'
+          description: sha-256 over the JCS form of the previous event of this mandate_id; for seq 0, over the mandate_id as UTF-8 bytes.
+        use:
+          type: object
+          description: Present when type is use.
+          required:
+          - closed_mandate_id
+          - amount
+          properties:
+            closed_mandate_id:
+              type: string
+              pattern: ^mdt_[A-Za-z0-9]{12,40}$
+              description: The closed Payment Mandate that was consumed.
+            amount:
+              $ref: '#/components/schemas/Amount'
+              description: The amount that the closed Payment Mandate authorised and the gateway reserved, in paise.
+            session_id:
+              type: string
+              description: The checkout session that the use belongs to.
+          additionalProperties: false
+        pause:
+          type: object
+          description: Present when type is pause_changed.
+          required:
+          - change
+          - reason
+          - registry_version
+          - registry_serial
+          properties:
+            change:
+              enum:
+              - added
+              - removed
+            reason:
+              enum:
+              - binding_ineligible
+              - reissue_required
+              description: The gateway-originated pause reason that was added or removed.
+            registry_version:
+              type: string
+              pattern: ^\d{4}-\d{2}-\d{2}$
+              description: The dated release of the registry publication that caused the change.
+            registry_serial:
+              type: integer
+              minimum: 1
+              description: The registry_serial of the publication that caused the change. A removal carries a serial greater than the one recorded
+                for the pause.
+            jti:
+              type: string
+              description: For a pause or lift caused by a conformance attestation, the jti of the attestation concerned.
+          additionalProperties: false
+      allOf:
+      - if:
+          properties:
+            type:
+              const: use
+          required:
+          - type
+        then:
+          required:
+          - use
+          not:
+            required:
+            - pause
+      - if:
+          properties:
+            type:
+              const: pause_changed
+          required:
+          - type
+        then:
+          required:
+          - pause
+          not:
+            required:
+            - use
+      - if:
+          properties:
+            type:
+              const: relinquished
+          required:
+          - type
+        then:
+          not:
+            anyOf:
+            - required:
+              - use
+            - required:
+              - pause
+      additionalProperties: false
     NegotiationCreate:
       type: object
       required:
@@ -7928,6 +8274,11 @@ components:
           enum:
           - HP
           - HNP
+          description: The presence that the agent asserts. The gateway derives the negotiation's presence from the session or from hp_proof, and
+            refuses presence HP without a valid hp_proof with 403 presence_not_proven. HNP needs no proof.
+        hp_proof:
+          $ref: '#/components/schemas/HpProof'
+          description: The proof of the principal's presence, REQUIRED for presence HP.
         rfq_parent_id:
           type: string
         items:
@@ -8674,8 +9025,37 @@ components:
               chosen:
                 type: boolean
               reason:
-                type: string
-                description: Why the option was chosen (a rank_reason) or skipped (an excluded reason, or not_principal_preference).
+                enum:
+                - user_preference
+                - lowest_total
+                - lowest_friction
+                - not_in_registry
+                - not_offered_by_bap
+                - not_accepted_by_seller
+                - not_in_term_sheet
+                - not_in_mandate
+                - presence_handler_mismatch
+                - above_limit
+                - instrument_unavailable
+                - card_not_enabled_for_cnp
+                - cod_not_allowed
+                - reservepay_block_wrong_payee
+                - pilot_not_attested
+                - cod_open_orders_cap
+                - credit_funding_not_allowed
+                - not_principal_preference
+                - existing_payee_instrument
+                - designated_gift_ppi
+                - planned_hp_step
+                - payee_terms_changed
+                - in_doubt_hold
+                - rail_only_change
+                - seller_reversal_unresolved
+                description: 'Why the option was chosen (a rank_reason) or skipped (an excluded reason or one of the leg reasons), from a closed enum. The leg
+                  reasons are: not_principal_preference; existing_payee_instrument (the seller''s own payee-bound instrument); designated_gift_ppi (the
+                  principal''s designated gift PPI); planned_hp_step (the one planned human-present step); payee_terms_changed (a block''s payee VPA is not the
+                  VPA in the leg''s fresh on_init); in_doubt_hold (an in_doubt payment holds the leg); rail_only_change (a fallback that changes the rail only,
+                  logged and raising no step-up); seller_reversal_unresolved (an unresolved reversal with this seller holds human-not-present payment to it).'
     UcpBacp:
       type: object
       description: 'The BACP-only state of a session, carried under the top-level bacp member of a projected UCP checkout, because the UCP checkout
@@ -8975,6 +9355,7 @@ components:
         agent:
           id: did:web:agents.vaani.example.in:sakhi
           credential_hash: sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM
+          bap_id: bap.vaani.example.in
         purpose:
           code: P-GRO-01
           text:

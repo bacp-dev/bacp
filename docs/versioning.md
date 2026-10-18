@@ -32,6 +32,10 @@ dates elsewhere in the documentation are shown as DD-MM-YYYY.
 The first dated release is `2026-10-17`. `draft` remains the working
 version built from `main`, where changes for later releases are made.
 
+A verifier chooses the rules to apply to a mandate by the dated release that the mandate names (`rail_binding.registry_version`
+and the release of the artefacts it was issued under), never by its `vct`. The `vct` names a mandate type, such as
+`in.bacp.mandate.payment.open.1`, and does not change when a release adds a field or a rule.
+
 A participant states the version it speaks in its gateway profile
 (`bacp.version` and `bacp.supported_versions` at `/.well-known/bacp`), and the
 gateway states it on the network leg in `context.bacp.version`. See
@@ -170,3 +174,22 @@ settles the deprecation window asked about in
   when they expire. A copy fetched earlier is missing later additions but,
   because backports are backwards-compatible by default, does not conflict
   with them.
+
+### Registry release manifest {#registry-release-manifest}
+
+The handler registry and the conformance-authority list are data, and a backport can amend them in place under the same
+date. So every publication of these files carries a release manifest, `source/handlers/release.json`, valid against
+[`registry-release.json`](https://bacp.dev/schemas/registry-release.json):
+
+- `registry_version` is the dated release (`YYYY-MM-DD`).
+- `registry_serial` is an integer of at least 1 that strictly increases across every publication, including every
+  backport to a dated release, so that two publications of the same `registry_version` are ordered. A mandate pause
+  lifts only on a greater serial ([Handler binding](specification/mandates.md#handler-binding)).
+- `published_at` is an RFC 3339 timestamp in IST (`+05:30`). The 24-hour freshness rule of a gateway runs from it.
+- `files[]` lists each file's `uri` (a URI reference resolved against the manifest) and its `digest`: `sha-256:` and the
+  unpadded base64url SHA-256 over the file's RFC 8785 (JCS) form. A byte hash would not match the served file, because
+  the site build re-serialises each JSON file.
+
+There is no registry-signed snapshot. No party holds a registry signing key, so the dated release and its manifest are
+the only source of the registry. A signed snapshot MAY be added later, once a holder of a registry key exists, without a
+breaking change.

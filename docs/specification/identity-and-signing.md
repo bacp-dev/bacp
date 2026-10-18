@@ -109,8 +109,10 @@ key by its registry key id, for example `bap.example.in|ukid-7|ed25519`, and
 MUST NOT trust a key presented only in a request. See
 [Registry lookup](discovery.md#registry-lookup), which names the
 [`registry-record.json`](https://bacp.dev/latest/schemas/registry-record.json) fields that BACP reads, among them the
-`operator_id` of a `support_operator` key (the agent operator that the key serves) and the Trusted Surface origins of a
-Mandate Manager or PSP.
+`operator_id` of a `support_operator` key (the agent operator that the key serves), the Trusted Surface origins of a
+Mandate Manager or PSP, and the legal `operator`, `regulatory_status[]` and `data_residency` of any subscriber. An
+AgentCredential's `operator.entity_id` and a registry record's `operator.entity_ids[]` use the same
+[`EntityId`](https://bacp.dev/schemas/common.json) shape (`type` of `CIN`, `LLPIN`, `GSTIN` or `PAN`, and `value`).
 
 ### Conformance-authority keys {#conformance-authority-keys}
 
@@ -228,6 +230,7 @@ of two for negotiation messages; any other tag MUST be rejected with
 | `bacp-negotiate` | Binds the principal in a negotiation | Firm offers and counter-offers, `withdraw` and `accept_revoke` on `POST /negotiations/{id}/offers`; `POST /negotiations/{id}/accept`; `POST /rfqs/{id}/award`; `POST /auctions`; bids on `POST /auctions/{id}/bids`; `POST /auctions/{id}/award` |
 | `bacp-ts` | Trusted Surface events and render fetches. **Never** an agent tag. | `POST /trusted-surface/events` and `GET /trusted-surface/step-ups/{step_up_id}`, signed with the registry key of the step-up's Mandate Manager or payer PSP |
 | `bacp-handoff` | A human support operator accepts or releases a handoff. **Never** an agent tag. | `POST /sessions/{id}/handoff` (`action: accept` or `release`), signed with a registry key whose role is support operator |
+| `bacp-mm-event` | A gateway reports a mandate event (`use`, `relinquished`, `pause_changed`) to the Mandate Manager. **Never** an agent tag. | The webhook `mandate.event`, delivered to the mandate's `audit_uri` and signed with the registry key of the gateway's BAP ([Mandate events](mandates.md#mandate-events)) |
 
 `POST /trusted-surface/events` and `GET /trusted-surface/step-ups/{step_up_id}`
 MUST accept only signatures under tag `bacp-ts` by the registry key of the

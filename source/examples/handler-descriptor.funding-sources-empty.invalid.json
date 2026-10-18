@@ -1,0 +1,183 @@
+{
+  "handler_id": "in.upi.reservepay",
+  "aliases": [
+    "upi.reservepay.block"
+  ],
+  "name": {
+    "en-IN": "UPI Reserve Pay (SBMD block)"
+  },
+  "family": "upi",
+  "kind": "payment",
+  "status": "live",
+  "rail": {
+    "operator": "NPCI"
+  },
+  "regulator": [
+    {
+      "body": "RBI",
+      "instrument": "SBMD/blocking decision 07-12-2022"
+    },
+    {
+      "body": "NPCI",
+      "instrument": "Reserve Pay"
+    }
+  ],
+  "presence": {
+    "human_presence": "mandate",
+    "hp": true,
+    "hnp": "rail_enforced",
+    "device_bound": false,
+    "assisted_only": false
+  },
+  "binding": {
+    "class": "O",
+    "open_eligible": true,
+    "open_primitives": [
+      "sbmd_block"
+    ],
+    "closed_auth": [
+      "upi.pin"
+    ],
+    "open_requires": "One block at a time per merchant per mobile number. An open mandate names the block's payee seller (payee.vpa and payee.bpp_id); a block payable to the buyer app does not back human-not-present payment. The authentication of a Reserve Pay block is validated at block creation (OC 200 item 3); each later debit is made without a fresh factor."
+  },
+  "mandate_primitives": [
+    {
+      "type": "sbmd_block",
+      "limits_enforced_by": "rail",
+      "ref_name": "SBMD block id",
+      "payee_scope": "single_merchant",
+      "multi_capture": true
+    }
+  ],
+  "limits": [
+    {
+      "name": "block_amount",
+      "source": {
+        "file": "NPCI UPI Reserve Pay product page, https://www.npci.org.in/product/upi-reserve-pay; NPCI UPI OC No. 228 (FY 2025-26) 'Enhancements in UPI Single Block Multiple Debits (UPI Reserve Pay)', 08-10-2025, https://www.npci.org.in/uploads/UPI_OC_No_228_FY_2025_26_Enhancement_in_UPI_Single_Block_Multiple_Debits_UPI_Reserve_Pay_a9095c181d.pdf",
+        "section": "Transaction Limits; and OC 228 Issuer Banks para 5",
+        "label": "NPCI"
+      },
+      "verification": "verified",
+      "configurable": true,
+      "amount": {
+        "value": 1000000,
+        "currency": "INR"
+      },
+      "applies_to": "maximum per block ('Maximum amount you can reserve: Rs 10,000 per block'; OC 228 Issuer Banks para 5: block of at most Rs 10,000 and up to 90 days)"
+    },
+    {
+      "name": "validity",
+      "source": {
+        "file": "NPCI UPI Reserve Pay product page, https://www.npci.org.in/product/upi-reserve-pay",
+        "section": "Transaction Limits",
+        "label": "NPCI"
+      },
+      "verification": "verified",
+      "configurable": true,
+      "duration": "P90D",
+      "applies_to": "maximum reserve duration ('Maximum duration for the reserve: 90 days')"
+    }
+  ],
+  "afa": {
+    "model": "at_block_creation",
+    "pre_debit_notice": "unknown",
+    "source": {
+      "file": "NPCI UPI OC 200 'Enablement of UPI Mandate feature of Single Block Multiple Debits (SBMD)', 31-07-2024, https://www.npci.org.in/uploads/UPI_OC_No_200_FY_24_25_Enablement_of_UPI_Mandate_feature_of_Single_Block_Multiple_Debits_f2f9bc9230.pdf",
+      "section": "item 3, para (d)",
+      "label": "NPCI"
+    },
+    "verification": "verified"
+  },
+  "refund": {
+    "route": "source",
+    "source": {
+      "file": "RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141)",
+      "section": "para 10(f)",
+      "label": "RBI"
+    },
+    "failed_txn_tat": "P5D",
+    "compensation_per_day": {
+      "value": 10000,
+      "currency": "INR"
+    },
+    "notes": "Whether a refund restores the block is not verified as of 17-10-2026. The mandate budget is not restored. Refund to the original source: RBI Master Direction on Regulation of Payment Aggregators 2025 (RBI/DPSS/2025-26/141) para 10(f). Failed-transaction TAT (P5D) and compensation (₹100 a day): RBI/2019-20/67 Annex."
+  },
+  "dispute": {
+    "channels": [
+      "UDIR in payer app",
+      "MyUPI automated chargeback",
+      "RBI Integrated Ombudsman"
+    ]
+  },
+  "settlement": {
+    "mechanism": "NPCI UPI settlement cycles (10 authorisation cycles a day, separate dispute cycles OC 222)",
+    "evidence_refs": [
+      "rrn",
+      "utr"
+    ],
+    "escrow": "pa_escrow"
+  },
+  "data_minimisation": {
+    "payment_leg_fields": [
+      "payee",
+      "amount",
+      "mandate_ref",
+      "checkout_hash"
+    ],
+    "never_collect": [
+      "pin",
+      "otp",
+      "card_pan",
+      "cvv",
+      "card_expiry",
+      "netbanking_credentials",
+      "aadhaar_number",
+      "biometric",
+      "basket"
+    ],
+    "basket_blind": true
+  },
+  "funding": "debit",
+  "funding_sources": [],
+  "credit_disclosure_required": false,
+  "segments": [
+    "b2c"
+  ],
+  "requirements": [
+    "REQ-301",
+    "REQ-304"
+  ],
+  "sources": [
+    {
+      "file": "NPCI UPI Reserve Pay product page, https://www.npci.org.in/product/upi-reserve-pay",
+      "section": "Transaction Limits; Transaction Process Flow",
+      "label": "NPCI"
+    },
+    {
+      "file": "NPCI UPI OC No. 228 (FY 2025-26) 'Enhancements in UPI Single Block Multiple Debits (UPI Reserve Pay)', 08-10-2025, https://www.npci.org.in/uploads/UPI_OC_No_228_FY_2025_26_Enhancement_in_UPI_Single_Block_Multiple_Debits_UPI_Reserve_Pay_a9095c181d.pdf",
+      "section": "General; Issuer Banks paras 2 and 4; Acquiring entities paras 1 to 3",
+      "label": "NPCI"
+    },
+    {
+      "file": "NPCI UPI Consolidated Circular v1.0 (NPCI/UPI/CC/01), 18-09-2026, https://www.npci.org.in/uploads/UPI_Consolidated_Circular_0641e910f7.pdf",
+      "section": "paras 16.1, 16.4, 16.6, 16.9 to 16.11",
+      "label": "NPCI"
+    },
+    {
+      "file": "NPCI press release 'RBI Governor unveils New Generation of Digital Payment Initiatives at GFF 2025' (08-10-2025), https://www.npci.org.in/uploads/RBI_Governor_unveils_New_Generation_of_Digital_Payment_Initiatives_at_GFF_6494fabdfc.pdf",
+      "section": "UPI Reserve Pay - SBMD on Credit Accounts",
+      "label": "NPCI"
+    },
+    {
+      "file": "Pine Labs UPI Reserve Pay docs, https://www.pinelabs.com/docs/online-payments/upi-reserve-pay",
+      "section": "whole instrument",
+      "label": "VENDOR"
+    },
+    {
+      "file": "RBI circular on Harmonisation of TAT and customer compensation for failed transactions (RBI/2019-20/67), https://www.rbi.org.in/Scripts/NotificationUser.aspx?Id=11693",
+      "section": "Annex",
+      "label": "RBI"
+    }
+  ],
+  "notes": "NPCI UPI OC 228 (08-10-2025) and the UPI Consolidated Circular v1.0 para 16.1 extend Reserve Pay to all UPI-permitted sources of funds, naming savings, current and overdraft accounts, RuPay credit cards and pre-sanctioned credit lines; the extant pricing of RuPay credit cards and credit lines on UPI applies to executed debits. funding stays debit for this descriptor: a block on a RuPay credit card or a credit line is a credit-funded leg (funding credit, in.upi.rupay_cc or in.upi.credit_line), which the PSP attestation states and which needs credit_funding_allowed. Acquirer eligibility: OC 228 enables Reserve Pay to begin with only for 'online verified merchants with low ticket and high frequency transactions'. One mobile number may hold only one block at a time for a particular merchant (OC 228 Issuer Banks para 4; Consolidated Circular para 16.4); no NPCI text caps blocks per user across merchants. A block is not a guarantee of payment. A timeout on a debit is a decline, reversed in real time and not settled; for timeouts only, acquiring entities may retry at most 3 times in 24 hours (OC 228 Acquiring entities para 3). The payer is notified of block creation, modification, debit, revoke and expiry (OC 228 Issuer Banks para 2; Consolidated Circular para 16.11); no NPCI text found states whether a pre-debit notice applies (Q-03). The payee PSP and the UPI app must give the user a facility to revoke the block (Consolidated Circular para 16.10); the merchant gives the facility to modify its amount or validity (para 16.9). No public NPCI list of the issuers that support Reserve Pay was found as of 17-10-2026 (an absence finding; Q-04). NPCI product page: block set up with UPI PIN; unused money is released on expiry or cancellation. Deemed debit, by date and side: a timeout on the debit with the issuer or payer PSP is a decline, reversed in real time and not deemed (OC 228, 08-10-2025, Acquiring entities para 3); a credit-side timeout after a successful debit is deemed (OC 200, 31-07-2024, para (d); Consolidated Circular para 32.3) and follows TAT row 4(b) of RBI/2019-20/67. The scope of deemed debit after OC 228 is not public (OC 88/2020-21 and OC 128/2021-22 are member-only; not verified as of 18-10-2026; AJD-26). RBI layer: no RBI exemption basis for the later debits of a block was found; the Authentication Directions Annexure-1 lists no SBMD item (not verified as of 18-10-2026; asked of RBI under AJD-37). The afa.verification grade covers the NPCI text only."
+}

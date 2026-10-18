@@ -113,8 +113,8 @@ equivalents, or any logo of NPCI, RBI or ONDC, and MUST NOT show `kind` to a pri
 ### Conformance-authority list {#conformance-authority-list}
 
 The **conformance-authority list** is the only way to admit a signer of conformance attestations. It is a public,
-dated list that each dated BACP release publishes as `source/registry/conformance-authorities.json`, or that a
-registry-signed snapshot carries; its schema is
+dated list that each dated BACP release publishes as `source/registry/conformance-authorities.json`, and whose digest
+the release manifest `source/handlers/release.json` records; its schema is
 [`conformance-authority-list.json`](https://bacp.dev/schemas/conformance-authority-list.json). The registry role
 `conformance_authority` ([Identity and Request Signing](identity-and-signing.md#conformance-authority-keys)) names a key that
 signs attestations and nothing else, and only a key of a listed entry qualifies.
@@ -133,8 +133,15 @@ signs attestations and nothing else, and only a key of a listed entry qualifies.
   [profile](discovery.md#profile-document)) and MUST NOT accept a signer that the public list does not contain.
 - **A conformance authority only signs and revokes.** It never routes, holds or settles funds. The project's
   interim maintainer never holds, operates or funds an authority key (GOVERNANCE.md).
-- **Separation is checked per mandate.** The Mandate Manager compares the entry's `operator` with the operators of the
-  attested subject, of the payer PSP and of itself ([Rules](#attestation-rules)).
+- **Separation is checked per mandate.** The Mandate Manager compares the entry's `operator` and `funders[]` with the
+  operators of the attested subject, of the payer PSP and of itself ([Rules](#attestation-rules)).
+- **Fees and reports.** Every entry carries `fee_model{basis: per_run | subscription, outcome_contingent: false,
+  terms_uri}`, so that no fee depends on whether the subject passes, and `publishes_all_runs: true`, so that the report
+  of every run, passes and failures, is published. No fee is payable to the project for a list entry
+  ([GOVERNANCE.md](https://github.com/bacp-dev/bacp/blob/main/GOVERNANCE.md#interim-maintainer)). A run report carries a
+  `conflict_declaration{sponsor_of_subject, other}`, which `report_digest` covers: `sponsor_of_subject` is `true` when
+  the authority, its operator or a funder sponsors the attested subject, and `other` states any other relationship,
+  or `none`.
 
 #### Rules {#attestation-rules}
 
@@ -144,8 +151,8 @@ signs attestations and nothing else, and only a key of a listed entry qualifies.
   ([Handler binding](mandates.md#handler-binding)) when any of these holds:
     - the JOSE `typ` is any value other than `bacp-conformance+jwt`;
     - the signing key, selected by the `kid` of the JOSE header, is not in the `keys[]` of an entry of the
-      [conformance-authority list](#conformance-authority-list) of the latest dated release, or of a registry-signed
-      snapshot no more than 24 hours old; the time of the check is outside the entry's `valid_from` to `valid_until`; or
+      [conformance-authority list](#conformance-authority-list) of the latest publication of the registry files (the highest
+      `registry_serial` of the release manifest); the time of the check is outside the entry's `valid_from` to `valid_until`; or
       the entry's status is revoked; while the list has no entry, no key qualifies, so a Mandate Manager
       refuses open mandates on every `pilot` handler, including `in.upi.circle` and `in.card.agentic`;
     - the entry is in the Mandate Manager's published exclusion list (`reasons: [attester_not_accepted]`);
@@ -160,10 +167,15 @@ signs attestations and nothing else, and only a key of a listed entry qualifies.
       `mandate_primitives` last changed;
     - `sub` is not the subscriber that the signing key of the forwarded request resolves to in the registry (the
       Mandate Manager does not take `sub` from a body field);
-    - the entry's `operator.id`, or the `id` of any of its `funders[]`, equals the operator of `sub`, of the payer PSP in
-      `rail_binding.psp_id` or of the issuing Mandate Manager, or any of those operators is unknown. A participant's
-      operator is the legal entity in its registry record; a profile, a request body or the attestation never supplies
-      it.
+    - the entry's operator, or any of its funders, is the same operator as `sub`, as the payer PSP in
+      `rail_binding.psp_id` or as the issuing Mandate Manager, or any of those operators is unknown
+      (`reasons: [attester_not_independent]`). A participant's operator is the `operator` of its
+      [registry record](discovery.md#registry-lookup) with `assertion: registry`: a profile, a request body, the
+      attestation or an `operator` whose `assertion` is `declared` never supplies it, and an absent or `declared`
+      operator is unknown. Two operators are the same when they share a CIN, an LLPIN or a PAN, or a `group_id`; a GSTIN
+      alone never decides it, because one entity can hold several. The entry's `operator.id` and the `id` of each of its
+      `funders[]` are compared with the `entity_ids[]` of the other operators, and so is each of its `funder_ids[]`.
+      When the entry names a `group_id`, a compared record that has none is unknown.
 - **Binding.** The Mandate Manager MUST write `rail_binding.conformance{iss, sub, jti}` on every open payment mandate
   bound to a `pilot` handler. The schema leaves the object optional, because a `live` handler needs none; this rule makes
   it REQUIRED for pilot bindings.
@@ -325,13 +337,12 @@ A BACP gateway MUST:
   ([Mandates and Consent](mandates.md)).
 - Re-check the open mandate's handler binding (status, conformance
   attestation and `rail_binding.primitive`) against the current registry on
-  every `complete`, taken from the dated release or a registry-signed
-  snapshot; adopt a status downgrade within 24 hours of its release, refuse
+  every `complete`, taken from the dated release; adopt a status downgrade within 24 hours of its `published_at`, refuse
   an HNP `complete` on a handler whose descriptor copy is more than 24 hours
   old (`reasons: [registry_copy_stale]`, `resolution: recoverable`, no
   pause), serve `GET /payment-handlers` with a `Cache-Control` `max-age` of at
   most 86400, and add the pause reason `binding_ineligible`, with the
-  `registry_version` that caused it, to every affected mandate when a
+  `registry_version` and `registry_serial` that caused it, to every affected mandate when a
   registry or attestation change makes its binding ineligible. Keep pause
   reasons as a set: keep a mandate `PAUSED` while any reason remains, remove
   only `binding_ineligible` and only on a strictly newer registry version in
@@ -506,6 +517,11 @@ A BACP gateway MUST:
   support operator key; serve `GET /step-ups/{step_up_id}` to the issuing credential only; match a `RETURN` or `CANCEL` field by field with an overlap rule; and apply the
   decline cool-off, the re-prompt cap and the declared limits ([Human participants](human-participants.md#step-up-limits); cases T6-05 to T6-09, T6-15 to T6-30, T6-33b,
   T6-35 to T6-42, T6-44b, T6-46 to T6-49).
+- Refuse an open mandate at a gateway that is not its `agent.bap_id`, take the principal section before the root section (K1 before K2), write a firm
+  commitment into the root's ledger keyed by `offer_hash`, allow one debit per `checkout_hash` per root inside the root's section, send a signed `MandateEvent`
+  to the `audit_uri` for each use, relinquishment and gateway-originated pause change, apply a receipt only when the PSP of the debit signed it, release a budget
+  only on the refund evidence of the [usage ledger](mandates.md#usage-ledger), hold human-not-present payment to a seller with an unresolved reversal, and state the
+  `reversal_basis` and `refund_route` of a `debited_not_confirmed` payment (cases T7-01, T7-02, T7-07 to T7-14, T7-18 to T7-31, T7-36 to T7-38, T7-44).
 - Pass the [binding cases](#binding-cases) for every one of `in.bacp.payment_plan`,
   `in.bacp.ledger`, `in.bacp.trade_document` and `in.bacp.ucp_checkout` that its profile
   lists, and, whatever it lists, the transport cases that bind every gateway (cases BND-TAG-01,
@@ -557,7 +573,7 @@ A Mandate Manager MUST:
   not in the handler descriptor's `binding.open_primitives`, whose handler is
   not open-eligible, or whose handler is `pilot` without a verified gateway
   [conformance attestation](#conformance-attestation) listing it. Take the
-  registry from the dated release or a registry-signed snapshot, never from a
+  registry from the dated release, never from a
   gateway endpoint, and record its version in `rail_binding.registry_version`.
 - Verify the gateway's attestation under every rule of [Conformance attestation](#attestation-rules) (signer in the
   public list and not excluded, scope, `typ`, 180-day validity, 24-hour status freshness, `sub` equal to the signing
@@ -582,6 +598,10 @@ A Mandate Manager MUST:
   sibling with `cascade_of` and `rail_revocation`; and be the only key that
   fetches and answers a summary step-up
   ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)).
+- Copy `agent.bap_id` from the verified AgentCredential, accept `supersedes` only from the Trusted Surface and sign `carried_exposure` from its own use events,
+  accept a `MandateEvent` only from the BAP of `agent.bap_id`, record `event_gap` on a missing `seq`, refuse an attested credit funding (an overdraft without a
+  deposit attestation, or a missing funding) without `credit_funding_allowed`, refuse a gift PPI without principal-side custody, and compare operators only
+  from the registry record's `operator` with `assertion: registry` (cases T7-03 to T7-06, T7-11, T7-12, T7-16, T7-17, T7-34).
 - Sign mandates as immutable artefacts. Open mandates carry `cnf`,
   `data_scopes`, `audit_uri`, a data-retention period and at least one
   budget or `max_executions`.
@@ -813,7 +833,7 @@ Fixture and step keys used by the cases on this page:
 - `registry_update` is a step that publishes a newer registry version to the
   registry source; `sweep` is a step that lets the gateway (or named
   replicas) apply the registry it holds.
-- `registry_by_replica` gives each gateway replica its own registry version,
+- `registry_by_replica` gives each gateway replica its own registry version and `serial`,
   to test replicas that lag within the 24-hour window.
 - `trusted_surface_event` is a step in which the mock Mandate Manager sends a
   signed Trusted Surface event (for example `mandate.paused`) to the gateway.
@@ -988,11 +1008,12 @@ Amounts are integer paise.
         webhooks: [{type: mandate.status_changed, status: PAUSED, reason: binding_ineligible, pause_reasons: [binding_ineligible]}]
         state: {mandate: PAUSED, session: cancelled}
         messages: [rail_binding_not_open_eligible]
-    - create_session: {state: ready_for_complete}
-    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+    - create_session: {state: ready_for_complete, may_refuse: true}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP, only_if_session_exists: true}
   expect:
-    responses:
-      - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible], count: 1}
+    exactly_one_of:
+      - responses: [{path: create_session, status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible]}]
+      - responses: [{path: complete, status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible]}]
     state: {mandate: PAUSED}
     rail: {settled_debits: 0}
 
@@ -1194,12 +1215,12 @@ Amounts are integer paise.
   title: A principal pause made during a binding pause survives the lift of the binding pause
   level: bacp.pay.all.1
   fixture:
-    registry: {version: R, in.upi.reservepay: {status: deprecated}}
-    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, status: PAUSED, pause_reasons: [binding_ineligible], pause_registry_version: R}
+    registry: {serial: S, in.upi.reservepay: {status: deprecated}}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, status: PAUSED, pause_reasons: [binding_ineligible], pause_registry_serial: S}
     sessions: {count: 0}
   steps:
     - trusted_surface_event: {event: mandate.paused}
-    - registry_update: {version: R+1, in.upi.reservepay: {status: live}}
+    - registry_update: {serial: S+1, in.upi.reservepay: {status: live}}
     - sweep: {replicas: all}
     - create_session: {state: ready_for_complete}
     - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
@@ -1213,13 +1234,13 @@ Amounts are integer paise.
     rail: {settled_debits: 0}
 
 - case_id: T0-RT-17
-  title: A replica on an older registry version does not lift a binding pause
+  title: A replica on a lower registry serial does not lift a binding pause
   level: bacp.pay.all.1
   fixture:
     gateway: {replicas: 2}
     registry_by_replica:
-      replica_a: {version: R+1, in.upi.reservepay: {status: deprecated}}
-      replica_b: {version: R, in.upi.reservepay: {status: live}}
+      replica_a: {serial: S+1, in.upi.reservepay: {status: deprecated}}
+      replica_b: {serial: S, in.upi.reservepay: {status: live}}
     mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
     sessions: {count: 2, state: ready_for_complete}
   steps:
@@ -1269,6 +1290,83 @@ Amounts are integer paise.
     agent_requests:
       - {method: POST, path: /mandates, count: 0}
       - {trusted_surface: resume, count: 0}
+
+- case_id: T0-RT-16b
+  title: A principal resume during a binding pause leaves the mandate paused for the binding
+  level: bacp.pay.all.1
+  fixture:
+    registry: {serial: S, in.upi.reservepay: {status: deprecated}}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, status: PAUSED, pause_reasons: [binding_ineligible], pause_registry_serial: S}
+    sessions: {count: 0}
+  steps:
+    - trusted_surface_event: {event: mandate.resumed}
+    - create_session: {state: ready_for_complete}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, resolution: requires_buyer_input, reasons: [binding_ineligible], count: 1}
+    state: {mandate: PAUSED, pause_reasons: [binding_ineligible]}
+    webhooks: [{type: mandate.status_changed, status: PAUSED, reason: binding_ineligible, pause_reasons: [binding_ineligible]}]
+    rail: {settled_debits: 0}
+
+- case_id: T0-RT-17b
+  title: On a greater registry serial with the binding eligible, every replica lifts the pause and an HNP complete succeeds
+  level: bacp.pay.all.1
+  fixture:
+    gateway: {replicas: 2}
+    registry_by_replica:
+      replica_a: {serial: S+1, in.upi.reservepay: {status: live}}
+      replica_b: {serial: S+1, in.upi.reservepay: {status: live}}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, status: PAUSED, pause_reasons: [binding_ineligible], pause_registry_serial: S}
+    sessions: {count: 0}
+  steps:
+    - sweep: {replicas: all}
+    - create_session: {state: ready_for_complete}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 200, body.status: completed, count: 1}
+    state: {mandate: ACTIVE}
+    webhooks: [{type: mandate.status_changed, status: ACTIVE, reason: binding_ineligible}]
+
+- case_id: T0-RT-19b
+  title: An agent that can disprove a gateway's reissue_required claim opens no re-issue and logs a gateway fault
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, registry_version: "2026-10-17", preinstalled: true}
+  steps:
+    - request_from_gateway: {method: POST, path: "/sessions/{session_id}/complete", response: {status: 400, code: rail_binding_not_open_eligible, reasons: [reissue_required]}}
+  expect:
+    agent_requests:
+      - {method: POST, path: /mandates, count: 0}
+    log: [{stage: mandate, reason: gateway_fault, count: 1}]
+
+- case_id: T0-RT-19c
+  title: An agent opens no re-issue or resume request on any non-recoverable rail_binding_not_open_eligible
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+    principal_instruction: none_after_refusal
+  steps:
+    - request_from_gateway: {method: POST, path: "/sessions/{session_id}/complete", response: {status: 400, code: rail_binding_not_open_eligible, reasons: [binding_ineligible, registry_copy_stale]}}
+    - request_from_gateway: {method: POST, path: "/sessions/{session_id}/complete", response: {status: 400, code: rail_binding_not_open_eligible, reasons: [reissue_required, binding_ineligible]}}
+  expect:
+    agent_requests:
+      - {method: POST, path: /mandates, count: 0}
+      - {trusted_surface: resume, count: 0}
+
+- case_id: T0-RT-20
+  title: A mandate.status_changed payload with ACTIVE and a pause reason is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: mandate-status-changed-data.active-with-reasons.invalid.json
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/MandateStatusChangedData}
+  expect:
+    verdict: {code: schema_invalid, path: $.pause_reasons}
 ```
 
 T0-RT-12 tests only the adoption of a downgrade, with the registry source
@@ -1293,20 +1391,20 @@ and its block tender, which alone would fit, is not debited either. The single
 succeeds. T0-RT-07 races two gift-PPI legs for the ₹1,000 left beside a
 ₹1,000 block: without block exposure both would fit. T0-RT-10b uses the
 `bpp_payment_terms` fixture key of the [multi-seller cases](#multi-seller-cases). T0-RT-14 tests the
-outcome only: how the principal-keyed negotiation section and the
-root-checkout-mandate section are ordered is not specified in this version
-([Q-36](open-questions.md#q-36)).
+outcome of a negotiated ACCEPT racing a `complete`, and asserts the order: the principal-keyed section (K1) is
+taken before the root-checkout-mandate section (K2), never the reverse, and the K1 reservation is visible in K2 keyed by
+`offer_hash` ([Atomic reservation](security-and-privacy.md#atomic-reservation); case T7-07 repeats it across replicas).
 
-!!! warning "Proposed"
+!!! note "Settled"
     T0-RT-04, T0-RT-05 and T0-RT-08 test that `in.store_credit`,
     `bacp.credit_ledger` and `in.loyalty` are not open-eligible in
-    `2026-10-17`. If [Q-59](open-questions.md#q-59) later opens them, these
-    cases are expected to change to test the conditions in its working
-    position: a failure receipt signed by the payee keeps the reservation
-    counted as spent; a third ₹1,500 sale under a ₹3,000 monthly budget gets
-    `mandate_exhausted`; an acknowledgement signed by the agent's `cnf` key
-    gets `ack_not_by_counterparty`; and a handler with no limits gets
-    `mandate_scope_mismatch`.
+    this release ([Q-59](open-questions.md#q-59), settled as closed). If a
+    later release opens them, these cases change to test the conditions in
+    Q-59, which T7-40 already tests: a failure receipt signed by the payee
+    keeps the reservation counted as spent; a third ₹1,500 sale under a
+    ₹3,000 monthly budget gets `mandate_exhausted`; an acknowledgement
+    signed by the agent's `cnf` key gets `ack_not_by_counterparty`; and a
+    handler with no limits gets `mandate_scope_mismatch`.
 
 T0-RT-11 cannot tell a correct Mandate Manager from one that refuses every
 pilot handler while the [conformance-authority list](#conformance-authority-list)
@@ -2078,7 +2176,7 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
     state: {mandate: EXPIRED, order: cancelled}
 
 - case_id: T2-OPS-03b
-  title: A human-present cancel is accepted on an order whose mandate is exhausted, and a human-not-present one is refused
+  title: A human-present cancel or issue is accepted on an order whose mandate is exhausted, and a human-not-present cancel is refused
   level: bacp.core.1
   fixture:
     mandate: {state: EXHAUSTED, preinstalled: true}
@@ -2087,10 +2185,12 @@ fixture list and accepts the fixture `typ`; CA-13 runs in production mode.
   steps:
     - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HNP}
     - request: {method: POST, path: "/orders/{order_id}/cancel", tag: bacp-post-order, presence: HP, hp_proof: valid}
+    - request: {method: POST, path: /issues, tag: bacp-post-order, presence: HP, hp_proof: valid, body: {action: RAISE_ISSUE, category: PAYMENT}}
   expect:
     responses:
       - {status: 403, code: presence_not_allowed, count: 1}
       - {status: 200, count: 1}
+      - {status: 201, count: 1}
     state: {mandate: EXHAUSTED, order: cancelled}
 
 - case_id: T2-OPS-03c
@@ -8203,3 +8303,696 @@ paise. Levels: gateway, schema and verifier cases `bacp.core.1` (T6-37 and T6-49
       - {status: 400, code: rail_binding_not_open_eligible, count: 1}
     rail: {settled_debits: 0}
 ```
+
+## Mandates, payments and registry cases {#t7-cases}
+
+The cases below cover the [gateway binding and porting of an open mandate](mandates.md#port), the [lock order](security-and-privacy.md#atomic-reservation),
+[mandate events](mandates.md#mandate-events), the [registry release manifest](payments/handler-registry.md#release-manifest), the
+[registry record](discovery.md#registry-lookup) and the separation of a [conformance authority](#conformance-authority-list), the receipts and
+[budget release](mandates.md#usage-ledger) after a seller-side reversal, the [reversal basis](checkout/index.md#debited-not-confirmed), funding and the
+[per-leg rule](mandates.md#per-leg-rule), the split-order key, the post-order and presence rules, and the closing of
+[Q-59](open-questions.md#q-59). They use the manifest form above, their ids use the prefix `T7-` (and the `T0-` ids that the registry serial changes), and amounts are
+integer paise. Levels: gateway cases `bacp.pay.all.1` unless stated; schema cases `bacp.core.1`. They also use:
+
+- `registry` and `registry_by_replica` (fixture): besides `version`, each takes `serial` and `published_at`, the keys of the
+  [release manifest](payments/handler-registry.md#release-manifest); a registry update names the `serial` that it publishes;
+- `credentials` (fixture): further AgentCredentials of the agent, each with its `bap` and `cnf`, and `present_credential` (step), which makes the agent present one of them;
+- `mandate_event` (step): the mock gateway sends a signed `MandateEvent` to the Mandate Manager under test, with `type`, `seq` and `signer` (a BAP subscriber id);
+- `ts_confirm` (step): the principal answers a `confirm` step-up with reason `refund_received` on the Trusted Surface;
+- `modification_request` (step): the agent asks the gateway to modify a block;
+- the expect keys `mm` (what the Mandate Manager recorded: `events_recorded`, `event_gap`, `ts_view`, `rejected`, `refused_with`), `ledger` (the root's exposure and
+  reservations, for example `reservations: [{key: offer_hash}]`), `comparison` (the `comparison[]` entries logged) and `message_text` (what a fixed message says and does not say).
+
+```yaml
+- case_id: T7-01
+  title: A mandate bound to gateway G1 by agent.bap_id is refused at G2 with the same cnf key, and nothing is debited
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, agent: {bap_id: B1}, budgets: [{period: P1M, max: {value: 300000, currency: INR}}]}
+    credentials: {C2: {bap: B2, cnf: same_as_mandate}}
+    rail: {settled_debits_at_g1: {value: 290000, currency: INR}}
+    sessions: {count: 1, amount: 290000, state: ready_for_complete, gateway: G2}
+  steps:
+    - present_credential: C2
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, param: $.agent.bap_id, count: 1}
+    rail: {settled_debits: 0}
+    ledger: {reservations: []}
+
+- case_id: T7-02
+  title: A legacy mandate with no bap_id is refused when the presented credential's hash is not agent.credential_hash
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, agent: {credential_hash: H_C1}}
+    credentials: {C2: {bap: B2, cnf: same_as_mandate}}
+    sessions: {count: 1, amount: 100000, state: ready_for_complete}
+  steps:
+    - present_credential: C2
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, param: $.agent.credential_hash, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T7-03
+  title: A mandate request that an agent submits with supersedes is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, supersedes: {mandate_id: "{mandate_id}"}}}
+  expect:
+    responses:
+      - {status: 403, code: trusted_surface_only, count: 1}
+    state: {mandate: ACTIVE}
+
+- case_id: T7-04
+  title: A Trusted Surface successor starts its windows at the spend that the Mandate Manager's use events show, and the old root is revoked
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, budgets: [{period: P1M, max: {value: 300000, currency: INR}}]}
+    mm_events: {use_total_this_ist_month: {value: 290000, currency: INR}}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, origin: trusted_surface, body: {rail: in.upi.reservepay, supersedes: {mandate_id: "{mandate_id}"}}}
+      trusted_surface: approve
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, amount: 20000, session: 1}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, amount: 20000, session: 2}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+      - {status: 403, code: mandate_exhausted, count: 1}
+    state: {old_root: REVOKED, successor: ACTIVE, carried_exposure: [{period: P1M, source: mm_events, amount: {value: 290000, currency: INR}}]}
+
+- case_id: T7-05
+  title: A successor whose Mandate Manager record has an event gap shows the window as incomplete, pre-filled at the old max, and changes it only on the principal's own factor
+  level: bacp.ts.1
+  system_under_test: trusted_surface
+  fixture:
+    mandate: {preinstalled: true, budgets: [{period: P1M, max: {value: 300000, currency: INR}}]}
+    mm_events: {event_gap: true}
+    logged_in_as: {principal: P}
+  steps:
+    - render: {kind: port, language: hi-IN}
+    - override: {window: P1M, amount: {value: 100000, currency: INR}, user_action: tap_confirm}
+    - override: {window: P1M, amount: {value: 100000, currency: INR}, user_action: upi_pin}
+  expect:
+    verdict:
+      render: {window_shown_as: incomplete, prefilled: {value: 300000, currency: INR}, language: hi-IN}
+      override_accepted_only_with: principal_own_factor
+
+- case_id: T7-06
+  title: A Reserve Pay block that the payer PSP re-attests moves to the successor and counts once
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, payee: seller-s, block_amount: {value: 500000, currency: INR}}
+    psp: {re_attests_block: true}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, origin: trusted_surface, body: {rail: in.upi.reservepay, supersedes: {mandate_id: "{mandate_id}"}}}
+      trusted_surface: approve
+  expect:
+    state: {successor: ACTIVE, old_root: REVOKED}
+    rail: {block_revocations: 0}
+    ledger: {exposure: {value: 500000, currency: INR}, counted_on_roots: 1}
+
+- case_id: T7-07
+  title: A firm ACCEPT and a complete racing across replicas leave exactly one winner, with the ACCEPT's reservation visible in the root's section
+  level: bacp.neg.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}], settled: {value: 0, currency: INR}}
+    negotiation: {state: NEGOTIATING, live_firm_offer: {all_in_total: {value: 250000, currency: INR}}}
+    sessions: {count: 1, amount: 250000, state: ready_for_complete}
+    gateway: {replicas: 2}
+  steps:
+    - parallel: 2
+      across_replicas: true
+      repeat: 50
+      requests:
+        - {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate}
+        - {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+  expect:
+    exactly_one_of:
+      - responses: [{path: accept, status: 200, state: ACCEPT_PENDING}, {path: complete, status: 403, code: mandate_exhausted}]
+      - responses: [{path: complete, status: 200, body.status: completed}, {path: accept, status: 200, state: ESCALATED, code: NEG_EXPOSURE_EXCEEDED}]
+    ledger: {reservations: [{key: offer_hash}]}
+    invariants: [INV-GUARDED-COMMITMENT, INV-NO-RESERVATION-LEFT]
+
+- case_id: T7-08
+  title: Two closed payment mandate pairs with one checkout_hash under one root settle one debit
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+    pairs: {count: 2, checkout_hash: same, under: one_root}
+    gateway: {replicas: 2}
+  steps:
+    - parallel: 2
+      across_replicas: true
+      repeat: 50
+      request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, body.status: completed, count: 1}
+      - {status: 403, code: mandate_scope_mismatch, count: 1}
+    rail: {settled_debits: 1}
+    invariants: [INV-ONE-DEBIT-PER-CHECKOUT, INV-NO-RESERVATION-LEFT]
+
+- case_id: T7-09
+  title: A relinquished root with a Reserve Pay sibling reaches the Mandate Manager as an event, and the agent delivers the revoke route until the block revocation is confirmed
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, siblings: 1}
+    mandate_manager: {mode: harness, rail_revocation: delayed}
+    sessions: {count: 0}
+  steps:
+    - request: {method: POST, path: "/mandates/{mandate_id}/relinquish", tag: bacp-browse}
+    - clock: {advance: 60s}
+  expect:
+    mm: {events_recorded: [{type: relinquished, within: 60s}]}
+    webhooks:
+      - {type: mandate.status_changed, status: REVOKED, cascade_of: "{root_mandate_id}", rail_revocation: unconfirmed}
+    agent_requests:
+      - {trusted_surface: revoke_route_delivered, until: rail_revocation_confirmed}
+
+- case_id: T7-10
+  title: A refund to source proceeds while the audit_uri is unreachable, and the event is retried with the same event_id
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+    audit_uri: unreachable
+    ledger: {rrn: RRN1}
+  steps:
+    - refund_due: {original_rrn: RRN1}
+    - audit_uri: reachable
+  expect:
+    rail: {refunds_to_source: 1}
+    mm: {events_recorded: [{type: use, event_id: same_on_retry, count: 1}]}
+
+- case_id: T7-11
+  title: A missing seq is recorded as event_gap and shown as unreconciled
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    mandate: {preinstalled: true, agent: {bap_id: B1}}
+  steps:
+    - mandate_event: {type: use, seq: 4, signer: B1}
+    - mandate_event: {type: use, seq: 6, signer: B1}
+  expect:
+    mm: {event_gap: true, ts_view: unreconciled}
+
+- case_id: T7-12
+  title: A MandateEvent signed by a BAP key that is not agent.bap_id is rejected and nothing is recorded
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    mandate: {preinstalled: true, agent: {bap_id: B1}}
+  steps:
+    - mandate_event: {type: pause_changed, seq: 0, signer: B2}
+  expect:
+    mm: {events_recorded: [], rejected: 1}
+
+- case_id: T7-13
+  title: A pause recorded at registry serial 7 is lifted by serial 8 of the same dated release
+  level: bacp.pay.all.1
+  fixture:
+    registry: {version: "2026-10-17", serial: 7, in.upi.reservepay: {status: deprecated}}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, status: PAUSED, pause_reasons: [binding_ineligible], pause_registry_serial: 7}
+    sessions: {count: 0}
+  steps:
+    - registry_update: {version: "2026-10-17", serial: 8, in.upi.reservepay: {status: live}}
+    - sweep: {replicas: all}
+  expect:
+    state: {mandate: ACTIVE}
+    webhooks: [{type: mandate.status_changed, status: ACTIVE, reason: binding_ineligible, registry_serial: 8}]
+
+- case_id: T7-14
+  title: A replica at serial 7 refuses an HNP complete more than 24 hours after serial 8 was published
+  level: bacp.pay.all.1
+  fixture:
+    gateway: {replicas: 2}
+    registry_by_replica:
+      replica_a: {version: "2026-10-17", serial: 8, published_at: -25h}
+      replica_b: {version: "2026-10-17", serial: 7}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP, replica: replica_b}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [registry_copy_stale], resolution: recoverable, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T7-15
+  title: An attestation pause is not lifted by an attestation from another authority
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    mandate: {rail: in.card.agentic, primitive: agentic_token_intent, preinstalled: true, conformance: {iss: J1, sub: gateway_G}, status: PAUSED, pause_reasons: [binding_ineligible]}
+    conformance_authorities: [{ca_id: J1, status: lapsed}, {ca_id: J2, operator: op.j2, scope: {pilots: [in.card.agentic]}}]
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: J2, sub: gateway_G, pilots: [in.card.agentic], exp: future, status: ok}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - sweep: {replicas: all}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [binding_ineligible], count: 1}
+    state: {mandate: PAUSED, pause_reasons: [binding_ineligible]}
+    rail: {settled_debits: 0}
+
+- case_id: T7-16
+  title: An authority funded by the gateway operator, or compared with a declared operator, is refused as not independent
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    registry: {in.card.agentic: {status: pilot}}
+    conformance_authorities: [{ca_id: ca.lab.example, operator: op.lab, funder_ids: [{type: CIN, value: CIN_OF_GATEWAY_OPERATOR}], scope: {pilots: [in.card.agentic]}}]
+    operators: {gateway_G: {assertion: registry, entity_ids: [{type: CIN, value: CIN_OF_GATEWAY_OPERATOR}]}, psp_P: op.p, mm_M: op.m}
+    mandate_manager: {id: mm_M, mode: harness, excluded_attesters: []}
+    gateway_attestation: {typ: bacp-conformance+jwt, iss: ca.lab.example, sub: gateway_G, subject_role: gateway, pilots: [in.card.agentic], exp: future, status: ok}
+    psp_attestation: {type: in.card.agentic, primitive: agentic_token_intent, psp_id: psp_P}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+    - operators: {gateway_G: {assertion: declared, entity_ids: [{type: CIN, value: OTHER}]}}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, signer: gateway_G, body: {rail: in.card.agentic}}
+      gateway: forwards
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [attester_not_independent], count: 2}
+    state: {mandate_request: REJECTED}
+    rail: {settled_debits: 0, calls: 0}
+
+- case_id: T7-17
+  title: An attested credit funding, a missing funding or an overdraft without a deposit attestation is refused without credit_funding_allowed
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    mandate_request: {rail: in.upi.reservepay, credit_funding_allowed: false}
+    psp_attestation: {type: in.upi.reservepay, primitive: sbmd_block, funding: credit}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay}}
+      trusted_surface: approve
+    - psp_attestation: {funding: absent}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay}}
+      trusted_surface: approve
+    - psp_attestation: {funding: deposit, account_type: overdraft, deposit_attested: false}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay}}
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 403, code: credit_funding_not_allowed, count: 3}
+    webhooks: [{type: mandate.rejected, rail_revocation: any}]
+    ledger: {block_exposure_until_revocation_confirmed: true}
+
+- case_id: T7-18
+  title: A PSP-signed receipt on a block above its attested amount counts at matched debits plus reservations
+  level: bacp.pay.all.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 400000, currency: INR}}]}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, block_amount: {value: 300000, currency: INR}, matched_debits: {value: 300000, currency: INR}}
+    sessions: {count: 1, amount: 50000, state: ready_for_complete}
+  steps:
+    - psp_receipt_arrives: {on_block: true, amount: {value: 100000, currency: INR}, signer: bound_psp}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    ledger: {block_exposure: {value: 400000, currency: INR}}
+    responses:
+      - {status: 403, code: mandate_exhausted, count: 1}
+
+- case_id: T7-19
+  title: An agent's request to modify a block is refused
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+  steps:
+    - modification_request: {block: "{rail_ref}", block_amount: {value: 900000, currency: INR}}
+  expect:
+    responses:
+      - {status: 403, code: trusted_surface_only, count: 1}
+    rail: {block_modifications: 0}
+
+- case_id: T7-19b
+  title: A block-modified event that breaks the sum of blocks pauses the mandate until the principal approves the modified block
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, block_amount: {value: 300000, currency: INR}}
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}]}
+    psp: {block_debit_feed: attested}
+  steps:
+    - trusted_surface_event: {event: rail.block_modified, signer: bound_psp, block_amount: {value: 500000, currency: INR}}
+    - create_session: {state: ready_for_complete}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 403, code: mandate_paused, count: 1}
+    state: {mandate: PAUSED, pause_reasons: [block_modified]}
+    webhooks: [{type: mandate.status_changed, status: PAUSED, reason: block_modified, pause_reasons: [block_modified]}]
+    rail: {settled_debits: 0}
+
+- case_id: T7-20
+  title: A failure receipt signed by a PSP other than the one bound to the mandate does not release the reservation
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, psp_id: psp-y}
+    payment: {state: in_doubt, amount: {value: 100000, currency: INR}}
+  steps:
+    - psp_receipt_arrives: {result: failure, signer: psp-x, role: psp}
+  expect:
+    responses:
+      - {status: 400, code: receipt_invalid, count: 1}
+    ledger: {reservations: [{amount: {value: 100000, currency: INR}}]}
+
+- case_id: T7-21
+  title: A refund receipt that cites another order's original_rrn is not applied
+  level: bacp.pay.all.1
+  fixture:
+    orders: {A: {original_rrn: RRN_A, checkout_hash: H_A}, B: {original_rrn: RRN_B, checkout_hash: H_B}}
+  steps:
+    - psp_receipt_arrives: {refund: true, original_rrn: RRN_A, applied_to: order_B, signer: bound_psp}
+  expect:
+    responses:
+      - {status: 400, code: receipt_invalid, count: 1}
+
+- case_id: T7-22
+  title: A settled full refund evidenced by the bound payer PSP releases the spend of an unconfirmed debit
+  level: bacp.pay.all.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}]}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, psp_id: psp-y}
+    payment: {status: reversal_pending, amount: {value: 290000, currency: INR}, original_rrn: RRN1, order_id: absent, collected_by: BPP}
+  steps:
+    - psp_receipt_arrives: {refund: true, settled: true, original_rrn: RRN1, amount: {value: 290000, currency: INR}, signer: psp-y}
+    - create_session: {seller: seller-t, state: ready_for_complete, amount: 290000}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    state: {payment: reversed, budget_after: [{period: P1M, remaining: {value: 300000, currency: INR}}]}
+    responses:
+      - {status: 200, body.status: completed, count: 1}
+
+- case_id: T7-23
+  title: A collector-PSP refund receipt alone leaves the spend until the principal confirms on the Trusted Surface
+  level: bacp.pay.all.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}]}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, psp_id: psp-y}
+    payment: {status: reversal_pending, amount: {value: 290000, currency: INR}, original_rrn: RRN1, order_id: absent, collected_by: BPP, collector_psp: psp-c}
+  steps:
+    - psp_receipt_arrives: {refund: true, settled: true, original_rrn: RRN1, amount: {value: 290000, currency: INR}, signer: psp-c}
+    - ts_confirm: {step_up_reason: refund_received, user_action: upi_pin}
+  expect:
+    state: {payment: reversed}
+    responses: []
+    ledger: {budget_released: false_before_confirmation_true_after}
+
+- case_id: T7-24
+  title: A partial refund, or a refund into store credit, releases nothing
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, psp_id: psp-y}
+    payment: {status: reversal_pending, amount: {value: 80000, currency: INR}, original_rrn: RRN1, order_id: absent}
+  steps:
+    - psp_receipt_arrives: {refund: true, settled: true, original_rrn: RRN1, amount: {value: 60000, currency: INR}, signer: psp-y}
+    - psp_receipt_arrives: {refund: true, settled: true, original_rrn: RRN1, amount: {value: 80000, currency: INR}, destination: in.store_credit, signer: psp-y}
+  expect:
+    ledger: {budget_released: false}
+
+- case_id: T7-25
+  title: An unresolved reversal with one seller stops human-not-present payment to that seller only
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true}
+    payment: {status: reversal_pending, seller: seller-s}
+    sessions: {count: 3, state: ready_for_complete, sellers: [seller-s, seller-s, seller-t], presence: [HNP, HP, HNP]}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: 1}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: 2, hp_proof: valid}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: 3}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, reasons: [seller_reversal_unresolved], count: 1}
+      - {status: 200, count: 2}
+
+- case_id: T7-26
+  title: A late on_confirm after a reversal began is answered with a cancel and never debited again
+  level: bacp.pay.all.1
+  fixture:
+    payment: {status: reversal_pending}
+  steps:
+    - bpp_on_confirm: {late: true}
+  expect:
+    beckn: [{action: cancel, count: 1}]
+    state: {session: cancelled}
+    rail: {settled_debits: unchanged}
+
+- case_id: T7-27
+  title: The debited_not_confirmed message follows the reversal basis and refund route
+  level: bacp.pay.all.1
+  fixture:
+    payment: {status: reversal_pending}
+    cases: [{reversal_basis: bacp_policy, refund_route: seller_collector}, {reversal_basis: rbi_tat, refund_route: gateway_collector}, {reversal_basis: unknown, refund_route: seller_collector}]
+  steps:
+    - build_message: {each_case: true}
+  expect:
+    message_text:
+      - {case: 1, never: ["₹100", "compensation"], says: requested, names: UDIR}
+      - {case: 2, says: ["T+5", "₹100 a day", started]}
+      - {case: 3, names: [refund_to_source, UDIR, ombudsman], says: conditional_rbi_sentence}
+
+- case_id: T7-28
+  title: A block whose payee provider differs from the provider in the signed terms is refused, and so is a payee with no provider where the terms name one
+  level: bacp.pay.all.1
+  fixture:
+    bpp_payment_terms: {provider_id: Y, vpa: kirana@okbank}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, payee: {vpa: kirana@okbank, bpp_id: sellerapp.example.in, provider_id: X}}
+    sessions: {count: 1, state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, presence: HNP}
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.upi.reservepay, payee: {vpa: kirana@okbank, bpp_id: sellerapp.example.in}}}
+  expect:
+    responses:
+      - {status: 403, code: reservepay_block_wrong_payee, count: 1}
+      - {status: 403, code: mandate_scope_mismatch, param: $.payee.provider_id, count: 1}
+    rail: {settled_debits: 0}
+
+- case_id: T7-29
+  title: A block whose payee VPA is not the VPA in the leg's fresh on_init is skipped
+  level: bacp.pay.all.1
+  fixture:
+    basket: {legs: 1}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, payee: {vpa: old@okbank}}
+    bpp_on_init: {vpa: new@okbank}
+  steps:
+    - plan_legs: {}
+  expect:
+    comparison: [{handler_id: in.upi.reservepay, chosen: false, reason: payee_terms_changed}]
+
+- case_id: T7-30
+  title: Two orders to one tax id on two seller apps within 10 minutes are one seller for split-order detection, and covers[] legs are exempt
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {step_up: {above_amount: {value: 200000, currency: INR}}}
+    bpp_terms: [{bpp_id: bpp-1, gstin: G1, provider_id: P1}, {bpp_id: bpp-2, gstin: G1, provider_id: P2}]
+    sessions: {count: 2, amount: 120000, state: ready_for_complete, sellers: [bpp-1, bpp-2]}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: 1}
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, session: 2, within: 10m}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+      - {status: 200, body.status: requires_escalation, messages: [split_order_suspected], count: 1}
+
+- case_id: T7-31
+  title: A fallback to another VPA under the same provider, to prepaid, or to cbdc is decided by the funding class, payee and collector
+  level: bacp.pay.all.1
+  fixture:
+    basket: {legs: 1, planned: in.upi.reservepay, funding_class: own_deposit}
+  steps:
+    - fallback: {to: in.upi.reservepay, payee: {vpa: other@okbank, provider_id: same}}
+    - fallback: {to: in.ppi.wallet}
+    - fallback: {to: in.cbdc.retail}
+  expect:
+    step_ups: [{reason: rail_fallback, count: 2}]
+    comparison: [{reason: rail_only_change, count: 1}]
+
+- case_id: T7-32
+  title: A descriptor with a merchant-only primitive and hnp rail_enforced is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: handler-descriptor.json, vector: handler-descriptor.hnp-rail-merchant-only.invalid.json}
+  expect:
+    verdict: {code: schema_invalid, path: $.mandate_primitives}
+
+- case_id: T7-33
+  title: A gift PPI that the seller has no contract to accept is excluded before ranking
+  level: bacp.pay.all.1
+  fixture:
+    mandate: {rail: in.ppi.gift, primitive: balance_cap, preinstalled: true}
+    seller: {accepts: [in.upi.reservepay]}
+  steps:
+    - request: {method: POST, path: /payment-handlers/intersect, tag: bacp-browse, body: {presence: HNP, session_id: "{session_id}"}}
+  expect:
+    responses:
+      - {status: 200, "body.excluded[0].handler_id": in.ppi.gift, "body.excluded[0].reason": not_accepted_by_seller, count: 1}
+
+- case_id: T7-34
+  title: A gift PPI whose attestation names a gateway-side vault is refused
+  level: bacp.pay.all.1
+  system_under_test: mandate_manager
+  fixture:
+    psp_attestation: {type: in.ppi.gift, primitive: balance_cap, custody: gateway_side}
+  steps:
+    - request: {method: POST, path: /mandates, tag: bacp-browse, body: {rail: in.ppi.gift}}
+      trusted_surface: approve
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, count: 1}
+
+- case_id: T7-35
+  title: A mandate.status_changed payload with ACTIVE and a pause reason is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/MandateStatusChangedData, vector: mandate-status-changed-data.active-with-reasons.invalid.json}
+  expect:
+    verdict: {code: schema_invalid, path: $.pause_reasons}
+
+- case_id: T7-36
+  title: A gateway claim of reissue_required on a mandate that has a primitive and a registry_version is a gateway fault
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, registry_version: "2026-10-17", preinstalled: true}
+  steps:
+    - request_from_gateway: {method: POST, path: "/sessions/{session_id}/complete", response: {status: 400, code: rail_binding_not_open_eligible, reasons: [reissue_required]}}
+  expect:
+    agent_requests:
+      - {method: POST, path: /mandates, count: 0}
+    log: [{stage: mandate, reason: gateway_fault, count: 1}]
+
+- case_id: T7-37
+  title: A principal resume during a binding pause leaves the pause, and the lift on a greater serial is the positive control
+  level: bacp.pay.all.1
+  fixture:
+    registry: {serial: 7, in.upi.reservepay: {status: deprecated}}
+    mandate: {rail: in.upi.reservepay, primitive: sbmd_block, preinstalled: true, status: PAUSED, pause_reasons: [binding_ineligible], pause_registry_serial: 7}
+    sessions: {count: 0}
+  steps:
+    - trusted_surface_event: {event: mandate.resumed}
+    - create_session: {state: ready_for_complete}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+    - registry_update: {serial: 8, in.upi.reservepay: {status: live}}
+    - sweep: {replicas: all}
+    - create_session: {state: ready_for_complete}
+    - request: {method: POST, path: "/sessions/{new_session_id}/complete", tag: bacp-pay, presence: HNP}
+  expect:
+    responses:
+      - {status: 400, code: rail_binding_not_open_eligible, reasons: [binding_ineligible], count: 1}
+      - {status: 200, body.status: completed, count: 1}
+    state: {mandate: ACTIVE}
+
+- case_id: T7-38
+  title: A human-present return and a human-present issue on an exhausted HNP-only mandate are accepted
+  level: bacp.core.1
+  fixture:
+    mandate: {state: EXHAUSTED, presence_allowed: [HNP], preinstalled: true}
+    order: {state: confirmed, placed_under: mandate}
+    ts_events: {step_up_hp_proof: valid}
+  steps:
+    - request: {method: POST, path: "/orders/{order_id}/returns", tag: bacp-post-order, presence: HP, hp_proof: valid}
+    - request: {method: POST, path: /issues, tag: bacp-post-order, presence: HP, hp_proof: valid, body: {action: RAISE_ISSUE, category: PAYMENT}}
+  expect:
+    responses:
+      - {status: 202, count: 1}
+      - {status: 201, count: 1}
+    beckn: [{action: update, count: 1}]
+
+- case_id: T7-39
+  title: A ledger sale counts against the budgets only when a gateway complete books it, and a creditor-posted sale does not
+  level: bacp.b2b.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 1000000, currency: INR}}]}
+    ledger: {credit_limit: {value: 1000000, currency: INR}, balance: {value: 0, currency: INR}}
+  steps:
+    - complete_books_sale: {amount: 900000}
+    - ledger_event: {entry: sale_1, status: disputed}
+    - complete_books_sale: {amount: 900000}
+    - creditor_posts_sale: {amount: 100000}
+  expect:
+    responses:
+      - {status: 200, count: 1}
+      - {status: 403, code: mandate_exhausted, count: 1}
+    state: {budget_after: [{period: P1M, remaining: {value: 100000, currency: INR}}]}
+
+- case_id: T7-40
+  title: A failure receipt signed by the payee operator's key on a merchant-enforced handler keeps the reservation
+  level: bacp.pay.all.1
+  fixture:
+    registry: {in.store_credit: {open_eligible: true, test_registry: true}}
+    mandate: {rail: in.store_credit, primitive: balance_cap, preinstalled: true}
+    payment: {state: in_doubt, amount: {value: 50000, currency: INR}}
+  steps:
+    - psp_receipt_arrives: {result: failure, signer: payee_operator_key}
+  expect:
+    responses:
+      - {status: 400, code: receipt_invalid, count: 1}
+    ledger: {reservations: [{amount: {value: 50000, currency: INR}}]}
+
+- case_id: T7-41
+  title: A conformance-authority entry with an outcome-contingent fee, a release time ending in Z and a payment aggregator record with only an LLPIN are each invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {vector: [conformance-authority-list.outcome-contingent.invalid.json, registry-release.published-at-z.invalid.json, registry-record.pa-llpin-only.invalid.json]}
+  expect:
+    verdict: {code: schema_invalid, count: 3}
+
+- case_id: T7-42
+  title: A NegotiationCreate that asserts presence HP without an hp_proof is refused
+  level: bacp.neg.1
+  fixture:
+    negotiation_mandate: {preinstalled: true}
+  steps:
+    - request: {method: POST, path: /negotiations, tag: bacp-browse, body: {presence: HP, mode: alternating, bpp_id: bpp.kirana.example.in, items: [{item_id: I-1, quantity: 1}]}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, count: 1}
+    beckn: []
+
+- case_id: T7-43
+  title: A comparison reason outside the closed enum is invalid
+  level: bacp.core.1
+  system_under_test: schema
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/IntersectResponse, vector: intersect-response.comparison-reason-unknown.invalid.json}
+  expect:
+    verdict: {code: schema_invalid, path: "$.comparison[0].reason"}
+
+- case_id: T7-44
+  title: A gateway runs the principal section before the root section in both orders of arrival and never deadlocks
+  level: bacp.neg.1
+  fixture:
+    checkout_mandate: {budgets: [{period: P1M, max: {value: 300000, currency: INR}}], roots: 2}
+    gateway: {replicas: 2}
+  steps:
+    - parallel: 2
+      across_replicas: true
+      repeat: 50
+      requests:
+        - {method: POST, path: "/negotiations/{negotiation_id}/accept", tag: bacp-negotiate, guards_roots: [root_2, root_1]}
+        - {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, root: root_1}
+  expect:
+    responses:
+      - {status: any_of_documented, no_timeout: true}
+    invariants: [INV-NO-RESERVATION-LEFT]
+```
+
+The T0 cases that the registry serial and the new rules touch are changed in place: T0-RT-06 accepts a refusal at `create_session` or at `complete`,
+T0-RT-16 and T0-RT-17 read the registry `serial` where they read a version, and T2-OPS-03b gains a human-present `RAISE_ISSUE`. T0-RT-16b, T0-RT-17b,
+T0-RT-19b, T0-RT-19c and T0-RT-20 are added beside the other T0 cases.

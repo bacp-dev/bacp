@@ -89,7 +89,8 @@ than its parent's.
   "principal": {"ref": "pp_9f2c1e", "assurance": "vpa_pin"},
   "agent": {
     "id": "did:web:agents.vaani.example.in:sakhi",
-    "credential_hash": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM"
+    "credential_hash": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM",
+    "bap_id": "bap.vaani.example.in"
   },
   "purpose": {
     "code": "P-GRO-01",
@@ -174,7 +175,9 @@ Manager** (MM) issues it.
    carries `checkout_mandate_ref` (pattern `^mdt_[A-Za-z0-9]{12,40}$`). A request for a
    payee-bound primitive carries `payee{vpa, bpp_id}`, and a request for a Reserve Pay block also
    carries the block amount it asks for in `rail_limits.block_amount`
-   ([Sibling Payment Mandates](#sibling-payment-mandates)). Proposed: when `action_scope` is omitted, all eight actions (`DISCOVER`,
+   ([Sibling Payment Mandates](#sibling-payment-mandates)). A request that the principal originates on the Trusted Surface to
+   move a mandate to another gateway carries `supersedes{mandate_id}` ([Porting a mandate](#port)); an agent never sends it.
+   Proposed: when `action_scope` is omitted, all eight actions (`DISCOVER`,
    `QUOTE`, `ORDER`, `PAY`, `CANCEL`, `RETURN`, `RAISE_ISSUE`, `SHARE_DATA`) are requested, and the
    Trusted Surface shows that full scope to the principal before approval.
 2. Before anything reaches the Trusted Surface, the gateway or the MM **MUST** reject the request:
@@ -220,27 +223,35 @@ Manager** (MM) issues it.
    compensation, is hashed into the ConsentReceipt `notice`. For a payee-bound primitive the notice also shows the
    payee name the bank returns for `payee.vpa` and the seller's `bpp_id`. For a Reserve Pay block it
    shows the requested block amount and, unless the payer PSP attests a block-debit feed, the
-   unseen-draw statement ([Usage ledger](#usage-ledger)). For a sibling Payment Mandate it shows the
+   unseen-draw statement ([Usage ledger](#usage-ledger)). For a block whose attested funding is credit, the notice says
+   "credit" in the principal's language and, for an interest-bearing credit line, that interest may run from each debit
+   (NPCI UPI Consolidated Circular v1.0, para 26.1.2). For a sibling Payment Mandate it shows the
    other Payment Mandates under the same root, their combined total, and the amount each budget of
    the root has left (its `max` less the root's exposure). The principal approves with an explicit
    action and the rail's own authentication (for UPI, the UPI PIN).
 5. The payer PSP creates or links the rail primitive (for example a Reserve Pay block, a UPI Circle
    delegation or an AutoPay mandate). It **MUST** use a primitive listed in the handler descriptor's
    `binding.open_primitives`, and signs a rail **attestation**: a JWS over
-   `{rail_ref, type, primitive, limits, expiry, payee, funding}`. It **MUST NOT** create a Reserve Pay
+   `{rail_ref, type, primitive, limits, expiry, payee, funding}` (and, for a gift PPI, `custody`). It **MUST NOT** create a Reserve Pay
    block larger than the requested `rail_limits.block_amount`.
 6. The MM checks [handler eligibility](#handler-binding) against the current registry, taken
-   from the dated BACP release or a registry-signed snapshot and never from a gateway endpoint,
-   records that registry's version in `rail_binding.registry_version`, and **MUST** refuse
+   from the dated BACP release and never from a gateway endpoint,
+   records that registry's version in `rail_binding.registry_version` (and, where it reads the release manifest, the
+   `registry_serial` and the digest of the registry file in `rail_binding.registry_serial` and
+   `rail_binding.registry_digest`), and **MUST** refuse
    issuance (`rail_binding_not_open_eligible`) if the attested `primitive` is not in the
    descriptor's `binding.open_primitives`, the descriptor is not open-eligible, or its `status`
    is neither `live` nor an attested `pilot`. For a `pilot` handler the MM **MUST** first verify the
    gateway's [conformance attestation](conformance.md#attestation-rules), forwarded in the request's
    `gateway_attestation`, find the handler in its `pilots[]`, and write `rail_binding.conformance{iss, sub, jti}`
-   into the mandate. The MM then checks that every BACP constraint is at or below the attested rail
+   into the mandate. The MM then copies `agent.bap_id` from the verified AgentCredential's `bap.subscriber_id` into the mandate, never from the
+   request, and checks that every BACP constraint is at or below the attested rail
    limits, and, for a Reserve Pay block, that the attested `block_amount` is at most the requested
    one and that the attested expiry is no later than the root open Checkout Mandate's
-   `valid_until`. It builds the open Checkout and open Payment Mandates, or, for a request with
+   `valid_until`. It refuses an attested `funding` of credit (or a missing one, or an overdraft account without a deposit
+   attestation) when the root lacks `credit_funding_allowed: true`, with `403 credit_funding_not_allowed`
+   ([Handler binding](#handler-binding)), and refuses a gift PPI whose attestation does not state `custody: principal_side`.
+   It builds the open Checkout and open Payment Mandates, or, for a request with
    `checkout_mandate_ref`, only the open Payment Mandate ([Sibling Payment Mandates](#sibling-payment-mandates)).
    If the MM refuses issuance at this step after the rail primitive exists, it **MUST** revoke the
    primitive at the rail and report the outcome in `rail_revocation{status}` on the
@@ -352,7 +363,11 @@ whose budgets cap the total ([Multi-seller basket](checkout/index.md#multi-selle
   Mandate or a second budget for the same basket. `parent_mandate_id` stays reserved for sub-agent
   delegation.
 - **Payee.** An open Payment Mandate whose `rail_binding.primitive` is `sbmd_block` **MUST** carry
-  `payee{vpa, bpp_id}`. A request without it is refused with `403 mandate_scope_mismatch` at
+  `payee{vpa, bpp_id}` and, when the seller's BPP-signed terms name a provider, `payee.provider_id`, which **MUST** equal
+  `message.order.provider.id` of those terms at every leg. A leg whose provider differs is refused with
+  `403 reservepay_block_wrong_payee` and nothing is debited (RBI Master Direction on Payment Aggregators 2025, paras 13(e)
+  and 13(f)); one seller app can serve several shops from one collection VPA, which is why the VPA alone is not enough
+  (whether ONDC seller apps share one VPA is not verified as of 18-10-2026). A request without it is refused with `403 mandate_scope_mismatch` at
   `$.payee`. `payee.vpa` **MUST** equal the VPA in the seller's BPP-signed payment terms (Beckn
   `payments[].params.virtual_payment_address` of `on_init`), and the attested payee **MUST** equal
   `payee.vpa`; otherwise issuance is refused with `400 rail_binding_not_open_eligible` and nothing
@@ -399,7 +414,8 @@ whose budgets cap the total ([Multi-seller basket](checkout/index.md#multi-selle
   `403 mandate_scope_mismatch` at `$.checkout_mandate_ref` (use `checkout_mandate_ref` to add a
   seller to an existing root), unless the notice the principal approves for it states the budgets of
   every other `ACTIVE` root and the combined total of all of them. A root at another Mandate Manager
-  is outside this rule (the [budgets across gateways](open-questions.md#q-36) question).
+  is outside this rule: each open mandate belongs to one gateway (`agent.bap_id`), and a move to another gateway is a
+  successor root ([Porting a mandate](#port)).
 - **Unconfirmed blocks outlive their root.** A block whose rail revocation is still `unconfirmed`
   when its root ends counts as exposure against every new root of the same principal (by the key
   above) until the MM reports it `confirmed` or the block expires. A PSP that never confirms can
@@ -409,6 +425,35 @@ whose budgets cap the total ([Multi-seller basket](checkout/index.md#multi-selle
 - **Set-up outside a checkout.** A principal may set up a block for a seller in advance, outside any
   checkout, through this request. The rule that a new block is offered only beside a one-time
   human-present payment ([Per-leg rule](#per-leg-rule), 3b) does not apply to such a set-up.
+
+### Porting a mandate to another gateway {#port}
+
+A principal who changes buyer app or gateway does not move an open mandate: the mandate is bound to one gateway
+(`agent.bap_id`), and a **successor root** replaces it.
+
+- **Principal-initiated, on the Trusted Surface only.** The principal approves the successor on the Trusted Surface, on
+  the same terms as any issuance ([Issuance](#issuance)). The successor carries `supersedes{mandate_id}`, and the MM
+  revokes the superseded root, with its siblings and their blocks as in [Revocation](#revocation), before the successor
+  becomes `ACTIVE`. A `MandateRequest` that an agent or a gateway submits with `supersedes` is refused with
+  `403 trusted_surface_only`. A support operator or an assisted operator never ports a mandate for a principal.
+- **No prompt and no cap.** A gateway **MUST NOT** prompt or induce a port, for example by lowering a limit, adding a
+  friction or offering a reward for it. BACP sets no numeric cap on ports: the UPI AutoPay rule that a port can be done
+  three times in a rolling 90-day period binds UPI members, not BACP (NPCI UPI Consolidated Circular v1.0, para 14.24.4).
+- **The carried spend.** The MM signs the spend that the principal has already made into the successor as
+  `carried_exposure[]{period, window_start, amount, source}`, derived from its own `use` events
+  ([Mandate events](#mandate-events)). The successor's windows start at that spend, so a port never restores budget.
+  No statement of the gateway that is being left is needed, so that gateway cannot hold the principal back by staying
+  silent. For a window in which the MM's record has a gap, `source` is `incomplete`: the Trusted Surface says so in the
+  principal's language and pre-fills that window at the superseded root's `max`. The principal may change any pre-filled
+  figure before approving, because the cap is the principal's own, and the change is accepted only with the principal's
+  own factor.
+- **Reserve Pay blocks.** A successor MAY re-bind a block of its predecessor when the payer PSP signs a fresh
+  attestation for the same block. A re-bound block is not revoked with the predecessor, its exposure moves to the
+  successor inside the root's atomic section, and it never counts on both roots. Where the payer PSP does not re-attest,
+  the old block is revoked and a new one is created, which asks the principal for the UPI PIN once for each seller, and
+  both blocks count as exposure while a revocation is `unconfirmed`. Whether payer PSPs re-attest is open with NPCI.
+- **Revocation parity.** No BACP route to revoke or move a mandate needs more steps or factors than the rail's own
+  withdrawal ([Revocation](#revocation)).
 
 ### Purpose bounds {#purpose-bounds}
 
@@ -633,6 +678,16 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   `binding.open_primitives`. `rail_binding.primitive` **MUST** be one of them, and the PSP
   attestation **MUST** cover it. For example, `in.ppi.wallet` lists only `ppi_emandate`, so a
   wallet balance (`balance_cap`) never backs an open mandate.
+- **Funding.** The PSP attestation states `funding` as `deposit` or `credit`. A savings or current account is deposit; a
+  RuPay credit card or a pre-sanctioned credit line is credit; an overdraft account is credit unless the PSP attests
+  deposit; and a missing `funding` is treated as credit. An attested `credit` without `credit_funding_allowed: true` on the
+  root gets `403 credit_funding_not_allowed` at issuance, where the MM sends `mandate.rejected` with `rail_revocation`, and at
+  `complete` on an existing mandate. A block that is refused after the rail call counts as exposure until its revocation is
+  confirmed ([Usage ledger](#usage-ledger)).
+- **Gift PPI custody.** `in.ppi.gift` is open-eligible only when the PSP attestation states `custody: principal_side`, that is,
+  that the vault of the gift code is on the principal's side (the Trusted Surface or the payer PSP). With `custody:
+  gateway_side`, or none, the MM refuses issuance with `rail_binding_not_open_eligible`, because the agent's side would
+  hold the code. A gift PPI then remains usable human-present.
 - Schema validity is not eligibility. After alias resolution the handler's descriptor **MUST**
   have `open_eligible: true`, **MUST** list `rail_binding.primitive` in `binding.open_primitives`,
   and **MUST** have `status: live`, or `status: pilot` only where the gateway's
@@ -646,10 +701,15 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   [conformance-authority list](conformance.md#conformance-authority-list) has no entry, no attestation verifies, so an MM refuses open mandates
   on every `pilot` handler, including `in.upi.circle` and `in.card.agentic`.
 - **Registry source.** The MM and the gateway **MUST** take the registry from the dated BACP
-  release (its `source/handlers/registry.json`) or from a snapshot signed by the registry, and
-  **MUST NOT** take it from a gateway endpoint such as `GET /payment-handlers`, which is unsigned
-  ([Discovery](discovery.md)). The MM records the version it checked against in
-  `rail_binding.registry_version`.
+  release (its `source/handlers/registry.json`), and **MUST NOT** take it from a gateway endpoint such as
+  `GET /payment-handlers`, which is unsigned ([Discovery](discovery.md)). There is no registry-signed snapshot,
+  because no party holds a registry signing key. Each publication of the registry files, including a backport that
+  amends a dated release in place, is described by the release manifest `source/handlers/release.json`
+  ([`registry-release.json`](https://bacp.dev/schemas/registry-release.json)): `registry_version`, a strictly increasing
+  `registry_serial` (at least 1), `published_at` (IST, `+05:30`) and `files[]` with the `sha-256` digest of each file over
+  its JCS form. A reader that wants to prove which copy it used compares that digest. The MM records the version it
+  checked against in `rail_binding.registry_version`, and MAY also record `rail_binding.registry_serial` and
+  `rail_binding.registry_digest`.
 - **The attestation is bound into the mandate.** On a pilot handler the open Payment Mandate carries
   `rail_binding.conformance{iss, sub, jti}`: the conformance authority, the gateway and the attestation's `jti`. The
   schema leaves it optional, and a conformance rule makes it REQUIRED for every pilot binding
@@ -659,9 +719,10 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   at issuance. The gateway **MUST** re-check it at step 1 of [Deterministic evaluation](#evaluation)
   on every `complete`, against the current registry, never against a copy taken when the mandate
   was issued.
-- **24-hour freshness.** A gateway **MUST** adopt a status downgrade within 24 hours of the release
-  or snapshot that makes it. It **MUST** refuse an HNP `complete` on a handler whose descriptor copy
-  it last refreshed from the registry source more than 24 hours earlier, with
+- **24-hour freshness.** A gateway **MUST** adopt a status downgrade within 24 hours of the `published_at` of
+  the publication that makes it. It **MUST** refuse an HNP `complete` on a handler whose descriptor copy
+  it last refreshed from the registry source more than 24 hours earlier, or whose copy carries a lower `registry_serial`
+  than a publication whose `published_at` is more than 24 hours past, with
   `400 rail_binding_not_open_eligible`, `reasons: [registry_copy_stale]` and
   `resolution: recoverable`. A stale copy is a gateway condition, not a fault of the binding: the
   gateway does not pause the mandate, the agent retries later without involving the principal, and
@@ -670,7 +731,7 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   conformance attestation, makes the binding of a mandate ineligible (for example a handler moved
   from `live` to `pilot` without an attested pilot, or to `reserved` or `deprecated`), the gateway
   **MUST** add the pause reason `binding_ineligible` to every affected mandate, recording the
-  `registry_version` of the release or snapshot that made the binding ineligible. If the mandate
+  `registry_version` and `registry_serial` of the publication that made the binding ineligible. If the mandate
   was `ACTIVE`, it becomes `PAUSED` and the gateway sends `mandate.status_changed` (`PAUSED`,
   `reason: binding_ineligible`, with `pause_reasons` and `affected_sessions`) to the agent and
   cancels every open session under the mandate with the message `rail_binding_not_open_eligible`.
@@ -692,32 +753,49 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
   mandate stay allowed with `presence: HP` ([Post-order gate](checkout/post-order.md#post-order-gate)).
 - **Pause reasons form a set.** A paused mandate carries the set of reasons for which it is paused:
   `principal_paused` (a pause by the principal on the Trusted Surface), `binding_ineligible`,
-  `reissue_required` (below) and `unmatched_rail_debit` (a debit on a Reserve Pay block that matches
-  no BACP payment, [Usage ledger](#usage-ledger)). The mandate stays `PAUSED` while any reason remains. A principal pause
+  `reissue_required` (below), `unmatched_rail_debit` (a debit on a Reserve Pay block that matches
+  no BACP payment) and `block_modified` (a reported increase of a block that breaks the sum of blocks or the root's
+  headroom), the last two in the [Usage ledger](#usage-ledger). The mandate stays `PAUSED` while any reason remains. A principal pause
   that arrives while a binding pause is in force is added to the set, never dropped, and a binding
   pause that arrives while the principal has paused the mandate is added in the same way. Only the
-  principal, on the Trusted Surface, removes `principal_paused` and `unmatched_rail_debit`. The gateway removes only
-  `binding_ineligible`, and only on a registry version strictly newer than the one recorded for the
-  pause in which the binding is eligible again (or, for a pause caused by the gateway's conformance
+  principal, on the Trusted Surface, removes `principal_paused`, `unmatched_rail_debit` and `block_modified`. The gateway
+  removes only `binding_ineligible`, and only on a `registry_serial` strictly greater than the one recorded for the
+  pause, at which the binding is eligible again (a later publication of the same `registry_version`, such as a backport, has
+  a greater serial and lifts the pause) or, for a pause caused by the gateway's conformance
   attestation, a newer attestation from the same authority (`iss` equal to `rail_binding.conformance.iss`), whose `sub`
   is the gateway itself, that lists the bound handler and passes every check in
   [At `complete`](conformance.md#attestation-rules); an attestation from another authority does not lift the pause, and
-  the principal's Mandate Manager issues a new mandate instead, under every issuance rule); a replica that still holds the recorded
-  or an older version **MUST NOT** remove it. When the last reason is removed the mandate returns to `ACTIVE`
+  the principal's Mandate Manager issues a new mandate instead, under every issuance rule. A replica that still holds the recorded
+  or a lower serial **MUST NOT** remove it. When the last reason is removed the mandate returns to `ACTIVE`
   and the gateway sends `mandate.status_changed` (`ACTIVE`) to the agent; a change to the set of a
   mandate that stays `PAUSED` is sent as `mandate.status_changed` (`PAUSED`) with the new
   `pause_reasons`. While a binding reason is in the set, `complete` gets
   `400 rail_binding_not_open_eligible` at step 1 of [evaluation](#evaluation); when only
-  `principal_paused` or `unmatched_rail_debit` remain, it gets `403 mandate_paused`.
-- **The Mandate Manager is not notified by the gateway.** The MM reads the same registry and can
-  detect the change itself; a gateway-to-MM event is not defined in `2026-10-17`
-  ([Q-61](open-questions.md#q-61)). For a pilot binding the MM **MUST** read the attestation's status list itself
-  and does not rely on the gateway's report; the event that would carry it stays open under Q-61. The gateway **MUST**
+  `principal_paused`, `unmatched_rail_debit` or `block_modified` remain, it gets `403 mandate_paused`.
+- **The gateway tells the Mandate Manager.** Every use of the mandate, every relinquishment at the gateway and every
+  addition or removal of a gateway-originated pause reason (`binding_ineligible`, `reissue_required`) is reported as a
+  [`MandateEvent`](#mandate-events) to the mandate's `audit_uri`, so that the Trusted Surface can show the principal why
+  the agent cannot pay and can offer re-issue ([Q-61](open-questions.md#q-61), settled). The Mandate Manager derives
+  two causes itself: a change of registry status (it reads the same registry) and a pause that follows its own issuance
+  record. It learns the others only from the event: an attestation swap (a binding pause caused by the gateway's own
+  attestation) and `unmatched_rail_debit`, which also needs a block-debit feed ([Q-10](open-questions.md#q-10)). For a
+  pilot binding the MM **MUST** read the attestation's status list itself and does not rely on the gateway's report.
+  The gateway **MUST** also
   record every addition and removal of
   `binding_ineligible` or `reissue_required` as an InstructionLog entry at stage `mandate`
-  (actor `gateway`) whose content carries the reason, the `registry_version` and, for a lapsed attestation, its `jti`, in the chain of
+  (actor `gateway`) whose content carries the reason, the `registry_version`, the `registry_serial`, the `registry_digest` of the registry file checked and, for a lapsed attestation, its `jti`, in the chain of
   every session the change cancels, and otherwise in the `mandate` entry of the next session
   opened under the mandate ([Evidence](evidence.md#stages)).
+- **Reasons are ordered.** When several apply, `reasons[]` of a `rail_binding_not_open_eligible` error lists them with
+  `reissue_required` first, then `binding_ineligible`, then `registry_copy_stale`, then `attestation_status_stale`, and
+  the `resolution` is that of the first.
+- **The agent cross-checks the claim.** The agent checks `reissue_required` and `binding_ineligible` against the mandate
+  that it holds. A mandate that carries `rail_binding.primitive` and `rail_binding.registry_version` is not one that
+  needs a re-issue, so a gateway's `reissue_required` for it is a claim that the agent can disprove. A claim that the
+  agent can disprove is a gateway fault: the agent sends no `POST /mandates`, records `gateway_fault` as the reason in the
+  `mandate` entry of its InstructionLog and tells the principal that the gateway refused the payment. The same holds for
+  every other non-recoverable `rail_binding_not_open_eligible`: the agent never turns it into a re-issue or resume
+  request without a new instruction from the principal.
 - **The agent does not turn a binding pause into a request.** This binding pause is not a
   principal pause: the principal does not resume it. On `binding_ineligible` the agent **MUST NOT**
   open a Trusted-Surface resume request or a re-issue request (`POST /mandates`) unless the
@@ -747,11 +825,11 @@ authority (one of its `mandate_primitives[].type`). Handlers are grouped into bi
     pilot-gated ([Q-39](open-questions.md#q-39)), and `in.erupi` is `pilot` until
     [Q-38](open-questions.md#q-38) is answered.
 
-!!! warning "Proposed"
+!!! note "Settled"
     `in.store_credit` and `in.loyalty` (limits enforced by the merchant) and `bacp.credit_ledger`
-    (limits enforced by BACP) are class O but have `open_eligible: false` in `2026-10-17`. Letting
-    them back open mandates is Proposed and waits for [Q-59](open-questions.md#q-59) and
-    [Q-46](open-questions.md#q-46).
+    (limits enforced by BACP) are class O but have `open_eligible: false` and `hnp: none`. Letting
+    them back open mandates is closed in this release ([Q-59](open-questions.md#q-59) and
+    [Q-46](open-questions.md#q-46), settled); the conditions for opening them later are Proposed text in Q-59.
 
 ### Per-leg payment rule for a multi-seller basket {#per-leg-rule}
 
@@ -764,7 +842,11 @@ presence ([handler intersection](payments/index.md#handler-intersection-and-pref
    handler intersection. No other rung ranks above it.
 2. **The seller's existing payee-bound instrument (3a).** An `ACTIVE` sibling open Payment Mandate
    under the basket's root whose `payee` is this seller, for example a Reserve Pay block the
-   principal already holds for it.
+   principal already holds for it. A block backs a leg only if the leg's fresh BPP-signed `on_init` names the VPA
+   that equals `payee.vpa`; otherwise the rung is skipped with `comparison[].reason: payee_terms_changed`. Held terms are
+   usable only until the `expires` of their Beckn `Authorization`. A terms-only `init` that obtains terms carries no
+   personal data of the principal beyond what the network requires (whether the network lets billing details be omitted is
+   open with ONDC).
 3. **A gift PPI the principal designated.** An `ACTIVE` sibling open Payment Mandate bound to
    `in.ppi.gift` under the root.
 4. **One planned human-present step.** If any leg is left without an HNP handler, the gateway raises
@@ -789,9 +871,16 @@ Rules on the order:
   ([Sibling Payment Mandates](#sibling-payment-mandates)).
 - **Fallback is a step-up.** When a leg cannot be paid with the handler first planned for it (the
   principal's preference, or the rung the principal last approved), and the replacement changes the
-  leg's funding (deposit or credit), [fee-bearer](#fee-bearer-change), payee or collector, the gateway raises a
-  `rail_fallback` step-up and moves no money. A change of rail alone, with none of those changing, is
-  logged in `comparison[]` and raises no step-up.
+  leg's funding class, [fee-bearer](#fee-bearer-change), payee or collector, the gateway raises a
+  `rail_fallback` step-up and moves no money. The funding class is read from the **attested** funding and is one of
+  `own_deposit` (deposit-funded: `debit`, and `cbdc`), `prepaid` (`prepaid` and `voucher`) and `borrowed` (`credit`, `loan`
+  and `trade_credit`). Prepaid is a class of its own because the principal's recourse differs: a failed on-us PPI payment is
+  reversed by T+1 and a failed UPI merchant payment by T+5 (RBI/2019-20/67, Annex rows 8(b) and 4(b)), a refund goes back to the
+  PPI (PPI Master Direction para 14.3(a)), and the complaint goes to the issuer within 48 hours to 30 days (para 16.2(e)).
+  The payee is compared by the VPA **and** by the pair `(bpp_id, provider_id)`, and the collector stays in the trigger,
+  because a different payee or collector changes who the principal pays and who must refund, which no budget or rail cap
+  shows. A change in a charge shown to the payer is already covered by the fee-bearer. A change of rail alone, with none of
+  those changing, is logged in `comparison[]` with `reason: rail_only_change` and raises no step-up.
 - **No re-route of an in-doubt leg.** A leg whose payment is `in_doubt` **MUST NOT** be re-routed to
   another handler, and no new debit is attempted for it, until reconciliation resolves it
   ([Failed payments](payments/index.md#failed-payments-tat-and-auto-reversal)).
@@ -824,7 +913,7 @@ There are three kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
-| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), a convenience fee that the mandate's [`convenience_fees`](#constraints) does not cover in HNP, an operator charge that the mandate's `operator_compensation` does not cover, the HNP `payment_mode_fee_inconsistent` warning ([Fees on the payer's screen](checkout/index.md#fee-lines)), an order that a seller's [`requires_principal_confirmation`](discovery.md#principal-confirmation) covers, or any check the gateway cannot resolve. `seller_confirmation`: a BPP-signed `on_select` or `on_init` carries the `bacp` tag `seller_confirmation`, so the seller's request for the buyer's own confirmation reaches the principal as a template sentence ([Seller refusals and substitution](transports/beckn.md#seller-reasons)); at most one per `checkout_hash`. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, [fee-bearer](#fee-bearer-change), payee or collector ([Per-leg rule](#per-leg-rule)). |
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), a convenience fee that the mandate's [`convenience_fees`](#constraints) does not cover in HNP, an operator charge that the mandate's `operator_compensation` does not cover, the HNP `payment_mode_fee_inconsistent` warning ([Fees on the payer's screen](checkout/index.md#fee-lines)), an order that a seller's [`requires_principal_confirmation`](discovery.md#principal-confirmation) covers, or any check the gateway cannot resolve. `seller_confirmation`: a BPP-signed `on_select` or `on_init` carries the `bacp` tag `seller_confirmation`, so the seller's request for the buyer's own confirmation reaches the principal as a template sentence ([Seller refusals and substitution](transports/beckn.md#seller-reasons)); at most one per `checkout_hash`. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes the funding class, [fee-bearer](#fee-bearer-change), payee or collector ([Per-leg rule](#per-leg-rule)). |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
 | `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per `(agent, principal)` and per order (`429` with `Retry-After`); a replacement for a step-up voided after a counterparty revised the issue's `resolution` is not counted there and is capped per `(principal, issue_id)`; and a repeat after an explicit decline waits out the published cool-off (`409`) ([Limits on step-ups](human-participants.md#step-up-limits)). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 
@@ -909,10 +998,13 @@ per leg the approval covers.
 **Split-order detection.** To stop an agent splitting one purchase into several orders that each
 stay under `step_up.above_amount`, the gateway **MUST** escalate (`confirm`,
 `above_step_up_threshold`, with message `split_order_suspected`) any order where the other orders
-under the same open mandate **to the same BPP**, completed or in flight within the previous 10
-minutes, plus this order, exceed `above_amount`. The check runs inside the atomic section
+under the same root open Checkout Mandate **to the same seller**, completed or in flight within the previous 10
+minutes, plus this order, exceed `above_amount`. The seller is identified by the tax id (the GSTIN) in the BPP-signed
+terms, else by the payee VPA, else by the pair `bpp_id` and `provider_id`, so that one shop that signs on through two
+seller apps is one seller. The `covers[]` legs of a summary-approved basket are exempt, because the principal has approved each of
+them. The check runs inside the atomic section
 ([Usage ledger](#usage-ledger)) and before rail caps. Velocity across different sellers is bounded
-only by the budgets; a cross-seller signal is open ([Q-50](open-questions.md#q-50)).
+only by the budgets ([Q-50](open-questions.md#q-50), settled).
 
 ## Deterministic evaluation {#evaluation}
 
@@ -938,7 +1030,10 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
    `mandate_schema_invalid`.
 2. **Open mandate.** The principal and MM signatures verify (`403 mandate_invalid_signature`).
    The rail attestation verifies and matches the binding. The status list does not mark the
-   mandate revoked (`403 mandate_revoked`). `status` is `ACTIVE` (otherwise `mandate_revoked`,
+   mandate revoked (`403 mandate_revoked`). The mandate belongs to this gateway: `agent.bap_id` equals the subscriber id of
+   this gateway's BAP (`403 mandate_scope_mismatch` at `$.agent.bap_id`), or, for a mandate issued without `agent.bap_id`,
+   the hash of the presented AgentCredential equals `agent.credential_hash` (the same error at `$.agent.credential_hash`).
+   `status` is `ACTIVE` (otherwise `mandate_revoked`,
    `mandate_paused`, `mandate_exhausted`, `mandate_expired`, or `mandate_required` for `PENDING`
    and `REJECTED`). The current time is within `valid_from` to `valid_until`
    (`mandate_expired`). The action is in `action_scope` (`mandate_scope_mismatch`).
@@ -949,7 +1044,9 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
    closed Payment Mandate that carries `tender{plan_hash, tender_id}`, the amount of that tender of
    the session's payment plan ([Wire binding of plans](payments/credit-and-split-tender.md#plan-wire)). The
    payee matches. `checkout_mandate_ref` links the pair. An HNP `auth_binding.type` is
-   `parent_rail_binding`. The closed Payment Mandate has not been used. Any mismatch gives
+   `parent_rail_binding`. The closed Payment Mandate has not been used, and no reservation or settled debit exists for this
+   `checkout_hash` under the root open Checkout Mandate (for each tender under a payment plan). The gateway makes the
+   check inside the root's atomic section, so that of two parallel `complete` calls one wins. Any mismatch gives
    `403 mandate_scope_mismatch`.
 5. **Constraints.** In order: `categories_deny`, `categories_allow`, `merchants_allow`,
    `delivery_pincodes`, `line_items`, `amount_per_txn` (`mandate_scope_mismatch`); then each
@@ -974,10 +1071,11 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
 11. **Evidence.** The session's InstructionLog chain verifies and its head matches
     (`403 log_chain_invalid`; see [Evidence](evidence.md#chain-verification)).
 12. **Collector.** On `complete`, the party in `collected_by` is an RBI-authorised payment
-    aggregator or a bank, according to its registry attribute (`403 collector_not_authorised`).
+    aggregator or a bank, according to a `verified` `rbi_pa` or `bank` entry in the `regulatory_status` of its registry
+    record (`403 collector_not_authorised`). A `declared` entry, or none, fails.
 13. **Commit.** Consume the closed Payment Mandate (one use) and any `covers[]` entry used at step 8,
     create the budget reservation, move the session to `complete_in_progress`, increment
-    `usage.count` and report the use to `audit_uri`.
+    `usage.count` and report the use to `audit_uri` as a [`MandateEvent`](#mandate-events) of type `use`.
 
 Every amount in steps 0, 4, 5, 7 and 8 is the BPP-signed quote total **after** discounts ([Discounts](checkout/index.md#discounts)).
 
@@ -993,12 +1091,21 @@ is a read-only view of it.
 - **Settled spend comes only from PSP-signed receipts.** A budget decrements only when the gateway
   applies a successful payment Receipt whose signature verifies against a registry key of role PSP
   and whose `open_mandate_ref` (or `mandate_ref`) is this mandate. Agent claims never change
-  usage. A receipt that fails these checks is refused (`400 receipt_invalid`).
+  usage. A payment success or failure receipt applies only when it is signed by the PSP of the closed Payment Mandate's
+  `auth_binding.psp_id` (for an HNP payment, the `rail_binding.psp_id` of the open Payment Mandate), so that another
+  PSP's key never releases or settles a reservation. A refund receipt applies only to a payment of the same
+  `checkout_hash` and payee, which it names by `original_rrn` ([Refund receipts](evidence.md#refund-receipts)). Each
+  `receipt_id` and each rail reference is applied once. A receipt that fails these checks is refused
+  (`400 receipt_invalid`) and the reservation stays.
 - **Reservations.** For every open Payment Mandate the ledger also holds in-flight reservations,
   keyed by closed Payment Mandate id, each with an amount and a time. Exposure is settled spend
   plus reservations. Exposure against an open Checkout Mandate's budgets is the settled spend and
   reservations of every open Payment Mandate under it. Budgets, `max_executions`, every rail-cap
-  pre-check and split-order detection **MUST** count reservations as spent.
+  pre-check and split-order detection **MUST** count reservations as spent. A firm ACCEPT, counter-offer or bid that the
+  [negotiation guard](negotiation/index.md#per-principal-exposure) emits holds a reservation keyed by its `offer_hash`. The
+  gateway writes it into the ledger of the root open Checkout Mandate, so that exposure inside the root's atomic section
+  counts it. A `complete` of the negotiated deal converts that reservation into the reservation of the closed Payment
+  Mandate, in one step inside the same section, and never counts both.
 - **Atomic section.** For `complete`, steps 5 to 8 and 13 of
   [Deterministic evaluation](#evaluation) **MUST** run as one atomic, linearisable operation keyed
   on the **root open Checkout Mandate**: the open Checkout Mandate named by the open Payment
@@ -1013,7 +1120,8 @@ is a read-only view of it.
   ([Presence proof](human-participants.md#hp-proof)).
 - **Blocks are exposure.** A Reserve Pay block is a pull authority: the seller may debit it several
   times. Each block bound by an open Payment Mandate under the root counts as **reserved spend at
-  its full attested `block_amount`** in every budget window it overlaps, from activation until its
+  the larger of its attested `block_amount` and the settled debits matched to it plus the reservations on it**
+  in every budget window it overlaps, from activation until its
   revocation at the rail is confirmed (`rail_revocation.status: confirmed`) or it expires, and after
   its root ends it counts against any new root of the same principal
   ([Sibling Payment Mandates](#sibling-payment-mandates)). A block that a `mandate.rejected` or
@@ -1035,10 +1143,20 @@ is a read-only view of it.
   Consolidated Circular v1.0, para 16.10). Where no such feed is attested, the gateway cannot see
   such a debit. The **unseen-draw statement** then says, in the principal's language, that this
   seller can draw up to ₹X unseen by BACP, where X is the block's attested amount less the matched
-  debits (at issuance, the requested block amount), and that the seller can change the block's amount or validity (Consolidated Circular
-  para 16.9). It appears in the notice of the block's issuance ([Issuance](#issuance), step 4) and
+  debits (at issuance, the requested block amount), and that the principal can change the block's amount or validity
+  through the seller's platform, which the payee PSP must offer (Consolidated Circular para 16.9), a change that BACP does
+  not see. It appears in the notice of the block's issuance ([Issuance](#issuance), step 4) and
   in the `ts_render` of every step-up that lists the block. The form of a block-debit feed and of
-  its attestation is not defined in this version ([Q-10](open-questions.md#q-10)).
+  its attestation is not defined in this version ([Q-10](open-questions.md#q-10), whose scope includes modifications of a block).
+- **Block modification.** An agent **MUST NOT** request a modification of a block: a request from an agent gets
+  `403 trusted_surface_only`. Where the payer PSP attests a block-debit feed it MAY also report a modification as the
+  event `rail.block_modified` (`mandate_id`, the new `block_amount` and, if it changed, `block_expires_at`), signed by the
+  registry key of the PSP named in `rail_binding.psp_id` and posted to `POST /trusted-surface/events`. The gateway applies it
+  inside the root's atomic section, so the block counts at the larger of the new amount and its matched debits plus
+  reservations. An increase that breaks the [sum-of-blocks rule](#sibling-payment-mandates) or the root's headroom adds the
+  pause reason `block_modified`; only the principal, on the Trusted Surface, removes it, by approving the modified block
+  against a fresh PSP attestation. Where no feed is attested, a modification made on the seller's app is invisible to BACP,
+  as the unseen-draw statement says.
 - **Resolution.** A reservation becomes settled spend only when a PSP-signed success receipt is
   applied. It is released on a PSP-signed failure receipt or a refused debit. While a payment is
   `in_doubt` its reservation is kept until reconciliation resolves it. When every payment on a
@@ -1049,8 +1167,11 @@ is a read-only view of it.
   BACP budgets. A rail authority can be far larger than the budget.
 - **Replicas.** A gateway that runs as several instances **MUST** share the ledger and keep it
   linearisable per root open Checkout Mandate (a single writer or a transactional store). A
-  per-process lock is not enough. Keeping budgets atomic across gateways, for a principal with two
-  BAPs, is open ([Q-36](open-questions.md#q-36)).
+  per-process lock is not enough. The order of the principal-keyed section and the root's section is in
+  [Atomic reservation](security-and-privacy.md#atomic-reservation). Budgets are atomic per root inside one gateway,
+  and one open mandate belongs to one gateway (`agent.bap_id`), so a principal with two BAPs cannot spend one
+  mandate through both; a mandate moves between gateways only by a successor root ([Porting a mandate](#port),
+  [Q-36](open-questions.md#q-36), settled).
 
 **Conformance.** N concurrent `complete` calls on one open mandate, or on sibling open Payment
 Mandates under one open Checkout Mandate, **MUST NOT** settle more than any `budgets[].max` allows,
@@ -1062,9 +1183,32 @@ behind.
 `Amount.value` keeps `minimum: 0` in the schemas for values that may legitimately be zero, such as
 a free line or a remaining budget.
 
-**Refunds do not restore budget.** A refund, whether from a cancellation, a return or a failed
+**Refunds do not restore budget, with one narrow exception.** A refund, whether from a cancellation, a return or a failed
 confirmation, **MUST NOT** reduce settled spend or restore any budget or `max_executions` count.
 This is fail-safe: an agent cannot cycle purchases and returns to exceed its authority.
+
+The exception is a debit that bought nothing. The gateway releases the spend of a debit, and the budget headroom and
+`max_executions` count it took, when all of these hold:
+
+1. the debit is a `debited_not_confirmed` debit with no `order_id`, or its order was cancelled by a BPP-signed `on_cancel`
+   before fulfilment;
+2. the debit is refunded in full to its source, and the refund is **settled**, not merely started; and
+3. the evidence is either (a) a refund receipt signed by the PSP of the closed Payment Mandate's `auth_binding.psp_id` (for an
+   HNP payment, the `rail_binding.psp_id`) that cites `original_rrn` for the full amount, or (b) a refund receipt signed by the
+   registered PSP of the order's `collected_by` that cites `original_rrn` for the full amount, **and** the principal's
+   confirmation on the Trusted Surface that the credit arrived (a `confirm` step-up with reason `refund_received`, whose
+   render says "I have received ₹X" in the principal's language, and whose approval is the principal's own factor).
+
+A receipt of the collector's PSP alone moves the session to `reversed` and leaves the spend in place until the principal
+confirms, so that a seller with an insider at its payment aggregator cannot restore the budget by forging a refund. A
+partial refund, a refund to anything but the source (for example into `in.store_credit`) and a refund on initiation alone
+release nothing. While such a reversal is unresolved, that is while the session is `reversal_pending`, the gateway
+refuses every further human-not-present debit to that seller under the root with `403 mandate_scope_mismatch` and
+`reasons: [seller_reversal_unresolved]`. A human-present payment to the seller, and any payment to another seller, is
+unaffected, and the hold ends when the session reaches `reversed`. A late `on_confirm` after a reversal has begun is
+answered with a Beckn `cancel`, logged, and never debited again; whether a late `on_confirm` forms a contract is for
+counsel ([Q-52](open-questions.md#q-52)). Whether the hold is a ranking parameter that a gateway that is an e-commerce
+entity must disclose from 01-01-2027 is for counsel ([Q-66](open-questions.md#q-66)).
 
 **`budget_after`.** After applying a receipt the gateway computes the remaining amount of each
 budget from its ledger and returns it, unsigned, as `session.payment.budget_after` and as an `info`
@@ -1094,6 +1238,35 @@ sequenceDiagram
     S-->>G: on_confirm with order id
     G-->>A: completed with order, receipt and budget_after
 ```
+
+## Mandate events {#mandate-events}
+
+Step 13 of [evaluation](#evaluation) already requires the gateway to report a use to the mandate's `audit_uri`, the
+endpoint of the Mandate Manager that issued it. This section gives that report its payload. It adds no endpoint to the
+Mandate Manager's API: the `audit_uri` is the one the mandate already carries
+(component `MandateEvent` and webhook `mandate.event` of the [OpenAPI document](https://bacp.dev/latest/services/bacp.openapi.yaml)).
+
+- **Types.** `use` (a closed Payment Mandate was consumed, with its `amount`), `relinquished` (the agent gave up the
+  mandate or its root at the gateway) and `pause_changed` (a gateway-originated pause reason was added or removed, with
+  `change`, `reason`, `registry_version`, `registry_serial` and, for an attestation, `jti`).
+- **Fields.** `event_id`, `mandate_id`, `root_mandate_id`, `gateway` (the BAP subscriber id), `created_at` (IST,
+  `+05:30`), `seq` and `prev_hash`. The events of one `mandate_id` are numbered from 0 with no gap, and `prev_hash` is
+  the `sha-256` over the JCS form of the previous event of that mandate (for `seq` 0, over the `mandate_id` as UTF-8
+  bytes), as the InstructionLog does for a session.
+- **Signature.** The gateway signs the event under RFC 9421 with the registry key of its BAP, under the tag
+  `bacp-mm-event` ([Signature tags](identity-and-signing.md#signature-tags)). The tag is never an agent tag, and an agent
+  key never signs it. The Mandate Manager refuses an event, and records nothing, when the BAP of the signing key is not
+  `gateway` or is not the mandate's `agent.bap_id` (for a legacy mandate without one, the BAP of the credential whose
+  hash the mandate carries).
+- **Delivery.** Within 60 seconds of the change, the bound that `revocation.notify_sla_seconds` already sets. A failed
+  delivery is retried with the same `event_id`, and the Mandate Manager de-duplicates on it. A delivery failure **MUST
+  NOT** block a refund, a reversal, a status check or a post-order write, and no payment depends on an event.
+- **Gaps.** When the Mandate Manager receives a `seq` after a missing one, it records `event_gap` for the mandate and the
+  Trusted Surface shows the mandate as "unreconciled". An unreconciled mandate loses only the explanation of why
+  payments paused. A window of spend that the Mandate Manager cannot reconstruct from its events is `incomplete`.
+- **Log.** The Mandate Manager's event store is the mandate-scoped log, kept for the mandate's retention period. The
+  gateway keeps writing the addition and removal of a pause reason to the InstructionLog of the session that it cancels,
+  or to the `mandate` entry of the next session under the mandate, and adds a reference to the `MandateEvent` to it.
 
 ## Revocation, pause and expiry {#revocation}
 
@@ -1145,21 +1318,27 @@ stateDiagram-v2
   block, shows the principal the route to revoke it in the UPI app, where the payee PSP and the UPI
   app must provide a revoke facility (NPCI UPI Consolidated Circular v1.0,
   para 16.10). The gateway treats every sibling as revoked as soon as it learns that the root has
-  ended, without waiting for the MM's events. How the MM learns of a relinquishment made at the
-  gateway is not defined in this version ([Q-61](open-questions.md#q-61)).
+  ended, without waiting for the MM's events. A relinquishment at the gateway reaches the MM as a `MandateEvent` of type
+  `relinquished`, sent within 60 seconds ([Mandate events](#mandate-events)). A relinquishment of a root that has
+  blocks is not complete for the principal until the MM reports `rail_revocation` for each of them. Until then the agent
+  **MUST** give the principal the Trusted Surface revoke route for the block, and the MM answers the relinquishment with
+  `mandate.revoked` events that carry `cascade_of` and `rail_revocation{status}`. The gateway sends
+  `mandate.status_changed` to the agent for a gateway-originated change within the same 60 seconds. No BACP route to
+  revoke needs more steps or factors than the rail's own withdrawal (NPCI UPI Consolidated Circular v1.0, paras 14.23 and
+  16.10).
 - A **binding pause** is different. The gateway adds the reason `binding_ineligible` when a
   mandate's rail binding stops being eligible after a registry or conformance-attestation change,
   and `reissue_required` to an open Payment Mandate issued without `rail_binding.primitive` or
   `rail_binding.registry_version`. Sessions are cancelled with `rail_binding_not_open_eligible`,
   and while a binding reason is in the set, `complete` returns
   `400 rail_binding_not_open_eligible`, not `mandate_paused`. The gateway removes
-  `binding_ineligible` itself on a strictly newer registry version in which the binding is
+  `binding_ineligible` itself on a strictly greater `registry_serial` in which the binding is
   eligible, or, for a pause caused by its conformance attestation, on a newer attestation from the same authority that
   lists the pilot and passes every check in [At `complete`](conformance.md#attestation-rules),
   never `principal_paused` or `reissue_required`, and the mandate stays `PAUSED` while any
-  reason remains. The gateway does not notify the MM; the MM reads the same registry
-  ([Q-61](open-questions.md#q-61)). Pause and lift are written to the InstructionLog with the
-  `registry_version` ([Handler binding](#handler-binding)).
+  reason remains. The gateway reports the pause and the lift to the MM as `MandateEvent`s
+  of type `pause_changed` ([Mandate events](#mandate-events)). Pause and lift are written to the InstructionLog with the
+  `registry_version` and `registry_serial` ([Handler binding](#handler-binding)).
 - A mandate becomes `EXPIRED` after `valid_until`, or when its rail binding expires
   (`rail_limits.expires_at`). Validity is bounded by the purpose's maximum validity.
 

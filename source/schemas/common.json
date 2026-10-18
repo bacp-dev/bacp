@@ -44,6 +44,29 @@
       "description": "Multihash-style 'alg:base64url'. sha-256 is mandatory, blake2b-512 allowed for Beckn digests.",
       "pattern": "^(sha-256|blake2b-512):[A-Za-z0-9_-]{43,88}$"
     },
+    "EntityId": {
+      "type": "object",
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "CIN",
+            "LLPIN",
+            "GSTIN",
+            "PAN"
+          ],
+          "description": "The kind of identifier: a company (CIN), a limited liability partnership (LLPIN), a GST registration (GSTIN) or a permanent account number (PAN)."
+        },
+        "value": {
+          "type": "string",
+          "description": "The identifier. A GSTIN is a registration of one state of an entity, so one company can hold several, and a GSTIN alone never shows that two registrations belong to different entities."
+        }
+      },
+      "description": "A legal entity's registration identifier. The same shape is used for an agent operator in an AgentCredential and for a participant in a registry record."
+    },
     "Jws": {
       "type": "string",
       "description": "Compact JWS or SD-JWT (with ~ separators). Payload canonicalised with JCS (RFC 8785).",

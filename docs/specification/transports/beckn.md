@@ -302,6 +302,27 @@ rule; a value of 0, or above 100, makes the benefit of the offer absent. A negat
 only where ONDC defines the sign, and otherwise the benefit is absent. The gateway validates every offer against
 `CatalogOffer` itself, and does not rely on the network's validation of offers.
 
+### Registry record mapping {#registry-mapping}
+
+A gateway that reads a Beckn registry lookup response builds the BACP
+[registry record](../discovery.md#registry-lookup) from it as follows. The Beckn field names are informative and are not
+verified as of 18-10-2026 against ONDC's registry specification (a question for ONDC, [Q-87](../open-questions.md#q-87)).
+
+| Beckn lookup field | BACP `registry-record.json` |
+|---|---|
+| `subscriber_id` | `subscriber_id` |
+| `ukid`, with the signing algorithm | the `kid` of a `keys[]` entry, `{subscriber_id}\|{ukid}\|ed25519` |
+| `signing_public_key` | the `jwk` of that `keys[]` entry |
+| `valid_from`, `valid_until` | `valid_from`, `valid_until` |
+| `type` of `BAP` or `BPP` | `bacp_role` of `bap` or `bpp`. A Beckn `type` has no value for a Mandate Manager, a PSP, a support operator or a conformance authority. |
+| `status` of `SUBSCRIBED` | `status: active` |
+| `status` of `UNSUBSCRIBED` or `INVALID_SSL` | `status: revoked` |
+| `status` of `EXPIRED` | no `status` value: the record is past its `valid_until`, and a reader MUST NOT use it |
+
+The legal `operator`, `regulatory_status[]` and `data_residency` have no Beckn field. Whether the ONDC network registry
+can carry them is not settled. Where it cannot, an operator is unknown, which fails every separation check closed, and a
+collecting party has no `verified` `rbi_pa` or `bank` entry, so `complete` returns `403 collector_not_authorised`.
+
 ## Signing {#signing}
 
 The signing profile on the Beckn leg is settled in [Q-43](../open-questions.md#q-43):

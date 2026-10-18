@@ -107,6 +107,21 @@
             "minLength": 22,
             "maxLength": 64,
             "description": "The idempotency key the gateway sent to the PSP for this tender. It is derived deterministically from the Idempotency-Key of the complete request and the tender_id, because the PSP never sees the tender_id. Response-only."
+          },
+          "reversal_basis": {
+            "enum": [
+              "rbi_tat",
+              "bacp_policy",
+              "unknown"
+            ],
+            "description": "Why the reversal of a debit that the seller never confirmed is due when it is: rbi_tat, when the payer PSP reports the debit as pending or as deemed (a credit-side timeout); then the message states the T+5 turnaround and the compensation of ₹100 a day that the RBI circular (RBI/2019-20/67, Annex, row 4(b)) sets. bacp_policy, when the PSP reports the payee credit as completed and only the seller's Beckn on_confirm is missing; then the deadline is BACP's own policy, and the message never states an RBI compensation entitlement. unknown, when the PSP's response does not say; then the message names the routes that certainly exist and says that if the payer's bank shows the payment as failed or pending, RBI's automatic-reversal and compensation rules apply. Present with refund_route."
+          },
+          "refund_route": {
+            "enum": [
+              "gateway_collector",
+              "seller_collector"
+            ],
+            "description": "Who refunds a debit that the seller never confirmed: gateway_collector, when the gateway's own payment aggregator collected the money, so that the gateway can start the refund itself and the message may say 'started'; seller_collector, when the seller's collector holds it, so that the gateway can only request the refund from that collector through IGM, citing original_rrn, and tells the principal how to raise a complaint through UDIR; the message then says 'requested', never 'started'. Present with reversal_basis."
           }
         },
         "required": [
@@ -116,7 +131,35 @@
           "sequence",
           "status"
         ],
-        "additionalProperties": false
+        "additionalProperties": false,
+        "dependentRequired": {
+          "reversal_basis": [
+            "refund_route"
+          ],
+          "refund_route": [
+            "reversal_basis"
+          ]
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "reversal_pending"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "required": [
+                "reversal_basis",
+                "refund_route"
+              ]
+            }
+          }
+        ]
       }
     },
     "refund_allocation": {

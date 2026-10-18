@@ -104,7 +104,10 @@ any Beckn message is sent:
    `unmatched_rail_debit`). A write on a revoked, paused, expired or exhausted mandate without HP returns
    `403 presence_not_allowed`. A `PENDING` or `REJECTED` mandate returns `403 mandate_required`.
 5. **Presence.** `presence` **MUST** be in the mandate's `presence_allowed`
-   (`403 presence_not_allowed`), plus the per-action presence rules below.
+   (`403 presence_not_allowed`), plus the per-action presence rules below. A write with `presence: HP` that carries a valid
+   `hp_proof` is exempt from this check, because the principal is present: otherwise a mandate whose `presence_allowed` is
+   only `HNP` could never return goods. A grievance, dispute, cancellation or return write is never refused with
+   `mandate_exhausted` or `mandate_expired`; for example an HP `RAISE_ISSUE` on an `EXHAUSTED` mandate returns `201`.
 6. **Presence proof.** A write with `presence: HP` **MUST** carry `hp_proof{ts_event_hash, step_up_id}`:
    a step-up of kind `post_order` whose `ts_render` names this write (`action`, `order_id` and, for
    an issue action, `issue_id` and, for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED`, the `subject_hash` of the issue's `resolution` as shown), and

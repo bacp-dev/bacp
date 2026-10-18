@@ -132,6 +132,13 @@ A mandate that sets `disclosure` to anything other than `never`, or a buyer mand
     --8<-- "source/examples/mandate-negotiation.disclosed.invalid.json"
     ```
 
+### Presence of a negotiation {#negotiation-presence}
+
+The gateway derives the presence of a negotiation from the session in which the principal reached the agent, or from an `hp_proof`
+([Presence proof](../human-participants.md#hp-proof)); it does not take it from the `presence` field of `NegotiationCreate` as the agent
+states it. A `NegotiationCreate` that asserts `presence: HP` without a valid `hp_proof` is refused with `403 presence_not_proven`
+(`requires_buyer_review`), and nothing is sent to the seller. `HNP` needs no proof.
+
 ## Term sheet
 
 Every binding offer carries a multi-issue **term sheet**, schema [`termsheet.json`](https://bacp.dev/schemas/termsheet.json). Amounts are integer paise in INR.
@@ -568,9 +575,9 @@ Whether a court reads an acceptance dispatched before `expires_at` but received 
 An agent that sends firm counter-offers to several sellers at once could commit the principal several times over. The guard therefore counts **exposure** (step N-7):
 
 - Exposure is the sum of `all_in_total` over the principal's outstanding firm counter-offers, `ACCEPT_PENDING` acceptances and `AGREED`-but-unpaid deals, across **all** of that principal's negotiation mandates and concurrent negotiations, including every session under the same `rfq_parent_id`, plus the message being guarded.
-- Exposure MUST be at most `total_max` **and** at most every remaining checkout-mandate budget period, whatever the payment handler. Whether B2B credit-ledger deals should instead count against `credit_ledger.max_outstanding` is open ([Q-46](../open-questions.md#q-46)).
+- Exposure MUST be at most `total_max` **and** at most every remaining checkout-mandate budget period, whatever the payment handler. A credit-ledger deal counts against the budgets and against `credit_ledger.max_outstanding` only when a gateway `complete` books it ([Q-46](../open-questions.md#q-46), settled).
 - Over the limit, the verdict is `needs_escalation` with `NEG_EXPOSURE_EXCEEDED`.
-- **Atomicity.** Computing exposure and emitting the firm message it guards MUST run as one atomic, linearisable operation keyed on the **principal**. Each outstanding commitment holds an exposure reservation. It is released when its offer reaches `REJECTED`, `EXPIRED`, `WITHDRAWN`, `SUPERSEDED`, `TERMINATED` or `LAPSED_CONDITION`, or `ACCEPT_REVOKED` on the proposer's countersigned `accept_revoke_honoured`, and converted when the deal is paid. Release is idempotent: it is keyed on the offer's `offer_hash` and happens at most once per reservation, however often the event that releases it is delivered or replayed. While the outcome of an `accept_revoke` is contested (the proposer has not countersigned an outcome), the reservation is held. If the outcome is still contested when the offer's `expires_at` passes, the gateway surfaces it to the principal (`requires_buyer_review`) and the reservation stays counted. A gateway that runs as several instances MUST share a linearisable exposure store. Exposure across two different gateways serving one principal is not yet counted ([Q-36](../open-questions.md#q-36)).
+- **Atomicity.** Computing exposure and emitting the firm message it guards MUST run as one atomic, linearisable operation keyed on the **principal**. Each outstanding commitment holds an exposure reservation. It is released when its offer reaches `REJECTED`, `EXPIRED`, `WITHDRAWN`, `SUPERSEDED`, `TERMINATED` or `LAPSED_CONDITION`, or `ACCEPT_REVOKED` on the proposer's countersigned `accept_revoke_honoured`, and converted when the deal is paid. Release is idempotent: it is keyed on the offer's `offer_hash` and happens at most once per reservation, however often the event that releases it is delivered or replayed. While the outcome of an `accept_revoke` is contested (the proposer has not countersigned an outcome), the reservation is held. If the outcome is still contested when the offer's `expires_at` passes, the gateway surfaces it to the principal (`requires_buyer_review`) and the reservation stays counted. A gateway that runs as several instances MUST share a linearisable exposure store. Exposure across two different gateways serving one principal is not counted: each open mandate belongs to one gateway (`agent.bap_id`), and a move to another gateway is a successor root ([Q-36](../open-questions.md#q-36), settled).
 - The session view reports only amounts (`exposure.principal_outstanding_firm`, `counted_against[]`), never the bound.
 
 ## Binding to checkout
