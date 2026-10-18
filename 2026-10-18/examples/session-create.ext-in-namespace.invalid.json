@@ -1,0 +1,16 @@
+{
+  "transaction_id": "7a2d4c1e-5b3f-4e8a-9c0d-2e3f4a5b6c7d",
+  "bpp_id": "bpp.dairy.example.in",
+  "provider_id": "P-207",
+  "items": [
+    {
+      "id": "I-PANEER-500G",
+      "quantity": 1
+    }
+  ],
+  "presence": "HNP",
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "ext": {
+    "in.bacp.discounts": {}
+  }
+}

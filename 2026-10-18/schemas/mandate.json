@@ -1,0 +1,936 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/mandate.json",
+  "title": "Mandate",
+  "description": "AP2 v0.2-compatible Checkout or Payment mandate, open or closed, with AA consent-artefact semantics. Everything except status, usage and signatures is signed and immutable.",
+  "type": "object",
+  "required": [
+    "vct",
+    "mandate_id",
+    "kind",
+    "form",
+    "iss",
+    "iat",
+    "valid_from",
+    "valid_until",
+    "principal",
+    "agent",
+    "purpose",
+    "action_scope",
+    "presence_allowed",
+    "constraints",
+    "revocation",
+    "signatures"
+  ],
+  "properties": {
+    "vct": {
+      "enum": [
+        "in.bacp.mandate.checkout.open.1",
+        "in.bacp.mandate.checkout.1",
+        "in.bacp.mandate.payment.open.1",
+        "in.bacp.mandate.payment.1"
+      ]
+    },
+    "ap2_vct": {
+      "enum": [
+        "mandate.checkout.open.1",
+        "mandate.checkout.1",
+        "mandate.payment.open.1",
+        "mandate.payment.1"
+      ],
+      "description": "AP2 v0.2 type this mandate is wire-compatible with"
+    },
+    "mandate_id": {
+      "type": "string",
+      "pattern": "^mdt_[A-Za-z0-9]{12,40}$"
+    },
+    "parent_mandate_id": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Open mandate this one narrows (closed mandate or sub-agent delegation). Scope and expiry may only narrow."
+    },
+    "supersedes": {
+      "type": "object",
+      "required": [
+        "mandate_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "mandate_id": {
+          "type": "string",
+          "pattern": "^mdt_[A-Za-z0-9]{12,40}$"
+        }
+      },
+      "description": "The open mandate that this one replaces when the principal ports it to another gateway or re-issues it. It is set only on a request that the principal originates on the Trusted Surface: a request from an agent or a gateway that carries it is refused with 403 trusted_surface_only. The Mandate Manager revokes the superseded mandate before this one becomes ACTIVE."
+    },
+    "carried_exposure": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "required": [
+          "period",
+          "window_start",
+          "amount",
+          "source"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "enum": [
+              "P1D",
+              "P7D",
+              "P1M",
+              "FIRST_24H",
+              "LIFETIME"
+            ],
+            "description": "The budget period of the window, as in constraints.budgets[].period."
+          },
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "\\+05:30$",
+            "description": "When the open window began, as an RFC 3339 timestamp in IST (+05:30)."
+          },
+          "amount": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount",
+            "description": "The spend already made in the window, in paise."
+          },
+          "source": {
+            "enum": [
+              "mm_events",
+              "incomplete"
+            ],
+            "description": "mm_events: the Mandate Manager's own use events cover the window. incomplete: they have a gap."
+          }
+        }
+      },
+      "description": "The spend that the principal has already made under the superseded mandate, in each budget window that is still open, as the Mandate Manager derived it from its own use events and signed it into this mandate. It starts the successor's windows at that spend, so that a port never restores budget. An entry with source incomplete marks a window for which the Mandate Manager's record has a gap: the Trusted Surface says so in the principal's language and pre-fills that window at the superseded mandate's max, which the principal may change before approving, because the cap is the principal's own. No signature of the gateway that is being left is ever needed. An agent or a gateway never supplies it."
+    },
+    "checkout_mandate_ref": {
+      "type": "string",
+      "description": "Payment mandates only: the checkout mandate this payment authority is bound to (AP2 payment.reference, REQUIRED)"
+    },
+    "kind": {
+      "enum": [
+        "checkout",
+        "payment"
+      ]
+    },
+    "form": {
+      "enum": [
+        "open",
+        "closed"
+      ]
+    },
+    "iss": {
+      "type": "string",
+      "description": "Mandate Manager / Trusted Surface subscriber id"
+    },
+    "iat": {
+      "type": "integer"
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "principal": {
+      "type": "object",
+      "required": [
+        "ref"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "description": "Pairwise pseudonymous user id at the Mandate Manager. Never an Aadhaar number."
+        },
+        "assurance": {
+          "enum": [
+            "vpa_pin",
+            "aadhaar_vc",
+            "digilocker",
+            "passkey"
+          ]
+        },
+        "device_jkt": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{43}$"
+          },
+          "description": "Optional. RFC 7638 JWK SHA-256 thumbprints (base64url) of the device keys that the principal enrolled on the Trusted Surface at issuance. When present, a Presentation's device_signature MUST verify against a key whose thumbprint is listed, or the gateway answers 403 presence_not_proven. When absent, device_signature is a signature by a device key of the Trusted Surface and no verifier relies on it. It is not a constraint: a gateway that does not know the field ignores it, so the binding is enforced only by an upgraded gateway, and its absence never weakens an approval. It is never called an electronic signature under the Information Technology Act, 2000."
+        }
+      }
+    },
+    "agent": {
+      "type": "object",
+      "required": [
+        "id",
+        "credential_hash"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "credential_hash": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+        },
+        "bap_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The subscriber id of the BAP, and so of the one gateway, that this mandate is bound to. The Mandate Manager copies it from the verified AgentCredential's bap.subscriber_id, never from the request, so it is no weaker than credential_hash, and it survives a credential re-issue that keeps cnf. A gateway whose BAP is not this value refuses the mandate with 403 mandate_scope_mismatch at $.agent.bap_id, so that one open mandate is spent through one gateway only; cross-gateway moves only by a successor mandate. A mandate issued without it (before this field) is bound by credential_hash alone: the gateway then requires the hash of the presented credential to equal credential_hash. A gateway on an earlier release does not enforce it."
+        }
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "required": [
+        "code",
+        "text"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^P-[A-Z]{3}-[0-9]{2}$",
+          "description": "Code from the BACP purpose-code registry (Sahamati Fair Use analogue), e.g. P-GRO-01 household grocery replenishment. The purpose fixes the categories, maximum validity, monetary bounds and data scopes the mandate may request. The registry is governed by the BACP working group: a new code or a changed bound ships only in a dated release. A purpose_code that is not in the registry MUST be refused with 403 mandate_scope_mismatch (settled in Q-47)."
+        },
+        "text": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/LangText"
+        }
+      }
+    },
+    "action_scope": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "DISCOVER",
+          "QUOTE",
+          "ORDER",
+          "PAY",
+          "CANCEL",
+          "RETURN",
+          "RAISE_ISSUE",
+          "SHARE_DATA"
+        ]
+      }
+    },
+    "data_scopes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "NAME",
+          "PHONE",
+          "DELIVERY_ADDRESS",
+          "EMAIL",
+          "AGE_OVER_18",
+          "GSTIN",
+          "ACTING_FOR"
+        ]
+      }
+    },
+    "presence_allowed": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Presence"
+      }
+    },
+    "constraints": {
+      "type": "object",
+      "description": "Evaluated fail-closed by deterministic code: unknown keys fail (AP2 agent_authorization).",
+      "properties": {
+        "amount_per_txn": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+        },
+        "budgets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "period",
+              "max"
+            ],
+            "properties": {
+              "period": {
+                "enum": [
+                  "P1D",
+                  "P7D",
+                  "P1M",
+                  "FIRST_24H",
+                  "LIFETIME"
+                ]
+              },
+              "max": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "max_executions": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "categories_allow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "ONDC domain or category codes, e.g. ONDC:RET10, RET10-Staples"
+        },
+        "categories_deny": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "merchants_allow": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "bpp_id"
+            ],
+            "properties": {
+              "bpp_id": {
+                "type": "string"
+              },
+              "provider_id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "delivery_pincodes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]{5}$"
+          }
+        },
+        "line_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "item_id",
+              "qty_max"
+            ],
+            "properties": {
+              "item_id": {
+                "type": "string"
+              },
+              "qty_max": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "step_up": {
+          "type": "object",
+          "properties": {
+            "above_amount": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+            },
+            "new_merchant": {
+              "type": "boolean"
+            },
+            "outside_categories": {
+              "type": "boolean"
+            },
+            "first_order": {
+              "type": "boolean"
+            }
+          }
+        },
+        "reject_preticked_addons": {
+          "const": true
+        },
+        "cod_allowed": {
+          "type": "boolean"
+        },
+        "cod_max_open_orders": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Open COD orders an agent may hold HNP."
+        },
+        "credit_funding_allowed": {
+          "type": "boolean",
+          "description": "Credit-funded handlers allowed."
+        },
+        "convenience_fees": {
+          "type": "object",
+          "description": "Whether the agent may pay a convenience fee on its own, in a human-not-present checkout. When the field is absent, or a convenience fee is not covered by it, a convenience fee line raises a confirm step-up (reason constraint_unresolved) before any money moves. A fee is covered when allowed is true and the fee, in total for the order, is at or below max_per_order (or max_per_order is absent).",
+          "required": [
+            "allowed"
+          ],
+          "properties": {
+            "allowed": {
+              "type": "boolean",
+              "description": "true: the agent may pay a convenience fee up to max_per_order without asking. false: every convenience fee raises the step-up."
+            },
+            "max_per_order": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount",
+              "description": "The largest total of convenience fee lines of one order that the agent may pay without asking. Meaningful only when allowed is true."
+            }
+          },
+          "if": {
+            "properties": {
+              "allowed": {
+                "const": false
+              }
+            },
+            "required": [
+              "allowed"
+            ]
+          },
+          "then": {
+            "not": {
+              "required": [
+                "max_per_order"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "confirmation_floor": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": false,
+          "description": "The principal's standing floor on how an approval is given on the Trusted Surface. Set or changed only by the principal on the Trusted Surface at issuance, never through a mandate request, and read out in full in the principal's language in the activation notice. Absent means any user action and any channel. An approval below the floor or outside the channels gets 403 presence_not_proven, and the gateway never offers a delivery outside it. If the only allowed channel is unavailable, the gateway answers 503 trusted_surface_unavailable with reason channel_not_allowed and the session's handoff routes. Being a constraint, a gateway or verifier that does not know it fails closed.",
+          "properties": {
+            "min_user_action": {
+              "enum": [
+                "tap_confirm",
+                "voice_confirm_plus_device",
+                "upi_pin",
+                "biometric",
+                "passkey"
+              ],
+              "description": "The weakest user_action that the principal accepts. The ladder is tap_confirm, then voice_confirm_plus_device, then any of upi_pin, biometric and passkey, which are equal. Voice never releases money, so the ladder bites on non-money confirm and post_order approvals."
+            },
+            "channels_allow": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Channel"
+              },
+              "description": "The channels on which the principal accepts an approval, for example only app. A request to be called, never a tap, can be read aloud and so can be a channel list."
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "checkout_hash": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+      "description": "Closed mandates only: hash of the BPP-signed quote / checkout (AP2 checkout_hash)"
+    },
+    "amount": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/PositiveAmount",
+      "description": "Closed mandates only: exact payable amount, greater than zero"
+    },
+    "tender": {
+      "type": "object",
+      "description": "Closed payment mandates only, and only one that pays one tender of a payment plan: the plan_hash of the plan and the tender_id this mandate pays. Its amount is then the tender's amount, not the quote total. A mandate that carries it MUST NOT pay a complete that has no payment_plan.",
+      "required": [
+        "plan_hash",
+        "tender_id"
+      ],
+      "properties": {
+        "plan_hash": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+          "pattern": "^sha-256:"
+        },
+        "tender_id": {
+          "type": "string",
+          "pattern": "^tdr_[A-Za-z0-9]{6,40}$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "payee": {
+      "type": "object",
+      "description": "The party a payment under this mandate is paid to. An open Payment Mandate whose rail_binding.primitive is sbmd_block (a UPI Reserve Pay block) MUST name the block's payee seller: vpa, equal to the VPA in that seller's BPP-signed payment terms, and bpp_id. The Mandate Manager refuses a Reserve Pay mandate request without it (403 mandate_scope_mismatch at $.payee).",
+      "properties": {
+        "vpa": {
+          "type": "string",
+          "description": "The payee's UPI virtual payment address."
+        },
+        "bap_id": {
+          "type": "string",
+          "description": "The buyer app, where the buyer app collects (collected_by BAP). Never the payee of a Reserve Pay block used human-not-present."
+        },
+        "bpp_id": {
+          "type": "string",
+          "description": "The seller app (BPP subscriber id) of the payee seller, for a payee-bound primitive such as a Reserve Pay block."
+        },
+        "provider_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The seller's provider id: the Beckn provider.id (message.order.provider.id) of the seller shop that the block pays, as the BPP-signed payment terms carry it. REQUIRED with an sbmd_block when those terms name a provider. It MUST equal message.order.provider.id of the terms at every leg, because one seller app can serve several shops from one collection VPA: a leg whose provider differs is refused with 403 reservepay_block_wrong_payee, and nothing is debited (a BACP rule whose basis is RBI Master Direction on Payment Aggregators 2025 para 13(f), under which a PA ensures that a marketplace takes no payment for a seller not onboarded on it, and para 13(e), a merchant ID per merchant; the block-payee match itself is BACP policy). Whether ONDC seller apps share one collection VPA across providers is not verified as of 18-10-2026."
+        }
+      }
+    },
+    "rail_binding": {
+      "type": "object",
+      "required": [
+        "type",
+        "primitive",
+        "rail_ref",
+        "psp_id",
+        "attestation",
+        "registry_version"
+      ],
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/RailType"
+            },
+            {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/RailTypeV1"
+            }
+          ],
+          "description": "Any class-O handler (binding rule B-1; RailTypeV1) or a legacy RailType alias. Class C/A/D/N ids never validate here. Schema validity is not eligibility: the resolved descriptor's open_eligible, open_primitives and status decide."
+        },
+        "primitive": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/MandatePrimitiveType",
+          "not": {
+            "const": "none"
+          },
+          "description": "The mandate primitive that carries this standing authority: one of the bound handler's mandate_primitives[].type, for example sbmd_block or ppi_emandate. Covered by the PSP attestation. It MUST be listed in the handler descriptor's binding.open_primitives; otherwise the Mandate Manager refuses issuance and the gateway refuses the binding with rail_binding_not_open_eligible. The value none is never valid here: a handler whose only primitive is none has no standing authority to bind."
+        },
+        "rail_ref": {
+          "type": "string",
+          "description": "UMN / SBMD block id / Circle delegation id as issued by the payer PSP"
+        },
+        "psp_id": {
+          "type": "string"
+        },
+        "attestation": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Jws",
+          "description": "PSP-signed statement {rail_ref, type, primitive, limits, expiry, payee, funding} hashed into this mandate; for a gift PPI it also states custody. funding is deposit or credit: the source of funds behind the primitive. A savings or current account is deposit. A RuPay credit card or a pre-sanctioned credit line is credit. An overdraft account is credit unless the PSP attests deposit. A missing funding is treated as credit. An attested credit without credit_funding_allowed: true on the root gets 403 credit_funding_not_allowed at issuance and at complete. custody (gift PPI only) is principal_side when the vault of the gift code is on the principal's side (the Trusted Surface or the payer PSP), and gateway_side otherwise; a gift PPI is open-eligible only on principal_side, and the Mandate Manager refuses issuance with rail_binding_not_open_eligible otherwise."
+        },
+        "registry_version": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+          "description": "The handler-registry version against which the Mandate Manager checked this binding's eligibility at issuance: the identifier of the dated BACP release (YYYY-MM-DD, for example 2026-10-18), never a copy served by a gateway. A record of the issuance check only; the gateway re-checks eligibility against the current registry at every complete."
+        },
+        "registry_digest": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+          "pattern": "^sha-256:",
+          "description": "OPTIONAL. The digest, as the release manifest (source/handlers/release.json) gives it for the handler registry file, that the Mandate Manager checked this binding against: sha-256 over the JCS form of the file. It pins the exact publication when a dated release has been amended in place. A record of the issuance check only."
+        },
+        "registry_serial": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "OPTIONAL. The registry_serial of the release manifest that the Mandate Manager checked this binding against at issuance. A record of the issuance check only; the serial recorded for a pause is what orders a later lift."
+        },
+        "conformance": {
+          "type": "object",
+          "required": [
+            "iss",
+            "sub",
+            "jti"
+          ],
+          "properties": {
+            "iss": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The ca_id of the conformance authority that signed the gateway's attestation."
+            },
+            "sub": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The gateway that the attestation is about. At complete, the gateway refuses the mandate when this is not itself."
+            },
+            "jti": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9_-]{8,64}$",
+              "description": "The jti of the attestation. The gateway re-checks its status at every complete (or, after a lift, the status of the newer attestation that lifted the pause), and a pause for a lapsed attestation logs it."
+            }
+          },
+          "additionalProperties": false,
+          "description": "The conformance attestation that admitted the bound handler as a pilot, as the Mandate Manager verified it at issuance: {iss, sub, jti}. A conformance rule REQUIRES it on every open payment mandate bound to a pilot handler; the schema leaves it optional because a live handler needs none. It is part of the signed, immutable mandate."
+        },
+        "rail_limits": {
+          "type": "object",
+          "properties": {
+            "per_txn": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+            },
+            "per_month": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+            },
+            "first_24h": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+            },
+            "block_amount": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount",
+              "description": "The amount of a Reserve Pay block as the payer PSP attests it. It is at most the block_amount the mandate request asked for. Under a root open Checkout Mandate its exposure is the larger of this amount and the settled debits matched to the block plus the reservations on it, from activation until its revocation at the rail is confirmed or it expires. The principal can change a block's amount or validity through the seller's platform (NPCI UPI Consolidated Circular v1.0, para 16.9), and BACP sees such a change only where the payer PSP attests a block-debit feed."
+            },
+            "expires_at": {
+              "type": "string",
+              "format": "date-time",
+              "description": "When the rail authority expires. For a Reserve Pay block bound under a root open Checkout Mandate it is no later than the root's valid_until."
+            }
+          }
+        },
+        "pre_debit_notice": {
+          "enum": [
+            "required_24h",
+            "not_applicable",
+            "unknown",
+            "bacp_policy_24h",
+            "post_debit_notice"
+          ]
+        }
+      },
+      "description": "OPEN payment mandates only: binding to a live standing-authority primitive whose limits the rail or the issuer enforces (listed in the descriptor's binding.open_primitives). upi.uap.* reserved."
+    },
+    "auth_binding": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "description": "CLOSED payment mandates only: how this single payment is authorised. Either it executes under the parent open mandate's rail_binding (HNP), or it carries a per-transaction user 2FA reference (HP) or another closed-class instrument.",
+      "properties": {
+        "type": {
+          "enum": [
+            "parent_rail_binding",
+            "upi.pin",
+            "upi.biometric",
+            "card.3ds",
+            "instrument"
+          ]
+        },
+        "handler": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/HandlerRef",
+          "description": "The handler that executes the payment: for HNP the parent's rail_binding.type, for HP the closed-class handler (for example in.upi.intent). Any canonical id or legacy alias; compared after alias resolution."
+        },
+        "ref": {
+          "type": "string",
+          "description": "2FA/authentication reference from the PSP or issuer, or the parent rail_ref"
+        },
+        "psp_id": {
+          "type": "string"
+        },
+        "afa_ref": {
+          "type": "object",
+          "required": [
+            "handler",
+            "primitive",
+            "registry_version"
+          ],
+          "additionalProperties": false,
+          "description": "Set only by the gateway, in the closed Payment Mandate record that it stores and in the evidence bundle, never in the mandate that the agent signs: a reference, not a copy, to the registry descriptor whose authentication model the debit relies on. The principal's post-debit notice and the evidence summary render the basis from the descriptor at that registry_version through a fixed template. A closed Payment Mandate that an agent sends with it, or an agent request that supplies it, gets 400 invalid_request, and it is in no tool input schema. The basis records which rule the debit relies on. It does not make the debit lawful: the issuer remains liable for a non-compliant debit. A verifier removes it before it computes the mandate hash or verifies signatures[].",
+          "properties": {
+            "handler": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/HandlerRef",
+              "description": "The handler whose descriptor is referenced, as a canonical id."
+            },
+            "primitive": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/MandatePrimitiveType",
+              "description": "The mandate primitive of that descriptor that carries the standing authority."
+            },
+            "registry_version": {
+              "type": "string",
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "description": "The dated BACP release of the handler registry whose descriptor this references."
+            }
+          }
+        }
+      }
+    },
+    "dpdp": {
+      "type": "object",
+      "properties": {
+        "consent_receipts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "data_retention": {
+          "type": "string",
+          "description": "ISO 8601 duration imposed on recipients, e.g. P1Y"
+        }
+      }
+    },
+    "revocation": {
+      "type": "object",
+      "required": [
+        "status_uri"
+      ],
+      "properties": {
+        "status_uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "status_list": {
+          "type": "object",
+          "properties": {
+            "uri": {
+              "type": "string",
+              "format": "uri"
+            },
+            "idx": {
+              "type": "integer"
+            }
+          }
+        },
+        "notify_sla_seconds": {
+          "type": "integer",
+          "maximum": 60
+        }
+      }
+    },
+    "audit_uri": {
+      "type": "string",
+      "format": "uri"
+    },
+    "cnf": {
+      "type": "object",
+      "required": [
+        "jwk"
+      ],
+      "properties": {
+        "jwk": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Jwk"
+        }
+      },
+      "description": "Agent key allowed to close this open mandate (AP2 section 4.1)"
+    },
+    "signatures": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Signature"
+      }
+    },
+    "status": {
+      "readOnly": true,
+      "enum": [
+        "PENDING",
+        "ACTIVE",
+        "PAUSED",
+        "REVOKED",
+        "EXPIRED",
+        "EXHAUSTED",
+        "REJECTED"
+      ]
+    },
+    "usage": {
+      "readOnly": true,
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "spent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "period": {
+                "type": "string"
+              },
+              "amount": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+              },
+              "window_start": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        },
+        "last_used_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "form": {
+            "const": "open"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "cnf"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "form": {
+            "const": "closed"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "checkout_hash",
+          "amount",
+          "parent_mandate_id"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "payment"
+          }
+        },
+        "required": [
+          "kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "checkout_mandate_ref"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "payment"
+          },
+          "form": {
+            "const": "open"
+          }
+        },
+        "required": [
+          "kind",
+          "form"
+        ]
+      },
+      "then": {
+        "required": [
+          "rail_binding"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "kind": {
+            "const": "payment"
+          },
+          "form": {
+            "const": "closed"
+          }
+        },
+        "required": [
+          "kind",
+          "form"
+        ]
+      },
+      "then": {
+        "required": [
+          "auth_binding"
+        ],
+        "not": {
+          "required": [
+            "rail_binding"
+          ]
+        }
+      }
+    },
+    {
+      "description": "An open mandate carries data scopes, an audit URI, a retention period and at least one frequency bound.",
+      "if": {
+        "properties": {
+          "form": {
+            "const": "open"
+          }
+        },
+        "required": [
+          "form"
+        ]
+      },
+      "then": {
+        "required": [
+          "data_scopes",
+          "audit_uri",
+          "dpdp"
+        ],
+        "properties": {
+          "dpdp": {
+            "required": [
+              "data_retention"
+            ]
+          },
+          "constraints": {
+            "anyOf": [
+              {
+                "required": [
+                  "budgets"
+                ]
+              },
+              {
+                "required": [
+                  "max_executions"
+                ]
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "description": "A tender binding is only for a closed payment mandate.",
+      "if": {
+        "required": [
+          "tender"
+        ]
+      },
+      "then": {
+        "properties": {
+          "form": {
+            "const": "closed"
+          },
+          "kind": {
+            "const": "payment"
+          }
+        },
+        "required": [
+          "form",
+          "kind"
+        ]
+      }
+    },
+    {
+      "description": "carried_exposure only accompanies supersedes.",
+      "dependentRequired": {
+        "carried_exposure": [
+          "supersedes"
+        ]
+      }
+    }
+  ]
+}

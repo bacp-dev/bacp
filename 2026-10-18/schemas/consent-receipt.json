@@ -1,0 +1,378 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/consent-receipt.json",
+  "title": "ConsentReceipt (DPDP)",
+  "description": "One receipt per recipient Data Fiduciary (merchant/BPP) per mandate. Issued by the data-blind Mandate Manager acting as (or for) a DPDP Consent Manager. A receipt with consent_kind marketing (Proposed) is the exception: it is standalone, has no mandate_ref, data_items or purpose, and records the principal's decision on each marketing purpose of one seller.",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "iss",
+    "issued_at",
+    "principal_ref",
+    "recipient",
+    "legal_basis",
+    "notice",
+    "captured_via",
+    "withdrawal",
+    "grievance",
+    "retention",
+    "signature"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^cr_[A-Za-z0-9]{12,40}$"
+    },
+    "consent_kind": {
+      "enum": [
+        "data_share",
+        "marketing"
+      ],
+      "default": "data_share",
+      "description": "data_share (the default when absent) is the per-mandate receipt for personal data that reaches a seller. marketing (Proposed in this release, and it can change shape in a later one) records the principal's own decision on marketing purposes for one seller; it carries purposes[] and channels[] and has no mandate_ref."
+    },
+    "iss": {
+      "type": "string"
+    },
+    "cm_registration_no": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "DPDP Board registration number of the Consent Manager (DPDP Rules 2025, Rule 4). On receipts issued on or after 13-11-2026 it MUST be the Board registration number when the Mandate Manager acts as a registered Consent Manager, and MUST be null otherwise (fail-safe default until Q-16 is settled)."
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "principal_ref": {
+      "type": "string"
+    },
+    "mandate_ref": {
+      "type": "string"
+    },
+    "recipient": {
+      "type": "object",
+      "required": [
+        "fiduciary_name",
+        "bpp_id"
+      ],
+      "properties": {
+        "fiduciary_name": {
+          "type": "string"
+        },
+        "bpp_id": {
+          "type": "string",
+          "description": "The recipient seller's bpp_id. \"*\" marks a class receipt, scoped to the mandate's categories, which only pre-authorises: the MM MUST mint a per-seller ConsentReceipt, whose recipient.bpp_id is that seller, at init and before any personal data reaches the seller; no data is ever released on the strength of a class receipt alone (settled in Q-12). On a marketing receipt it MUST NOT be \"*\"."
+        },
+        "provider_id": {
+          "type": "string"
+        },
+        "dpo_contact": {
+          "type": "string"
+        }
+      }
+    },
+    "data_items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "field",
+          "form"
+        ],
+        "properties": {
+          "field": {
+            "enum": [
+              "NAME",
+              "PHONE",
+              "DELIVERY_ADDRESS",
+              "EMAIL",
+              "AGE_OVER_18",
+              "GSTIN",
+              "ACTING_FOR"
+            ],
+            "description": "The personal data item covered. ACTING_FOR is the GSTIN and display name of whom the agent acts for, which the gateway tells the seller only under a per-seller receipt that lists it."
+          },
+          "form": {
+            "enum": [
+              "plain",
+              "masked",
+              "selective_disclosure_vc",
+              "token"
+            ]
+          }
+        }
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "required": [
+        "code",
+        "text"
+      ],
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "text": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/LangText"
+        },
+        "goods_or_services": {
+          "type": "string"
+        }
+      }
+    },
+    "legal_basis": {
+      "enum": [
+        "consent_s6",
+        "legitimate_use_s7a"
+      ]
+    },
+    "notice": {
+      "type": "object",
+      "required": [
+        "language",
+        "hash",
+        "operator_compensation"
+      ],
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "English or an Eighth Schedule language (BCP 47)"
+        },
+        "hash": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "translation_model": {
+          "type": "string"
+        },
+        "operator_compensation": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/OperatorCompensation",
+          "description": "The operator compensation the principal saw in the notice. REQUIRED: a Mandate Manager MUST NOT activate a mandate whose notice did not state it."
+        }
+      }
+    },
+    "captured_via": {
+      "type": "object",
+      "required": [
+        "surface",
+        "user_action",
+        "device_signature"
+      ],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "description": "Trusted Surface id (PSP app or Mandate Manager app), never the agent"
+        },
+        "user_action": {
+          "enum": [
+            "tap_confirm",
+            "upi_pin",
+            "biometric",
+            "passkey",
+            "voice_confirm_plus_device"
+          ]
+        },
+        "device_signature": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Jws"
+        },
+        "voice_evidence": {
+          "type": "object",
+          "properties": {
+            "audio_hash": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+            },
+            "transcript_hash": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+            },
+            "translation_model": {
+              "type": "string"
+            }
+          }
+        },
+        "presentation": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Presentation",
+          "description": "What the Trusted Surface presented and how. OPTIONAL. When present, its user_action equals captured_via.user_action and its language equals notice.language."
+        }
+      }
+    },
+    "withdrawal": {
+      "type": "object",
+      "required": [
+        "uri"
+      ],
+      "properties": {
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "erasure_signal": {
+          "const": true
+        }
+      }
+    },
+    "grievance": {
+      "type": "object",
+      "required": [
+        "contact"
+      ],
+      "properties": {
+        "contact": {
+          "type": "string"
+        },
+        "board_complaint_uri": {
+          "type": "string",
+          "format": "uri"
+        }
+      }
+    },
+    "retention": {
+      "type": "object",
+      "required": [
+        "recipient_max"
+      ],
+      "properties": {
+        "recipient_max": {
+          "type": "string",
+          "description": "ISO 8601 duration"
+        },
+        "legal_minimum": {
+          "type": "string",
+          "default": "P1Y",
+          "description": "DPDP Rule 8(3)"
+        }
+      }
+    },
+    "status": {
+      "readOnly": true,
+      "enum": [
+        "ACTIVE",
+        "WITHDRAWN",
+        "EXPIRED"
+      ]
+    },
+    "signature": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Signature"
+    },
+    "purposes": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Marketing receipts only (Proposed). One entry for each marketing purpose that the Trusted Surface asked about, one purpose for each question. granted is the principal's own answer: no purpose is preselected, the first or an equal option is \"no\", and a purpose that the principal was not asked about does not appear and is not granted. A purpose absent from every active receipt is not granted.",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "text",
+          "granted"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "description": "The purpose id that the seller named, as the Trusted Surface presented it."
+          },
+          "text": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/LangText"
+          },
+          "granted": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "channels": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "description": "Marketing receipts only (Proposed). The channels that the principal agreed to for the granted purposes.",
+      "items": {
+        "enum": [
+          "sms",
+          "whatsapp",
+          "voice_call",
+          "email",
+          "push"
+        ]
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "consent_kind": {
+            "const": "marketing"
+          }
+        },
+        "required": [
+          "consent_kind"
+        ]
+      },
+      "then": {
+        "required": [
+          "purposes",
+          "channels"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "mandate_ref"
+              ]
+            },
+            {
+              "required": [
+                "data_items"
+              ]
+            },
+            {
+              "required": [
+                "purpose"
+              ]
+            }
+          ]
+        },
+        "properties": {
+          "recipient": {
+            "properties": {
+              "bpp_id": {
+                "not": {
+                  "const": "*"
+                }
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "mandate_ref",
+          "data_items",
+          "purpose"
+        ],
+        "not": {
+          "anyOf": [
+            {
+              "required": [
+                "purposes"
+              ]
+            },
+            {
+              "required": [
+                "channels"
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

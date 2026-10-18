@@ -1,0 +1,33 @@
+{
+  "payment": {
+    "instruments": [
+      {
+        "id": "tdr_gift001",
+        "type": "in.bacp.tender",
+        "amount": 100000,
+        "selected": true,
+        "credential": {
+          "type": "in.bacp.closed_payment_mandate",
+          "token": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln"
+        }
+      },
+      {
+        "id": "tdr_upi001",
+        "handler_id": "in.upi.circle",
+        "type": "in.bacp.tender",
+        "amount": 216000,
+        "selected": true,
+        "credential": {
+          "type": "in.bacp.closed_payment_mandate",
+          "token": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln"
+        }
+      }
+    ]
+  },
+  "bacp": {
+    "checkout_mandate": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln",
+    "checkout_hash": "sha-256:MdzPb6o2QprB1t01MqITDlt_3VlU_4O8efFu8026Jpo",
+    "presence": "HNP",
+    "plan_id": "plan_GIFTUPI0001"
+  }
+}

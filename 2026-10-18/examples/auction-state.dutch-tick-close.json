@@ -1,0 +1,32 @@
+{
+  "auction_id": "auc_MANDI20261020",
+  "spec_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4",
+  "state": "AWARDED",
+  "current_price": {
+    "value": 180000,
+    "currency": "INR"
+  },
+  "bids_count": 3,
+  "closes_at": "2026-10-20T11:00:00+05:30",
+  "awarded_offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "tick_close": {
+    "tick": 4,
+    "accepts": [
+      {
+        "log_seq": 87,
+        "msg_hash": "sha-256:lJRtoHUIQckYFk7BASGC6sKjJ-XUVuGwnPAf-YDVEAs"
+      },
+      {
+        "log_seq": 88,
+        "msg_hash": "sha-256:WhY4bhJm9wXJk-7XHcqeRbQ3WSA4DqlPAhF9Djosj54"
+      }
+    ],
+    "log_head": "sha-256:puM6b3R7BrQTlpr9p56R-_uigPyPOQaTc6_KCeiDQRU",
+    "signature": {
+      "role": "operator",
+      "kid": "ra.mandi.example.in|k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "plan_id": "plan_GIFTUPI0001",
+  "checkout_hash": "sha-256:MdzPb6o2QprB1t01MqITDlt_3VlU_4O8efFu8026Jpo",
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "tenders": [
+    {
+      "tender_id": "tdr_gift001",
+      "handler": "in.ppi.gift",
+      "amount": {
+        "value": 100000,
+        "currency": "INR"
+      },
+      "sequence": 1,
+      "presence": "HNP",
+      "funding": "prepaid",
+      "closed_payment_mandate_ref": "mdt_PAYGIFT0000001",
+      "auth_binding_type": "parent_rail_binding",
+      "status": "captured",
+      "receipt_id": "rcpt_GIFT000000001"
+    },
+    {
+      "tender_id": "tdr_upi001",
+      "handler": "in.upi.circle",
+      "amount": {
+        "value": 116000,
+        "currency": "INR"
+      },
+      "sequence": 2,
+      "presence": "HNP",
+      "funding": "debit",
+      "closed_payment_mandate_ref": "mdt_PAYUPI00000001",
+      "auth_binding_type": "parent_rail_binding",
+      "rail_ref": "CIRCLE-DLG-40917",
+      "status": "reversal_pending",
+      "reversal_deadline": "2026-10-25T19:02:11+05:30",
+      "psp_key": "3f9c1d7ab25e48c0a6d1e0b79c4f2a85",
+      "reversal_basis": "unknown",
+      "refund_route": "seller_collector"
+    }
+  ],
+  "refund_allocation": "lifo",
+  "atomicity": "saga",
+  "afa_evaluated_on": "plan_total",
+  "plan_hash": "sha-256:Hq5vYd2m0aB7sKxP3oWc9eTnLuZ1fRiG4jXyVb6QhMA"
+}

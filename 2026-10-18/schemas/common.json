@@ -1,0 +1,1247 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/common.json",
+  "title": "BACP common types",
+  "$defs": {
+    "Amount": {
+      "type": "object",
+      "description": "Integer minor units (paise) per ISO 4217, as in UCP, ACP and AP2.",
+      "required": [
+        "value",
+        "currency"
+      ],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "currency": {
+          "const": "INR"
+        }
+      },
+      "additionalProperties": false
+    },
+    "PositiveAmount": {
+      "type": "object",
+      "description": "A payable amount: integer minor units (paise), greater than zero. Used for a closed mandate's amount, a payment or refund Receipt's amount and a payment-plan tender's amount. Amount (minimum 0) stays in use for values that may legitimately be zero, such as a zero-priced free-goods line or a remaining budget.",
+      "required": [
+        "value",
+        "currency"
+      ],
+      "properties": {
+        "value": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "currency": {
+          "const": "INR"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Hash": {
+      "type": "string",
+      "description": "Multihash-style 'alg:base64url'. sha-256 is mandatory, blake2b-512 allowed for Beckn digests.",
+      "pattern": "^(sha-256|blake2b-512):[A-Za-z0-9_-]{43,88}$"
+    },
+    "EntityId": {
+      "type": "object",
+      "required": [
+        "type",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "CIN",
+            "LLPIN",
+            "GSTIN",
+            "PAN"
+          ],
+          "description": "The kind of identifier: a company (CIN), a limited liability partnership (LLPIN), a GST registration (GSTIN) or a permanent account number (PAN)."
+        },
+        "value": {
+          "type": "string",
+          "description": "The identifier. A GSTIN is a registration of one state of an entity, so one company can hold several, and a GSTIN alone never shows that two registrations belong to different entities."
+        }
+      },
+      "description": "A legal entity's registration identifier. The same shape is used for an agent operator in an AgentCredential and for a participant in a registry record."
+    },
+    "Jws": {
+      "type": "string",
+      "description": "Compact JWS or SD-JWT (with ~ separators). Payload canonicalised with JCS (RFC 8785).",
+      "pattern": "^[A-Za-z0-9_-]+\\.[A-Za-z0-9_-]*\\.[A-Za-z0-9_-]+(~[A-Za-z0-9_.~-]*)?$"
+    },
+    "Jwk": {
+      "type": "object",
+      "required": [
+        "kty"
+      ],
+      "properties": {
+        "kty": {
+          "enum": [
+            "EC",
+            "OKP"
+          ]
+        },
+        "crv": {
+          "enum": [
+            "P-256",
+            "Ed25519"
+          ]
+        },
+        "x": {
+          "type": "string"
+        },
+        "y": {
+          "type": "string"
+        },
+        "kid": {
+          "type": "string"
+        }
+      }
+    },
+    "Signature": {
+      "type": "object",
+      "required": [
+        "kid",
+        "alg",
+        "value"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "principal",
+            "mandate_manager",
+            "psp",
+            "agent",
+            "agent_provider",
+            "bap",
+            "bpp",
+            "registry",
+            "operator",
+            "support_operator",
+            "conformance_authority"
+          ],
+          "description": "The registry role of the key that made this signature. conformance_authority signs conformance attestations only, and only for a key that appears in the public conformance-authority list."
+        },
+        "kid": {
+          "type": "string",
+          "description": "Registry-resolvable key id, e.g. 'bap.example.in|ukid-7|ed25519' or a did:web#fragment"
+        },
+        "alg": {
+          "enum": [
+            "ES256",
+            "EdDSA"
+          ],
+          "description": "Signature algorithm. Every verifier of a BACP signature MUST support both ES256 (ECDSA P-256 with SHA-256) and EdDSA (Ed25519); every signer MUST use one of the two, and a signature with any other algorithm MUST be rejected (settled in Q-42)."
+        },
+        "value": {
+          "$ref": "#/$defs/Jws",
+          "description": "A detached JWS (RFC 7515 Appendix F): the compact form with an empty payload segment, signed over the JCS form of the artefact minus the members that its own hash leaves out, with the protected header {alg, kid} (and typ where the specification requires one). The header kid equals this object's kid, and a verifier recomputes the payload and never reads one from the value."
+        }
+      },
+      "additionalProperties": false
+    },
+    "Presence": {
+      "enum": [
+        "HP",
+        "HNP"
+      ],
+      "description": "Human present / human not present (AP2 section 4.2)."
+    },
+    "LangText": {
+      "type": "object",
+      "description": "Multilingual map keyed by BCP 47 tag, e.g. {\"hi-IN\": \"...\", \"en-IN\": \"...\"}.",
+      "propertyNames": {
+        "pattern": "^[a-z]{2,3}(-[A-Za-z]{4})?(-[A-Z]{2})?$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      },
+      "minProperties": 1
+    },
+    "LanguageTag": {
+      "type": "string",
+      "pattern": "^[a-z]{2,3}(-[A-Za-z]{4})?(-[A-Z]{2})?$",
+      "description": "BCP 47 language tag of the same form as a LangText key, for example hi-IN (Hindi in Devanagari), ta-IN, en-IN or hi-Latn-IN (Hindi in Roman script). Never a language name such as \"Hindi\"."
+    },
+    "RailType": {
+      "type": "string",
+      "pattern": "^(upi\\.circle\\.delegate|upi\\.reservepay\\.block|upi\\.autopay|upi\\.uap\\.[a-z0-9_.]+)$"
+    },
+    "Channel": {
+      "enum": [
+        "app",
+        "voice",
+        "ivr",
+        "upi123pay",
+        "whatsapp",
+        "web",
+        "assisted"
+      ],
+      "description": "Channel through which the principal interacts: app, voice, ivr, upi123pay (UPI 123PAY on a feature phone), whatsapp, web or assisted (a human assisted operator at a physical touchpoint). The OpenAPI binding refers to this definition."
+    },
+    "Handler": {
+      "enum": [
+        "upi.circle.delegate",
+        "upi.reservepay.block",
+        "upi.autopay",
+        "upi.lite",
+        "upi.123pay",
+        "rupay.token",
+        "erupi",
+        "erupee",
+        "bbps",
+        "cod",
+        "upi.pin"
+      ],
+      "description": "Legacy BACP payment handler ids. upi.uap.* is reserved and validated by RailType."
+    },
+    "Duration": {
+      "type": "string",
+      "description": "ISO 8601 duration, e.g. P30D, PT15M",
+      "pattern": "^P(?!$)(\\d+Y)?(\\d+M)?(\\d+W)?(\\d+D)?(T(?=\\d)(\\d+H)?(\\d+M)?(\\d+S)?)?$"
+    },
+    "QuantityUnit": {
+      "type": "object",
+      "description": "How an item is sold and counted: the unit of one step, its scale and the ordering increment. unit is a UN/CEFACT Recommendation 20 common code. One step is 10^-scale of the unit, and a line quantity is a whole number of steps and MUST be a multiple of increment. When an item carries no QuantityUnit its unit is C62 (one piece) with scale 0 and increment 1, so the quantity is a count. Where the unit is C62 the scale MUST be 0.",
+      "required": [
+        "unit"
+      ],
+      "properties": {
+        "unit": {
+          "type": "string",
+          "pattern": "^[A-Z0-9]{2,3}$",
+          "description": "UN/CEFACT Recommendation 20 common code, for example C62 (one piece), KGM (kilogram), GRM (gram), LTR (litre), MLT (millilitre), DZN (dozen), TNE (tonne). A value that is not a code of that list is invalid."
+        },
+        "scale": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 15,
+          "default": 0,
+          "description": "One step is 10^-scale of the unit: with unit KGM and scale 3, one step is a gram. The maximum is 15."
+        },
+        "increment": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 1,
+          "description": "The ordering granularity in steps. A quantity that is not a multiple of it is refused at the quantity's path and is never rounded."
+        },
+        "display_text": {
+          "$ref": "#/$defs/LangText",
+          "description": "The unit label in the languages the seller provides, for example {\"en-IN\": \"kg\", \"hi-IN\": \"किलो\"}. It is counterparty text and is spoken only as a labelled value."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "unit": {
+                "const": "C62"
+              }
+            },
+            "required": [
+              "unit"
+            ]
+          },
+          "then": {
+            "properties": {
+              "scale": {
+                "const": 0
+              }
+            }
+          }
+        }
+      ],
+      "additionalProperties": false
+    },
+    "IssueStatus": {
+      "enum": [
+        "Assert",
+        "Agree",
+        "Disagree",
+        "Terminate"
+      ],
+      "description": "Per-issue status generalised from ONDC *_status."
+    },
+    "IssueMeta": {
+      "type": "object",
+      "properties": {
+        "negotiable": {
+          "type": "boolean",
+          "default": false,
+          "description": "False = fixed issue. A counter that changes a fixed issue is rejected with NEG_ISSUE_NOT_NEGOTIABLE."
+        },
+        "status": {
+          "$ref": "#/$defs/IssueStatus"
+        },
+        "proposed_by": {
+          "enum": [
+            "buyer",
+            "seller",
+            "auctioneer",
+            "catalog"
+          ]
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "HandlerId": {
+      "type": "string",
+      "pattern": "^(in\\.[a-z0-9_]+(\\.[a-z0-9_]+){0,3}|bacp\\.[a-z0-9_]+(\\.[a-z0-9_]+){0,2})$",
+      "description": "Canonical payment-handler id. in.* = Indian rail or instrument, bacp.* = BACP-native construct."
+    },
+    "HandlerRef": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/HandlerId"
+        },
+        {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Handler"
+        },
+        {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/RailType"
+        }
+      ],
+      "description": "Canonical handler id, or a legacy alias kept for one deprecation window."
+    },
+    "RailTypeV1": {
+      "type": "string",
+      "description": "Handlers that may back an OPEN (HNP) payment mandate (binding class O). Supersedes the legacy RailType.",
+      "pattern": "^(in\\.upi\\.(reservepay|circle|autopay|otm)|in\\.card\\.(mandate|agentic)|in\\.nach\\.debit|in\\.ppi\\.(wallet|gift|netc_topup|ncmc_topup)|in\\.store_credit|in\\.loyalty|in\\.erupi|in\\.cbdc\\.programmed|in\\.bbps\\.upms|bacp\\.credit_ledger|in\\.upi\\.uap\\.[a-z0-9_.]+|upi\\.circle\\.delegate|upi\\.reservepay\\.block|upi\\.autopay|upi\\.uap\\.[a-z0-9_.]+)$"
+    },
+    "ConformanceLevel": {
+      "enum": [
+        "bacp.core.1",
+        "bacp.pay.upi.1",
+        "bacp.pay.all.1",
+        "bacp.neg.1",
+        "bacp.b2b.1",
+        "bacp.auction.1",
+        "bacp.ts.1"
+      ],
+      "description": "Id of a conformance level: bacp.core.1 (Core), bacp.pay.upi.1 (Payments-UPI), bacp.pay.all.1 (Payments-All), bacp.neg.1 (Negotiation), bacp.b2b.1 (B2B), bacp.auction.1 (Auctions), bacp.ts.1 (Trusted Surface)."
+    },
+    "MandatePrimitiveType": {
+      "description": "Type of the rail object that carries a standing authority, as listed in a handler descriptor's mandate_primitives[].type, for example sbmd_block (UPI Reserve Pay block), upi_autopay_umn, card_emandate, nach_umrn, ppi_emandate or balance_cap.",
+      "enum": [
+        "sbmd_block",
+        "otm_block",
+        "circle_delegation",
+        "upi_autopay_umn",
+        "card_emandate",
+        "agentic_token_intent",
+        "nach_umrn",
+        "ppi_emandate",
+        "balance_cap",
+        "voucher",
+        "programmability_rules",
+        "upms_registration",
+        "topup_mandate",
+        "loan_sanction",
+        "payee_binding",
+        "approval_policy",
+        "assisted_session",
+        "credit_limit",
+        "factoring_unit",
+        "gpa_block",
+        "pps_registration",
+        "none"
+      ]
+    },
+    "UdyamCategory": {
+      "enum": [
+        "micro",
+        "small",
+        "medium",
+        "none",
+        "undeclared"
+      ],
+      "description": "MSMED Act s.15 applies to micro and small enterprises only."
+    },
+    "Party": {
+      "type": "object",
+      "properties": {
+        "role": {
+          "enum": [
+            "buyer",
+            "seller",
+            "ordering_entity",
+            "consignee",
+            "paying_authority",
+            "broker",
+            "aggregator",
+            "financier",
+            "logistics",
+            "assurer",
+            "arbiter",
+            "assisted_operator",
+            "reseller",
+            "auctioneer"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "description": "Beckn subscriber id, provider id, or pairwise pseudonymous principal ref. Never an Aadhaar number."
+        },
+        "legal_name": {
+          "type": "string"
+        },
+        "gstin": {
+          "type": "string",
+          "pattern": "^[0-9]{2}[A-Z0-9]{10}[0-9A-Z]{3}$"
+        },
+        "udyam": {
+          "type": "object",
+          "properties": {
+            "number": {
+              "type": "string"
+            },
+            "category": {
+              "$ref": "#/$defs/UdyamCategory"
+            },
+            "activity": {
+              "enum": [
+                "manufacturing",
+                "services",
+                "trading"
+              ],
+              "description": "MSMED s.15 applies to manufacturing and services micro/small units. Whether traders are covered (Office Memorandum of 02-07-2021) is open question Q-21."
+            },
+            "declared_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "evidence_hash": {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+            }
+          },
+          "required": [
+            "category"
+          ],
+          "additionalProperties": false
+        },
+        "aato_band": {
+          "enum": [
+            "lt_5cr",
+            "5cr_to_10cr",
+            "gte_10cr",
+            "unknown"
+          ],
+          "description": "Drives GST e-invoice (IRN) rules."
+        },
+        "kind": {
+          "enum": [
+            "agent",
+            "human"
+          ],
+          "description": "offeror_kind disclosure."
+        },
+        "acts_for": {
+          "type": "string",
+          "description": "Role or party id this intermediary acts for."
+        },
+        "pricing_ai_vendor": {
+          "type": "string",
+          "description": "Third-party pricing or negotiation AI vendor."
+        },
+        "settlement_accounts": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "description": "The accounts on which this party accepts a payment, used on the creditor of a CreditLedger: a UPI VPA, or a hash of the account number and IFSC. A payment receipt auto-acknowledges a ledger payment only when its payee matches one of them. Only the party itself adds one, by a signed amendment.",
+          "items": {
+            "type": "object",
+            "oneOf": [
+              {
+                "required": [
+                  "vpa"
+                ]
+              },
+              {
+                "required": [
+                  "account_hash"
+                ]
+              }
+            ],
+            "properties": {
+              "vpa": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9._-]{2,256}@[A-Za-z][A-Za-z0-9]{1,63}$",
+                "description": "A UPI virtual payment address."
+              },
+              "account_hash": {
+                "$ref": "#/$defs/Hash",
+                "description": "sha-256 over the account number and IFSC, so that the ledger does not carry the account number."
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "role",
+        "id"
+      ],
+      "additionalProperties": false
+    },
+    "DocumentRef": {
+      "type": "object",
+      "properties": {
+        "doc_type": {
+          "enum": [
+            "rfq",
+            "quotation",
+            "proforma",
+            "po",
+            "order_ack",
+            "tax_invoice",
+            "credit_note",
+            "debit_note",
+            "delivery_challan",
+            "e_way_bill",
+            "grn",
+            "prc",
+            "crac",
+            "weighment_slip",
+            "assay_certificate",
+            "inspection_report",
+            "payment_advice",
+            "tds_certificate",
+            "e_nwr",
+            "huid",
+            "rera_agreement",
+            "lc_document_set",
+            "e_bg",
+            "e_ticket",
+            "rental_agreement",
+            "scheme_claim",
+            "ledger_confirmation",
+            "auction_slip",
+            "bid_document",
+            "contract",
+            "msmed_objection",
+            "proof_of_delivery",
+            "lorry_receipt"
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "parent_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Typed document graph: e.g. GRN -> PO, invoice -> PO."
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "issued_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "hash": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+        },
+        "irn": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "GST e-invoice IRN (64 hex)."
+        },
+        "signed_qr_hash": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+        },
+        "ewb_no": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "amount": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+        },
+        "uri": {
+          "type": "string",
+          "format": "uri"
+        },
+        "payload": {
+          "type": "object",
+          "description": "The body of the document where BACP reads it. For a grn: the delivery date, the lines with quantities and enum reasons, and an optional written objection. For a proof_of_delivery or lorry_receipt: the attestations that make it count.",
+          "properties": {
+            "delivery_date": {
+              "type": "string",
+              "format": "date",
+              "description": "The date the goods were actually delivered. It MUST NOT precede the invoice date or lie in the future."
+            },
+            "lines": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 200,
+              "items": {
+                "type": "object",
+                "required": [
+                  "line_ref",
+                  "qty_received",
+                  "qty_accepted",
+                  "qty_rejected"
+                ],
+                "properties": {
+                  "line_ref": {
+                    "type": "string",
+                    "maxLength": 64,
+                    "pattern": "^[\\x21-\\x7e]+$",
+                    "description": "The line of the PO or invoice this line answers."
+                  },
+                  "qty_received": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "qty_accepted": {
+                    "type": "number",
+                    "minimum": 0
+                  },
+                  "qty_rejected": {
+                    "type": "number",
+                    "minimum": 0,
+                    "description": "qty_accepted plus qty_rejected MUST NOT exceed qty_received; JSON Schema cannot state this sum, so a gateway checks it and refuses a GRN that breaks it."
+                  },
+                  "reason_code": {
+                    "enum": [
+                      "short_supply",
+                      "damaged",
+                      "wrong_item",
+                      "expired",
+                      "quality",
+                      "other"
+                    ],
+                    "description": "Required when qty_rejected is above zero."
+                  },
+                  "reason_text": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "description": "Free text written by the document's author. It is counterparty text: every surface labels it and no agent treats it as an instruction."
+                  }
+                },
+                "additionalProperties": false,
+                "allOf": [
+                  {
+                    "if": {
+                      "properties": {
+                        "qty_rejected": {
+                          "exclusiveMinimum": 0
+                        }
+                      },
+                      "required": [
+                        "qty_rejected"
+                      ]
+                    },
+                    "then": {
+                      "required": [
+                        "reason_code"
+                      ]
+                    }
+                  }
+                ]
+              }
+            },
+            "objection": {
+              "type": "object",
+              "required": [
+                "text",
+                "raised_on"
+              ],
+              "properties": {
+                "text": {
+                  "type": "string",
+                  "maxLength": 500,
+                  "description": "The written objection. Counterparty text."
+                },
+                "raised_on": {
+                  "type": "string",
+                  "format": "date"
+                }
+              },
+              "additionalProperties": false,
+              "description": "A written objection to the goods or services, with its date."
+            },
+            "transporter_signature": {
+              "$ref": "#/$defs/Jws",
+              "description": "The transporter's signature over the delivery record: a third-party reference the buyer can check."
+            },
+            "buyer_countersignature": {
+              "$ref": "#/$defs/Jws",
+              "description": "The buyer's counter-signature of the seller-posted delivery evidence."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "doc_type",
+        "id"
+      ],
+      "additionalProperties": false,
+      "description": "A typed reference to a trade document, with its hash. A GRN, a CRAC and an MSMED objection also carry their body in payload. Seller-posted delivery evidence (proof_of_delivery, lorry_receipt) dates MSMED acceptance only when the buyer counter-signed it or it carries a third-party reference the buyer can check (an e-way bill number, or a transporter signature); otherwise the ledger records acceptance_basis unattested."
+    },
+    "Citation": {
+      "type": "object",
+      "properties": {
+        "file": {
+          "type": "string"
+        },
+        "section": {
+          "type": "string"
+        },
+        "label": {
+          "enum": [
+            "RBI",
+            "NPCI",
+            "NBBL",
+            "NET",
+            "STATUTE",
+            "GeM/DoE",
+            "VENDOR",
+            "PRESS",
+            "SECONDARY",
+            "K",
+            "V",
+            "UNVERIFIED",
+            "ANALYSIS"
+          ]
+        }
+      },
+      "required": [
+        "file",
+        "section"
+      ],
+      "additionalProperties": false
+    },
+    "ProtocolVersion": {
+      "type": "string",
+      "pattern": "^(\\d{4}-\\d{2}-\\d{2}|draft)$",
+      "description": "BACP protocol version: a dated release identifier (YYYY-MM-DD), or \"draft\" for the unreleased working version."
+    },
+    "ParticipantRole": {
+      "enum": [
+        "principal",
+        "assisted_operator",
+        "seller_operator",
+        "sub_agent"
+      ],
+      "description": "Role of a participant in a session other than the session's own agent: principal (the human or business the agent acts for), assisted_operator (a human who completes the session for the principal at a physical touchpoint, channel assisted), seller_operator (a human acting for the seller, such as a kirana owner or a munim) or sub_agent (an agent acting under a mandate delegated by the session's agent). Seller staff and support staff who act through the seller app and IGM are not session participants."
+    },
+    "Participant": {
+      "type": "object",
+      "description": "One participant in a checkout session. The principal is referred to by a pairwise pseudonymous reference, never by an Aadhaar number. Accessibility needs travel only as Presentation.modality, never as disability data. For an assisted_operator, ref and ref_verification are attribution, never authentication: neither proves who the operator is or that the principal gave the operator authority.",
+      "required": [
+        "participant_id",
+        "role"
+      ],
+      "properties": {
+        "participant_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Identifier of this participant within the session; referred to by Presentation.assisted_by, InstructionLogEntry.actor_ref and acknowledgement actors."
+        },
+        "role": {
+          "$ref": "#/$defs/ParticipantRole"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Who the participant is: the pairwise pseudonymous principal reference for a principal; for an assisted_operator, a namespaced reference scheme:id, where scheme is csc_vle, bank_bc, ondc_np_agent or other, issued to the operator by the body that certifies it (who certifies assisted operators is an open question); the seller-side reference for a seller operator; the agent id for a sub-agent."
+        },
+        "ref_verification": {
+          "enum": [
+            "asserted",
+            "verified"
+          ],
+          "description": "Set only by the gateway, for an assisted_operator. asserted means that the agent operator supplied ref and the gateway has not checked it against a registry. verified is written only when the gateway can name the verifying registry, and none exists today, so asserted is the only value in practice. An agent that supplies verified gets 400 invalid_request. An absent value reads as asserted."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "role"
+            ],
+            "properties": {
+              "role": {
+                "const": "assisted_operator"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "ref": {
+                "pattern": "^(csc_vle|bank_bc|ondc_np_agent|other):[^\\s]+$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "HandoffRoute": {
+      "type": "object",
+      "description": "One route to a human. A route on a voice, IVR or UPI 123PAY channel is a tel: URI, optionally with the DTMF digits to press (for example 0). A route on another channel is a tel: or https: URI. A route that carries dtmf MUST be a tel: URI.",
+      "required": [
+        "channel",
+        "uri",
+        "languages",
+        "hours"
+      ],
+      "properties": {
+        "channel": {
+          "$ref": "#/$defs/Channel"
+        },
+        "uri": {
+          "type": "string",
+          "pattern": "^(tel:|https:)",
+          "description": "tel: URI (RFC 3966, https://www.rfc-editor.org/rfc/rfc3966) or https: URI of the route."
+        },
+        "dtmf": {
+          "type": "string",
+          "pattern": "^[0-9*#]{1,8}$",
+          "description": "Digits the caller presses on a voice or IVR flow to reach a human, for example 0. Only on a tel: route."
+        },
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/LanguageTag"
+          },
+          "description": "Languages in which a human answers on this route."
+        },
+        "hours": {
+          "type": "string",
+          "minLength": 1,
+          "description": "When a human answers on this route, in IST, for example 'Mo-Su 08:00-20:00' or '24x7'."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "dtmf"
+            ]
+          },
+          "then": {
+            "properties": {
+              "uri": {
+                "pattern": "^tel:"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Presentation": {
+      "type": "object",
+      "description": "What a Trusted Surface presented to the principal, how, and what the principal did. Recorded by the Trusted Surface (Mandate Manager or payer PSP) and carried inside its signed Trusted Surface event. For a step-up, content_hash is the hash of the gateway-signed ts_render the Trusted Surface fetched by step_up_id.",
+      "required": [
+        "surface",
+        "channel",
+        "language",
+        "modality",
+        "content_hash",
+        "content_ref",
+        "user_action",
+        "shown_at",
+        "acted_at"
+      ],
+      "properties": {
+        "surface": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Trusted Surface id: the registry subscriber id of the payer PSP or Mandate Manager whose app, IVR or assisted counter presented the content, equal to the subscriber id of the registry key that signed the event. The gateway refuses an event whose surface is not the signer's subscriber id with 404 not_found. Never the agent."
+        },
+        "channel": {
+          "$ref": "#/$defs/Channel"
+        },
+        "language": {
+          "$ref": "#/$defs/LanguageTag",
+          "description": "Language in which the content was presented: English or a language of the Eighth Schedule, as a BCP 47 tag."
+        },
+        "modality": {
+          "enum": [
+            "visual",
+            "audio",
+            "both"
+          ],
+          "description": "visual (on screen), audio (read aloud in full before the factor was entered) or both."
+        },
+        "language_choice": {
+          "enum": [
+            "principal_selected"
+          ],
+          "description": "Present, with the value principal_selected, only when the Trusted Surface could not render the language of ts_render and the principal chose another language on the Trusted Surface. Absent otherwise. A Trusted Surface MUST NOT render a language other than ts_render.language without it."
+        },
+        "content_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "sha-256 over the exact bytes of the content presented. For a step-up, the sha-256 of the compact JWS ts_render."
+        },
+        "content_ref": {
+          "type": "string",
+          "anyOf": [
+            {
+              "pattern": "^#/ts_renders/(0|[1-9][0-9]*)$"
+            },
+            {
+              "pattern": "^[A-Za-z][A-Za-z0-9+.-]*:",
+              "format": "uri"
+            }
+          ],
+          "description": "Where a party entitled to the evidence can fetch the presented content to recompute content_hash. For a step-up it is an RFC 3986 fragment that holds an RFC 6901 JSON Pointer into the evidence bundle, #/ts_renders/<index>, where <index> is the zero-based position of the ts_render in the bundle's ts_renders array without leading zeros. The bundle is signed and immutable, so the index is stable. Otherwise it is an absolute URI of the operator-held content."
+        },
+        "template_id": {
+          "type": "string",
+          "description": "Identifier and version of the Trusted Surface template used to render the content."
+        },
+        "renders": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "catalogue_disclosure",
+              "plan",
+              "items",
+              "acceptance_revocation",
+              "unrequested_lines"
+            ]
+          },
+          "description": "The render fields beyond the base set of this version that the Trusted Surface presented: catalogue_disclosure, plan, items, unrequested_lines or acceptance_revocation. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure or plan, and on any step-up approval whose ts_render lists a name in render_required (the gateway refuses the event with 400 invalid_request if any such name is missing); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field. renders is the only extension point of Presentation."
+        },
+        "checkout_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "checkout_hash of the quote the content showed: the session's quote, or for a post_order step-up the order's. REQUIRED on a step_up.approved event (the gateway refuses one without it with 400 invalid_request), except on the approval of a post_order step-up for an order-less ledger act (LEDGER_ACK with no order_id), which carries none; never present with offer_hash. The gateway applies an approval only while the session's checkout_hash equals it."
+        },
+        "offer_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "offer_hash of the offer a negotiation confirm step-up showed. REQUIRED on a negotiation.step_up.approved event and never present with checkout_hash. The gateway checks that it equals the ts_render's offer_hash and the offer the step-up names, or refuses the event with 403 ts_render_mismatch."
+        },
+        "plan_hash": {
+          "$ref": "#/$defs/Hash",
+          "pattern": "^sha-256:",
+          "description": "plan_hash of the payment plan a step-up showed. REQUIRED on a step_up.approved event whose ts_render carries plan, and never present otherwise. The gateway checks that it equals the ts_render's plan.plan_hash, or refuses the event with 403 ts_render_mismatch."
+        },
+        "user_action": {
+          "enum": [
+            "tap_confirm",
+            "upi_pin",
+            "biometric",
+            "passkey",
+            "voice_confirm_plus_device",
+            "decline"
+          ],
+          "description": "The principal's action: the ConsentReceipt captured_via values, or decline. biometric is the principal's own enrolled biometric, never an operator's. voice_confirm_plus_device is a voice confirmation on a call that the Trusted Surface placed to, or received from, the number it holds for the principal or payer; 'device' there means that Trusted Surface-bound number or call leg, not a device key. It carries voice_evidence.challenge_hash, and the gateway refuses it on a rail_auth step-up and on any confirm step-up whose approval releases a debit (403 presence_not_proven)."
+        },
+        "shown_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "acted_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "device_signature": {
+          "$ref": "#/$defs/Jws",
+          "description": "Signature by the principal's device key over the JCS form of {step_up_id, content_hash, acted_at} (for a step-up), or over {content_hash, acted_at} otherwise."
+        },
+        "voice_evidence": {
+          "type": "object",
+          "properties": {
+            "audio_hash": {
+              "$ref": "#/$defs/Hash",
+              "description": "sha-256 of the recorded audio of the confirmation."
+            },
+            "transcript_hash": {
+              "$ref": "#/$defs/Hash"
+            },
+            "translation_model": {
+              "type": "string"
+            },
+            "challenge_hash": {
+              "$ref": "#/$defs/Hash",
+              "description": "sha-256 over the JCS form of {step_up_id, content_hash, challenge}, where challenge is the single-use value of at least 4 digits that the Trusted Surface drew from its own random source for this step-up and the principal answered by speech or by keypad (DTMF carries the same weight). The challenge is never in ts_render, StepUp, StepUpStatus or anything else an agent sees."
+            }
+          },
+          "description": "Evidence of a voice confirmation (user_action voice_confirm_plus_device). challenge_hash is REQUIRED. The Trusted Surface draws the voice challenge itself, on its own call leg, and the gateway never sees the challenge, so it cannot recompute the hash: it is evidence that the answer was bound to an unpredictable value, not a check the gateway makes.",
+          "required": [
+            "challenge_hash"
+          ]
+        },
+        "assisted_by": {
+          "type": "string",
+          "description": "participant_id of the assisted_operator entry in the session's participants[]. REQUIRED when channel is assisted. The Trusted Surface takes it from the assisted operators listed in the gateway-signed ts_render, never from the agent, and the gateway checks that it names an assisted_operator participant of the session."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "channel": {
+                "const": "assisted"
+              }
+            },
+            "required": [
+              "channel"
+            ]
+          },
+          "then": {
+            "required": [
+              "assisted_by"
+            ],
+            "properties": {
+              "user_action": {
+                "enum": [
+                  "upi_pin",
+                  "biometric",
+                  "decline"
+                ],
+                "description": "On channel assisted the principal approves with the principal's own factor (UPI PIN, or biometric meaning the principal's own biometric enrolled for the principal on the Trusted Surface device), never a tap (BACP policy)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "user_action": {
+                "const": "voice_confirm_plus_device"
+              }
+            },
+            "required": [
+              "user_action"
+            ]
+          },
+          "then": {
+            "required": [
+              "voice_evidence"
+            ]
+          }
+        },
+        {
+          "not": {
+            "required": [
+              "checkout_hash",
+              "offer_hash"
+            ]
+          }
+        }
+      ]
+    },
+    "HpProof": {
+      "type": "object",
+      "description": "Proof that the principal confirmed one write on the Trusted Surface: a post-order write with presence HP (cancel, return, raise issue, issue action) or an agent's trade act (GRN, CRAC, MSMED written objection, ledger acknowledgement). It names a step-up of kind post_order, whose gateway-signed ts_render names the action, the order and, for an issue action, the issue and, for RESOLUTION_ACCEPTED or RESOLUTION_REJECTED, the subject_hash of the resolution shown, and the signed step_up.approved event for it. It is valid only for the write its ts_render names, for RESOLUTION_ACCEPTED or RESOLUTION_REJECTED only while the issue's resolution still hashes to that subject_hash, and is used once; otherwise the write is refused with 403 presence_not_proven.",
+      "required": [
+        "ts_event_hash",
+        "step_up_id"
+      ],
+      "properties": {
+        "ts_event_hash": {
+          "$ref": "#/$defs/Hash",
+          "description": "sha-256 over the JCS form of the signed step_up.approved event that the gateway received at /trusted-surface/events for step_up_id."
+        },
+        "step_up_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "The post_order step-up under which the Trusted Surface showed this write."
+        }
+      }
+    },
+    "Actor": {
+      "type": "object",
+      "description": "Who performed a ledger acknowledgement or a trade act (GRN, CRAC, MSMED written objection): a human or an agent, the role in which it acted, and a reference to the acting participant. A human acts as principal, assisted_operator or seller_operator; an agent acts as agent or sub_agent.",
+      "required": [
+        "kind",
+        "role",
+        "participant_ref"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "human",
+            "agent"
+          ]
+        },
+        "role": {
+          "enum": [
+            "principal",
+            "assisted_operator",
+            "seller_operator",
+            "agent",
+            "sub_agent"
+          ],
+          "description": "principal for the buyer or seller party itself (or its authorised human), seller_operator for seller staff such as a munim, assisted_operator for a human at a physical touchpoint, agent for the party's own AI agent and sub_agent for a delegated agent."
+        },
+        "participant_ref": {
+          "type": "string",
+          "minLength": 1,
+          "description": "participant_id in the session's participants[], or the agent id for an agent."
+        },
+        "mandate_ref": {
+          "type": "string",
+          "description": "Mandate under which an agent acted. It does not authorise a trade act: an agent's act needs hp_proof."
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "human"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "principal",
+                  "assisted_operator",
+                  "seller_operator"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "agent"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "properties": {
+              "role": {
+                "enum": [
+                  "agent",
+                  "sub_agent"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ChargeRecipient": {
+      "enum": [
+        "seller",
+        "logistics",
+        "buyer_app",
+        "agent_operator",
+        "assisted_operator",
+        "government",
+        "other"
+      ],
+      "description": "Who receives a charge from the payer's money: the seller, a logistics provider, the buyer app, the agent operator, an assisted operator, the government (tax) or another party. A value signed by the seller's side is never inferred or rewritten by the gateway."
+    },
+    "OperatorCompensation": {
+      "type": "object",
+      "description": "What the agent operator, an assisted operator or the buyer app is paid for acting for the principal. The Mandate Manager shows it in the mandate notice before the principal approves, and it is part of the hashed notice of the ConsentReceipt. BACP requires the declaration for activation as a matter of its own policy; no Indian rule found requires it.",
+      "required": [
+        "from_principal",
+        "from_sellers"
+      ],
+      "properties": {
+        "from_principal": {
+          "type": "array",
+          "minItems": 1,
+          "description": "What the principal pays. A single entry with basis none means the principal pays nothing.",
+          "items": {
+            "type": "object",
+            "required": [
+              "basis"
+            ],
+            "properties": {
+              "basis": {
+                "enum": [
+                  "per_order",
+                  "period",
+                  "none"
+                ],
+                "description": "per_order: a fee on each order. period: a fee for a period named in the operator's terms. none: the principal pays nothing."
+              },
+              "amount": {
+                "$ref": "#/$defs/Amount",
+                "description": "The fee for one order or one period. REQUIRED when basis is per_order or period, and absent when basis is none."
+              }
+            },
+            "if": {
+              "properties": {
+                "basis": {
+                  "const": "none"
+                }
+              },
+              "required": [
+                "basis"
+              ]
+            },
+            "then": {
+              "not": {
+                "required": [
+                  "amount"
+                ]
+              }
+            },
+            "else": {
+              "required": [
+                "amount"
+              ]
+            },
+            "additionalProperties": false
+          }
+        },
+        "from_sellers": {
+          "enum": [
+            "finder_fee",
+            "channel_margin",
+            "none",
+            "other"
+          ],
+          "description": "What sellers pay the operator or the buyer app for orders it brings: an ONDC buyer finder fee, a channel margin, nothing, or another arrangement."
+        }
+      },
+      "if": {
+        "properties": {
+          "from_principal": {
+            "contains": {
+              "properties": {
+                "basis": {
+                  "const": "none"
+                }
+              },
+              "required": [
+                "basis"
+              ]
+            }
+          }
+        },
+        "required": [
+          "from_principal"
+        ]
+      },
+      "then": {
+        "properties": {
+          "from_principal": {
+            "maxItems": 1
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

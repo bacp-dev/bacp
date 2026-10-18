@@ -1,0 +1,52 @@
+{
+  "auction_id": "auc_GEMRA20261013",
+  "type": "reverse_l1",
+  "auctioneer": {
+    "role": "auctioneer",
+    "id": "ra.gem-like.example.in",
+    "kind": "human"
+  },
+  "auctioneer_neutrality": {
+    "operator_type": "government_platform",
+    "affiliated_with_any_seller": false,
+    "clock_source": "auctioneer CounterSignature timestamps"
+  },
+  "lots": [
+    {
+      "lot_id": "LOT1",
+      "item_id": "LAPTOP-I5-16G",
+      "quantity": 120,
+      "unit": "each"
+    }
+  ],
+  "start_price": {
+    "value": 660000000,
+    "currency": "INR"
+  },
+  "increment": {
+    "value": 5000000,
+    "currency": "INR"
+  },
+  "opens_at": "2026-10-20T11:00:00+05:30",
+  "closes_at": "2026-10-20T13:00:00+05:30",
+  "extension_rule": {
+    "window": "PT5M",
+    "extend_by": "PT5M",
+    "max_extensions": 20
+  },
+  "visibility": "sealed",
+  "tie_break": "earliest_bid",
+  "eligibility": {
+    "technical_qualified_only": true,
+    "exclude_suspended": true
+  },
+  "award_rule": "l1",
+  "retraction_rule": "no_retraction",
+  "procurement_mode_reason": "Value above direct and L1 purchase ceilings",
+  "signature": {
+    "role": "operator",
+    "kid": "ra.gem-like.example.in|k1",
+    "alg": "ES256",
+    "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+  }
+}

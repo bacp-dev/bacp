@@ -1,0 +1,13 @@
+{
+  "code": "agreed_by_agent",
+  "render": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl",
+  "content_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "delivery": {
+    "route": {
+      "type": "sms",
+      "ref": "sms:+919800000000"
+    },
+    "delivered_at": "2026-10-13T11:05:14+05:30",
+    "receipt_ref": "dlr_01HZXN"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "items": [
+    {
+      "id": "I-ATTA-2KG",
+      "quantity": 1
+    }
+  ],
+  "fulfilment": {
+    "type": "Delivery",
+    "address_ref": "addr_home",
+    "pincode": "560034",
+    "option_id": "fo1"
+  }
+}

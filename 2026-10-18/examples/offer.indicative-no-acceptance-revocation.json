@@ -1,0 +1,220 @@
+{
+  "type": "counter_offer",
+  "msg_id": "nmsg_S2r2a8Kq2",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 2,
+  "dispatched_at": "2026-10-13T11:02:00+05:30",
+  "sender_log_seq": 14,
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz0",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "from": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in",
+    "agent_id": "did:web:bunkar.example.in:agent",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.bunkar.example.in|ukid-2|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:bunkar.example.in:agent#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "in_reply_to": "sha-256:CLBzZiGShPn7otrhk5RQwUJ0OVvuTGgXzZe31AFlwOg",
+  "mode": "alternating",
+  "firm": false,
+  "term_sheet": {
+    "term_sheet_id": "ts_saree_r2",
+    "version": "1",
+    "currency": "INR",
+    "pricing_basis": "negotiated",
+    "parties": {
+      "buyer": {
+        "role": "buyer",
+        "id": "pp_9f2c1e",
+        "kind": "agent"
+      },
+      "seller": {
+        "role": "seller",
+        "id": "bpp.bunkar.example.in|P2",
+        "kind": "agent",
+        "udyam": {
+          "category": "micro",
+          "activity": "manufacturing"
+        }
+      }
+    },
+    "lines": [
+      {
+        "line_id": "L1",
+        "item_id": "CHND-SILK-112",
+        "name": {
+          "hi-IN": "चंदेरी सिल्क साड़ी",
+          "en-IN": "Chanderi silk saree"
+        },
+        "hsn": "5007",
+        "unit": "each",
+        "quantity": {
+          "value": 1,
+          "status": "Agree",
+          "negotiable": false
+        },
+        "unit_price": {
+          "value": {
+            "value": 210000,
+            "currency": "INR"
+          },
+          "status": "Assert",
+          "negotiable": true,
+          "proposed_by": "seller"
+        },
+        "tax_inclusive": true,
+        "gst_rate_pct": 5,
+        "retail_package_mrp_required": false,
+        "line_total": {
+          "value": 210000,
+          "currency": "INR"
+        },
+        "asserted_by_buyer": true
+      }
+    ],
+    "charges": [
+      {
+        "code": "delivery",
+        "recipient": "seller",
+        "amount": {
+          "value": {
+            "value": 6000,
+            "currency": "INR"
+          },
+          "status": "Agree",
+          "negotiable": false
+        },
+        "mandatory": true,
+        "first_disclosed_round": 1
+      }
+    ],
+    "all_in_total": {
+      "value": 216000,
+      "currency": "INR"
+    },
+    "delivery": {
+      "fulfilment_type": {
+        "value": "delivery",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "deliver_by": {
+        "value": "2026-10-18T20:00:00+05:30",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "payment": {
+      "options": [
+        {
+          "option_id": "prepaid",
+          "handlers": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ],
+          "timing": "ON-ORDER",
+          "all_in_total": {
+            "value": 216000,
+            "currency": "INR"
+          }
+        },
+        {
+          "option_id": "cod",
+          "handlers": [
+            "in.cod",
+            "in.cod.upi"
+          ],
+          "timing": "ON-FULFILLMENT",
+          "method_fee": {
+            "value": 4000,
+            "currency": "INR"
+          },
+          "all_in_total": {
+            "value": 220000,
+            "currency": "INR"
+          }
+        }
+      ],
+      "selected_option_id": {
+        "value": "prepaid",
+        "status": "Assert",
+        "negotiable": true,
+        "proposed_by": "buyer"
+      },
+      "schedule": [
+        {
+          "tranche_id": "T1",
+          "pct": 100,
+          "due": {
+            "event": "on_order"
+          },
+          "handlers_allowed": [
+            "in.upi.reservepay",
+            "in.upi.intent"
+          ]
+        }
+      ],
+      "collected_by": {
+        "value": "BPP",
+        "status": "Agree",
+        "negotiable": false
+      }
+    },
+    "returns": {
+      "return_window": {
+        "value": "P7D",
+        "status": "Agree",
+        "negotiable": false
+      },
+      "return_type": {
+        "value": "exchange_only",
+        "status": "Agree",
+        "negotiable": true
+      }
+    },
+    "conditions_precedent": [
+      "payment_on_order"
+    ]
+  },
+  "all_in_total": {
+    "value": 216000,
+    "currency": "INR"
+  },
+  "valid_from": "2026-10-13T11:02:00+05:30",
+  "expires_at": "2026-10-13T11:32:00+05:30",
+  "inventory_hold_until": "2026-10-13T11:32:00+05:30",
+  "acceptance_manner": "bacp.neg.accept",
+  "agreed_issues": [
+    "/lines/0/quantity",
+    "/delivery/deliver_by"
+  ],
+  "jurisdictional": {
+    "mrp_checked": true,
+    "msme_seller": true
+  },
+  "advisory": {
+    "binding": false,
+    "text_hash": "sha-256:6iak2WON2JhiFipD_0-eRnjeMbrfux8b9kSh87RJ-Oc"
+  }
+}

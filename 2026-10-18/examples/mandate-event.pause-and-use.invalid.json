@@ -1,0 +1,24 @@
+{
+  "event_id": "evt_01HZXWm4",
+  "type": "pause_changed",
+  "mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "root_mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "gateway": "bap.vaani.example.in",
+  "created_at": "2026-12-16T10:00:03+05:30",
+  "seq": 4,
+  "prev_hash": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM",
+  "pause": {
+    "change": "added",
+    "reason": "binding_ineligible",
+    "registry_version": "2026-10-18",
+    "registry_serial": 2
+  },
+  "use": {
+    "closed_mandate_id": "mdt_PAYCLOSED7Q2W9X4",
+    "amount": {
+      "value": 29000,
+      "currency": "INR"
+    },
+    "session_id": "ses_01HZXD"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "type": "invalid_request",
+  "code": "capability_unsupported",
+  "message": "This gateway does not list in.bacp.discounts, so the discounts member is refused and no session was created",
+  "param": "$.discounts",
+  "capability": "in.bacp.discounts",
+  "resolution": "unrecoverable"
+}

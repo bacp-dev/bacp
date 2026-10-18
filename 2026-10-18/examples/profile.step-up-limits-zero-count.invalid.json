@@ -1,0 +1,60 @@
+{
+  "bacp": {
+    "version": "2026-10-18",
+    "supported_versions": [
+      "2026-10-18"
+    ]
+  },
+  "bap_id": "bap.vaani.example.in",
+  "transports": [
+    "rest",
+    "mcp"
+  ],
+  "capabilities": [
+    "in.bacp.discover",
+    "in.bacp.checkout",
+    "in.bacp.mandate",
+    "in.bacp.order"
+  ],
+  "payment_handlers": [
+    "in.upi.reservepay",
+    "in.upi.circle",
+    "in.ppi.gift"
+  ],
+  "message_id_namespace": "55884fda-3b41-58be-87a9-2be7b3b43b7f",
+  "keys": {
+    "keys": [
+      {
+        "kty": "OKP",
+        "crv": "Ed25519",
+        "x": "11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+        "kid": "ukid-7"
+      }
+    ]
+  },
+  "step_up_limits": {
+    "post_order_per_principal": {
+      "count": 5,
+      "window": "PT1H"
+    },
+    "post_order_per_order": {
+      "count": 3,
+      "window": "PT1H"
+    },
+    "reprompt_per_issue": {
+      "count": 0,
+      "window": "P7D"
+    },
+    "decline_cooloff": {
+      "window": "PT10M"
+    },
+    "render_fetch_per_key": {
+      "count": 600,
+      "window": "PT1M"
+    },
+    "render_fetch_per_step_up": {
+      "count": 20,
+      "window": "PT1M"
+    }
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "plan_id": "plan_GIFTUPI0001",
+  "tenders": [
+    {
+      "tender_id": "tdr_gift001",
+      "handler": "in.ppi.gift",
+      "amount": {
+        "value": 100000,
+        "currency": "INR"
+      },
+      "sequence": 1,
+      "payment_mandate": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln"
+    },
+    {
+      "tender_id": "tdr_upi001",
+      "handler": "in.upi.circle",
+      "amount": {
+        "value": 116000,
+        "currency": "INR"
+      },
+      "sequence": 2,
+      "payment_mandate": "eyJhbGciOiJFUzI1NiJ9.eyJ2Y3QiOiJpbi5iYWNwLm1hbmRhdGUucGF5bWVudC4xIn0.c2ln"
+    }
+  ],
+  "refund_allocation": "lifo"
+}

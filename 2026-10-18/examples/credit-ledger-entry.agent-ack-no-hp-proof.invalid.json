@@ -1,0 +1,123 @@
+{
+  "entry_id": "lde_TILH00000041",
+  "ledger_id": "ldg_ANNAxTILH0001",
+  "seq": 41,
+  "type": "sale",
+  "amount": {
+    "value": 42105000,
+    "currency": "INR"
+  },
+  "effect": "increase_receivable",
+  "at": "2026-10-20T17:10:00+05:30",
+  "due_date": "2026-11-19",
+  "credit_terms": {
+    "credit_days": 30,
+    "reference_event": "on_acceptance",
+    "reference_date": "2026-10-20",
+    "agreed_in_offer_hash": "sha-256:MybbKuwgRB5sHqxf5ELiGObmaBzmvzQ_7zVEALcoVkA"
+  },
+  "msmed": {
+    "applies": true,
+    "supplier_category": "small",
+    "acceptance_date": "2026-10-20",
+    "written_agreement": true,
+    "statutory_due_date": "2026-11-19",
+    "interest_basis": "3x_rbi_bank_rate_compound_monthly",
+    "tax_flag": "none"
+  },
+  "documents": [
+    {
+      "doc_type": "po",
+      "id": "PO-ANNA-7781"
+    },
+    {
+      "doc_type": "tax_invoice",
+      "id": "TO/26-27/0912",
+      "parent_ids": [
+        "PO-ANNA-7781"
+      ],
+      "irn": "a3f1c2e4b5d6a7980f1e2d3c4b5a69788796a5b4c3d2e1f00112233445566778",
+      "amount": {
+        "value": 42105000,
+        "currency": "INR"
+      }
+    },
+    {
+      "doc_type": "e_way_bill",
+      "id": "EWB-1",
+      "ewb_no": "331009876543",
+      "parent_ids": [
+        "TO/26-27/0912"
+      ]
+    },
+    {
+      "doc_type": "grn",
+      "id": "GRN-ANNA-5521",
+      "parent_ids": [
+        "PO-ANNA-7781",
+        "TO/26-27/0912"
+      ]
+    }
+  ],
+  "order_id": "ORD-TILH-0912",
+  "offer_hash": "sha-256:MybbKuwgRB5sHqxf5ELiGObmaBzmvzQ_7zVEALcoVkA",
+  "ledger_after": {
+    "balance": {
+      "value": 42105000,
+      "currency": "INR"
+    },
+    "credit_limit": {
+      "value": 100000000,
+      "currency": "INR"
+    },
+    "overdue": {
+      "value": 0,
+      "currency": "INR"
+    }
+  },
+  "acknowledgements": [
+    {
+      "by": "seller",
+      "actor": {
+        "kind": "human",
+        "role": "seller_operator",
+        "participant_ref": "par_TILH_munim_01"
+      },
+      "method": "signature",
+      "at": "2026-10-20T17:10:00+05:30"
+    },
+    {
+      "by": "buyer",
+      "actor": {
+        "kind": "agent",
+        "role": "agent",
+        "participant_ref": "did:web:agents.annapurna.example.in:proc",
+        "mandate_ref": "mdt_NEGANNA000000001"
+      },
+      "method": "signature",
+      "at": "2026-10-20T17:40:00+05:30"
+    }
+  ],
+  "status": "acknowledged",
+  "agent": {
+    "id": "did:web:agents.annapurna.example.in:proc",
+    "mandate_ref": "mdt_NEGANNA000000001",
+    "presence": "HP"
+  },
+  "prev_hash": "sha-256:rhzI-VIDjvIvzBg23Lq-ce4lXKEAjL_aU3aBLh-FOpU",
+  "entry_hash": "sha-256:2j76-F435SKJwqHuMivnGIyVn2QjD-8_t2gJjvOWAAA",
+  "signatures": [
+    {
+      "role": "bpp",
+      "kid": "bpp.tilhan.example.in|k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "bap",
+      "kid": "bap.annapurna.example.in|k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ]
+}

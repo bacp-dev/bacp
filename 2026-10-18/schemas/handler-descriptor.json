@@ -1,0 +1,1032 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/handler-descriptor.json",
+  "title": "HandlerDescriptor",
+  "description": "One entry of the BACP payment-handler registry. Descriptors are data: limits and rules are configuration, not code.",
+  "type": "object",
+  "required": [
+    "handler_id",
+    "name",
+    "family",
+    "kind",
+    "status",
+    "rail",
+    "regulator",
+    "presence",
+    "binding",
+    "mandate_primitives",
+    "limits",
+    "afa",
+    "refund",
+    "dispute",
+    "settlement",
+    "data_minimisation",
+    "funding",
+    "sources"
+  ],
+  "properties": {
+    "handler_id": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/HandlerId"
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Legacy and previously proposed ids that resolve to this handler."
+    },
+    "aliases_deprecated_after": {
+      "type": "string",
+      "format": "date",
+      "description": "Date after which this handler's deprecated aliases stop resolving. It is at least two dated releases and at least 180 days after the release that deprecates them, whichever is later (settled in Q-28; versioning policy)."
+    },
+    "name": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/LangText"
+    },
+    "family": {
+      "enum": [
+        "upi",
+        "card",
+        "netbanking",
+        "a2a",
+        "nach",
+        "ppi",
+        "credit",
+        "cod",
+        "bbps",
+        "voucher",
+        "cbdc",
+        "aeps",
+        "transit",
+        "trade_finance",
+        "cross_border",
+        "government",
+        "pa",
+        "cheque",
+        "ledger",
+        "loyalty",
+        "store_credit",
+        "pos"
+      ]
+    },
+    "kind": {
+      "enum": [
+        "payment",
+        "mandate_registration",
+        "financing",
+        "security_verification",
+        "tracker",
+        "ledger"
+      ]
+    },
+    "status": {
+      "enum": [
+        "live",
+        "pilot",
+        "reserved",
+        "deprecated"
+      ]
+    },
+    "rail": {
+      "type": "object",
+      "properties": {
+        "operator": {
+          "type": "string"
+        },
+        "network": {
+          "type": "string"
+        },
+        "params": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "operator"
+      ],
+      "additionalProperties": false
+    },
+    "regulator": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          },
+          "instrument": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "body",
+          "instrument"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "presence": {
+      "type": "object",
+      "properties": {
+        "human_presence": {
+          "enum": [
+            "required",
+            "mandate",
+            "none"
+          ],
+          "description": "required = human 2FA per payment; mandate = may run under a standing mandate; none = no payer authentication."
+        },
+        "hp": {
+          "type": "boolean"
+        },
+        "hnp": {
+          "enum": [
+            "none",
+            "rail_enforced",
+            "order_only"
+          ],
+          "description": "rail_enforced = a standing authority whose limits the rail or issuer enforces. order_only = order may be placed HNP, payment happens later with a human (COD)."
+        },
+        "device_bound": {
+          "type": "boolean"
+        },
+        "assisted_only": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "human_presence",
+        "hp",
+        "hnp"
+      ],
+      "additionalProperties": false
+    },
+    "binding": {
+      "type": "object",
+      "properties": {
+        "class": {
+          "enum": [
+            "O",
+            "C",
+            "A",
+            "D",
+            "N"
+          ],
+          "description": "Section 13.3: O open-eligible, C closed HP only, A assisted HP, D deferred (COD), N non-paying."
+        },
+        "open_eligible": {
+          "type": "boolean"
+        },
+        "open_primitives": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/MandatePrimitiveType",
+            "not": {
+              "const": "none"
+            }
+          },
+          "description": "The mandate primitives that may back an open (human-not-present) payment mandate on this handler. Each entry MUST be a mandate_primitives[].type of this descriptor whose limits_enforced_by is rail or issuer. An open payment mandate whose rail_binding.primitive is not listed here is refused with rail_binding_not_open_eligible. For example, in.ppi.wallet lists only ppi_emandate, so a wallet balance never backs an open mandate."
+        },
+        "open_requires": {
+          "type": "string",
+          "description": "Condition for open eligibility, e.g. 'only with an AFA-registered e-mandate reference'."
+        },
+        "closed_auth": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "upi.pin",
+              "upi.biometric",
+              "card.3ds",
+              "card.otp",
+              "card.passkey",
+              "netbanking.login_otp",
+              "maker_checker",
+              "aadhaar_biometric",
+              "voucher_code",
+              "wallet_pin",
+              "kfs_esign",
+              "dsc",
+              "cash_at_door",
+              "parent_rail_binding"
+            ]
+          }
+        }
+      },
+      "required": [
+        "class",
+        "open_eligible"
+      ],
+      "additionalProperties": false
+    },
+    "mandate_primitives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/MandatePrimitiveType"
+          },
+          "ref_name": {
+            "type": "string",
+            "description": "Rail reference carried in rail_binding.rail_ref, e.g. UMN, UMRN, SBMD block id."
+          },
+          "ref_pattern": {
+            "type": "string",
+            "format": "regex",
+            "description": "OPTIONAL regular expression that a rail_binding.rail_ref of this primitive has to match, so that a Mandate Manager can check the reference's shape. It is set only from a public source that states the format; no descriptor sets one in this version. Adding one to a live descriptor later is a breaking change."
+          },
+          "limits_enforced_by": {
+            "enum": [
+              "rail",
+              "issuer",
+              "merchant",
+              "lender",
+              "bacp",
+              "none"
+            ]
+          },
+          "payee_scope": {
+            "enum": [
+              "single_merchant",
+              "single_biller",
+              "single_creditor",
+              "any_merchant",
+              "purpose_locked",
+              "issuer_contracted",
+              "lender",
+              "n_a"
+            ],
+            "description": "Who the primitive may pay. issuer_contracted: any merchant that has a contract with the issuer of the instrument to accept it (RBI Master Direction on Prepaid Payment Instruments, paras 2.6 and 11.4.3), so that acceptance depends on the seller and is checked per seller before the rung is ranked. any_merchant is for a primitive that the rail lets pay any payee."
+          },
+          "multi_capture": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "type",
+          "limits_enforced_by"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "enum": [
+              "per_txn",
+              "per_txn_min",
+              "per_day",
+              "per_month",
+              "per_year",
+              "first_24h",
+              "balance",
+              "block_amount",
+              "mandate_max",
+              "voucher_max",
+              "no_afa_debit",
+              "no_afa_debit_special_categories",
+              "validity",
+              "devices",
+              "pps_threshold",
+              "cash_threshold"
+            ]
+          },
+          "amount": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+          },
+          "duration": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Duration"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "applies_to": {
+            "type": "string"
+          },
+          "source": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Citation"
+          },
+          "verification": {
+            "enum": [
+              "verified",
+              "secondary",
+              "vendor",
+              "unverified",
+              "conflict"
+            ]
+          },
+          "conflict_note": {
+            "type": "string"
+          },
+          "configurable": {
+            "type": "boolean"
+          },
+          "bound": {
+            "enum": [
+              "min",
+              "max"
+            ],
+            "description": "Whether the value of this limit is a floor (min) or a ceiling (max). Absent means a ceiling, except for validity, where an absent bound means the limit is a fixed value. For example, the validity of a gift PPI is a minimum of one year (RBI Master Direction on Prepaid Payment Instruments, para 13.1)."
+          }
+        },
+        "required": [
+          "name",
+          "source",
+          "verification",
+          "configurable"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "afa": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "enum": [
+            "per_txn_2fa",
+            "at_registration_and_first_debit",
+            "at_registration_only",
+            "at_block_creation",
+            "at_provisioning",
+            "exempt",
+            "exempt_below_threshold",
+            "biometric_assisted",
+            "maker_checker",
+            "loan_acceptance",
+            "voucher_code",
+            "none_cash",
+            "n_a"
+          ]
+        },
+        "rbi_annex1_item": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "The row of Annexure-1 of the RBI authentication directions (RBI/2025-26/79) that exempts this handler from two-factor authentication. REQUIRED when model is exempt or exempt_below_threshold, and FORBIDDEN when model is at_block_creation or at_registration_only, so that a handler is never labelled as an RBI exemption when it relies on authentication at creation or registration. The upper bound is not fixed, because Annexure-1 says that any subsequent addition or modification also applies, so the registry maintains the set of rows. The item records which rule the debit relies on. It does not make the debit lawful: the issuer remains liable for a non-compliant debit."
+        },
+        "threshold": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+        },
+        "threshold_special": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+        },
+        "pre_debit_notice": {
+          "enum": [
+            "required_24h",
+            "bacp_policy_24h",
+            "exempt",
+            "unknown",
+            "not_applicable"
+          ]
+        },
+        "source": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Citation"
+        },
+        "verification": {
+          "enum": [
+            "verified",
+            "secondary",
+            "vendor",
+            "unverified",
+            "conflict"
+          ],
+          "description": "How well the afa.source citation was checked, on the same scale as limits[].verification. It grades the NPCI or RBI text that the authentication model relies on, so that a registry reader can tell a verified citation from a vendor or unverified one."
+        }
+      },
+      "required": [
+        "model",
+        "pre_debit_notice"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "model"
+            ],
+            "properties": {
+              "model": {
+                "enum": [
+                  "exempt",
+                  "exempt_below_threshold"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "rbi_annex1_item"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "model"
+            ],
+            "properties": {
+              "model": {
+                "enum": [
+                  "at_block_creation",
+                  "at_registration_only"
+                ]
+              }
+            }
+          },
+          "then": {
+            "not": {
+              "required": [
+                "rbi_annex1_item"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "refund": {
+      "type": "object",
+      "properties": {
+        "route": {
+          "enum": [
+            "source",
+            "source_with_card_credit_consent",
+            "same_ppi",
+            "release_block_or_source",
+            "lender",
+            "user_elected_account",
+            "same_balance",
+            "issuer_or_sponsor",
+            "new_credit_push",
+            "ledger_credit_note",
+            "n_a",
+            "unverified"
+          ]
+        },
+        "failed_txn_tat": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Duration"
+        },
+        "compensation_per_day": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+        },
+        "notes": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Citation"
+        }
+      },
+      "required": [
+        "route"
+      ],
+      "additionalProperties": false
+    },
+    "dispute": {
+      "type": "object",
+      "properties": {
+        "channels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "window": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Duration"
+        },
+        "source": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Citation"
+        }
+      },
+      "required": [
+        "channels"
+      ],
+      "additionalProperties": false
+    },
+    "settlement": {
+      "type": "object",
+      "properties": {
+        "mechanism": {
+          "type": "string"
+        },
+        "evidence_refs": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "rrn",
+              "utr",
+              "umn",
+              "umrn",
+              "arn",
+              "auth_code",
+              "bconnect_txn_id",
+              "voucher_id",
+              "cbdc_txn_id",
+              "factoring_unit_id",
+              "loan_id",
+              "lc_no",
+              "ebg_no",
+              "gem_order_no",
+              "crac_no",
+              "pfms_payment_id",
+              "pa_order_id",
+              "cheque_no",
+              "uetr",
+              "ledger_entry_id",
+              "payee_mcc",
+              "awb",
+              "none"
+            ]
+          },
+          "description": "The keys a receipt of this handler may carry (the others in rail.evidence). payee_mcc, carried in rail.evidence, is the merchant category code of the UPI merchant tag (NPCI/UPI/CC/01 para 7.2), listed only where a payer PSP can pass it on; it lets a receipt show whether the payee was categorised as a small merchant (P2PM). It is optional, and an absent value means unknown, not a small merchant."
+        },
+        "escrow": {
+          "enum": [
+            "pa_escrow",
+            "none",
+            "gem_pool_account",
+            "platform",
+            "n_a"
+          ]
+        },
+        "timeline_source": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "mechanism",
+        "evidence_refs"
+      ],
+      "additionalProperties": false
+    },
+    "data_minimisation": {
+      "type": "object",
+      "properties": {
+        "payment_leg_fields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "never_collect": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "pin",
+              "otp",
+              "card_pan",
+              "cvv",
+              "card_expiry",
+              "netbanking_credentials",
+              "aadhaar_number",
+              "biometric",
+              "voucher_code_plaintext",
+              "basket"
+            ]
+          }
+        },
+        "retain_only": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "basket_blind": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "payment_leg_fields",
+        "never_collect",
+        "basket_blind"
+      ],
+      "additionalProperties": false
+    },
+    "funding": {
+      "enum": [
+        "debit",
+        "credit",
+        "prepaid",
+        "cash",
+        "voucher",
+        "loan",
+        "cbdc",
+        "trade_credit",
+        "n_a"
+      ]
+    },
+    "funding_sources": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "debit",
+          "credit",
+          "prepaid",
+          "cash",
+          "voucher",
+          "loan",
+          "cbdc",
+          "trade_credit",
+          "n_a"
+        ]
+      },
+      "description": "OPTIONAL. Every source of funds that a payer can bring to this handler, when it is more than the primary funding. It MUST contain funding. For example, a UPI Reserve Pay block can sit on a savings or current account (debit) or on an overdraft account, a RuPay credit card or a pre-sanctioned credit line (credit), so in.upi.reservepay lists debit and credit. The source that a given mandate actually uses is the one the payer PSP attests, never the one listed here."
+    },
+    "credit_disclosure_required": {
+      "type": "boolean"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "b2c",
+          "b2b",
+          "g2b",
+          "c2c",
+          "assisted",
+          "cross_border"
+        ]
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^(PAY|REQ|TRADE|NEG)-[0-9]{3}$"
+      }
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Citation"
+      }
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "binding": {
+            "properties": {
+              "open_eligible": {
+                "const": true
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "presence": {
+            "properties": {
+              "hnp": {
+                "const": "rail_enforced"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "An open-eligible descriptor names at least one open-eligible mandate primitive.",
+      "if": {
+        "properties": {
+          "binding": {
+            "properties": {
+              "open_eligible": {
+                "const": true
+              }
+            },
+            "required": [
+              "open_eligible"
+            ]
+          }
+        },
+        "required": [
+          "binding"
+        ]
+      },
+      "then": {
+        "properties": {
+          "binding": {
+            "required": [
+              "open_primitives"
+            ],
+            "properties": {
+              "open_primitives": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "presence": {
+            "properties": {
+              "device_bound": {
+                "const": true
+              }
+            },
+            "required": [
+              "device_bound"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "binding": {
+            "properties": {
+              "open_eligible": {
+                "const": false
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "funding": {
+            "enum": [
+              "credit",
+              "loan"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "credit_disclosure_required": {
+            "const": true
+          }
+        },
+        "required": [
+          "credit_disclosure_required"
+        ]
+      }
+    },
+    {
+      "description": "A descriptor that says a rail or issuer enforces the limits of a standing authority names a primitive that the rail or the issuer enforces. A merchant-enforced or BACP-enforced primitive alone is not hnp rail_enforced.",
+      "if": {
+        "properties": {
+          "presence": {
+            "properties": {
+              "hnp": {
+                "const": "rail_enforced"
+              }
+            },
+            "required": [
+              "hnp"
+            ]
+          }
+        },
+        "required": [
+          "presence"
+        ]
+      },
+      "then": {
+        "properties": {
+          "mandate_primitives": {
+            "contains": {
+              "properties": {
+                "limits_enforced_by": {
+                  "enum": [
+                    "rail",
+                    "issuer"
+                  ]
+                }
+              },
+              "required": [
+                "limits_enforced_by"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (debit).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "debit"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "debit"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (credit).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "credit"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "credit"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (prepaid).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "prepaid"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "prepaid"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (cash).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "cash"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "cash"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (voucher).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "voucher"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "voucher"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (loan).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "loan"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "loan"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (cbdc).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "cbdc"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "cbdc"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (trade_credit).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "trade_credit"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "trade_credit"
+            }
+          }
+        }
+      }
+    },
+    {
+      "description": "funding_sources, when present, contains the primary funding (n_a).",
+      "if": {
+        "properties": {
+          "funding": {
+            "const": "n_a"
+          }
+        },
+        "required": [
+          "funding",
+          "funding_sources"
+        ]
+      },
+      "then": {
+        "properties": {
+          "funding_sources": {
+            "contains": {
+              "const": "n_a"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

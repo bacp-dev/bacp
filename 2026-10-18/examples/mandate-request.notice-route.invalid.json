@@ -1,0 +1,79 @@
+{
+  "purpose_code": "P-GRO-01",
+  "rail": "in.upi.reservepay",
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "payee": {
+    "vpa": "dairy@examplebank",
+    "bpp_id": "bpp.dairy.example.in"
+  },
+  "rail_limits": {
+    "block_amount": {
+      "value": 100000,
+      "currency": "INR"
+    }
+  },
+  "presence_allowed": [
+    "HNP",
+    "HP"
+  ],
+  "proposed_constraints": {
+    "amount_per_txn": {
+      "value": 60000,
+      "currency": "INR"
+    },
+    "budgets": [
+      {
+        "period": "P1M",
+        "max": {
+          "value": 100000,
+          "currency": "INR"
+        }
+      }
+    ],
+    "categories_allow": [
+      "ONDC:RET10"
+    ],
+    "merchants_allow": [
+      {
+        "bpp_id": "bpp.dairy.example.in"
+      }
+    ],
+    "negotiation": {
+      "process": {
+        "max_rounds": 4,
+        "deadline": "PT2H",
+        "accept_confirmation": "autonomous",
+        "notice_route": {
+          "type": "sms",
+          "ref": "sms:+919800000000"
+        }
+      }
+    }
+  },
+  "data_scopes": [
+    "NAME",
+    "PHONE",
+    "DELIVERY_ADDRESS"
+  ],
+  "action_scope": [
+    "QUOTE",
+    "ORDER",
+    "PAY",
+    "CANCEL",
+    "RETURN",
+    "RAISE_ISSUE",
+    "SHARE_DATA"
+  ],
+  "validity": "P30D",
+  "language": "hi-IN",
+  "channel": "app",
+  "webhook_url": "https://agents.vaani.example.in/bacp/hooks",
+  "operator_compensation": {
+    "from_principal": [
+      {
+        "basis": "none"
+      }
+    ],
+    "from_sellers": "none"
+  }
+}

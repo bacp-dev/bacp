@@ -1,0 +1,8 @@
+{
+  "type": "other_charge",
+  "recipient": "agent_operator",
+  "amount": {
+    "value": 2000,
+    "currency": "INR"
+  }
+}

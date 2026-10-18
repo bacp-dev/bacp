@@ -1,0 +1,2730 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/2026-10-18/specification/evidence/">
+      
+      
+        <link rel="prev" href="../payments/economics/">
+      
+      
+        <link rel="next" href="../trade-profiles/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Evidence and Instruction Log - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#evidence-and-instruction-log" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Evidence and Instruction Log
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#instruction-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InstructionLog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InstructionLog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#entry-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entry contents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signer-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signer roles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hash-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hash chain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chain-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#receipts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Receipts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Receipts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rail-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rail evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refund-receipts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refund receipts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#budget_after-is-never-signed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        budget_after is never signed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-receipts-are-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How receipts are used
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence bundle
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evidence bundle">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ap2-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AP2 five-step verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#igm-attachment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attaching evidence to an IGM issue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bundle-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#instruction-log" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        InstructionLog
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InstructionLog">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#entry-contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Entry contents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#stages" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Stages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#signer-roles" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Signer roles
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#hash-chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Hash chain
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chain-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Chain verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#receipts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Receipts
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Receipts">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rail-evidence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rail evidence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refund-receipts" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refund receipts
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#budget_after-is-never-signed" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        budget_after is never signed
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#how-receipts-are-used" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        How receipts are used
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bundle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Evidence bundle
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Evidence bundle">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#contents" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Contents
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ap2-verification" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AP2 five-step verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#igm-attachment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Attaching evidence to an IGM issue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#bundle-access" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Access
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Retention
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="evidence-and-instruction-log">Evidence and Instruction Log<a class="headerlink" href="#evidence-and-instruction-log" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>When an agent buys something on a principal's behalf, every party may later need to show what was
+authorised, what was instructed, what was offered and what was paid. BACP produces that evidence
+as a by-product of every transaction, using three artefacts:</p>
+<table>
+<thead>
+<tr>
+<th>Artefact</th>
+<th>Schema</th>
+<th>Produced by</th>
+<th>Proves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>InstructionLog</strong> entries</td>
+<td><a href="https://bacp.dev/latest/schemas/instruction-log-entry.json"><code>instruction-log-entry.json</code></a></td>
+<td>The agent operator's gateway</td>
+<td>The ordered chain prompt → intent → cart → mandate → payment → order, tamper-evident</td>
+</tr>
+<tr>
+<td><strong>Receipt</strong></td>
+<td><a href="https://bacp.dev/latest/schemas/receipt.json"><code>receipt.json</code></a></td>
+<td>The verifier that acted: PSP, BPP or Mandate Manager</td>
+<td>That a payment, refund, checkout or mandate step happened, anchored to the rail</td>
+</tr>
+<tr>
+<td><strong>Evidence bundle</strong></td>
+<td><code>EvidenceBundle</code> in the REST binding</td>
+<td>The gateway, on request</td>
+<td>Everything above for one transaction, verified and signed, for a dispute</td>
+</tr>
+</tbody>
+</table>
+<h2 id="instruction-log">InstructionLog<a class="headerlink" href="#instruction-log" title="Permanent link">&para;</a></h2>
+<p>The InstructionLog is a signed, append-only, hash-chained record kept <strong>per checkout session</strong>. It
+lets a reviewer reconstruct what the principal authorised and what they instructed, without the
+operator being able to rewrite history afterwards.</p>
+<h3 id="entry-contents">Entry contents<a class="headerlink" href="#entry-contents" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>seq</code></td>
+<td>0 for the first entry of the session, then +1 per entry, with no gaps.</td>
+</tr>
+<tr>
+<td><code>session_id</code>, <code>transaction_id</code></td>
+<td>The session and the Beckn transaction, end to end.</td>
+</tr>
+<tr>
+<td><code>stage</code></td>
+<td>What kind of step this is (see <a href="#stages">Stages</a>).</td>
+</tr>
+<tr>
+<td><code>actor</code></td>
+<td>Who performed the step: <code>user</code>, <code>agent</code>, <code>gateway</code>, <code>trusted_surface</code>, <code>bpp</code>, <code>psp</code>, or a session participant: <code>assisted_operator</code>, <code>seller_operator</code>, <code>sub_agent</code> (<a href="../human-participants/#roles">Human participants</a>).</td>
+</tr>
+<tr>
+<td><code>actor_ref</code></td>
+<td>The participant's <code>participant_id</code> (REQUIRED for <code>assisted_operator</code>, <code>seller_operator</code> and <code>sub_agent</code>), or on a handoff entry the key id of the support operator who accepted or released it.</td>
+</tr>
+<tr>
+<td><code>at</code></td>
+<td>When it happened.</td>
+</tr>
+<tr>
+<td><code>channel</code>, <code>language</code></td>
+<td>For example <code>voice</code> and <code>hi-IN</code>.</td>
+</tr>
+<tr>
+<td><code>content_hash</code></td>
+<td><code>sha-256</code> of the raw content (a transcript, audio, a structured intent, a quote, a receipt).</td>
+</tr>
+<tr>
+<td><code>content_ref</code></td>
+<td>Where the operator keeps the encrypted raw content.</td>
+</tr>
+<tr>
+<td><code>summary</code></td>
+<td>A short multilingual summary.</td>
+</tr>
+<tr>
+<td><code>model</code></td>
+<td>The model <code>id</code>, <code>version</code> and, for voice or translated turns, <code>translation_model</code>.</td>
+</tr>
+<tr>
+<td><code>refs</code></td>
+<td>Cross-references: <code>mandate_ref</code>, <code>checkout_hash</code>, <code>message_id</code>, <code>order_id</code>, <code>rrn</code>, <code>receipt_id</code>, <code>issue_id</code>; at stage <code>discover</code>, also <code>idempotency_key</code>, <code>source_digests[]</code>, <code>source_checks[]</code> and <code>registry_lookup</code>; at stage <code>cart</code>, <code>discount_codes[]</code> (<code>{code_mac, source}</code>).</td>
+</tr>
+<tr>
+<td><code>prev_hash</code>, <code>entry_hash</code></td>
+<td>The chain links (<a href="#hash-chain">Hash chain</a>).</td>
+</tr>
+<tr>
+<td><code>signature</code></td>
+<td>The operator's signature.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Only hashes and references leave the operator.</strong> Raw content stays encrypted at the agent
+operator, and is released only inside an evidence bundle to a party entitled to it
+(<a href="#bundle-access">Access</a>).</p>
+<h3 id="stages">Stages<a class="headerlink" href="#stages" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th><code>stage</code></th>
+<th>Recorded when</th>
+<th>Typical <code>actor</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ai_disclosure</code></td>
+<td>The agent presents the AI disclosure and the routes to a human. It is the first entry whose actor is <code>agent</code>, before <code>intent</code> (<a href="../human-participants/#ai-disclosure">Human participants</a>)</td>
+<td><code>agent</code></td>
+</tr>
+<tr>
+<td><code>prompt</code></td>
+<td>The principal instructs the agent (text or voice; voice records channel, language and translation model)</td>
+<td><code>user</code></td>
+</tr>
+<tr>
+<td><code>intent</code></td>
+<td>The agent turns the instruction into a structured intent or mandate request</td>
+<td><code>agent</code></td>
+</tr>
+<tr>
+<td><code>discover</code></td>
+<td>A search is sent and results arrive. The agent records the <code>Idempotency-Key</code> of the search, the <code>source_digest</code> of every discovery source it checked, the outcome of each (<code>verified</code>, <code>mismatch</code> or <code>unverified</code>, with the reason <code>discovery_source_mismatch</code> or <code>discovery_source_unverified</code>) and the host of the registry lookup it used (<a href="../discovery/#verifying-results">Verifying discovery results</a>). <code>content_hash</code> covers the discover response as returned</td>
+<td><code>agent</code>, <code>gateway</code></td>
+</tr>
+<tr>
+<td><code>cart</code></td>
+<td>Items are selected; the handler comparison is logged here</td>
+<td><code>agent</code>, <code>gateway</code></td>
+</tr>
+<tr>
+<td><code>disclosure</code></td>
+<td>The BPP's signed quote and disclosures arrive; records <code>checkout_hash</code> and the disclosures hash</td>
+<td><code>bpp</code></td>
+</tr>
+<tr>
+<td><code>mandate</code></td>
+<td>A mandate is activated, used or changes status, including each gateway pause reason (<code>binding_ineligible</code>, <code>reissue_required</code>) added or removed, with the <code>registry_version</code> (<a href="../mandates/#handler-binding">Handler binding</a>); records mandate hashes</td>
+<td><code>gateway</code>, <code>trusted_surface</code></td>
+</tr>
+<tr>
+<td><code>step_up</code></td>
+<td>A step-up is requested, approved, declined or expires</td>
+<td><code>gateway</code>, <code>trusted_surface</code></td>
+</tr>
+<tr>
+<td><code>payment</code></td>
+<td>A debit is initiated (basket-blind instruction), a receipt arrives, an in-doubt debit is reconciled, a refund is issued</td>
+<td><code>gateway</code>, <code>psp</code></td>
+</tr>
+<tr>
+<td><code>order</code></td>
+<td><code>on_confirm</code> creates the order</td>
+<td><code>bpp</code></td>
+</tr>
+<tr>
+<td><code>post_order</code></td>
+<td>Cancels, returns, status changes and post-order refunds</td>
+<td><code>agent</code>, <code>assisted_operator</code>, <code>bpp</code>, <code>psp</code></td>
+</tr>
+<tr>
+<td><code>grievance</code></td>
+<td>An IGM issue is raised and every action on it</td>
+<td><code>agent</code>, <code>bpp</code></td>
+</tr>
+<tr>
+<td><code>negotiation</code></td>
+<td>Every negotiation message and counter-signature</td>
+<td><code>agent</code>, <code>bpp</code></td>
+</tr>
+<tr>
+<td><code>guard</code></td>
+<td>Every negotiation guard verdict (constraint ids only)</td>
+<td><code>gateway</code></td>
+</tr>
+<tr>
+<td><code>ledger</code></td>
+<td>Credit-ledger postings and acknowledgements</td>
+<td><code>gateway</code>, <code>seller_operator</code></td>
+</tr>
+<tr>
+<td><code>handoff</code></td>
+<td>A handoff to a human is requested, accepted by a registered support operator, or released (<a href="../checkout/#handoff">Human handoff</a>)</td>
+<td><code>agent</code>, <code>gateway</code></td>
+</tr>
+</tbody>
+</table>
+<p>The stage <code>disclosure</code> is the seller's quote; the AI disclosure is always <code>ai_disclosure</code>. The
+<code>negotiation</code>, <code>guard</code> and <code>ledger</code> stages are described in
+<a href="../negotiation/">Negotiation</a> and <a href="../payments/credit-and-split-tender/">Credit and Split Tender</a>.</p>
+<h3 id="signer-roles">Signer roles<a class="headerlink" href="#signer-roles" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Every entry is signed by the <strong>agent operator</strong> (the gateway's BAP registry key) with
+  <code>signature.role: operator</code>, whatever its <code>actor</code>. The <code>actor</code> field records who acted; the
+  signature records who attests to the record.</li>
+<li>The signature is asymmetric (ES256 or EdDSA), as a detached JWS over the JCS form of the entry
+  minus <code>signature</code>. A shared-secret MAC <strong>MUST NOT</strong> be used, because it cannot give
+  non-repudiation.</li>
+<li>The acts of other parties are proved by their own signatures on the artefacts the entry hashes
+  and references: the BPP's signature on the quote, the PSP's on the Receipt, the principal's and
+  MM's on the mandate, the Trusted Surface's on a step-up event. A human act is never proved by
+  the operator's signature alone: the bundle carries the signed Trusted Surface events themselves
+  (<a href="#bundle">Bundle contents</a>).</li>
+</ul>
+<h3 id="hash-chain">Hash chain<a class="headerlink" href="#hash-chain" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>entry_hash = sha-256( JCS( entry minus {entry_hash, signature} ) )
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>prev_hash  = entry_hash of entry seq - 1
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>prev_hash of seq 0 (genesis) = sha-256( session_id as UTF-8 bytes )
+</code></pre></div>
+<p>Hashes are written <code>sha-256:&lt;base64url&gt;</code>. The <strong>log head</strong> is the <code>entry_hash</code> of the last entry,
+or the genesis hash when the log is empty.</p>
+<p><strong>Anchoring.</strong> The gateway <strong>MUST</strong> put the current <code>log_head</code> in <code>context.bacp.log_head</code> on every
+committing Beckn message it sends (<code>init</code>, <code>confirm</code>, <code>update</code>, <code>cancel</code>, <code>issue</code>). Those messages
+are signed on the network, so the BPP and the network hold independent copies of the head at each
+commitment. An operator that deletes or rewrites an entry produces a chain that no longer matches
+the heads recorded in the network trace.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"seq"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"session_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ses_01HZXB"</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"transaction_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60"</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">"stage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"prompt"</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">"actor"</span><span class="p">:</span><span class="w"> </span><span class="s2">"user"</span><span class="p">,</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">"at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-20T19:00:02+05:30"</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">"channel"</span><span class="p">:</span><span class="w"> </span><span class="s2">"voice"</span><span class="p">,</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">  </span><span class="nt">"language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"hi-IN"</span><span class="p">,</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">  </span><span class="nt">"content_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:YaIsf4NASd5cjPZvWWkQKmbj9SW9F-zJzj-1G6_KAi4"</span><span class="p">,</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="nt">"content_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://logs.vaani.example.in/blobs/ses_01HZXB/0"</span><span class="p">,</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="nt">"hi-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"दो किलो आटा, एक लीटर दूध और पाँच सौ ग्राम दाल मँगवा दो"</span><span class="p">,</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">    </span><span class="nt">"en-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Order 2 kg atta, 1 L milk and 500 g dal"</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">  </span><span class="nt">"model"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"example-llm-2"</span><span class="p">,</span><span class="w"> </span><span class="nt">"version"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026.10.1"</span><span class="p">,</span><span class="w"> </span><span class="nt">"translation_model"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bhashini-asr-hi-v3"</span><span class="p">},</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="nt">"refs"</span><span class="p">:</span><span class="w"> </span><span class="p">{},</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">  </span><span class="nt">"prev_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:QP09K6-qS2n7bF4INQ0RefqmkL9onuRPPhV0nYVtfWo"</span><span class="p">,</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="nt">"entry_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:nbwyd-n-VkI8y5myMA_yKrU7bG6Dh9OkbXcZO3R-lXI"</span><span class="p">,</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">  </span><span class="nt">"signature"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"operator"</span><span class="p">,</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="w">    </span><span class="nt">"kid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bap.vaani.example.in|ukid-7|ed25519"</span><span class="p">,</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="w">    </span><span class="nt">"alg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"EdDSA"</span><span class="p">,</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="w">    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"eyJhbGciOiJFZERTQSJ9.eyJsIjowfQ.c2ln"</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="chain-verification">Chain verification<a class="headerlink" href="#chain-verification" title="Permanent link">&para;</a></h3>
+<p>A verifier <strong>MUST</strong> check a log as follows, and <strong>MUST</strong> reject it at the first failure:</p>
+<ol>
+<li>The log is not empty.</li>
+<li>Every entry validates against <code>instruction-log-entry.json</code>.</li>
+<li>For entry <em>i</em> (counting from 0): <code>seq</code> = <em>i</em>, and <code>session_id</code> equals the first entry's.</li>
+<li><code>prev_hash</code> equals the genesis hash for <em>i</em> = 0, and the previous entry's <code>entry_hash</code>
+   otherwise.</li>
+<li>Recomputing <code>entry_hash</code> gives the stored value.</li>
+<li><code>signature</code> verifies against the registry key named by its <code>kid</code>.</li>
+<li>If an expected head is known (for example from <code>context.bacp.log_head</code> in a network message,
+   or from the gateway's current state), the last <code>entry_hash</code> equals it.</li>
+</ol>
+<p>The gateway <strong>MUST</strong> run this check on the session's log before <code>complete</code>. A broken chain returns
+<code>403 log_chain_invalid</code> (<code>unrecoverable</code>) and no money moves
+(<a href="../mandates/#evaluation">Deterministic evaluation</a>).</p>
+<h2 id="receipts">Receipts<a class="headerlink" href="#receipts" title="Permanent link">&para;</a></h2>
+<p>A <strong>Receipt</strong> is the signed statement of the party that acted: the payer PSP for a payment or
+refund, the BPP for a checkout, the Mandate Manager for a mandate. It follows AP2's mandate,
+checkout and payment receipts and adds the Indian rail references.</p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>receipt_type</code></td>
+<td><code>mandate</code>, <code>checkout</code>, <code>payment</code> or <code>refund</code>.</td>
+</tr>
+<tr>
+<td><code>iss</code></td>
+<td>The verifier that acted. A payment or refund receipt <strong>MUST</strong> be signed with a registry key of role PSP; a checkout receipt with a key of role BPP.</td>
+</tr>
+<tr>
+<td><code>result</code></td>
+<td><code>success</code>, <code>failure</code> or <code>in_doubt</code>.</td>
+</tr>
+<tr>
+<td><code>reference</code></td>
+<td>The hash of the <strong>closed mandate that was presented</strong>: <code>sha-256</code> over the JCS form of the mandate minus <code>status</code>, <code>usage</code> and <code>signatures</code>.</td>
+</tr>
+<tr>
+<td><code>mandate_ref</code>, <code>open_mandate_ref</code></td>
+<td>The closed mandate id and its open parent.</td>
+</tr>
+<tr>
+<td><code>transaction_id</code>, <code>order_id</code></td>
+<td>The Beckn transaction, end to end, and the order.</td>
+</tr>
+<tr>
+<td><code>checkout_hash</code>, <code>amount</code>, <code>payee</code></td>
+<td>Required on a successful payment or refund receipt. <code>amount</code> <strong>MUST</strong> be greater than zero.</td>
+</tr>
+<tr>
+<td><code>rail</code></td>
+<td>The rail evidence (below).</td>
+</tr>
+<tr>
+<td><code>refund_state</code></td>
+<td>Refund receipts only (below).</td>
+</tr>
+<tr>
+<td><code>fx</code></td>
+<td>Optional foreign-currency view; settlement stays in INR.</td>
+</tr>
+<tr>
+<td><code>signature</code></td>
+<td>The issuer's signature.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="rail-evidence">Rail evidence<a class="headerlink" href="#rail-evidence" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>rail.type</code> is a handler reference; producers <strong>SHOULD</strong> emit the canonical id. <code>rail.type</code>,
+  <code>rail.rail_ref</code> and <code>rail.status</code> are always present.</li>
+<li><strong>UPI family</strong> (<code>upi.*</code>, <code>in.upi.*</code>, <code>in.cod.upi</code>, <code>in.pos.tap</code>, <code>in.pos.dynamic_qr</code>): a
+  successful payment or refund receipt <strong>MUST</strong> carry the 12-digit <code>rrn</code>, and <strong>MUST</strong> carry <code>utr</code>
+  whenever the handler descriptor's <code>settlement.evidence_refs</code> lists it.</li>
+<li><strong>Other handlers</strong>: the receipt <strong>MUST</strong> carry at least one of <code>rrn</code>, <code>utr</code> or <code>rail.evidence</code>.
+  <code>rail.evidence</code> is a string map whose keys come from the descriptor's
+  <code>settlement.evidence_refs</code> (for example <code>arn</code> and <code>auth_code</code> for cards, <code>umrn</code> for NACH,
+  <code>voucher_id</code> for e-RUPI, <code>ledger_entry_id</code> for store credit and <code>bacp.credit_ledger</code>, <code>awb</code> for
+  a COD record).</li>
+<li><code>rail.evidence</code> <strong>MUST NOT</strong> contain anything the descriptor lists under
+  <code>data_minimisation.never_collect</code> (PIN, OTP, card number, CVV, expiry, Aadhaar number).</li>
+<li>Cash on delivery moves no money through a rail and has no payment Receipt; the order records the
+  collection against the shipment <code>awb</code>.</li>
+</ul>
+<p>Rail references let receipts be joined with the rail's own dispute channel (UDIR for UPI). See
+<a href="../payments/handler-registry/">Handler Registry</a>.</p>
+<h3 id="refund-receipts">Refund receipts<a class="headerlink" href="#refund-receipts" title="Permanent link">&para;</a></h3>
+<p>A refund receipt <strong>MUST</strong> be signed by a registered PSP, and the gateway applies it only to a payment of the same
+<code>checkout_hash</code> and payee. A payment success or failure receipt is applied only when it is signed by the PSP of the closed
+Payment Mandate's <code>auth_binding.psp_id</code> (HNP: the open Payment Mandate's <code>rail_binding.psp_id</code>), and each <code>receipt_id</code> and
+rail reference is applied once; otherwise the gateway answers <code>400 receipt_invalid</code> and the reservation stays
+(<a href="../mandates/#usage-ledger">Usage ledger</a>). A refund receipt <strong>MUST</strong> identify the original payment (<code>original_rrn</code>, <code>original_utr</code>, or an
+<code>original_*</code> key in <code>rail.evidence</code>), proving the refund went back to the original method, and
+<strong>MUST</strong> carry <code>refund_state</code>: <code>refunded_to_source</code> (the default for a completed refund to
+source), <code>released_block</code>, <code>pending_cardholder_consent</code>, <code>reversed_to_bank_account</code>,
+<code>credit_note_issued</code> or <code>adjusted_against_dues</code>. A card refund before the bill is paid <strong>MUST</strong> be
+<code>adjusted_against_dues</code> and <strong>MUST NOT</strong> pass through <code>pending_cardholder_consent</code>.</p>
+<h3 id="budget_after-is-never-signed"><code>budget_after</code> is never signed<a class="headerlink" href="#budget_after-is-never-signed" title="Permanent link">&para;</a></h3>
+<p>The PSP holds no mandate budgets. A Receipt <strong>MUST NOT</strong> contain <code>budget_after</code>, and the schema
+rejects one that does. The gateway computes the remaining budget from its own ledger after applying
+the receipt and returns it unsigned in <code>session.payment.budget_after</code>
+(<a href="../mandates/#usage-ledger">Mandates</a>). A verifier <strong>MUST</strong> ignore any budget figure that claims to
+come from a receipt.</p>
+<h3 id="how-receipts-are-used">How receipts are used<a class="headerlink" href="#how-receipts-are-used" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The gateway applies a payment receipt to the mandate ledger only after verifying its signature
+  against a registry key of role PSP and checking that it belongs to the mandate. A forged or
+  mismatched receipt is refused with <code>400 receipt_invalid</code>.</li>
+<li>A webhook <strong>MUST NOT</strong> embed a signed Receipt. It carries a <code>ReceiptRef</code>: <code>receipt_id</code>,
+  <code>receipt_hash</code> (<code>sha-256</code> over the JCS form of the full signed receipt), <code>receipt_type</code>,
+  <code>result</code>, and where present <code>amount</code>, <code>refund_state</code> and
+  <code>rail {type, rrn, status, original_rrn}</code>.</li>
+<li>The full signed receipt is available to the party of record by authenticated GET on its owning
+  resource (<code>/sessions/{id}</code>, <code>/orders/{id}</code>, <code>/orders/{id}/returns/{rid}</code>). An agent that relies
+  on it <strong>MUST</strong> check that its hash equals the <code>receipt_hash</code> it was sent.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">"receipt_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"rcpt_PAY0000000001"</span><span class="p">,</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">"receipt_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"payment"</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">"iss"</span><span class="p">:</span><span class="w"> </span><span class="s2">"psp.example.in"</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">"issued_at"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-20T19:02:11+05:30"</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">"result"</span><span class="p">:</span><span class="w"> </span><span class="s2">"success"</span><span class="p">,</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">"reference"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:56zHckmGabR5RoD_aAjAlsFMjuSAjmXgymcJL4c7arY"</span><span class="p">,</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">  </span><span class="nt">"mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_PAYC0000000001"</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">  </span><span class="nt">"open_mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_PAY7Q2W9X4K1M3"</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">  </span><span class="nt">"transaction_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60"</span><span class="p">,</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nt">"order_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ORD-KIR-88231"</span><span class="p">,</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">"checkout_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ"</span><span class="p">,</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">30200</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nt">"payee"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"vpa"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ganeshkirana@examplebank"</span><span class="p">,</span><span class="w"> </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Shree Ganesh Kirana"</span><span class="p">},</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="nt">"rail"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">    </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"in.upi.reservepay"</span><span class="p">,</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">    </span><span class="nt">"rail_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SBMD-HDFX-000123456"</span><span class="p">,</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="w">    </span><span class="nt">"rrn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"629318004417"</span><span class="p">,</span>
+<a id="__codelineno-2-19" name="__codelineno-2-19" href="#__codelineno-2-19"></a><span class="w">    </span><span class="nt">"utr"</span><span class="p">:</span><span class="w"> </span><span class="s2">"629318004417"</span><span class="p">,</span>
+<a id="__codelineno-2-20" name="__codelineno-2-20" href="#__codelineno-2-20"></a><span class="w">    </span><span class="nt">"npci_txn_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"NPCIEX0000000001"</span><span class="p">,</span>
+<a id="__codelineno-2-21" name="__codelineno-2-21" href="#__codelineno-2-21"></a><span class="w">    </span><span class="nt">"psp_confirmation_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PSPCONF-77812"</span><span class="p">,</span>
+<a id="__codelineno-2-22" name="__codelineno-2-22" href="#__codelineno-2-22"></a><span class="w">    </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"SUCCESS"</span>
+<a id="__codelineno-2-23" name="__codelineno-2-23" href="#__codelineno-2-23"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-2-24" name="__codelineno-2-24" href="#__codelineno-2-24"></a><span class="w">  </span><span class="nt">"signature"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-2-25" name="__codelineno-2-25" href="#__codelineno-2-25"></a><span class="w">    </span><span class="nt">"role"</span><span class="p">:</span><span class="w"> </span><span class="s2">"psp"</span><span class="p">,</span>
+<a id="__codelineno-2-26" name="__codelineno-2-26" href="#__codelineno-2-26"></a><span class="w">    </span><span class="nt">"kid"</span><span class="p">:</span><span class="w"> </span><span class="s2">"psp.example.in|ukid-1|es256"</span><span class="p">,</span>
+<a id="__codelineno-2-27" name="__codelineno-2-27" href="#__codelineno-2-27"></a><span class="w">    </span><span class="nt">"alg"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ES256"</span><span class="p">,</span>
+<a id="__codelineno-2-28" name="__codelineno-2-28" href="#__codelineno-2-28"></a><span class="w">    </span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="s2">"eyJhbGciOiJFUzI1NiJ9.eyJyIjoxfQ.c2ln"</span>
+<a id="__codelineno-2-29" name="__codelineno-2-29" href="#__codelineno-2-29"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-2-30" name="__codelineno-2-30" href="#__codelineno-2-30"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="bundle">Evidence bundle<a class="headerlink" href="#bundle" title="Permanent link">&para;</a></h2>
+<p><code>GET /evidence/{transaction_id}</code> returns the <strong>evidence bundle</strong> for a transaction: everything a
+grievance officer, an ODR body, a regulator or the principal needs to verify the purchase, without
+trusting the agent or its operator.</p>
+<h3 id="contents">Contents<a class="headerlink" href="#contents" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>transaction_id</code></td>
+<td>The Beckn transaction.</td>
+</tr>
+<tr>
+<td><code>agent_credential_hash</code></td>
+<td>Hash of the AgentCredential the agent used.</td>
+</tr>
+<tr>
+<td><code>mandates[]</code></td>
+<td>The open Checkout and Payment Mandates, each wrapped in a JWS by the operator (the payload keeps the principal and MM signatures), and the closed mandates exactly as presented (agent-signed or principal-signed attached JWS).</td>
+</tr>
+<tr>
+<td><code>checkout</code></td>
+<td>The BPP-signed quote (<code>bpp_signed_quote</code>), <code>checkout_hash</code>, <code>disclosures_hash</code> and the <code>disclosures</code> they hash (including <code>catalogue[]</code>), and <code>bpp_signed_payment_terms</code>: the seller's payment terms from <code>on_init</code> (Beckn <code>payments[]</code>, with <code>collected_by</code> and the payee VPA in <code>params.virtual_payment_address</code>) as the gateway received them, kept as <code>{body, authorization}</code>: the raw <code>on_init</code> body and its Beckn <code>Authorization</code> header, which verifies against the BPP's registry key (<a href="../transports/beckn/#signing">Beckn signing</a>). REQUIRED for every Reserve Pay leg (<a href="../mandates/#sibling-payment-mandates">Sibling Payment Mandates</a>).</td>
+</tr>
+<tr>
+<td><code>receipts[]</code></td>
+<td>The full signed receipts: the BPP's checkout receipt, the PSP's payment receipt, and any refund receipts.</td>
+</tr>
+<tr>
+<td><code>consent_receipts[]</code></td>
+<td>The ConsentReceipts under which data was shared.</td>
+</tr>
+<tr>
+<td><code>instruction_log[]</code></td>
+<td>The session's full InstructionLog.</td>
+</tr>
+<tr>
+<td><code>discovery_response</code></td>
+<td>The signed <code>POST /discover</code> response as <code>{status, body, content_digest, signature_input, signature}</code>, where <code>body</code> is the response content exactly as sent, with no content coding, and its sha-256 is the <code>content_hash</code> of the session's agent-written <code>discover</code> InstructionLog entry. REQUIRED when <code>Disclosures.catalogue[]</code> is present and that entry exists. The verifier rebuilds the signature base from <code>status</code> (<code>@status</code>) and the stored <code>content_digest</code>.</td>
+</tr>
+<tr>
+<td><code>discovery_sources[]</code></td>
+<td>For a session whose items came from <code>POST /discover</code>: the BPP-signed <code>on_search</code> callback behind every <code>source_digest</code> in <code>checkout.disclosures.catalogue[]</code>, each as <code>{body, authorization}</code> exactly as the gateway received it (<a href="../discovery/#catalogue-retention">Retention of the signed callbacks</a>). A verifier checks that the sha-256 of each <code>body</code> equals the <code>source_digest</code> and that the <code>authorization</code> verifies against the BPP's registry key, and compares the item values in the body with <code>checkout.disclosures.catalogue[]</code>.</td>
+</tr>
+<tr>
+<td><code>trusted_surface_events[]</code></td>
+<td>Every signed Trusted Surface event of the transaction, verbatim as received at <code>/trusted-surface/events</code> (step-up results, mandate activation, credit acceptance, AFA completion), each with its <a href="../human-participants/#presentation"><code>Presentation</code></a>.</td>
+</tr>
+<tr>
+<td><code>ts_renders[]</code></td>
+<td>The gateway-signed <a href="../human-participants/#ts-render"><code>ts_render</code></a> (compact JWS) of every step-up that a <code>step_up.approved</code>, <code>step_up.declined</code>, <code>negotiation.step_up.approved</code> or <code>negotiation.step_up.declined</code> event in <code>trusted_surface_events[]</code> names, byte-identical to what the Trusted Surface fetched. The <code>content_ref</code> of such an event's <code>presentation</code> is the fragment <code>#/ts_renders/&lt;index&gt;</code>, an RFC 6901 JSON Pointer to the render's position in this array; an index outside the array, or a <code>content_hash</code> that differs from the sha-256 of the render found there, is <code>evidence_unverifiable</code>. In a bundle released to a seller or a payer PSP, a summary step-up's render is left out and <code>ts_render_digests[]</code> carries it instead.</td>
+</tr>
+<tr>
+<td><code>notice_renders[]</code></td>
+<td>For every autonomous negotiation act of the transaction: the gateway-signed notice (<code>agreed_by_agent</code> or <code>purchase_offered_by_agent</code>) and the receipt of its delivery to the principal by the mandate's <code>notice_route</code>, as <code>{code, render, content_hash, delivery}</code>. A notice is not a step-up and has no event. A reviewer answers "I never agreed" from its <code>content_hash</code>.</td>
+</tr>
+<tr>
+<td><code>ts_render_digests[]</code></td>
+<td>Only in a bundle released to a seller or a payer PSP: for each summary step-up over a <a href="../checkout/#multi-seller-basket">multi-seller basket</a>, <code>{step_up_id, render_hash, cover}</code>, where <code>render_hash</code> is the sha-256 of its <code>ts_render</code> and <code>cover</code> is the <code>covers[]</code> entry of this transaction's leg. The other sellers' lines stay out of the bundle.</td>
+</tr>
+<tr>
+<td><code>verification</code></td>
+<td>The gateway's own result: <code>steps_passed</code> (0 to 6), <code>chain_valid</code>, and for step 6 <code>catalogue_result</code> and <code>catalogue_unchecked[]</code>.</td>
+</tr>
+<tr>
+<td><code>bundle_signature</code></td>
+<td>The operator's signature over the whole bundle minus <code>bundle_signature</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>A human-readable rendering of a bundle, the informative summary profile
+<code>in.bacp.evidence.summary.1</code>, is described in
+<a href="../human-participants/#evidence-summary">Human participants</a>. It is built only from the signed
+artefacts in the bundle and is never itself evidence.</p>
+<p>For a negotiated purchase the bundle also carries the negotiation transcript, the accepted offer,
+the <code>within_bounds</code> attestation and the bound <code>on_init</code>, so that a reviewer can check what was
+offered and agreed without seeing the principal's reservation price (<a href="../negotiation/">Negotiation</a>).</p>
+<h3 id="ap2-verification">AP2 five-step verification<a class="headerlink" href="#ap2-verification" title="Permanent link">&para;</a></h3>
+<p>A bundle verifies only if all six steps pass (the five AP2 steps and step 6), the InstructionLog
+chain is valid, and the bundle signature verifies:</p>
+<ol>
+<li><strong>Closed Checkout Mandate.</strong> It is signed by the open Checkout Mandate's <code>cnf</code> key (HNP) or by
+   the principal who signed the parent (HP); its <code>parent_mandate_id</code> is the open mandate; and the
+   open mandate's principal and MM signatures verify.</li>
+<li><strong>Checkout hash.</strong> The BPP signature on the quote verifies against a registry key of role BPP;
+   <code>sha-256(JCS(quote))</code> equals <code>checkout_hash</code>; and the closed Checkout Mandate carries that
+   <code>checkout_hash</code> and the quote total.</li>
+<li><strong>Checkout receipt.</strong> The BPP-signed checkout receipt is a success and its <code>reference</code> equals
+   the hash of the closed Checkout Mandate.</li>
+<li><strong>Closed Payment Mandate.</strong> It is signed by the open Payment Mandate's <code>cnf</code> key (or the
+   principal); its parent is the open Payment Mandate, whose signatures verify; its
+   <code>checkout_hash</code> and <code>amount</code> match; and its <code>checkout_mandate_ref</code> is the closed Checkout
+   Mandate.</li>
+<li><strong>Payment receipt.</strong> The PSP-signed payment receipt is a success; its <code>reference</code> equals the
+   hash of the closed Payment Mandate; its <code>checkout_hash</code> and <code>amount</code> match; and it carries the
+   rail evidence required for its handler (<a href="#rail-evidence">Rail evidence</a>).</li>
+<li><strong>Trusted Surface events.</strong> Every <code>trusted_surface_events[]</code> entry verifies against a
+   registry key of role Mandate Manager or PSP. The signer of every <code>step_up.*</code> and <code>negotiation.step_up.*</code> event
+   MUST also be one of the keys that <a href="../human-participants/#ts-signers">Step-up signers</a> derives from the
+   mandates in the bundle: the issuer of the mandate that the render's <code>mandate_id</code> names, or the PSP that the table names
+   for that step-up from the bundle's Payment Mandates. A registry Mandate Manager or PSP key that is not one of them
+   is <code>evidence_unverifiable</code>. Every InstructionLog entry at stage <code>step_up</code> that
+   records an approval or a decline has a matching event, whose hash the entry's <code>content_hash</code>
+   carries. Every <code>step_up.approved</code>, <code>mandate.activated</code>, <code>loan.accepted</code> and
+   <code>payment.afa_completed</code> event carries a <code>Presentation</code>, and for a step-up its <code>content_hash</code> is
+   the hash of the step-up's <code>ts_render</code> and its <code>checkout_hash</code> is the bundle's <code>checkout_hash</code>.
+   A contested crossing records <code>late_receipt_party</code> in its transcript entry; two receipts at one <code>log_seq</code> that name different
+   entries, or a decrease of <code>received_at</code> along a chain without <code>clock_step_observed</code>, is <code>evidence_unverifiable</code>.
+   A <code>negotiation.step_up.approved</code> event carries a <code>Presentation</code> with <code>offer_hash</code> instead of
+   <code>checkout_hash</code>: the verifier <strong>MUST</strong> check that it equals the <code>offer_hash</code> of the step-up's
+   <code>ts_render</code> and of the signed offer in the bundle's negotiation transcript, and that the
+   <code>ts_render</code>'s <code>acceptance_revocation</code>, where present, equals that offer's value; the quote
+   comparisons below do not apply to such an event.
+   <code>negotiation.step_up.approved</code> and <code>negotiation.step_up.declined</code> are step-up events for the next rule: their <code>ts_render</code>
+   MUST be in <code>ts_renders[]</code>, with its hash and signature checked, and a missing one is <code>evidence_unverifiable</code>; the
+   quote comparisons below never apply to them. A <code>negotiation.agreed.declined</code> or <code>negotiation.purchase_offer.withdrawn</code>
+   event carries a <code>Presentation</code> with <code>offer_hash</code>, which the verifier checks against the offer in the negotiation transcript.
+   For every other step-up event, <code>ts_renders[]</code> <strong>MUST</strong> hold a <code>ts_render</code> whose sha-256 is that
+   <code>content_hash</code> (where the event carries one) and whose signature verifies against the gateway's
+   registry key, and the verifier <strong>MUST</strong> compare its <code>total</code>, its payee (<code>seller_name</code>) and its
+   <code>checkout_hash</code> with the BPP-signed quote in <code>checkout</code>, and its <code>price_breakup_hash</code> with
+   <code>checkout.disclosures_hash</code>; a missing render or any mismatch fails the step. Where the step-up's
+   <code>ts_render</code> carries <code>covers[]</code> (a summary step-up over a basket), the verifier instead finds the
+   <code>covers[]</code> entry whose <code>session_id</code> is the bundle's session and compares its <code>checkout_hash</code> and
+   <code>amount</code> with the BPP-signed quote and its <code>payee.vpa</code> with the payee VPA of the PSP payment receipt; the
+   summary's <code>total</code>, <code>seller_name</code> and <code>checkout_hash</code>, and the <code>Presentation.checkout_hash</code>
+   equality above, are not checked against this leg's quote. In a bundle that carries the summary
+   only as a <code>ts_render_digests[]</code> entry, the event's <code>content_hash</code> <strong>MUST</strong> equal its
+   <code>render_hash</code> and the same comparison is made with its <code>cover</code>; that the <code>cover</code> is an entry of the
+   render is checked by a reviewer that holds the full render (the principal, the grievance officer or
+   the ODR body). The InstructionLog's first entry whose actor is <code>agent</code> is at stage <code>ai_disclosure</code>.
+   Where the bundle carries <code>checkout.bpp_signed_payment_terms</code>, its <code>authorization</code> <strong>MUST</strong> verify
+   over its <code>body</code> against the registry key of the BPP that the body's <code>context.bpp_id</code> names, as of
+   the signature's <code>created</code> time, and the payee VPA of the PSP payment receipt <strong>MUST</strong> equal the
+   payee VPA in those terms; for a Reserve Pay payment the terms <strong>MUST</strong> be present and the open
+   Payment Mandate's <code>payee.vpa</code> and <code>payee.bpp_id</code> <strong>MUST</strong> equal the VPA and the <code>bpp_id</code> in them
+   (<a href="../mandates/#sibling-payment-mandates">Sibling Payment Mandates</a>).
+   For a session step-up of kind <code>confirm</code> or <code>rail_auth</code> the verifier also checks the catalogue disclosure:
+   every <code>Disclosures.catalogue[]</code> entry of <code>checkout.disclosures</code> that is <code>sponsored</code> or <code>undeclared</code>, or has a
+   <code>prior_price</code>, MUST have an entry in the <code>ts_render</code>'s <code>catalogue_disclosure[]</code>, so that an omission fails; where the session's agent-written
+   <code>discover</code> InstructionLog entry exists for the bundle's <code>transaction_id</code>, <code>checkout.disclosures.catalogue[]</code> MUST hold
+   exactly one entry for each line item of the BPP-signed quote whose item appears in a source named in that entry's
+   <code>refs.source_digests</code>; each
+   entry's <code>sponsorship</code>, <code>prior_price</code> and <code>unit_price</code> MUST equal (JCS) those of the <code>Disclosures.catalogue[]</code> entry
+   that its <code>index</code> names (<code>unit_price</code> against <code>discovered_unit_price</code>; on a summary step-up, of the leg that
+   <code>covers[cover_index]</code> names, which only a verifier that holds that leg's bundle can check); and
+   <code>counterparty_text[name_ref].text</code> MUST equal a language value of the item's name in the BPP-signed quote for that
+   item. For each <code>Disclosures.catalogue[]</code> entry whose <code>source_digest</code> appears in <code>refs.source_digests</code> of the
+   session's <code>discover</code> InstructionLog entry written by the agent, the signed source in <code>discovery_sources[]</code> whose sha-256 is that
+   digest MUST verify against the BPP's registry key as of the signature's <code>created</code> time; its <code>context.message_id</code> MUST
+   equal the derivation from the <code>idempotency_key</code> in that log entry; and its item values MUST match those of the
+   <code>Disclosures.catalogue[]</code> entry, derived by the <a href="../transports/beckn/#disclosure-mapping">normative mapping</a>. An entry
+   whose digest is not there was not checked by the agent; the verifier records it as unchecked, and it does not fail the
+   step. Where the session's agent-written <code>discover</code> InstructionLog entry exists, <code>discovery_response</code> MUST be present, its
+   signature MUST verify against the gateway's profile key, and the sha-256 of its <code>body</code> MUST equal that entry's
+   <code>content_hash</code>; each entry's <code>sponsorship.status</code> MUST then be no weaker than, and its <code>sponsorship.by[]</code> a superset
+   of, those of the same item in <code>discovery_response</code>. Where there is no such entry, the sponsorship comparison is
+   recorded as unchecked and does not fail the step. This
+   makes the verifier, not the gateway, the judge of whether the sponsorship and prior price shown at checkout are those
+   the seller sent.
+   Any other failure of step 6 is <code>evidence_unverifiable</code>; a catalogue check that fails or is unchecked is recorded in
+   <code>verification.catalogue_result</code> and <code>catalogue_unchecked[]</code> and does not stop the issue (see
+   <a href="#igm-attachment">Attaching evidence to an IGM issue</a>). Step 6 proves what the principal was shown and, through
+   <a href="#contents"><code>EvidenceBundle.checkout.bpp_signed_payment_terms</code></a>, whom the seller asked to be
+   paid; neither the quote nor <code>ts_render</code> carries the payee's VPA or settlement account.</li>
+</ol>
+<p>The gateway runs this verification when it builds the bundle and records the result in
+<code>verification</code>. A reviewer <strong>SHOULD</strong> re-run it independently rather than trust <code>verification</code>.</p>
+<h3 id="igm-attachment">Attaching evidence to an IGM issue<a class="headerlink" href="#igm-attachment" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Before raising an issue the gateway <strong>MUST</strong> assemble the bundle and verify it fully. If it does
+  not pass all six verification steps with a valid chain, <code>POST /issues</code> returns <code>422 evidence_unverifiable</code>
+  and nothing is sent (<a href="../checkout/post-order/#igm">Orders and Post-order</a>). The one exception is the catalogue
+  checks of step 6: a catalogue entry that fails or is unchecked does not stop the issue; the gateway records it in
+  <code>verification</code> (<code>catalogue_result</code>, <code>catalogue_unchecked[]</code>) and sends the issue. A gateway <strong>MUST NOT</strong> refuse to raise
+  an issue because of a catalogue check.</li>
+<li>The Beckn <code>issue</code> carries the bundle by reference: <code>evidence_bundle_ref</code> (the
+  <code>/evidence/{transaction_id}</code> URI) and <code>evidence_bundle_hash</code> (<code>sha-256</code> over the JCS form of the
+  bundle). The bundle itself is also returned on the <code>Issue</code> to the agent.</li>
+<li>When the issue is escalated to <code>GRIEVANCE</code>, the same bundle, identified by the same hash, goes to
+  the GRO. ODR bodies receive it the same way, out of protocol.</li>
+<li>For a payment issue, the RRN or UTR in the bundle and on the issue is the join key with the
+  rail's dispute channel.</li>
+</ul>
+<h3 id="bundle-access">Access<a class="headerlink" href="#bundle-access" title="Permanent link">&para;</a></h3>
+<p>The bundle contains personal data and the principal's instructions. The gateway <strong>MUST</strong> release
+it only to:</p>
+<ul>
+<li>the principal, or the agent acting under the principal's mandate for that transaction;</li>
+<li>the counterparties of record (the seller and the payer PSP of that transaction);</li>
+<li>the grievance redressal officer or ODR body handling an issue on it;</li>
+<li>a regulator, on lawful request.</li>
+</ul>
+<p>Anyone else gets <code>403 evidence_forbidden</code>. Selective disclosure keeps the basket away from the PSP
+and the instrument away from the seller where the format allows it. A summary step-up's full
+<code>ts_render</code>, which lists every seller of a basket, goes only to the principal (or the agent acting for
+the principal), the grievance officer, the ODR body and a regulator; a seller or a payer PSP gets its
+<code>ts_render_digests[]</code> entry instead.</p>
+<h2 id="retention">Retention<a class="headerlink" href="#retention" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Record</th>
+<th>Kept by</th>
+<th>Retention</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mandates, notices, consent and sharing records</td>
+<td>Mandate Manager</td>
+<td>At least 7 years, exportable in machine-readable form</td>
+</tr>
+<tr>
+<td>Personal data received by a seller</td>
+<td>Each recipient Data Fiduciary</td>
+<td><code>dpdp.data_retention</code> of the mandate and <code>retention.recipient_max</code> of the ConsentReceipt, never below the one-year minimum of DPDP Rule 8(3), and erased afterwards</td>
+</tr>
+<tr>
+<td>Idempotency keys and stored responses</td>
+<td>Gateway</td>
+<td>At least 24 hours (48 hours recommended)</td>
+</tr>
+<tr>
+<td>Replay-cache nonces</td>
+<td>Gateway</td>
+<td>Until the signature's <code>expires</code> (at most 300 seconds)</td>
+</tr>
+<tr>
+<td>InstructionLog, receipts and evidence bundles</td>
+<td>Agent operator (gateway) and PSP</td>
+<td>Long enough to serve grievances, disputes and regulatory review; see below</td>
+</tr>
+<tr>
+<td>BPP-signed <code>on_search</code> callbacks behind a returned <code>source_digest</code></td>
+<td>Gateway</td>
+<td>As long as the evidence bundle of any session that used an item from them, and in any case as long as the InstructionLog</td>
+</tr>
+<tr>
+<td>Negotiation transcripts</td>
+<td>Agent operator</td>
+<td>Proposed: 2 years for B2C, longer for B2B and public procurement (<a href="../open-questions/#q-56">Q-56</a>)</td>
+</tr>
+</tbody>
+</table>
+<p>Where these records contain payment data, RBI's directive on Storage of Payment System Data
+(RBI/2017-18/153, 06-04-2018) already requires RBI-authorised payment system providers to store
+that data only in India (the foreign leg of a cross-border transaction may also be stored abroad).</p>
+<p>Until <a href="../open-questions/#q-15">Q-15</a> is settled, a gateway, Mandate Manager or PSP adapter MUST
+store InstructionLogs, receipts and evidence bundles that contain payment data only in India, and
+MUST NOT send that payment data to any processor outside India (see
+<a href="../security-and-privacy/#data-localisation">Data localisation</a>).</p>
+<div class="admonition warning">
+<p class="admonition-title">Proposed</p>
+<p>A single retention table for InstructionLogs, receipts and evidence bundles, with downstream
+erasure on a deadline, is open (<a href="../open-questions/#q-17">Q-17</a>).</p>
+</div>
+<p>See <a href="../security-and-privacy/">Security and Privacy</a> for encryption and access control of operator
+records.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../payments/economics/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Who Pays">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Who Pays
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../trade-profiles/" class="md-footer__link md-footer__link--next" aria-label="Next: Trade Profiles">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Trade Profiles
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

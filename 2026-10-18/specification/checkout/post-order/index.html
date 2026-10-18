@@ -1,0 +1,2415 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/2026-10-18/specification/checkout/post-order/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../../negotiation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Orders and Post-order - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#orders-and-post-order" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Orders and Post-order
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#orders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orders
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orders">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#order-addressing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Order addressing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#order-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Order state and tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-order-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The post-order mandate gate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cancel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Returns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#refunds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refunds to the original method
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Refunds to the original method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#weight-adjustment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weighed goods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#igm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issues and grievances (IGM)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Issues and grievances (IGM)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raising-an-issue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raising an issue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#status-actions-and-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status, actions and levels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#orders" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Orders
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Orders">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#order-addressing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Order addressing
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#order-state" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Order state and tracking
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#post-order-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The post-order mandate gate
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cancel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cancel
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#returns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Returns
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#refunds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refunds to the original method
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Refunds to the original method">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#weight-adjustment" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Weighed goods
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#igm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Issues and grievances (IGM)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Issues and grievances (IGM)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#raising-an-issue" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Raising an issue
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#status-actions-and-levels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status, actions and levels
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#timelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timelines
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-responses" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error responses
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="orders-and-post-order">Orders and Post-order<a class="headerlink" href="#orders-and-post-order" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>Once <code>complete</code> succeeds, the seller (BPP) owns an <strong>order</strong>. The order's state stays Beckn's
+authoritative state machine; the gateway mirrors it and adds an append-only <code>adjustments[]</code> read
+model. Every write after the order exists (cancel, return, raising and acting on an issue) is
+<strong>mandate-scoped</strong>: it passes the same deterministic gate as checkout, with its own signature tag
+<code>bacp-post-order</code>.</p>
+<p>These are the paths that agentic checkout protocols generally leave out: cancelling, returning and
+complaining on behalf of a principal.</p>
+<h2 id="orders">Orders<a class="headerlink" href="#orders" title="Permanent link">&para;</a></h2>
+<h3 id="order-addressing">Order addressing<a class="headerlink" href="#order-addressing" title="Permanent link">&para;</a></h3>
+<p>Beckn order ids are unique only within the BPP that issued them. The gateway therefore keys every
+order by the pair <strong>(<code>bpp_id</code>, <code>order_id</code>)</strong>.</p>
+<ul>
+<li>When an agent holds only one order with a given <code>order_id</code>, it MAY address the order by
+  <code>order_id</code> alone.</li>
+<li>When the agent holds the same <code>order_id</code> from two or more BPPs, every order-scoped request
+  <strong>MUST</strong> name the BPP:<ul>
+<li>in the request body as <code>bpp_id</code> on cancel (<code>POST /orders/{order_id}/cancel</code>), return
+  (<code>POST /orders/{order_id}/returns</code>) and issue (<code>POST /issues</code>) requests;</li>
+<li>as the query parameter <code>?bpp_id=</code> on <code>GET /orders/{order_id}</code> and
+  <code>GET /orders/{order_id}/returns/{return_id}</code>.</li>
+</ul>
+</li>
+<li>If the order is ambiguous and <code>bpp_id</code> is missing, the gateway <strong>MUST</strong> return
+  <code>400 invalid_request</code> with <code>param: $.bpp_id</code>. It <strong>MUST NOT</strong> pick one of the orders.</li>
+<li>A <code>bpp_id</code> that matches none of the agent's orders with that id returns <code>404 not_found</code>.</li>
+<li>The query string is covered by the request signature: whenever the target URI has a query
+  component, the RFC 9421 signature <strong>MUST</strong> cover <code>@query</code>
+  (<a href="../../identity-and-signing/">Identity and Request Signing</a>).</li>
+</ul>
+<p>For example, <code>GET /orders/ORD-KIR-88231?bpp_id=bpp.kirana.example.in</code> is signed with <code>@query</code>
+in its covered components, so the <code>bpp_id</code> cannot be changed in transit.</p>
+<h3 id="order-state">Order state and tracking<a class="headerlink" href="#order-state" title="Permanent link">&para;</a></h3>
+<p><code>GET /orders/{order_id}</code> returns the <code>Order</code>: <code>state</code>, <code>fulfilment_state</code>, <code>line_items</code>,
+<code>totals</code>, <code>invoice</code>, <code>adjustments[]</code>, <code>return_window_ends</code>, <code>payment</code> and <code>mandate_ref</code>.</p>
+<ul>
+<li><code>state</code> is the Beckn order state: <code>Created</code>, <code>Accepted</code>, <code>In-progress</code>, <code>Completed</code>,
+  <code>Cancelled</code>.</li>
+<li><code>fulfilment_state</code> is the ONDC fulfilment state code (for example <code>Order-delivered</code>). An order with several fulfilments MAY
+  also carry <code>fulfilments[]{id, type, state}</code> (SHOULD, where the seller reports them), each with its own state.</li>
+<li><code>adjustments[]</code> is append-only: <code>cancellation</code>, <code>return</code>, <code>refund</code>, <code>replacement</code>, <code>dispute</code> and <code>weight_charge</code>
+  entries, each with <code>status</code>, <code>at</code>, and where relevant <code>amount</code> and <code>receipt_id</code>. Nothing is
+  rewritten.</li>
+<li><code>return_window_ends</code> comes from the seller's <code>@ondc/org/return_window</code>.</li>
+</ul>
+<p>The seller pushes changes as unsolicited <code>on_status</code>, <code>on_update</code> and <code>on_cancel</code> callbacks. The
+gateway accepts a callback only if it verifies against the BPP's registry key, is addressed to this
+BAP, and names an order it knows by (<code>bpp_id</code>, <code>order_id</code>); anything else is ignored and logged.
+It then sends the agent a webhook:</p>
+<table>
+<thead>
+<tr>
+<th>Webhook</th>
+<th>When</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>order.updated</code></td>
+<td>Every order state or fulfilment change (<code>on_status</code>, <code>on_cancel</code>, <code>on_update</code>)</td>
+<td>Full order snapshot</td>
+</tr>
+<tr>
+<td><code>return.updated</code></td>
+<td>Every return or refund state change</td>
+<td><code>{order_id, return}</code></td>
+</tr>
+<tr>
+<td><code>payment.receipt</code></td>
+<td>A payment or refund receipt is issued</td>
+<td><code>ReceiptRef</code>, never the signed receipt</td>
+</tr>
+<tr>
+<td><code>issue.updated</code></td>
+<td>A respondent action on an IGM issue</td>
+<td>Full issue snapshot</td>
+</tr>
+</tbody>
+</table>
+<p>Tracking uses the same model: fulfilment progress arrives as <code>order.updated</code> with the new
+<code>fulfilment_state</code>. Beckn <code>track</code> → <code>on_track</code> maps to the <code>bacp.order.track</code> verb.</p>
+<p>Order snapshot (abridged to one line item):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ORD-KIR-88231"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"transaction_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60"</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"bpp_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bpp.kirana.example.in"</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"provider_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"P-112"</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="w">  </span><span class="nt">"state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Completed"</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="w">  </span><span class="nt">"fulfilment_state"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Order-delivered"</span><span class="p">,</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="w">  </span><span class="nt">"line_items"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="w">    </span><span class="p">{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"I-MILK-1L"</span><span class="p">,</span><span class="w"> </span><span class="nt">"quantity"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="w">     </span><span class="nt">"unit_price"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">6800</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="w">     </span><span class="nt">"total"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">6800</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">}}</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="w">  </span><span class="nt">"totals"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"total"</span><span class="p">,</span><span class="w"> </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">30200</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">}}],</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="w">  </span><span class="nt">"adjustments"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="nt">"return_window_ends"</span><span class="p">:</span><span class="w"> </span><span class="s2">"2026-10-22T21:00:00+05:30"</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="nt">"mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_CHK7Q2W9X4K1M3"</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="post-order-gate">The post-order mandate gate<a class="headerlink" href="#post-order-gate" title="Permanent link">&para;</a></h2>
+<p>Every post-order write (cancel, return, raise issue, issue action) <strong>MUST</strong> pass this gate before
+any Beckn message is sent:</p>
+<ol>
+<li><strong>Tag and idempotency.</strong> The request is signed with tag <code>bacp-post-order</code> and carries an
+   <code>Idempotency-Key</code>.</li>
+<li><strong>Mandate.</strong> The <code>mandate_ref</code> that a cancel, return or issue request carries <strong>MUST</strong> be the
+   mandate the order was placed under (<code>403 mandate_scope_mismatch</code> otherwise). An issue action is
+   checked against the mandate of the issue's order.</li>
+<li><strong>Scope.</strong> The action (<code>CANCEL</code>, <code>RETURN</code> or <code>RAISE_ISSUE</code>) <strong>MUST</strong> be in the mandate's
+   <code>action_scope</code> (<code>403 mandate_scope_mismatch</code>).</li>
+<li><strong>Status.</strong> The mandate <strong>MUST</strong> be <code>ACTIVE</code>; or <code>REVOKED</code>, <code>PAUSED</code>, <code>EXPIRED</code> or <code>EXHAUSTED</code> with
+   <code>presence: HP</code>, for every pause reason (<code>principal_paused</code>, <code>binding_ineligible</code>, <code>reissue_required</code> and
+   <code>unmatched_rail_debit</code>). A write on a revoked, paused, expired or exhausted mandate without HP returns
+   <code>403 presence_not_allowed</code>. A <code>PENDING</code> or <code>REJECTED</code> mandate returns <code>403 mandate_required</code>.</li>
+<li><strong>Presence.</strong> <code>presence</code> <strong>MUST</strong> be in the mandate's <code>presence_allowed</code>
+   (<code>403 presence_not_allowed</code>), plus the per-action presence rules below. A write with <code>presence: HP</code> that carries a valid
+   <code>hp_proof</code> is exempt from this check, because the principal is present: otherwise a mandate whose <code>presence_allowed</code> is
+   only <code>HNP</code> could never return goods. A grievance, dispute, cancellation or return write is never refused with
+   <code>mandate_exhausted</code> or <code>mandate_expired</code>; for example an HP <code>RAISE_ISSUE</code> on an <code>EXHAUSTED</code> mandate returns <code>201</code>.</li>
+<li><strong>Presence proof.</strong> A write with <code>presence: HP</code> <strong>MUST</strong> carry <code>hp_proof{ts_event_hash, step_up_id}</code>:
+   a step-up of kind <code>post_order</code> whose <code>ts_render</code> names this write (<code>action</code>, <code>order_id</code> and, for
+   an issue action, <code>issue_id</code> and, for <code>RESOLUTION_ACCEPTED</code> or <code>RESOLUTION_REJECTED</code>, the <code>subject_hash</code> of the issue's <code>resolution</code> as shown), and
+   the hash of its signed <code>step_up.approved</code> event, not used for another write. Without <code>hp_proof</code>
+   the gateway returns <code>403 presence_not_proven</code> (<code>requires_buyer_review</code>) carrying <code>step_up</code> (kind
+   <code>post_order</code>, reason <code>presence_proof</code>) for the principal to confirm, and the same pending
+   step-up on a repeat; with a proof for another action, order or issue, one already used, or one
+   for an issue (<code>RESOLUTION_ACCEPTED</code> or <code>RESOLUTION_REJECTED</code>) whose current <code>resolution</code> does not hash to its <code>subject_hash</code>, the same code. The gateway consumes the proof inside the atomic section keyed on the order's root
+   Checkout Mandate. No Beckn or IGM message is sent until the proof passes
+   (<a href="../../human-participants/#hp-proof">Presence proof</a>).</li>
+</ol>
+<p><strong>An ended or paused mandate does not strand an order.</strong> Revoking, pausing, expiring or exhausting a
+mandate stops new commitments only. Cancel, return and issue on orders already placed under it stay
+allowed, with the principal present, whatever the reason: a principal must always be able to cancel, return
+or dispute an order that is already paid, and the seller's take-back and refund duties continue. A pause for
+a lapsed conformance attestation or any other binding reason is a gateway condition and never blocks the
+principal's protective write.</p>
+<h2 id="cancel">Cancel<a class="headerlink" href="#cancel" title="Permanent link">&para;</a></h2>
+<p><code>POST /orders/{order_id}/cancel</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"reason_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"001"</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_CHK7Q2W9X4K1M3"</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"presence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HP"</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nt">"hp_proof"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"ts_event_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:Rk3mW8qZ1tY5vB9nC2xL6pD0sH4jF7gA3eU8iO1kM5w"</span><span class="p">,</span><span class="w"> </span><span class="nt">"step_up_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stp_01HZPOCAN01q8W3nK5vRt7YcLm2"</span><span class="p">},</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="nt">"note"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"hi-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"गलती से ऑर्डर हो गया"</span><span class="p">,</span><span class="w"> </span><span class="nt">"en-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Ordered by mistake"</span><span class="p">},</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">"bpp_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bpp.kirana.example.in"</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li><code>reason_code</code> comes from the seller's Beckn <code>get_cancellation_reasons</code>.</li>
+<li>An HNP cancel is allowed only when the order amount is within the mandate's
+  <code>step_up.above_amount</code>; above it the cancel <strong>MUST</strong> be <code>presence: HP</code>
+  (<code>403 presence_not_allowed</code>).</li>
+<li>The gateway sends Beckn <code>cancel {order_id, cancellation_reason_id}</code> and waits for <code>on_cancel</code>.
+  If the seller refuses under its cancellation terms (<code>@ondc/org/cancellable</code>,
+  <code>cancellation_terms</code>), the gateway returns <code>403 cancel_not_allowed</code>
+  (<code>requires_buyer_review</code>) with the seller's error.</li>
+<li>On success the order becomes <code>Cancelled</code>, a <code>cancellation</code> adjustment is appended, and the
+  gateway refunds the amount to the original method (<a href="#refunds">Refunds</a>). Cancelling an
+  already-cancelled order returns its current state.</li>
+<li>A seller-side cancel arrives as an unsolicited <code>on_cancel</code>. The gateway appends a
+  <code>cancellation</code> adjustment with status <code>SELLER_CANCELLED</code> and refunds in the same way.</li>
+</ul>
+<h2 id="returns">Returns<a class="headerlink" href="#returns" title="Permanent link">&para;</a></h2>
+<p><code>POST /orders/{order_id}/returns</code>:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"I-MILK-1L"</span><span class="p">,</span><span class="w"> </span><span class="nt">"quantity"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">}],</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">  </span><span class="nt">"reason_code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"002"</span><span class="p">,</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">  </span><span class="nt">"mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_CHK7Q2W9X4K1M3"</span><span class="p">,</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="nt">"presence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HP"</span><span class="p">,</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nt">"hp_proof"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"ts_event_hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:M4pQ8rT2vX6zB1dF5hJ9kL3nP7sW0yA4cE8gI2mO6qU"</span><span class="p">,</span><span class="w"> </span><span class="nt">"step_up_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"stp_01HZPORET01q8W3nK5vRt7YcLm2"</span><span class="p">},</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="w">  </span><span class="nt">"evidence"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a><span class="w">    </span><span class="p">{</span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"image"</span><span class="p">,</span>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="w">     </span><span class="nt">"hash"</span><span class="p">:</span><span class="w"> </span><span class="s2">"sha-256:KArKH3tsITnbzaQ_h7yf91N2zdrnaEcfKy5IDFOJd7A"</span><span class="p">,</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="w">     </span><span class="nt">"uri"</span><span class="p">:</span><span class="w"> </span><span class="s2">"https://agents.vaani.example.in/e/1.jpg"</span><span class="p">}</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nt">"refund_to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"original_method"</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="p">}</span>
+</code></pre></div>
+<ul>
+<li>Returns are <strong><code>presence: HP</code></strong>: the principal confirms the return on the Trusted Surface, through
+  the <code>post_order</code> step-up that the first attempt returns, and the request carries <code>hp_proof</code> of
+  that confirmation (gate step 6). An HNP return gets
+  <code>403 presence_not_allowed</code>; an HP return without valid <code>hp_proof</code> gets
+  <code>403 presence_not_proven</code>.</li>
+<li>The request <strong>MUST</strong> be made before <code>return_window_ends</code>. After it, the gateway returns
+  <code>403 return_not_allowed</code>.</li>
+<li><strong>Partial quantities</strong> are allowed. Each item <strong>MUST</strong> be on the order, and for each item the
+  quantity in this request plus the quantities in earlier returns on the same order <strong>MUST NOT</strong>
+  exceed the ordered quantity. Otherwise <code>403 return_not_allowed</code> at <code>$.items[i]</code>.</li>
+<li>The refund amount is the item's unit price times the returned quantity, plus the charge lines the order's terms refund
+  and less any charge line the terms disclosed as retained. The refund record carries <code>charges_refunded[]</code> and
+  <code>charges_retained[]</code>; a retained line carries the <code>refund_rule</code> that was disclosed before commitment. A refund that is
+  below the amount paid and does not match <code>charges_retained[]</code> gets the message <code>refund_short_of_terms</code>
+  (<a href="../../payments/#refunds">Refunds</a>).</li>
+<li><code>reason_code</code> comes from the seller's <code>get_return_reasons</code>. Evidence is carried as hashes and
+  URIs; the media stays with the agent operator.</li>
+<li>The gateway sends Beckn <code>update</code> with <code>update_target: item</code> and returns <code>202</code> with a
+  <code>ReturnRecord</code> in <code>RETURN_INITIATED</code>.</li>
+</ul>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">"return_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ret_01HZXC"</span><span class="p">,</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">"order_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ORD-KIR-88231"</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"RETURN_INITIATED"</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nt">"items"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"I-MILK-1L"</span><span class="p">,</span><span class="w"> </span><span class="nt">"quantity"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">}],</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nt">"refund"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PENDING"</span><span class="p">,</span><span class="w"> </span><span class="nt">"amount"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"value"</span><span class="p">:</span><span class="w"> </span><span class="mi">6800</span><span class="p">,</span><span class="w"> </span><span class="nt">"currency"</span><span class="p">:</span><span class="w"> </span><span class="s2">"INR"</span><span class="p">},</span><span class="w"> </span><span class="nt">"to"</span><span class="p">:</span><span class="w"> </span><span class="s2">"original_method"</span><span class="p">}</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span>
+</code></pre></div>
+<p>The seller moves the return through <code>on_update</code>:</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; RETURN_INITIATED: update sent
+    RETURN_INITIATED --&gt; RETURN_APPROVED: on_update Return_Approved
+    RETURN_INITIATED --&gt; RETURN_REJECTED: on_update Return_Rejected
+    RETURN_APPROVED --&gt; RETURN_PICKED: on_update Return_Picked
+    RETURN_APPROVED --&gt; LIQUIDATED: on_update Liquidated (no pickup)
+    RETURN_PICKED --&gt; RETURN_DELIVERED: on_update Return_Delivered
+    RETURN_DELIVERED --&gt; [*]
+    LIQUIDATED --&gt; [*]
+    RETURN_REJECTED --&gt; [*]</code></pre>
+<p>The return refund <strong>MUST</strong> be issued <strong>exactly once</strong>, on the first of <code>Liquidated</code> or
+<code>Return_Delivered</code>. <code>refund.status</code> then moves <code>PENDING</code> → <code>INITIATED</code> → <code>SUCCESS</code> (with the refund
+receipt) or <code>FAILED</code>. A rejected return sets <code>refund.status: FAILED</code>. Each change appends a
+<code>return</code> adjustment and sends <code>return.updated</code>.</p>
+<p>A rejected return also carries the message <code>return_refused</code>, and a seller's unsolicited <code>on_cancel</code> of an order carries <code>seller_cancelled</code>
+on the order. Each has <code>resolution: requires_buyer_review</code> and names the operator's <code>grievance_contact</code> in <code>args[]</code>. Neither ends the principal's
+route: a seller's refusal to take back goods that the principal reports as defective is not lawful (Consumer Protection (E-Commerce) Rules,
+2020, r.6(3)), and cancellation charges are to be symmetric (r.4(8)), so the principal can raise an issue (<a href="../../errors/#registry-session">Errors</a>).</p>
+<h2 id="refunds">Refunds to the original method<a class="headerlink" href="#refunds" title="Permanent link">&para;</a></h2>
+<ul>
+<li>The refund for a line of an order that carried discounts comes from the seller-signed revised quote, never from a gateway computation, and never exceeds what was paid for that line: the line total minus the allocations on that line (<a href="../#discounts">Discounts</a>).</li>
+<li>A refund <strong>MUST</strong> go back to the instrument that paid (<code>refund_to: original_method</code>), through the
+  same handler, as a credit referencing the original payment.</li>
+<li>The refund Receipt is PSP-signed and <strong>MUST</strong> identify the original payment (<code>original_rrn</code>,
+  <code>original_utr</code>, or an <code>original_*</code> key in <code>rail.evidence</code>) and carry a <code>refund_state</code>. The
+  default for a completed refund to source is <code>refunded_to_source</code>.</li>
+<li>Card, UPI and net-banking payments are <strong>never</strong> refunded into a prepaid wallet (PPI), even on
+  request (<code>403 refund_to_ppi_forbidden</code>). A refund to another payer-owned mode needs the payer's
+  explicit instruction (<code>403 refund_not_to_source</code> otherwise).</li>
+<li>Card refunds, split-tender allocation and credit-funded refunds have handler-specific states such
+  as <code>pending_cardholder_consent</code> and <code>adjusted_against_dues</code>; see
+  <a href="../../payments/">Payments</a> and <a href="../../payments/credit-and-split-tender/">Credit and Split Tender</a>.</li>
+<li>A refund <strong>MUST NOT</strong> restore any mandate budget (<a href="../../mandates/#usage-ledger">Mandates</a>).</li>
+<li>A refund below the amount paid <strong>MUST</strong> match the lines in <code>charges_retained[]</code> (the same rule on a cancellation
+  adjustment); otherwise the gateway returns <code>refund_short_of_terms</code> (<code>requires_buyer_review</code>, with the IGM route) and does
+  not block or hold the refund. A refund is never reduced by the merchant discount rate or the aggregator's fees
+  (<a href="../../payments/#refunds">Refunds</a>).</li>
+<li>Every refund appends a <code>refund</code> adjustment with its <code>receipt_id</code> and sends <code>payment.receipt</code> with a
+  <code>ReceiptRef</code>. A failed refund appends a <code>refund</code> adjustment with a <code>FAILED</code> status.</li>
+</ul>
+<h3 id="weight-adjustment">Weighed goods<a class="headerlink" href="#weight-adjustment" title="Permanent link">&para;</a></h3>
+<p>A line sold by weight or measure (<a href="../#units">Units, quantity and weighed goods</a>) can be packed heavier or lighter than
+quoted. The order stands at the quoted total unless a rule below moves it:</p>
+<ol>
+<li><strong>Down only by default.</strong> A post-order weight adjustment can only reduce the amount: the gateway records it as a <code>refund</code>
+   in <code>adjustments[]</code>, to the original method, under the rules above. A weight adjustment that raises the amount, when the
+   line carries no <code>adjustment_band</code>, is refused: the order stands at the quoted total, nothing is collected and the gateway
+   records the refusal in the InstructionLog.</li>
+<li><strong>A band, only with a hold.</strong> A line whose <code>adjustment_band</code> has a <code>max_up</code> (accepted only when all four conditions of
+   <a href="../#units">Units, quantity and weighed goods</a> hold) allows an upward adjustment of at most <code>max_up</code>, recorded as a
+   <code>weight_charge</code> adjustment. The extra is collected only from the hold that was placed at payment: there is no second
+   debit and no cash-on-delivery top-up. Where the rail has no hold, or the hold cannot be captured in part, the band was
+   never accepted and the adjustment is down only. An upward adjustment above <code>max_up</code>, or on a rail without a hold, is
+   refused and the order stands.</li>
+<li><strong>Budget.</strong> A downward adjustment is a partial refund after fulfilment and releases no budget
+   (<a href="../../mandates/#usage-ledger">Usage ledger</a>).</li>
+</ol>
+<h2 id="igm">Issues and grievances (IGM)<a class="headerlink" href="#igm" title="Permanent link">&para;</a></h2>
+<p>BACP raises complaints through the ONDC Issue and Grievance Management (IGM) flow, with the agent as
+an <code>AI_AGENT</code> complainant acting on behalf of the principal, and with a signed, verifiable evidence
+bundle attached.</p>
+<h3 id="raising-an-issue">Raising an issue<a class="headerlink" href="#raising-an-issue" title="Permanent link">&para;</a></h3>
+<p><code>POST /issues</code> (tag <code>bacp-post-order</code>, <code>RAISE_ISSUE</code> in scope):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">"order_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"ORD-KIR-88231"</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">"category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PAYMENT"</span><span class="p">,</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="nt">"sub_category"</span><span class="p">:</span><span class="w"> </span><span class="s2">"PMT02"</span><span class="p">,</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">  </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nt">"hi-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"दूध वापस किया, पर रिफ़ंड नहीं आया"</span><span class="p">,</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">    </span><span class="nt">"en-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Returned milk, refund not received"</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nt">"mandate_ref"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mdt_CHK7Q2W9X4K1M3"</span><span class="p">,</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="w">  </span><span class="nt">"rrn"</span><span class="p">:</span><span class="w"> </span><span class="s2">"629318004417"</span><span class="p">,</span>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="w">  </span><span class="nt">"bpp_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bpp.kirana.example.in"</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="p">}</span>
+</code></pre></div>
+<ol>
+<li>The gateway passes the <a href="#post-order-gate">post-order gate</a>. <code>presence</code> defaults to <code>HNP</code>; on an
+   order whose mandate is not <code>ACTIVE</code> (<code>REVOKED</code>, <code>PAUSED</code>, <code>EXPIRED</code> or <code>EXHAUSTED</code>) it <strong>MUST</strong> be <code>HP</code>.</li>
+<li>It assembles the transaction's <strong>evidence bundle</strong> and runs the verification (the five AP2 steps and step 6, Trusted Surface events) and the
+   InstructionLog chain check (<a href="../../evidence/#bundle">Evidence bundle</a>). If the bundle does not
+   verify fully, it returns <code>422 evidence_unverifiable</code> and sends nothing. A failure of only the catalogue checks of step 6 does not stop the issue: the gateway sends it with the result recorded in <code>verification</code>. A gateway <strong>MUST NOT</strong> refuse to raise an issue because of a catalogue check.</li>
+<li>It sends Beckn IGM 2.0 <code>issue</code> with the agent as an <code>actors[]</code> entry of <code>type</code> <code>AI_AGENT</code>
+   (Proposed, see below) whose <code>id</code> is the issue's <code>complainant_id</code>, the agent id and operator, <code>on_behalf_of</code> set to the principal's pseudonymous <code>principal_ref</code>, the
+   <code>mandate_ref</code>, the payment references (RRN or UTR), the <code>evidence_bundle_ref</code> URI and the
+   <code>evidence_bundle_hash</code>, and mirrors the actor type in a <code>bacp</code> tag group.</li>
+<li>For a <code>PAYMENT</code> issue with an RRN, the gateway also lets the payer PSP pick the complaint up
+   through UPI's dispute channel (UDIR), cross-referenced by RRN and the IGM issue id.</li>
+<li>It returns <code>201</code> with the <code>Issue</code> in status <code>OPEN</code> and level <code>ISSUE</code>. The seller's <code>on_issue</code> is
+   only an acknowledgement; <code>PROCESSING</code> arrives later as an unsolicited <code>on_issue</code>.</li>
+</ol>
+<p>Whether ONDC registers <code>AI_AGENT</code> as an IGM 2.0 actor type is open
+(<a href="../../open-questions/#q-11">Q-11</a>): the IGM 2.0 enum has <code>AGENT</code>, which is not an AI agent. Until then
+it is a namespaced extension value mirrored in tags. BACP targets IGM 2.0, which has only <code>issue</code> and
+<code>on_issue</code>; <code>GET /issues/{issue_id}</code> returns the gateway's snapshot and makes no network call (the
+IGM 1.x <code>issue_status</code> / <code>on_issue_status</code> actions are not used).</p>
+<h3 id="status-actions-and-levels">Status, actions and levels<a class="headerlink" href="#status-actions-and-levels" title="Permanent link">&para;</a></h3>
+<p><code>Issue.status</code> is one of <code>OPEN</code>, <code>PROCESSING</code>, <code>RESOLVED</code>, <code>CLOSED</code>. Everything the parties <em>do</em>
+is an entry in <code>actions[]</code> (with <code>actor_type</code> and time), never a status: <code>OPEN</code>, <code>PROCESSING</code>,
+<code>INFO_REQUESTED</code>, <code>INFO_PROVIDED</code>, <code>INFO_NOT_AVAILABLE</code>, <code>RESOLUTION_PROPOSED</code>,
+<code>RESOLUTION_ACCEPTED</code>, <code>RESOLUTION_REJECTED</code>, <code>RESOLUTION_CASCADED</code>, <code>RESOLVED</code>, <code>CLOSED</code> (the IGM 2.0 action codes),
+plus <code>ESCALATED</code>, a BACP agent action that raises the issue level (<code>ISSUE</code> → <code>GRIEVANCE</code>) rather than an IGM 2.0 action code. A proposed remedy is carried in <code>resolution</code> (<code>action_triggered</code>: <code>REFUND</code>,
+<code>REPLACEMENT</code>, <code>RETURN</code>, <code>CANCEL</code>, <code>NO-ACTION</code>, and <code>refund_amount</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Respondent action (<code>on_issue</code>)</th>
+<th>Effect on <code>status</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>PROCESSING</code>, <code>INFO_REQUESTED</code>, <code>RESOLUTION_PROPOSED</code>, <code>RESOLUTION_CASCADED</code></td>
+<td><code>PROCESSING</code></td>
+</tr>
+<tr>
+<td><code>RESOLVED</code></td>
+<td><code>RESOLVED</code></td>
+</tr>
+</tbody>
+</table>
+<p>The agent acts with <code>POST /issues/{issue_id}/actions</code> (<code>INFO_PROVIDED</code>, <code>RESOLUTION_ACCEPTED</code>,
+<code>RESOLUTION_REJECTED</code>, <code>ESCALATED</code>, <code>CLOSED</code>), through the same gate:</p>
+<ul>
+<li><code>RESOLUTION_ACCEPTED</code> and <code>RESOLUTION_REJECTED</code> <strong>MUST</strong> be <code>presence: HP</code>, with <code>hp_proof</code>
+  (gate step 6): only the principal accepts or rejects a remedy, and only the remedy the principal
+  was shown. If the seller revises the <code>resolution</code> after the principal confirmed, the proof no
+  longer applies (<code>403 presence_not_proven</code>). <code>RESOLUTION_ACCEPTED</code> is followed by <code>CLOSED</code>, and the issue becomes
+  <code>CLOSED</code>.</li>
+<li>Acting on a <code>CLOSED</code> issue returns <code>409 session_state_conflict</code>.</li>
+<li><code>ESCALATED</code> moves the issue from level <code>ISSUE</code> to level <code>GRIEVANCE</code>, handled by the grievance
+  redressal officer (GRO). The escalation carries the <strong>same</strong> evidence bundle, identified by its
+  hash.</li>
+</ul>
+<p>IGM in its current version has no dispute level. Online dispute resolution (ODR) is referenced out
+of protocol as <code>odr_reference</code> (<a href="../../open-questions/#q-06">Q-06</a>).</p>
+<h3 id="timelines">Timelines<a class="headerlink" href="#timelines" title="Permanent link">&para;</a></h3>
+<p>On opening, the gateway sets <code>expected_response_by</code> to at most 48 hours after the issue is raised
+and <code>expected_resolution_by</code> to at most 30 days after it, or to the shorter durations the respondent
+declares in the IGM 2.0 <code>expected_response_time</code> and <code>expected_resolution_time</code>. The 48-hour
+acknowledgement and one-month redress limits come from the Consumer Protection (E-Commerce) Rules,
+2020, Rule 4(5), and ONDC restates them for buyers: the buyer app "must come back to you within 48
+hours", and a complaint "has to be resolved within 30 days"
+(<a href="https://ondc.org/pages/complaint.html">ONDC complaint page</a>). The IGM 2.0 schema carries these clocks
+as per-issue ISO 8601 durations and sets no network default; ONDC's reference SDK uses <code>PT1H</code> and
+<code>P1D</code> as example values. If the respondent misses <code>expected_response_by</code>, the agent SHOULD offer the
+principal an escalation to <code>GRIEVANCE</code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Proposed</p>
+<p>Whether the gateway escalates automatically when a clock is missed, and what the ONDC Network
+Policy IGM chapter adds, are open (<a href="../../open-questions/#q-57">Q-57</a>).</p>
+</div>
+<pre class="mermaid"><code>sequenceDiagram
+    autonumber
+    actor U as Principal
+    participant A as Agent
+    participant G as BACP Gateway (interfacing NP)
+    participant S as Seller (counterparty NP)
+    participant GRO as GRO
+    participant P as Payer PSP (UDIR)
+    U-&gt;&gt;A: My refund has not arrived
+    A-&gt;&gt;G: POST /issues with category PAYMENT, RRN, mandate_ref
+    G-&gt;&gt;G: Post-order gate, assemble and verify evidence bundle
+    G-&gt;&gt;S: IGM issue with AI_AGENT actor and evidence_bundle_ref
+    S--&gt;&gt;G: on_issue ACK
+    G-&gt;&gt;P: UDIR complaint keyed by RRN with the issue id
+    G--&gt;&gt;A: 201 issue OPEN, response due in 48 h
+    S--&gt;&gt;G: on_issue PROCESSING then INFO_REQUESTED
+    G--&gt;&gt;A: Webhook issue.updated
+    A-&gt;&gt;G: POST action INFO_PROVIDED
+    S--&gt;&gt;G: on_issue RESOLUTION_PROPOSED refund ₹68
+    A-&gt;&gt;U: The seller will refund again. Accept?
+    U-&gt;&gt;A: Yes
+    A-&gt;&gt;G: POST action RESOLUTION_ACCEPTED with presence HP
+    G-&gt;&gt;S: issue with RESOLUTION_ACCEPTED and CLOSED
+    alt No response by expected_response_by
+        A-&gt;&gt;G: POST action ESCALATED with presence HP
+        G-&gt;&gt;GRO: Grievance with the same evidence bundle
+    end</code></pre>
+<h2 id="error-responses">Error responses<a class="headerlink" href="#error-responses" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th>Codes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>400</td>
+<td><code>invalid_request</code> (including an ambiguous order without <code>bpp_id</code>, at <code>$.bpp_id</code>), <code>idempotency_key_required</code></td>
+</tr>
+<tr>
+<td>401</td>
+<td><code>signature_invalid</code>, <code>replay_detected</code>, <code>agent_unregistered</code>, <code>agent_credential_revoked</code></td>
+</tr>
+<tr>
+<td>403</td>
+<td><code>mandate_scope_mismatch</code>, <code>presence_not_allowed</code>, <code>presence_not_proven</code>, mandate status errors, <code>cancel_not_allowed</code>, <code>return_not_allowed</code>, <code>refund_to_ppi_forbidden</code>, <code>refund_not_to_source</code></td>
+</tr>
+<tr>
+<td>404</td>
+<td><code>not_found</code></td>
+</tr>
+<tr>
+<td>409</td>
+<td><code>idempotency_in_flight</code>, <code>session_state_conflict</code></td>
+</tr>
+<tr>
+<td>413</td>
+<td><code>request_too_large</code></td>
+</tr>
+<tr>
+<td>422</td>
+<td><code>idempotency_conflict</code>, <code>evidence_unverifiable</code></td>
+</tr>
+<tr>
+<td>429</td>
+<td><code>quota_exceeded</code></td>
+</tr>
+<tr>
+<td>502</td>
+<td><code>bpp_nack</code></td>
+</tr>
+<tr>
+<td>503</td>
+<td><code>idempotency_store_unavailable</code></td>
+</tr>
+<tr>
+<td>504</td>
+<td><code>bpp_timeout</code></td>
+</tr>
+</tbody>
+</table>
+<p>See <a href="../../errors/">Errors</a> for the full registry.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Sessions and Checkout">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Sessions and Checkout
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../../negotiation/" class="md-footer__link md-footer__link--next" aria-label="Next: Overview">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

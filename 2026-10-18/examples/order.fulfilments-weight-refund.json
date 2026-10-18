@@ -1,0 +1,58 @@
+{
+  "id": "ORD-KIR-88231",
+  "transaction_id": "6f1c2a8e-0c7b-4f7e-9d0e-1b2c3d4e5f60",
+  "bpp_id": "bpp.kirana.example.in",
+  "state": "In-progress",
+  "fulfilment_state": "Out-for-delivery",
+  "fulfilments": [
+    {
+      "id": "F1",
+      "type": "Delivery",
+      "state": "Out-for-delivery"
+    },
+    {
+      "id": "F2",
+      "type": "Self-Pickup",
+      "state": "Pending"
+    }
+  ],
+  "line_items": [
+    {
+      "id": "I-ATTA-LOOSE",
+      "quantity": 1500,
+      "measure": {
+        "unit": "KGM",
+        "scale": 3,
+        "increment": 250
+      },
+      "unit_price": {
+        "value": 4400,
+        "currency": "INR"
+      },
+      "total": {
+        "value": 6600,
+        "currency": "INR"
+      }
+    }
+  ],
+  "totals": [
+    {
+      "type": "total",
+      "amount": {
+        "value": 6600,
+        "currency": "INR"
+      }
+    }
+  ],
+  "adjustments": [
+    {
+      "type": "refund",
+      "status": "completed",
+      "amount": {
+        "value": 300,
+        "currency": "INR"
+      },
+      "at": "2026-10-19T19:30:00+05:30"
+    }
+  ]
+}

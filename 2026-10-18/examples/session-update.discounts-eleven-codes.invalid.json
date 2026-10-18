@@ -1,0 +1,27 @@
+{
+  "items": [
+    {
+      "id": "I-ATTA-2KG",
+      "quantity": 1
+    },
+    {
+      "id": "I-MILK-1L",
+      "quantity": 1
+    }
+  ],
+  "discounts": {
+    "codes": [
+      "CODE0",
+      "CODE1",
+      "CODE2",
+      "CODE3",
+      "CODE4",
+      "CODE5",
+      "CODE6",
+      "CODE7",
+      "CODE8",
+      "CODE9",
+      "CODE10"
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "entry": {
+    "entry_id": "lde_KHATA00000007",
+    "ledger_id": "ldg_KIRANAKHATA01",
+    "seq": 7,
+    "type": "payment",
+    "amount": {
+      "value": 480000,
+      "currency": "INR"
+    },
+    "effect": "decrease_receivable",
+    "at": "2026-11-17T12:00:00+05:30",
+    "settles": [
+      {
+        "entry_id": "lde_TILH00000041",
+        "amount": {
+          "value": 480000,
+          "currency": "INR"
+        }
+      }
+    ],
+    "settlement_evidence": {
+      "handler": "in.upi.intent",
+      "receipt_id": "rcpt_UPI0000000042",
+      "rrn": "629318004499"
+    },
+    "acknowledgements": [],
+    "status": "pending_ack",
+    "prev_hash": "sha-256:2j76-F435SKJwqHuMivnGIyVn2QjD-8_t2gJjvOWAAA",
+    "entry_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc",
+    "signatures": [
+      {
+        "role": "bap",
+        "kid": "bap.annapurna.example.in|k1",
+        "alg": "ES256",
+        "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+      }
+    ]
+  },
+  "messages": [
+    {
+      "type": "warning",
+      "code": "settlement_payee_unmatched",
+      "resolution": "requires_buyer_review",
+      "content": {
+        "en-IN": "The payment was recorded but its payee is not one of the seller's settlement accounts, so it waits for the seller to confirm it."
+      },
+      "param": "$.entry"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "type": "invalid_request",
+  "code": "capability_unsupported",
+  "message": "The discounts member is refused",
+  "param": "$.discounts",
+  "resolution": "unrecoverable"
+}

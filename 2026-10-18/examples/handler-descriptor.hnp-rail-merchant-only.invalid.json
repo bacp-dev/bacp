@@ -1,0 +1,118 @@
+{
+  "handler_id": "in.store_credit",
+  "aliases": [],
+  "name": {
+    "en-IN": "Closed-system store credit"
+  },
+  "family": "store_credit",
+  "kind": "payment",
+  "status": "live",
+  "rail": {
+    "operator": "merchant"
+  },
+  "regulator": [
+    {
+      "body": "Consumer law",
+      "instrument": "Not an RBI payment system (PPI MD 2.1)"
+    }
+  ],
+  "presence": {
+    "human_presence": "none",
+    "hp": true,
+    "hnp": "rail_enforced",
+    "device_bound": false,
+    "assisted_only": false
+  },
+  "binding": {
+    "class": "O",
+    "open_eligible": false,
+    "open_requires": "Merchant-scoped balance. Not open-eligible in BACP 2026-10-18: its limits are enforced by the merchant, not by a rail or issuer. Held pending Q-59 and Q-46."
+  },
+  "mandate_primitives": [
+    {
+      "type": "balance_cap",
+      "limits_enforced_by": "merchant",
+      "ref_name": "store credit id",
+      "payee_scope": "single_merchant",
+      "multi_capture": true
+    }
+  ],
+  "limits": [
+    {
+      "name": "balance",
+      "source": {
+        "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+        "section": "para 2.1",
+        "label": "RBI"
+      },
+      "verification": "verified",
+      "configurable": true,
+      "applies_to": "merchant terms"
+    }
+  ],
+  "afa": {
+    "model": "n_a",
+    "pre_debit_notice": "not_applicable",
+    "source": {
+      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+      "section": "para 2.1",
+      "label": "RBI"
+    }
+  },
+  "refund": {
+    "route": "same_balance",
+    "source": {
+      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+      "section": "para 2.1",
+      "label": "RBI"
+    }
+  },
+  "dispute": {
+    "channels": [
+      "merchant grievance",
+      "consumer commission"
+    ]
+  },
+  "settlement": {
+    "mechanism": "internal",
+    "evidence_refs": [
+      "ledger_entry_id"
+    ],
+    "escrow": "n_a"
+  },
+  "data_minimisation": {
+    "payment_leg_fields": [
+      "payee",
+      "amount",
+      "mandate_ref",
+      "checkout_hash"
+    ],
+    "never_collect": [
+      "pin",
+      "otp",
+      "card_pan",
+      "cvv",
+      "card_expiry",
+      "netbanking_credentials",
+      "aadhaar_number",
+      "biometric",
+      "basket"
+    ],
+    "basket_blind": true
+  },
+  "funding": "prepaid",
+  "credit_disclosure_required": false,
+  "segments": [
+    "b2c"
+  ],
+  "requirements": [
+    "PAY-119"
+  ],
+  "sources": [
+    {
+      "file": "RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82)",
+      "section": "para 2.1",
+      "label": "RBI"
+    }
+  ]
+}

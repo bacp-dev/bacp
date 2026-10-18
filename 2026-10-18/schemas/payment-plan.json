@@ -1,0 +1,315 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/payment-plan.json",
+  "title": "PaymentPlan (split and multi-tender)",
+  "description": "How one accepted all_in_total is paid: several tenders now (gift card + UPI) and/or tranches over time (token advance + loan + balance). One closed payment mandate and one Receipt per tender. Step-up and AFA are evaluated on the plan total, never per tender. Over the wire, a gateway that lists the capability in.bacp.payment_plan offers plans as PlanOption values and takes the chosen plan as a PlanRequest.",
+  "type": "object",
+  "required": [
+    "plan_id",
+    "checkout_hash",
+    "all_in_total",
+    "tenders",
+    "refund_allocation"
+  ],
+  "properties": {
+    "plan_id": {
+      "type": "string",
+      "pattern": "^plan_[A-Za-z0-9]{8,40}$"
+    },
+    "plan_hash": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+      "pattern": "^sha-256:",
+      "description": "sha-256 over the JCS (RFC 8785) form of the plan's tenders: the array of {tender_id, handler, amount, sequence} objects (with tranche_id when present), in ascending sequence, without payment_mandate and without any response-only field. The same value in PlanOption.plan_hash, in a closed payment mandate's tender.plan_hash and in the ts_render's plan.plan_hash."
+    },
+    "checkout_hash": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+      "description": "Hash of the BPP-signed quote (the checkout), the same for every tender. It is not the accepted offer_hash."
+    },
+    "all_in_total": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+    },
+    "tenders": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "properties": {
+          "tender_id": {
+            "type": "string",
+            "pattern": "^tdr_[A-Za-z0-9]{6,40}$"
+          },
+          "handler": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/HandlerRef"
+          },
+          "amount": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/PositiveAmount",
+            "description": "Greater than zero, even when the tenders sum to the total."
+          },
+          "sequence": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Capture order. Stored-value tenders first."
+          },
+          "tranche_id": {
+            "type": "string",
+            "description": "TermSheet payment.schedule tranche this tender pays."
+          },
+          "presence": {
+            "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Presence"
+          },
+          "closed_payment_mandate_ref": {
+            "type": "string"
+          },
+          "auth_binding_type": {
+            "type": "string"
+          },
+          "rail_ref": {
+            "type": "string",
+            "description": "The rail's own reference for the debit (for example a UPI RRN or a Circle delegation id), kept so that support staff can answer a call from one record."
+          },
+          "funding": {
+            "enum": [
+              "debit",
+              "credit",
+              "prepaid",
+              "cash",
+              "voucher",
+              "loan",
+              "cbdc",
+              "trade_credit"
+            ]
+          },
+          "status": {
+            "enum": [
+              "planned",
+              "held",
+              "captured",
+              "in_doubt",
+              "reversal_pending",
+              "failed",
+              "released",
+              "refunded",
+              "partially_refunded"
+            ],
+            "description": "in_doubt: the rail has not said whether the debit succeeded; while any tender is in_doubt the gateway MUST NOT release or refund any other tender. reversal_pending: a debit that did not confirm is waiting for the rail to reverse it by reversal_deadline."
+          },
+          "receipt_id": {
+            "type": "string"
+          },
+          "reversal_deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the rail's reversal of an unconfirmed debit is due: the debit time plus the rail's turnaround time (UPI P2M T+5, PPI on-us T+1). Gateway-computed and response-only."
+          },
+          "psp_key": {
+            "type": "string",
+            "minLength": 22,
+            "maxLength": 64,
+            "description": "The idempotency key the gateway sent to the PSP for this tender. It is derived deterministically from the Idempotency-Key of the complete request and the tender_id, because the PSP never sees the tender_id. Response-only."
+          },
+          "reversal_basis": {
+            "enum": [
+              "rbi_tat",
+              "bacp_policy",
+              "unknown"
+            ],
+            "description": "Why the reversal of a debit that the seller never confirmed is due when it is: rbi_tat, when the payer PSP reports the debit as pending or as deemed (a credit-side timeout); then the message states the T+5 turnaround and the compensation of ₹100 a day that the RBI circular (RBI/2019-20/67, Annex, row 4(b)) sets. bacp_policy, when the PSP reports the payee credit as completed and only the seller's Beckn on_confirm is missing; then the deadline is BACP's own policy, and the message never states an RBI compensation entitlement. unknown, when the PSP's response does not say; then the message names the routes that certainly exist and says that if the payer's bank shows the payment as failed or pending, RBI's automatic-reversal and compensation rules apply. Present with refund_route."
+          },
+          "refund_route": {
+            "enum": [
+              "gateway_collector",
+              "seller_collector"
+            ],
+            "description": "Who refunds a debit that the seller never confirmed: gateway_collector, when the gateway's own payment aggregator collected the money, so that the gateway can start the refund itself and the message may say 'started'; seller_collector, when the seller's collector holds it, so that the gateway can only request the refund from that collector through IGM, citing original_rrn, and tells the principal how to raise a complaint through UDIR; the message then says 'requested', never 'started'. Present with reversal_basis."
+          }
+        },
+        "required": [
+          "tender_id",
+          "handler",
+          "amount",
+          "sequence",
+          "status"
+        ],
+        "additionalProperties": false,
+        "dependentRequired": {
+          "reversal_basis": [
+            "refund_route"
+          ],
+          "refund_route": [
+            "reversal_basis"
+          ]
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "reversal_pending"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "required": [
+                "reversal_basis",
+                "refund_route"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "refund_allocation": {
+      "enum": [
+        "lifo",
+        "pro_rata",
+        "tender_specific"
+      ],
+      "description": "Default lifo: reverse capture order, each tender back to its own source (PA MD 10(f), PPI MD 14.3)."
+    },
+    "atomicity": {
+      "const": "saga",
+      "description": "Hold or capture in sequence. On a later failure, release or refund earlier tenders to source."
+    },
+    "afa_evaluated_on": {
+      "const": "plan_total"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "PlanRequest": {
+      "type": "object",
+      "description": "The payment plan an agent sends in complete.payment_plan, in full. Its tenders MUST hash (see PaymentPlan.plan_hash) to the plan_hash of an entry in the session's payment.plan_options[], or to a plan that the principal confirmed on the Trusted Surface; otherwise the gateway refuses it with 400 plan_not_offered. The agent never composes tender amounts the gateway did not offer or the principal did not confirm. Response-only fields are not allowed.",
+      "required": [
+        "plan_id",
+        "tenders"
+      ],
+      "properties": {
+        "plan_id": {
+          "type": "string",
+          "pattern": "^plan_[A-Za-z0-9]{8,40}$",
+          "description": "The plan_id of the offered or confirmed plan."
+        },
+        "tenders": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "tender_id",
+              "handler",
+              "amount",
+              "sequence",
+              "payment_mandate"
+            ],
+            "properties": {
+              "tender_id": {
+                "type": "string",
+                "pattern": "^tdr_[A-Za-z0-9]{6,40}$"
+              },
+              "handler": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/HandlerRef"
+              },
+              "amount": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/PositiveAmount",
+                "description": "Greater than zero. Every tender carries an amount; an open-amount tender is refused."
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 1,
+                "description": "Capture order. Stored-value tenders first, and at most one tender without a hold primitive, placed last."
+              },
+              "payment_mandate": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Jws",
+                "description": "The closed payment mandate for this tender, with tender{plan_hash, tender_id} set and amount equal to this tender's amount."
+              },
+              "tranche_id": {
+                "type": "string",
+                "description": "The TermSheet payment.schedule tranche this tender pays. Only the tranche paid at complete is debited."
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "refund_allocation": {
+          "enum": [
+            "lifo",
+            "tender_specific"
+          ],
+          "description": "Default lifo. pro_rata is refused with 400 until the question of its fit with the refund-to-source rule is settled (Q-40)."
+        }
+      },
+      "additionalProperties": false
+    },
+    "PlanOption": {
+      "type": "object",
+      "description": "One way to pay the session, offered by the gateway in Session.payment.plan_options[]. It carries no default or preselected flag. The gateway-written description is read out unchanged on a voice channel.",
+      "required": [
+        "plan_id",
+        "plan_hash",
+        "description",
+        "tenders",
+        "all_in_total"
+      ],
+      "properties": {
+        "plan_id": {
+          "type": "string",
+          "pattern": "^plan_[A-Za-z0-9]{8,40}$"
+        },
+        "plan_hash": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+          "pattern": "^sha-256:",
+          "description": "The hash that a PlanRequest's tenders must match (see PaymentPlan.plan_hash)."
+        },
+        "description": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/LangText",
+          "description": "One sentence, written by the gateway from its own templates, for example hi-IN \"₹1,000 गिफ्ट कार्ड से और ₹1,160 UPI से\". Counterparty text never appears in it."
+        },
+        "tenders": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4,
+          "description": "Read-only. The tenders of the option, in capture order.",
+          "items": {
+            "type": "object",
+            "required": [
+              "tender_id",
+              "handler",
+              "amount",
+              "sequence"
+            ],
+            "properties": {
+              "tender_id": {
+                "type": "string",
+                "pattern": "^tdr_[A-Za-z0-9]{6,40}$"
+              },
+              "handler": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/HandlerRef"
+              },
+              "amount": {
+                "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/PositiveAmount"
+              },
+              "sequence": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "tranche_id": {
+                "type": "string"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "all_in_total": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount",
+          "description": "The total the tenders add up to."
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

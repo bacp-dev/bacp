@@ -1,0 +1,23 @@
+{
+  "step_up_id": "stp_01HZYPq8W3nK5vRt7YcLm2",
+  "kind": "post_order",
+  "reason": "presence_proof",
+  "mandate_id": "mdt_CHK7Q2W9X4K1M3",
+  "action": "REFUND_NOW",
+  "order_id": "ord_01HZY4",
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:XUSoFa1rYaDbGv8uQod_zZQfNJZ1vLWkjY_iYXv2ZzQ",
+  "total": {
+    "value": 45000,
+    "currency": "INR"
+  },
+  "seller_name": "NANDINI DAIRY STORE",
+  "summary": {
+    "hi-IN": "नंदिनी डेयरी स्टोर का ₹450 का ऑर्डर रद्द करें?",
+    "en-IN": "Cancel the ₹450 order from Nandini Dairy Store?"
+  },
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T19:05:00+05:30",
+  "payer_ref": "sha-256:K--ciesPMEh5-AskOBsrSW3p1bNLmdpsrk0UH6mIIUE"
+}

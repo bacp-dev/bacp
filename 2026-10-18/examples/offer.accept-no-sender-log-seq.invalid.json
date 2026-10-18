@@ -1,0 +1,59 @@
+{
+  "type": "accept",
+  "msg_id": "nmsg_B3acc9Kq1",
+  "negotiation_id": "neg_SAREE7Q2W9",
+  "transaction_id": "7c1f1a52-9f0a-4b1e-9d1e-2b4f0f7f1c11",
+  "round": 3,
+  "dispatched_at": "2026-10-13T11:05:10+05:30",
+  "sender_log_prev": "sha-256:Qk9yZGVyLWxvZy1wcmV2LWhhc2gtZXhhbXBsZS0wxyz4",
+  "protocol_terms": {
+    "version": "2026-10-18",
+    "hash": "sha-256:lq8OWyzx02wHbwGNYhUocd-yx-4sgc48vOE1CWO609U"
+  },
+  "received_at": "2026-10-13T11:05:11+05:30",
+  "from": {
+    "role": "buyer",
+    "np_id": "bap.vaani.example.in",
+    "agent_id": "did:web:agents.vaani.example.in:sakhi",
+    "offeror_kind": "agent"
+  },
+  "to": {
+    "role": "seller",
+    "np_id": "bpp.bunkar.example.in"
+  },
+  "signatures": [
+    {
+      "role": "bap",
+      "kid": "bap.vaani.example.in|ukid-7|ed25519",
+      "alg": "EdDSA",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    },
+    {
+      "role": "agent",
+      "kid": "did:web:agents.vaani.example.in:sakhi#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  ],
+  "counter_signature": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl",
+  "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+  "negotiation_mandate_ref": {
+    "id": "mdt_NEG7Q2W9X4K1M3",
+    "hash": "sha-256:NuNND_z4qhA_CZaDGKdqX_9Qm3p9V5VXzrM7DoSWYd8"
+  },
+  "legal_effect": "acceptance",
+  "bound_attestation": {
+    "type": "bacp.neg.bound_attestation",
+    "mandate_ref": "mdt_NEG7Q2W9X4K1M3",
+    "offer_hash": "sha-256:A8TDokQtHijBOECn2BVE2ExpPwDodmrPYXzlMr8iUSQ",
+    "result": true,
+    "iss": "mm.psp.example.in",
+    "iat": 1791873310,
+    "signature": {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|k3",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJiYWNwIjoidjEifQ.c2lnbmF0dXJl"
+    }
+  }
+}

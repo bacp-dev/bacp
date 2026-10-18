@@ -1,0 +1,12 @@
+{
+  "doc_type": "lorry_receipt",
+  "id": "lr_SURAT000112",
+  "issuer": "transporter.example.in",
+  "issued_at": "2026-11-01T18:00:00+05:30",
+  "hash": "sha-256:Qm8vXz1bN6dRtY0eWuS5cAfGhL2oP9iVxT4yKnBwJk3",
+  "ewb_no": "341009876543",
+  "payload": {
+    "delivery_date": "2026-11-01",
+    "delivery_notes": "x"
+  }
+}

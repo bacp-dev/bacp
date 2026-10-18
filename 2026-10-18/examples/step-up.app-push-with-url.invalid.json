@@ -1,0 +1,14 @@
+{
+  "step_up_id": "stp_01HZXAq8W3nK5vRt7YcLm2",
+  "kind": "confirm",
+  "reason": "above_step_up_threshold",
+  "summary": {
+    "hi-IN": "₹1,350 का ऑर्डर आपकी ₹1,200 की सीमा से ज़्यादा है। कृपया UPI ऐप में पुष्टि करें।",
+    "en-IN": "The ₹1,350 order is above your ₹1,200 limit. Please confirm in your UPI app."
+  },
+  "ts_render": "eyJhbGciOiJFUzI1NiIsInR5cCI6ImJhY3AtdHMtcmVuZGVyK2p3cyJ9.eyJzdGVwX3VwX2lkIjoic3RwXzAxSFpYQXE4VzNuSzV2UnQ3WWNMbTIifQ.c2ln",
+  "delivery": "app_push",
+  "expires_at": "2026-10-22T18:40:00+05:30",
+  "trusted_surface_url": "https://psp.example.in/approve/stp_01HZXAq8W3nK5vRt7YcLm2",
+  "surface": "psp.example.in"
+}

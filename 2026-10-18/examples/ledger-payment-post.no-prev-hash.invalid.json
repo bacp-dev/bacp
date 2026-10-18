@@ -1,0 +1,22 @@
+{
+  "mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "type": "payment",
+  "amount": {
+    "value": 480000,
+    "currency": "INR"
+  },
+  "settles": [
+    {
+      "entry_id": "lde_KHATA00000006",
+      "amount": {
+        "value": 480000,
+        "currency": "INR"
+      }
+    }
+  ],
+  "settlement_evidence": {
+    "handler": "in.upi.intent",
+    "receipt_id": "rcpt_UPI0000000042",
+    "rrn": "629318004499"
+  }
+}

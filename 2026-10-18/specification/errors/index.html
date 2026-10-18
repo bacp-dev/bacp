@@ -1,0 +1,4093 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/2026-10-18/specification/errors/">
+      
+      
+        <link rel="prev" href="../trade-profiles/">
+      
+      
+        <link rel="next" href="../security-and-privacy/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Errors - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#errors" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Errors
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/rails/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../payments/economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two channels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Two channels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dual-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dual-channel codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Error object
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#message-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Message object
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#registry-transport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transport, identity and idempotency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-mandate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mandate and verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session and payment messages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-negotiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negotiation, RFQ and auction codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-payments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payment-handler and rail codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-rail-ledger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rail and ledger refusals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-reasons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal and nested reasons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-up-reasons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step-up reasons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refund-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refund states
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#channels" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Two channels
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Two channels">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#dual-channel" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Dual-channel codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Error object
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#message-object" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The Message object
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#resolution" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Resolution
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#client-behaviour" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Client behaviour
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Registry
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Registry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#registry-transport" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Transport, identity and idempotency
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-mandate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mandate and verification
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-session" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Session and payment messages
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-negotiation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Negotiation, RFQ and auction codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-payments" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Payment-handler and rail codes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#registry-rail-ledger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Rail and ledger refusals
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#internal-reasons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Internal and nested reasons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#step-up-reasons" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Step-up reasons
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#refund-states" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refund states
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="errors">Errors<a class="headerlink" href="#errors" title="Permanent link">&para;</a></h1>
+<p>BACP reports problems on two channels, following the ACP error model. A request that the gateway could not accept
+fails with an HTTP error status and a flat <code>Error</code> object. A request that the gateway accepted, but whose business
+outcome the agent must act on, succeeds (200 or 201, or 202 where the operation is accepted asynchronously) with the full authoritative state and a <code>messages[]</code> array. This
+page defines both shapes, the resolution vocabulary that tells an agent what it may do next, and the registry of
+every code a conforming participant may emit.</p>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release. Codes are stable identifiers. A participant MUST NOT emit a code that is not registered on this page.</p>
+</div>
+<h2 id="channels">Two channels<a class="headerlink" href="#channels" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Channel</th>
+<th>When</th>
+<th>HTTP status</th>
+<th>Body</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Protocol failure</strong></td>
+<td>The request was malformed, unauthenticated, unauthorised, refused by the deterministic mandate verifier, or could not reach the seller.</td>
+<td>4xx or 5xx</td>
+<td>One flat <a href="#error-object"><code>Error</code></a> object</td>
+</tr>
+<tr>
+<td><strong>Business outcome</strong></td>
+<td>The request was processed and the resource has a new authoritative state, but the agent must take note, ask the principal, or wait.</td>
+<td>200 or 201; 202 for asynchronous operations (<code>POST /mandates</code>, return requests, Trusted Surface events)</td>
+<td>The full resource (session, order, negotiation, …) with <a href="#message-object"><code>messages[]</code></a></td>
+</tr>
+</tbody>
+</table>
+<p>Rules:</p>
+<ol>
+<li>A gateway MUST return protocol failures as 4xx or 5xx with a flat <code>Error</code>. It MUST NOT wrap them in a 200.</li>
+<li>A gateway MUST return business outcomes as 200, 201 or (for asynchronous operations) 202 with the full resource state and <code>messages[]</code>. The agent
+   MUST treat the returned state as authoritative and MUST NOT reconstruct state from earlier responses.</li>
+<li><strong>Step-up is never only an error.</strong> When a human must approve, the resource moves to
+   <code>status: requires_escalation</code>, carries a <code>step_up</code> object, and carries the message <code>step_up_required</code> with
+   <code>resolution: requires_buyer_review</code>. See <a href="../mandates/">Mandates and Consent</a> and
+   <a href="../checkout/">Sessions and Checkout</a>.</li>
+<li><code>param</code> is an RFC 9535 JSONPath into the request (for an <code>Error</code>) or into the returned resource (for a message),
+   for example <code>$.mandate_ref</code> or <code>$.payment.scheduled_debit_at</code>. Header problems use <code>$.headers.&lt;Name&gt;</code>.</li>
+</ol>
+<h3 id="dual-channel">Dual-channel codes<a class="headerlink" href="#dual-channel" title="Permanent link">&para;</a></h3>
+<p>Some validator and guard codes can appear on either channel. The rule is:</p>
+<ul>
+<li>the code is a <strong>200 message</strong> when it describes an <em>incoming</em> counterparty object or a <em>computed</em> outcome (a
+  handler intersection, a seller's offer);</li>
+<li>the code is a <strong>403 error</strong> when it blocks the caller's <em>own outgoing</em> commitment (a firm COUNTER, an ACCEPT, a
+  bid, an award, a session update or <code>complete</code>).</li>
+</ul>
+<p>For example, <code>handlers_incompatible</code> is a 200 message on <code>POST /payment-handlers/intersect</code> and a 403 error on an
+ACCEPT whose agreed payment option has no eligible handler. Registry rows marked "200 msg / 403" follow this rule.</p>
+<p>A code that also appears as a 200 <code>error</code> message on a session cancelled by a mandate event (<code>mandate_expired</code>,
+<code>mandate_revoked</code>, <code>mandate_paused</code>, <code>rail_binding_not_open_eligible</code>) mirrors that code's error status: the message
+reports the same condition that <code>complete</code> would return as an error.</p>
+<h2 id="error-object">The Error object<a class="headerlink" href="#error-object" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>enum</td>
+<td>yes</td>
+<td>Error class: <code>invalid_request</code>, <code>authentication_error</code>, <code>authorization_error</code>, <code>mandate_error</code>, <code>payment_error</code>, <code>upstream_error</code>, <code>service_unavailable</code></td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>string</td>
+<td>yes</td>
+<td>A code from the <a href="#registry">registry</a></td>
+</tr>
+<tr>
+<td><code>message</code></td>
+<td>string</td>
+<td>yes</td>
+<td>Human-readable explanation for logs and developers. Agents MUST NOT present it to the principal as a legal notice.</td>
+</tr>
+<tr>
+<td><code>param</code></td>
+<td>string</td>
+<td>no</td>
+<td>RFC 9535 JSONPath to the offending field</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>enum</td>
+<td>no</td>
+<td>How the agent should proceed; one of the <a href="#resolution">resolution values</a>. Gateways SHOULD send it.</td>
+</tr>
+<tr>
+<td><code>reasons</code></td>
+<td>array of string</td>
+<td>conditional</td>
+<td>Every local and rail reason that applied. REQUIRED on rail-cap and step-up errors.</td>
+</tr>
+<tr>
+<td><code>step_up_kind</code></td>
+<td>enum</td>
+<td>conditional</td>
+<td><code>confirm</code> or <code>rail_auth</code>. REQUIRED on step-up errors.</td>
+</tr>
+<tr>
+<td><code>supported_versions</code></td>
+<td>array of string</td>
+<td>conditional</td>
+<td>The versions that the gateway lists. REQUIRED on <code>version_unsupported</code> and absent on every other code.</td>
+</tr>
+<tr>
+<td><code>capability</code></td>
+<td>string</td>
+<td>conditional</td>
+<td>The capability id that owns the refused member. REQUIRED on <code>capability_unsupported</code> and absent on every other code.</td>
+</tr>
+<tr>
+<td><code>reason</code></td>
+<td>enum</td>
+<td>conditional</td>
+<td><code>no_conforming_origin</code>, <code>language_unavailable</code> or <code>channel_not_allowed</code>. REQUIRED on <code>trusted_surface_unavailable</code> and absent on every other code. Not to be confused with <code>reasons</code>.</td>
+</tr>
+<tr>
+<td><code>seller_reason</code></td>
+<td>object</td>
+<td>conditional</td>
+<td>On <code>bpp_nack</code> only: <code>{code, beckn_code}</code>, the reason the seller refused. <code>code</code> is <code>item_unavailable</code>, <code>quantity_reduced</code>, <code>price_changed</code>, <code>not_serviceable</code>, <code>store_closed</code>, <code>agent_orders_not_accepted</code>, <code>terms_mismatch</code> or <code>other</code>. The gateway sets it only from the BPP-signed NACK, and an unmapped Beckn code gives <code>other</code>. Which ONDC code maps to which value is for ONDC to answer.</td>
+</tr>
+<tr>
+<td><code>handoff_routes</code></td>
+<td>array of <code>HandoffRoute</code></td>
+<td>conditional</td>
+<td>On <code>trusted_surface_unavailable</code> with <code>reason</code> <code>language_unavailable</code> or <code>channel_not_allowed</code>: the session's <code>ai_disclosure.handoff_routes</code>, so that the agent can offer the principal a human. Absent when the session lists none.</td>
+</tr>
+<tr>
+<td><code>step_up</code></td>
+<td>object</td>
+<td>conditional</td>
+<td>On <code>403 presence_not_proven</code> for a post-order write without <code>hp_proof</code>: a <code>StepUp</code> of kind <code>post_order</code> (reason <code>presence_proof</code>) that the principal confirms on the Trusted Surface to obtain the proof (<a href="../human-participants/#hp-proof">Presence proof</a>).</td>
+</tr>
+</tbody>
+</table>
+<p>Rail-cap and step-up errors MUST also carry <code>reasons[]</code> (every local and rail reason that applied) and
+<code>step_up_kind</code>. <code>idempotency_in_flight</code> and <code>quota_exceeded</code> MUST be sent with a <code>Retry-After</code> header.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mandate_error"</span><span class="p">,</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mandate_revoked"</span><span class="p">,</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"message"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Mandate mdt_PAY7Q2W9X4K1M3 is REVOKED"</span><span class="p">,</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="nt">"param"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$.mandate_ref"</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="message-object">The Message object<a class="headerlink" href="#message-object" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Type</th>
+<th>Required</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>type</code></td>
+<td>enum</td>
+<td>yes</td>
+<td><code>error</code>, <code>warning</code>, <code>info</code> or <code>disclosure</code></td>
+</tr>
+<tr>
+<td><code>code</code></td>
+<td>string</td>
+<td>yes</td>
+<td>A code from the <a href="#registry">registry</a></td>
+</tr>
+<tr>
+<td><code>origin</code></td>
+<td>enum</td>
+<td>conditional</td>
+<td>Who wrote <code>content</code>: <code>gateway</code> (the default when <code>args</code> is absent) or <code>counterparty</code>. REQUIRED whenever <code>args</code> is present.</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>LangText</td>
+<td>yes</td>
+<td>Multilingual text keyed by BCP 47 tag, for example <code>{"hi-IN": "…", "en-IN": "…"}</code>. A gateway-written <code>content</code> never contains counterparty text.</td>
+</tr>
+<tr>
+<td><code>args</code></td>
+<td>array</td>
+<td>no</td>
+<td>Values inserted at <code>{name}</code> placeholders in <code>content</code>, each <code>{name, origin, text}</code>. A counterparty value (an item name, a fee label) travels only here, with <code>origin: counterparty</code>.</td>
+</tr>
+<tr>
+<td><code>param</code></td>
+<td>string</td>
+<td>no</td>
+<td>RFC 9535 JSONPath into the returned resource</td>
+</tr>
+<tr>
+<td><code>resolution</code></td>
+<td>enum</td>
+<td>yes</td>
+<td>What the agent may do next (see <a href="#resolution">Resolution</a>)</td>
+</tr>
+</tbody>
+</table>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"warning"</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"code"</span><span class="p">:</span><span class="w"> </span><span class="s2">"payment_in_doubt"</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"content"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="nt">"en-IN"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Debit status unknown. Reconciling with the PSP. Do not retry with a new key."</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">  </span><span class="nt">"param"</span><span class="p">:</span><span class="w"> </span><span class="s2">"$.payment.status"</span><span class="p">,</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">  </span><span class="nt">"resolution"</span><span class="p">:</span><span class="w"> </span><span class="s2">"recoverable"</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="p">}</span>
+</code></pre></div>
+<p>The first message of every checkout session is the <code>ai_disclosure</code> message (<code>type: disclosure</code>), which carries the
+agent's AI notice in the principal's language and points (<code>param: $.ai_disclosure</code>) at the session's typed routes to a
+human.</p>
+<p>For a message with <code>type: disclosure</code> and a code registered below with that type (<code>sponsored_listing</code>,
+<code>sponsorship_undeclared</code> and <code>prior_price_claim</code>), an agent that presents the session to a principal MUST present the
+fixed phrase for that code from <a href="../human-participants/#disclosure-phrases">Disclosure phrases</a>, in the principal's
+language, next to what <code>param</code> names, with the item's name, as labelled seller text, taken from the session line whose item is the <code>catalogue[]</code> entry's <code>item_id</code>, never from <code>args</code>. It fills
+the phrase's slots from the <code>Disclosures.catalogue[]</code> entry that <code>param</code> names. It MUST NOT summarise, hide or drop the
+message, and it hands off to a human rather than present it in a reduced form. It never reads the message's <code>content</code> in
+place of the fixed phrase. A <code>type: disclosure</code> message with an unregistered code is treated as <code>info</code>: the agent
+records it and does not read it verbatim. <code>ai_disclosure</code> keeps its own rule.</p>
+<h2 id="resolution">Resolution<a class="headerlink" href="#resolution" title="Permanent link">&para;</a></h2>
+<p>Every <code>Error</code> code and every message has exactly one <code>resolution</code>. On a seller-side gateway a code whose registry resolution is
+<code>requires_buyer_review</code> is emitted with <code>requires_seller_review</code>, because the principal who reviews is the seller's. The one exception is
+<code>rail_binding_not_open_eligible</code>, whose registry row gives a resolution per cause; the <code>Error.resolution</code> field
+then carries the one that applies:</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Meaning for the agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>recoverable</code></td>
+<td>The agent may fix the request itself (re-select, wait, GET and retry with the same key) without involving the principal.</td>
+</tr>
+<tr>
+<td><code>requires_buyer_input</code></td>
+<td>The agent must ask the principal for something new: set up or renew a mandate, choose another payment method, supply missing data.</td>
+</tr>
+<tr>
+<td><code>requires_buyer_review</code></td>
+<td>A human must review and approve on the Trusted Surface (step-up, disclosure review, out-of-scope action). The agent MUST NOT approve on the principal's behalf.</td>
+</tr>
+<tr>
+<td><code>requires_seller_review</code></td>
+<td>The same, for the seller principal: a message that a seller-side gateway emits and that its principal reviews, in the seller application or on the seller's Trusted Surface. The agent MUST NOT approve on the seller principal's behalf. A buyer-side gateway never emits it.</td>
+</tr>
+<tr>
+<td><code>unrecoverable</code></td>
+<td>The request cannot succeed as sent. The agent must not retry it; an operator may need to act.</td>
+</tr>
+</tbody>
+</table>
+<p>"Informational" is not a resolution value. Purely informational messages use <code>type: info</code> with
+<code>resolution: recoverable</code>.</p>
+<h2 id="client-behaviour">Client behaviour<a class="headerlink" href="#client-behaviour" title="Permanent link">&para;</a></h2>
+<ul>
+<li>An agent that meets a code it does not know MUST act on the HTTP status class (and, for messages, on
+  <code>resolution</code>). It MUST NOT retry a 4xx with a new <code>Idempotency-Key</code>: a new key is a new purchase intent and is
+  evaluated against the mandate afresh.</li>
+<li>After a 5xx, a timeout or a lost response, the agent MUST first <code>GET</code> the resource and MAY then retry only with the
+  <strong>same</strong> <code>Idempotency-Key</code> (see <a href="../transports/rest/#idempotency">REST binding</a>).</li>
+<li>On <code>payment_in_doubt</code> the agent MUST NOT re-key. The gateway reconciles with the PSP and reports the outcome.</li>
+<li>A new code MUST be registered here, with its HTTP status and resolution, before any participant emits it.</li>
+<li>A conformance run fails on any unregistered code (see <a href="../conformance/">Conformance</a>).</li>
+</ul>
+<h2 id="registry">Registry<a class="headerlink" href="#registry" title="Permanent link">&para;</a></h2>
+<p>"200 msg" means the code arrives in <code>messages[]</code> on a 200 or 201 response. "200 + <code>step_up</code>" means the resource moves
+to <code>requires_escalation</code> with a <code>step_up</code> object. A dash in the <em>Typical param</em> column means no single field applies.</p>
+<h3 id="registry-transport">Transport, identity and idempotency<a class="headerlink" href="#registry-transport" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>HTTP</th>
+<th><code>type</code></th>
+<th>Meaning</th>
+<th>Typical <code>param</code></th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>invalid_request</code></td>
+<td>400</td>
+<td>invalid_request</td>
+<td>Generic schema or parse failure. Also returned when an order-scoped request is ambiguous because the agent holds the same order id from two sellers and did not name the seller, and when a session's <code>basket_id</code> is already used by sessions of another principal, presence or root open Checkout Mandate. Also returned when <code>BACP-Version</code> is missing and the profile lists more than one version (at <code>$.headers.BACP-Version</code>), when a quantity is not a multiple of the item's <code>increment</code> (at <code>$.items[n].quantity</code>), when <code>fulfilment.option_id</code> names an option that the session did not offer (at <code>$.fulfilment.option_id</code>), and when a basket is below a <code>min_order</code> (at <code>$.items</code>).</td>
+<td>the offending field; <code>$.bpp_id</code> for an ambiguous order; <code>$.basket_id</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>version_unsupported</code></td>
+<td>400</td>
+<td>invalid_request</td>
+<td>The request names, in <code>BACP-Version</code>, a version that the gateway's profile does not list. The error carries <code>supported_versions[]</code>. A request that omits a header that is REQUIRED because the profile lists more than one version is not this code: it is <code>invalid_request</code> at <code>$.headers.BACP-Version</code>.</td>
+<td><code>$.headers.BACP-Version</code>; <code>supported_versions</code> carries the listed versions</td>
+<td>recoverable (choose a listed version)</td>
+</tr>
+<tr>
+<td><code>version_mismatch</code></td>
+<td>409</td>
+<td>invalid_request</td>
+<td>A request for a session names a version other than the one the session was created under. Nothing changes.</td>
+<td><code>$.headers.BACP-Version</code></td>
+<td>recoverable (name the session's version, or create a new session)</td>
+</tr>
+<tr>
+<td><code>capability_unsupported</code></td>
+<td>400</td>
+<td>invalid_request</td>
+<td>A request carries a member that a capability owns, and the gateway's version defines that capability but the gateway does not list it (for example <code>discounts</code> without <code>in.bacp.discounts</code>, <code>payment_plan</code> or a <code>session_id</code> on <code>POST /payment-handlers/intersect</code> without <code>in.bacp.payment_plan</code>, or a UCP <code>buyer.consent</code>, <code>loyalty</code> or <code>cart_id</code> member on the UCP projection). Nothing is created or changed. The <code>content</code> of an MCP result is the fixed <code>capability_absent</code> sentence (<a href="../human-participants/#disclosure-phrases">Disclosure phrases</a>). It is not the <code>discount_code_unsupported</code> warning, which is a listed capability whose seller declines.</td>
+<td>the member path, for example <code>$.discounts</code>; <code>capability</code> carries the capability id</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>idempotency_key_required</code></td>
+<td>400</td>
+<td>invalid_request</td>
+<td><code>Idempotency-Key</code> is missing on a POST or PUT, or is not 22–64 printable ASCII characters.</td>
+<td><code>$.headers.Idempotency-Key</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>idempotency_conflict</code></td>
+<td>422</td>
+<td>invalid_request</td>
+<td>The same key was reused with a different request body. A retry that adds <code>hp_proof</code> to a refused <code>403 presence_not_proven</code> write is such a case; its message names a new key.</td>
+<td><code>$.headers.Idempotency-Key</code></td>
+<td>unrecoverable (a new key only for a new intent), or recoverable when the only change is <code>hp_proof</code> (retry with a new key)</td>
+</tr>
+<tr>
+<td><code>idempotency_in_flight</code></td>
+<td>409 + <code>Retry-After</code></td>
+<td>invalid_request</td>
+<td>A request with the same key is still being processed.</td>
+<td>—</td>
+<td>recoverable (retry with the same key)</td>
+</tr>
+<tr>
+<td><code>idempotency_store_unavailable</code></td>
+<td>503</td>
+<td>service_unavailable</td>
+<td>The idempotency store is unreachable; writes fail closed.</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>request_too_large</code></td>
+<td>413</td>
+<td>invalid_request</td>
+<td>The request body exceeds the gateway's limit (at most 256 KiB). Checked on raw bytes before signature verification.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>quota_exceeded</code></td>
+<td>429 + <code>Retry-After</code></td>
+<td>invalid_request</td>
+<td>The agent has too many live idempotency keys or too many requests in flight, or the caller exceeded a rate limit: render fetches per Mandate Manager or PSP key, counted before the lookup, and per key and step-up after the standing check, or <code>post_order</code> step-ups created per <code>(agent, principal)</code> and per order. <code>Retry-After</code> is REQUIRED. The figures are the gateway's own, published in its profile (<a href="../human-participants/#step-up-limits">Limits on step-ups</a>).</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>signature_invalid</code></td>
+<td>401</td>
+<td>authentication_error</td>
+<td>The RFC 9421 signature does not verify, lacks a required covered component, is outside its time window, or uses a tag that the endpoint or the credential's <code>purposes</code> does not allow. Also a handoff <code>accept</code> or <code>release</code> signed by a key whose registry role is not <code>support_operator</code>.</td>
+<td><code>$.headers.Signature-Input</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>replay_detected</code></td>
+<td>401</td>
+<td>authentication_error</td>
+<td>The <code>(keyid, nonce)</code> pair was already seen within the signature window.</td>
+<td><code>$.headers.Signature-Input</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>agent_unregistered</code></td>
+<td>401</td>
+<td>authentication_error</td>
+<td>The signing key or the AgentCredential does not resolve in the registry.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>agent_credential_revoked</code></td>
+<td>401</td>
+<td>authentication_error</td>
+<td>The AgentCredential is revoked on its status list.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>trusted_surface_only</code></td>
+<td>403</td>
+<td>authorization_error</td>
+<td>The caller is an agent, not a registered Mandate Manager or payer PSP, so it may not post Trusted Surface events or fetch a step-up's <code>ts_render</code>. A Mandate Manager or PSP that is not the step-up's (<a href="../human-participants/#ts-signers">Step-up signers</a>) gets <code>404 not_found</code> instead. Also returned for a <code>MandateRequest</code> that an agent or a gateway submits with <code>supersedes</code>: only the principal, on the Trusted Surface, ports a mandate (<a href="../mandates/#port">Porting a mandate</a>).</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>trusted_surface_unavailable</code></td>
+<td>503</td>
+<td>service_unavailable</td>
+<td>No Trusted Surface can take the step-up, and the gateway sent nothing that carries it to the principal. <code>reason</code> is <code>no_conforming_origin</code> (the signer has no registered origin the gateway may use and no <code>ts_notify_url</code>), <code>language_unavailable</code> (no Trusted Surface of the signer renders the step-up's language) or <code>channel_not_allowed</code> (the only channels that the mandate's confirmation floor allows are unavailable). With the last two the error carries <code>handoff_routes[]</code>. It is never <code>recoverable</code>: a bare <code>503</code> reads as "retry", and a retry cannot succeed until the signer registers an origin or a notify endpoint, or the principal chooses a route (<a href="../human-participants/#ts-origins">Origins and delivery</a>).</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>ts_render_mismatch</code></td>
+<td>403</td>
+<td>authorization_error</td>
+<td>A Trusted Surface approval's <code>presentation.content_hash</code> is not the sha-256 of the step-up's gateway-signed <code>ts_render</code>; or, for a negotiation step-up, <code>presentation.offer_hash</code>, the <code>ts_render</code>'s <code>offer_hash</code> and the offer the step-up names differ, or the <code>ts_render</code>'s <code>acceptance_revocation</code> differs from the signed offer's value. The event is refused and the session does not change. Returned to the Mandate Manager or PSP that posted it.</td>
+<td><code>$.presentation.content_hash</code>, <code>$.presentation.offer_hash</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>not_found</code></td>
+<td>404</td>
+<td>invalid_request</td>
+<td>The resource does not exist or is not visible to the caller, including a step-up or session that belongs to another Mandate Manager's or PSP's mandate, and a handoff <code>accept</code> or <code>release</code> signed by a <code>support_operator</code> key of another agent operator than the session's.</td>
+<td>the path parameter</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>session_state_conflict</code></td>
+<td>409</td>
+<td>invalid_request</td>
+<td>The operation is not allowed in the resource's current state, including an agent <code>PUT</code> or <code>complete</code> on a session in <code>human_handoff</code>, and a handoff <code>accept</code> after the handoff ended (<code>handoff.ended_at</code> set). Also, at <code>$.handoff.accepted_by</code>: a handoff <code>accept</code> while <code>accepted_by</code> is set, a <code>release</code> by a key of the same agent operator that is not <code>accepted_by</code>, and an agent <code>release</code> after acceptance. Also a new step-up inside the decline cool-off that follows an explicit <code>step_up.declined</code>, and a replacement past the seller re-prompt cap of an issue, both with no new step-up (<a href="../human-participants/#step-up-limits">Limits on step-ups</a>); the cool-off answer carries <code>Retry-After</code> set to the time left.</td>
+<td><code>$.status</code>, <code>$.handoff.accepted_by</code></td>
+<td>recoverable (GET, then act on the current state)</td>
+</tr>
+<tr>
+<td><code>bpp_timeout</code></td>
+<td>504</td>
+<td>upstream_error</td>
+<td>No <code>on_*</code> callback arrived within the gateway's wait window. The resource remains retrievable.</td>
+<td>—</td>
+<td>recoverable (GET, then retry with the same key)</td>
+</tr>
+<tr>
+<td><code>bpp_nack</code></td>
+<td>502</td>
+<td>upstream_error</td>
+<td>The seller app NACKed the Beckn request. <code>seller_reason</code> carries the seller's own stated reason, when its BPP-signed NACK has one. <code>recoverable</code> covers only a retry of the same item at a total no higher than the one the principal was shown. A substitute item or seller at a higher total needs the principal's confirmation (<a href="../transports/beckn/#seller-reasons">Seller refusals and substitution</a>).</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="registry-mandate">Mandate and verification<a class="headerlink" href="#registry-mandate" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>HTTP</th>
+<th><code>type</code></th>
+<th>Meaning</th>
+<th>Typical <code>param</code></th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mandate_required</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>No mandate is referenced, or the referenced mandate is not yet ACTIVE (PENDING or REJECTED).</td>
+<td><code>$.mandate_ref</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>mandate_invalid_signature</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>A Mandate Manager, principal or agent signature over a mandate (or the closing key-binding JWT) does not verify, for example because the mandate was edited.</td>
+<td><code>$.mandates</code>, <code>$.kb_jwt</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>mandate_invalid</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>The mandate is malformed in a way the verifier cannot evaluate; the verifier fails closed.</td>
+<td><code>$.mandates</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>mandate_schema_invalid</code></td>
+<td>400</td>
+<td>invalid_request</td>
+<td>The mandate fails its schema, for example an open payment mandate without <code>rail_binding</code>.</td>
+<td><code>$.mandates</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>rail_binding_not_open_eligible</code></td>
+<td>400 (also a 200 <code>error</code> message on a checkout session cancelled by a binding pause)</td>
+<td>invalid_request</td>
+<td>The open payment mandate's <code>rail_binding</code> (or the <code>rail</code> of a mandate request) resolves to a handler that cannot back standing authority: a reserved or deprecated descriptor, a pilot that the gateway's conformance attestation does not list in an unexpired <code>pilots[]</code>, a handler that is not open-eligible, or a <code>rail_binding.primitive</code> that is not in the descriptor's <code>binding.open_primitives</code>. Also returned for an open payment mandate issued without <code>rail_binding.primitive</code> or <code>rail_binding.registry_version</code>, for an HNP <code>complete</code> when the gateway's descriptor copy is more than 24 hours old, for an HNP <code>complete</code> on a pilot handler when the mandate's <code>rail_binding.conformance</code> is absent, names another gateway, or names an attestation that is revoked or expired (<code>binding_ineligible</code>) or whose status list is more than 24 hours old or unreachable (<code>attestation_status_stale</code>), at issuance for a conformance attestation that the Mandate Manager does not accept (<a href="../conformance/#attestation-rules">Conformance attestation</a>), and at issuance for a Reserve Pay block whose payee is the buyer app, whose seller's BPP-signed payment terms the gateway does not hold and does not obtain first, or whose payee VPA is not the VPA in those terms. Evaluated against the current registry at issuance and at every <code>complete</code>. On <code>complete</code> the error carries <code>reasons[]</code> with the cause: <code>binding_ineligible</code>, <code>reissue_required</code>, <code>registry_copy_stale</code> or <code>attestation_status_stale</code>; at issuance it may carry <code>attester_not_accepted</code> (the signer is in the Mandate Manager's published exclusion list) or <code>attester_not_independent</code> (the authority or a funder is the same operator as the gateway, the payer PSP or the Mandate Manager, or an operator is unknown). When several reasons apply, <code>reasons[]</code> is ordered <code>reissue_required</code>, <code>binding_ineligible</code>, <code>registry_copy_stale</code>, <code>attestation_status_stale</code>, and <code>resolution</code> is that of the first. An agent that can disprove <code>reissue_required</code> or <code>binding_ineligible</code> from the mandate it holds treats the claim as a gateway fault and opens no re-issue (<a href="../mandates/#handler-binding">Handler binding</a>). The 400 status is deliberate (see the note below this table).</td>
+<td><code>$.mandates</code>, <code>$.rail</code></td>
+<td>requires_buyer_input at <code>POST /mandates</code>, for <code>reissue_required</code> (have the mandate re-issued on an eligible binding) and for <code>binding_ineligible</code> (offer another payment method; the agent opens no resume or re-issue request without a new principal instruction); recoverable for <code>registry_copy_stale</code> and <code>attestation_status_stale</code> (a gateway or attestation-status condition: retry later, the principal is not asked)</td>
+</tr>
+<tr>
+<td><code>constraint_unknown</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>The mandate carries a constraint key the verifier does not know. Unknown constraints fail closed.</td>
+<td><code>$.proposed_constraints</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>mandate_expired</code></td>
+<td>403 (also a 200 <code>error</code> message on a checkout session cancelled by the expiry)</td>
+<td>mandate_error</td>
+<td>The mandate is past <code>valid_until</code> or its rail authority has expired. A post-order write with <code>presence: HP</code> is not refused for this status (<a href="../checkout/post-order/#post-order-gate">Post-order gate</a>); without HP it gets <code>403 presence_not_allowed</code>.</td>
+<td><code>$.mandate_ref</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>mandate_revoked</code></td>
+<td>403 (also a 200 message: <code>error</code> on a checkout session cancelled by the revocation, <code>warning</code> on negotiation sessions)</td>
+<td>mandate_error</td>
+<td>The mandate was revoked by the principal, by a rail safety switch or by agent relinquishment. A post-order write with <code>presence: HP</code> is not refused for this status (<a href="../checkout/post-order/#post-order-gate">Post-order gate</a>); without HP it gets <code>403 presence_not_allowed</code>.</td>
+<td><code>$.mandate_ref</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>mandate_paused</code></td>
+<td>403 (also a 200 <code>error</code> message on a checkout session cancelled by the pause)</td>
+<td>mandate_error</td>
+<td>The principal paused the mandate, or the gateway paused it for a debit on its Reserve Pay block that matches no BACP payment (<code>unmatched_rail_debit</code>, removed only by the principal), and only these reasons are in force. While a gateway pause reason (<code>binding_ineligible</code>, <code>reissue_required</code>) is also in force, <code>rail_binding_not_open_eligible</code> is returned instead. A post-order write with <code>presence: HP</code> is not refused for this status (<a href="../checkout/post-order/#post-order-gate">Post-order gate</a>); without HP it gets <code>403 presence_not_allowed</code>.</td>
+<td><code>$.mandate_ref</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>mandate_exhausted</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>A budget, the rail block or <code>max_executions</code> is used up, counting in-flight reservations and every Reserve Pay block at its full amount. A post-order write with <code>presence: HP</code> is not refused for this status (<a href="../checkout/post-order/#post-order-gate">Post-order gate</a>); without HP it gets <code>403 presence_not_allowed</code>. At mandate request (and on the activation event of a sibling block) also: a requested Reserve Pay block that, at its full amount, does not fit the remaining headroom of every budget window of its root.</td>
+<td><code>$.mandate_ref</code>, <code>$.checkout_mandate_ref</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>mandate_scope_mismatch</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>The request falls outside the mandate: amount, category, merchant, PIN code, line items, <code>checkout_hash</code>, data shared outside <code>data_scopes</code>, reuse of a closed payment mandate, purpose bounds at mandate request, or a handler that does not resolve. At mandate request also: a Reserve Pay request without <code>payee</code> or without <code>rail_limits.block_amount</code>, a <code>checkout_mandate_ref</code> that names no <code>ACTIVE</code> root open Checkout Mandate of the principal, block amounts under one root (the requested one included) that would exceed its smallest budget <code>max</code>, or a new root open Checkout Mandate for a principal who already holds an <code>ACTIVE</code> root at the same Mandate Manager whose notice does not state every other root's budgets and the combined total. At <code>complete</code> also: a human-not-present debit to a seller with an unresolved reversal under the root (<code>reasons: [seller_reversal_unresolved]</code>; a human-present payment is allowed), an open mandate presented at a gateway that is not its BAP (<code>agent.bap_id</code>; for a mandate without one, a credential whose hash is not <code>agent.credential_hash</code>), and a second debit for a <code>checkout_hash</code> that already has a reservation or settled debit under the root.</td>
+<td><code>$.checkout_hash</code>, <code>$.mandate_ref</code>, <code>$.payee</code>, <code>$.rail_limits.block_amount</code>, <code>$.checkout_mandate_ref</code>, <code>$.agent.bap_id</code>, <code>$.agent.credential_hash</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>amount_not_positive</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>A payable amount, a tender or a ledger posting is zero, negative or not an integer number of paise.</td>
+<td><code>$.amount</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>presence_not_allowed</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>The request's presence (HP or HNP) is not in the mandate's <code>presence_allowed</code>, or a trade act (<code>POST /trade-acts</code>) carries <code>presence: HNP</code>.</td>
+<td><code>$.presence</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>presence_not_proven</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>A post-order write with <code>presence: HP</code> has no valid <code>hp_proof</code>: none (the error then carries <code>step_up</code>, a <code>post_order</code> step-up whose <code>ts_render</code> names the write, the same pending one on a repeat), one for another action, order or issue, one for <code>RESOLUTION_ACCEPTED</code> or <code>RESOLUTION_REJECTED</code> on an issue whose <code>resolution</code> has changed since it was shown (<code>subject_hash</code>), or one already used, or, for a trade act, a proof whose step-up shows a different subject than the one submitted (<code>subject_hash</code>: the exact document body, the ledger entry's <code>entry_hash</code> or the statement's <code>head_hash</code>; the proof is not consumed). Or, on an assisted session, a Trusted Surface approval was not made with the principal's own factor or names no assisted operator of the session. Or an ACCEPT_REVOKE of an acceptance that the principal approved on the Trusted Surface carries no valid <code>hp_proof</code>. Or a Trusted Surface approval of a <code>rail_auth</code> step-up, or of a <code>confirm</code> step-up whose approval releases a debit, carries <code>user_action: voice_confirm_plus_device</code> (<a href="../human-participants/#voice">Voice confirmation</a>). Or an approval is below the mandate's <code>confirmation_floor</code>, or on a channel outside it (<a href="../mandates/#confirmation-floor">Confirmation floor</a>), or its <code>device_signature</code> does not verify against the mandate's <code>principal.device_jkt[]</code>. Nothing is sent to the network.</td>
+<td><code>$.hp_proof</code>, <code>$.presentation.user_action</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>rail_limit_exceeded</code></td>
+<td>403 + <code>reasons[]</code>, <code>step_up_kind: rail_auth</code></td>
+<td>mandate_error</td>
+<td>A rail cap other than an AFA threshold would be exceeded: per-transaction, period, first-24-hour, remaining block or channel cap.</td>
+<td><code>$.amount</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>log_chain_invalid</code></td>
+<td>403</td>
+<td>mandate_error</td>
+<td>The InstructionLog chain is broken or its head does not match the <code>log_head</code> sent on the network.</td>
+<td><code>$.log_head</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>constraint_unresolved</code></td>
+<td>200 + <code>step_up</code></td>
+<td>—</td>
+<td>A constraint cannot be evaluated deterministically for this request, so the gateway falls back to a human confirmation.</td>
+<td><code>$.step_up</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>collector_not_authorised</code></td>
+<td>403</td>
+<td>payment_error</td>
+<td>The party in <code>collected_by</code> is not an RBI-authorised payment aggregator or a bank according to the registry. No money moves.</td>
+<td><code>$.payment.collected_by</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>receipt_invalid</code></td>
+<td>400</td>
+<td>invalid_request</td>
+<td>A receipt is malformed or is not signed by a registered PSP key.</td>
+<td><code>$.receipt</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>evidence_forbidden</code></td>
+<td>403</td>
+<td>authorization_error</td>
+<td>The caller is not a party of record for the evidence bundle.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>evidence_unverifiable</code></td>
+<td>422</td>
+<td>invalid_request</td>
+<td>The evidence bundle fails verification: signatures, the chain (including a negotiation receipt whose <code>received_at</code> is earlier than that of an entry before it in the chain without <code>clock_step_observed</code>; two receipts at one <code>log_seq</code> for different entries; a CounterSignature payload without <code>log_seq</code>, <code>log_entry_hash</code> or <code>prev_entry_hash</code>; under the sunset text for <code>allowed_until_receipt</code>, also a receipt of an ACCEPT or ACCEPT_REVOKE without <code>log_entry_hash</code>, or a CounterSignature that names a transcript position holding another message), or step 6 (a step-up entry without its signed Trusted Surface event, an approval without a <code>Presentation</code> or with a <code>content_hash</code> that does not match its <code>ts_render</code>, a step-up event whose <code>ts_render</code> is missing from <code>ts_renders[]</code> or whose <code>total</code>, payee or <code>checkout_hash</code> differs from the BPP-signed quote or whose <code>price_breakup_hash</code> differs from the disclosures hash, a <code>ts_render</code> whose <code>catalogue_disclosure[]</code> differs from the bundle's <code>Disclosures.catalogue[]</code> or omits a qualifying entry, a <code>Disclosures.catalogue[]</code> entry whose <code>source_digest</code> the agent's <code>discover</code> log entry does not list or whose signed source does not match, a negotiation step-up whose <code>ts_render</code> carries an <code>offer_hash</code> or <code>acceptance_revocation</code> that differs from the signed offer, or a first agent entry that is not <code>ai_disclosure</code>). A verifier reports the same code.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>cancel_not_allowed</code></td>
+<td>403</td>
+<td>authorization_error</td>
+<td>The seller refuses the cancellation under its cancellation terms (<code>@ondc/org/cancellable</code>, <code>cancellation_terms</code>). A mandate or scope failure is <code>mandate_scope_mismatch</code>, and a presence failure is <code>presence_not_allowed</code>.</td>
+<td><code>$.order_id</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>return_not_allowed</code></td>
+<td>403</td>
+<td>authorization_error</td>
+<td>The return is outside the return window, the item is not returnable, or the quantity exceeds what was ordered and not yet returned.</td>
+<td><code>$.items[n]</code></td>
+<td>requires_buyer_review</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Why <code>rail_binding_not_open_eligible</code> is 400.</strong> On <code>complete</code>, this code can be a refusal by the deterministic
+verifier of a well-formed, signed mandate (for example after a registry downgrade), which would normally be a 403
+<code>mandate_error</code>. BACP keeps it on 400 <code>invalid_request</code> deliberately, so that one code keeps one status at
+<code>POST /mandates</code> and at <code>complete</code> and the registry entry stays unchanged. Moving the code to 403 was considered and
+not adopted. Both statuses are on the protocol-failure channel and carry the same resolution, so a client handles
+them the same way.</p>
+<h3 id="registry-session">Session and payment messages<a class="headerlink" href="#registry-session" title="Permanent link">&para;</a></h3>
+<p>These are always 200 or 201 messages. <code>prior_price_contradicted</code> and <code>prior_price_invalid</code> arrive in <code>messages[]</code> of a
+discover response; the others arrive on a session.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Message <code>type</code></th>
+<th>Meaning</th>
+<th>Typical <code>param</code></th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>ai_disclosure</code></td>
+<td>disclosure</td>
+<td>First message of every session: the AI notice, pointing at the session's <code>ai_disclosure</code> with its typed routes to a human.</td>
+<td><code>$.ai_disclosure</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>step_up_required</code></td>
+<td>error</td>
+<td>A human approval is needed; see the <code>step_up</code> object.</td>
+<td><code>$.step_up</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>step_up_approved</code></td>
+<td>info</td>
+<td>The principal approved the step-up on the Trusted Surface.</td>
+<td><code>$.step_up</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>step_up_declined</code></td>
+<td>warning</td>
+<td>The principal declined the step-up on the Trusted Surface; the session is cancelled and no money moves.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>step_up_expired</code></td>
+<td>warning</td>
+<td>The step-up link expired without approval, or the approval was acted on (<code>presentation.acted_at</code>) after <code>expires_at</code>. No money moves.</td>
+<td><code>$.step_up</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>quote_expired</code></td>
+<td>warning</td>
+<td>The seller's quote expired before <code>complete</code>; the session returns to <code>incomplete</code>.</td>
+<td><code>$.quote.expires_at</code></td>
+<td>recoverable (re-select)</td>
+</tr>
+<tr>
+<td><code>quote_mismatch</code></td>
+<td>warning</td>
+<td>The seller's quote differs from what the agent requested (items or quantities).</td>
+<td><code>$.line_items</code></td>
+<td>recoverable or requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>preticked_addon_removed</code></td>
+<td>warning</td>
+<td>The gateway removed an add-on the seller had pre-selected.</td>
+<td><code>$.line_items[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>drip_pricing_detected</code></td>
+<td>warning</td>
+<td>The total rose between quote and checkout, or a mandatory charge appeared late.</td>
+<td><code>$.totals</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>payment_mode_fee_inconsistent</code></td>
+<td>warning</td>
+<td>A convenience fee applies to some debit payment modes the seller accepts and not others, or differs between them (NPCI/UPI/CC/01 para 7.5, which binds the Payee PSP). A SHOULD, never a refusal; in HNP it also raises a <code>confirm</code> step-up (<code>constraint_unresolved</code>).</td>
+<td><code>$.totals</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>charge_recipient_invalid</code></td>
+<td>warning</td>
+<td>A stated <code>bacp.charge</code> recipient breached the type-to-recipient rule (<a href="../checkout/#fee-lines">Fees on the payer's screen</a>); the gateway ignored it and applied the <a href="../transports/beckn/#recipient-mapping">recipient mapping</a>.</td>
+<td><code>$.totals[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>operator_compensation_mismatch</code></td>
+<td>warning</td>
+<td>A session carries a seller-paid entry in <code>intermediary_compensation[]</code> while the mandate's notice says <code>from_sellers: none</code> (<a href="../mandates/#operator-compensation">Operator compensation</a>).</td>
+<td><code>$.intermediary_compensation[n]</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>charge_recipient_unmapped</code></td>
+<td>warning</td>
+<td>A charge line arrived with a type that the <a href="../transports/beckn/#recipient-mapping">recipient mapping</a> does not cover; the line is kept with <code>recipient: other</code>.</td>
+<td><code>$.totals[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>discovery_price_changed</code></td>
+<td>warning</td>
+<td>A unit price at <code>on_select</code> is higher than the price shown at discovery. <code>requires_buyer_review</code> when the item was shown with a <code>prior_price</code>, and the session then has a <code>confirm</code> step-up. Otherwise <code>recoverable</code>, and the agent tells a present principal the new price. A lower price never raises it.</td>
+<td><code>$.line_items[n].unit_price</code></td>
+<td>recoverable, or requires_buyer_review when the item was shown with a <code>prior_price</code></td>
+</tr>
+<tr>
+<td><code>prior_price_contradicted</code></td>
+<td>warning</td>
+<td>Advisory. The gateway has itself seen a lower price for the item in the 30 days before the <code>announced_on</code> of its <code>prior_price</code>. The value is relayed unaltered. The agent SHOULD NOT voice the reduction claim.</td>
+<td><code>$.results[n].items[m].prior_price</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>prior_price_invalid</code></td>
+<td>warning</td>
+<td>The gateway dropped a <code>prior_price</code> that was not above the item's <code>unit_price</code>, or was above <code>mrp</code> while <code>tax_inclusive</code> was <code>true</code>, or whose seller-sent decimal could not be converted to integer paise.</td>
+<td><code>$.results[n].items[m].prior_price</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>sponsored_listing</code></td>
+<td>disclosure</td>
+<td>The item at <code>$.disclosures.catalogue[n]</code> was shown as <code>sponsored</code>. The agent presents the <code>sponsored</code> phrase with the party from <code>by[]</code>.</td>
+<td><code>$.disclosures.catalogue[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>sponsorship_undeclared</code></td>
+<td>disclosure</td>
+<td>Nobody in the chain stated whether the item at <code>$.disclosures.catalogue[n]</code> was sponsored. The agent presents the <code>undeclared</code> phrase, never "not sponsored".</td>
+<td><code>$.disclosures.catalogue[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>prior_price_claim</code></td>
+<td>disclosure</td>
+<td>The item at <code>$.disclosures.catalogue[n]</code> was shown with a seller-asserted prior price. The agent presents the <code>prior_price</code> phrase and never a bare percentage.</td>
+<td><code>$.disclosures.catalogue[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>discount_code_expired</code></td>
+<td>warning</td>
+<td>A submitted discount code is past its validity. The code is absent from <code>discounts.applied[]</code>.</td>
+<td><code>$.discounts.codes[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>discount_code_invalid</code></td>
+<td>warning</td>
+<td>A submitted code is unknown to the seller, or the gateway reports every rejection with this code.</td>
+<td><code>$.discounts.codes[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>discount_code_already_applied</code></td>
+<td>warning</td>
+<td>A submitted code is already applied to the session.</td>
+<td><code>$.discounts.codes[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>discount_code_combination_disallowed</code></td>
+<td>warning</td>
+<td>A submitted code cannot be combined with a discount that is already applied.</td>
+<td><code>$.discounts.codes[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>discount_code_user_ineligible</code></td>
+<td>warning</td>
+<td>A submitted code is not available to this buyer.</td>
+<td><code>$.discounts.codes[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>discount_code_unsupported</code></td>
+<td>warning</td>
+<td>The seller or network takes no discount codes.</td>
+<td><code>$.discounts.codes[n]</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>policy_text_mismatch</code></td>
+<td>warning</td>
+<td>A typed policy of the session or catalogue (<code>in.bacp.policy.return</code>, <code>.cancel</code> or <code>.cod</code>) contradicts the binding <code>return_terms</code> or <code>cancellation_terms</code>. The session moves to <code>requires_escalation</code> with a <code>confirm</code> step-up (reason <code>constraint_unresolved</code>) and cannot reach <code>ready_for_complete</code> until the principal has reviewed.</td>
+<td><code>$.policies[n]</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>disclosures_missing</code></td>
+<td>error</td>
+<td>A mandatory pre-contract disclosure (seller name, total price, return terms, cancellation terms, country of origin, expected delivery or price breakup) is missing; the session cannot reach <code>ready_for_complete</code>.</td>
+<td><code>$.disclosures</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>split_order_suspected</code></td>
+<td>warning</td>
+<td>Orders to the same seller within a short window look like a split to stay under a step-up threshold.</td>
+<td><code>$.totals</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>payment_in_doubt</code></td>
+<td>warning</td>
+<td>The PSP did not confirm the debit; the gateway is reconciling.</td>
+<td><code>$.payment.status</code></td>
+<td>recoverable (do NOT re-key)</td>
+</tr>
+<tr>
+<td><code>payment_failed</code></td>
+<td>error</td>
+<td>The debit failed; no money moved and the budget reservation is released.</td>
+<td><code>$.payment</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>debited_not_confirmed</code></td>
+<td>warning</td>
+<td>The principal was debited but the seller never confirmed; a refund to source has started (<code>refund_route: gateway_collector</code>) or has been requested from the seller's collector (<code>seller_collector</code>). With <code>reversal_basis: rbi_tat</code> the message states the rail turnaround time and the ₹100 a day compensation; with <code>bacp_policy</code> it never states an RBI compensation entitlement; with <code>unknown</code> it names the refund, UDIR and the Ombudsman routes and says that RBI's rules apply if the bank shows the payment as failed or pending.</td>
+<td><code>$.payment.reversal_deadline</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>return_refused</code></td>
+<td>warning</td>
+<td>The seller rejected a return (<code>RETURN_REJECTED</code>). Never terminal: the message carries the operator's <code>grievance_contact</code> in <code>args[]</code>, and a seller's refusal to take back goods that the principal reports as defective is not the end of the matter (Consumer Protection (E-Commerce) Rules, 2020, r.6(3)).</td>
+<td><code>$.return.status</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>seller_cancelled</code></td>
+<td>warning</td>
+<td>The seller cancelled an order that the principal had not asked to cancel (an unsolicited <code>on_cancel</code>). Never terminal: the message carries the <code>grievance_contact</code> in <code>args[]</code>, and the refund follows the refund rules (r.4(8) of the same Rules requires cancellation charges to be symmetric).</td>
+<td><code>$.state</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>budget_after</code></td>
+<td>info</td>
+<td>The remaining mandate budget after a PSP-signed receipt was applied (computed by the gateway, unsigned).</td>
+<td><code>$.payment.budget_after</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>pre_debit_notice</code></td>
+<td>info</td>
+<td>A pre-debit notice has been issued; no money moves until it matures.</td>
+<td><code>$.payment.scheduled_debit_at</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>pre_debit_opt_out</code></td>
+<td>warning</td>
+<td>The principal opted out of the notified debit; the session is cancelled with no rail traffic.</td>
+<td><code>$.payment</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>session_cancelled</code></td>
+<td>info</td>
+<td>The session was cancelled (by the agent, by TTL or because the mandate ended).</td>
+<td><code>$.mandate_ref</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>mandate_revoked</code></td>
+<td>error (checkout session) / warning (negotiation)</td>
+<td>The mandate was revoked while the session or negotiation was live.</td>
+<td><code>$.mandate_ref</code></td>
+<td>requires_buyer_input</td>
+</tr>
+</tbody>
+</table>
+<h3 id="registry-negotiation">Negotiation, RFQ and auction codes<a class="headerlink" href="#registry-negotiation" title="Permanent link">&para;</a></h3>
+<p>See <a href="../negotiation/">Negotiation</a> and <a href="../negotiation/rfq-and-auctions/">RFQ and Auctions</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>HTTP</th>
+<th>Meaning</th>
+<th>Typical <code>param</code></th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>NEG_SCHEMA_INVALID</code></td>
+<td>400</td>
+<td>The negotiation message or TermSheet fails its schema, or carries an extension issue the guard cannot evaluate.</td>
+<td>the offending field</td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_ISSUE_NOT_NEGOTIABLE</code></td>
+<td>200 msg / 403</td>
+<td>A counter changes an issue that is not in the agreed <code>negotiable_issues</code>.</td>
+<td><code>$.term_sheet</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_STALE_OFFER</code></td>
+<td>409</td>
+<td>The message cites an offer that is not the live offer.</td>
+<td><code>$.in_reply_to</code></td>
+<td>recoverable (GET, then respond to the live offer)</td>
+</tr>
+<tr>
+<td><code>NEG_OFFER_EXPIRED</code></td>
+<td>200 msg / 403 (own, local)</td>
+<td>The cited offer is past <code>expires_at</code> on the offeror's receipt, or the acceptor's gateway refused locally to dispatch an accept within 5 s of <code>expires_at</code> on its own clock. An accept refused as expired whose <code>dispatched_at</code> is not after <code>expires_at</code> and which passed freshness is <code>crossing_contested</code>, not this code.</td>
+<td><code>$.offer_hash</code></td>
+<td>recoverable (fresh offer or REQUEST_EXTENSION)</td>
+</tr>
+<tr>
+<td><code>NEG_ACCEPT_NONCONFORMING</code></td>
+<td>422 (own) / 200 msg (counterparty text)</td>
+<td>The acceptance does not use the prescribed manner (a signed <code>bacp.neg.accept</code>); chat, voice or an unsigned accept does not bind.</td>
+<td><code>$.untrusted_counterparty_text</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_TERMS_DRIFT</code></td>
+<td>200 msg, state <code>BREACH_FLAGGED</code></td>
+<td>The seller's <code>on_init</code> or <code>confirm</code> terms differ from the accepted offer.</td>
+<td><code>$.bound_term_sheet_hash</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>NEG_MRP_EXCEEDED</code></td>
+<td>200 msg (counterparty) / 403 (own)</td>
+<td>A unit price including tax exceeds the MRP of a retail package. Also in a discover response: an item with <code>tax_inclusive: true</code> whose <code>unit_price</code> is above its <code>mrp</code> (a 200 message on <code>POST /discover</code>).</td>
+<td><code>$.term_sheet.lines[n].unit_price</code>, <code>$.results[n].items[m].unit_price</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_MSMED_CREDIT_CAP</code></td>
+<td>200 msg (incoming) / 403 (own firm)</td>
+<td>Credit days to a micro or small enterprise exceed the statutory cap.</td>
+<td><code>$.term_sheet.payment.credit_days</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_DRIP_PRICING</code></td>
+<td>200 msg</td>
+<td>A charge appeared after the first round, or the all-in total rose beyond the mandate's tripwire.</td>
+<td><code>$.live_offer.all_in_total</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>NEG_FALSE_URGENCY</code></td>
+<td>200 msg / 403</td>
+<td>The offer's validity window is shorter than the minimum (PT5M for B2C).</td>
+<td><code>$.expires_at</code></td>
+<td>requires_buyer_review (msg) / recoverable (403)</td>
+</tr>
+<tr>
+<td><code>NEG_BASKET_SNEAK</code></td>
+<td>200 msg / 403</td>
+<td>A counter adds lines or add-ons the principal did not assert.</td>
+<td><code>$.term_sheet.lines</code></td>
+<td>requires_buyer_review / recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_PERSONALISED_PRICING</code></td>
+<td>200 msg / 403</td>
+<td>The pricing basis is undeclared or uses prohibited attributes.</td>
+<td><code>$.term_sheet.pricing_basis</code></td>
+<td>requires_buyer_review / recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_EXPOSURE_EXCEEDED</code></td>
+<td>200 + <code>step_up</code></td>
+<td>Outstanding firm commitments across this principal's negotiations would exceed <code>total_max</code> or a remaining budget.</td>
+<td><code>$.term_sheet</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>NEG_INJECTION_SUSPECTED</code></td>
+<td>200 msg</td>
+<td>Counterparty free text looks like an instruction to the agent; it is quarantined as data.</td>
+<td><code>$.untrusted_counterparty_text</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_CASH_LIMIT</code></td>
+<td>403</td>
+<td>A cash tranche of ₹2 lakh or more.</td>
+<td><code>$.term_sheet.payment.schedule</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_RERA_TOKEN_CAP</code></td>
+<td>403</td>
+<td>A property token above 10% without a linked registered agreement.</td>
+<td><code>$.term_sheet.deposit</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_CREDIT_DISCLOSURE_MISSING</code></td>
+<td>403</td>
+<td>An EMI, BNPL or credit-funded option lacks lender, APR or KFS.</td>
+<td><code>$.term_sheet.payment</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_EMI_NO_COST_FALSE</code></td>
+<td>403</td>
+<td>An interest-bearing EMI is labelled no-cost.</td>
+<td><code>$.term_sheet.payment.emi</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_EINVOICE_IRN_MISSING</code></td>
+<td>403 (dispatch gate)</td>
+<td>A B2B invoice that needs an IRN has none.</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_EWB_MISSING</code></td>
+<td>403 (dispatch gate)</td>
+<td>An e-way bill is required before dispatch and is missing.</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_COLLUSION_SCREEN</code></td>
+<td>200 msg (screen flag)</td>
+<td>A collusion heuristic flagged the bids, or an RFQ or auction was cancelled because its award was revoked. It never blocks.</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>NEG_EARLY_AWARD</code></td>
+<td>403</td>
+<td>Award attempted before <code>response_by</code> while invitees are still to respond.</td>
+<td><code>$.response_by</code></td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>NEG_EARLY_REVEAL</code></td>
+<td>403</td>
+<td>A sealed bid was revealed before the commit phase closed.</td>
+<td>—</td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>NEG_SHILL_BID</code></td>
+<td>403</td>
+<td>A bid from the seller or a declared affiliate.</td>
+<td>—</td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>NEG_DUTCH_PRICE_INCREASE</code></td>
+<td>403</td>
+<td>A Dutch tick higher than the previous tick.</td>
+<td>—</td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>NEG_RETRACTION_REFUSED</code></td>
+<td>403</td>
+<td>A retraction that the auction's <code>retraction_rule</code> does not allow, or one inside the anti-sniping window.</td>
+<td>—</td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>NEG_AWARD_RULE</code></td>
+<td>403</td>
+<td>The award does not follow the published award rule, or the RFQ or auction was cancelled after a revoked award and cannot be awarded again. The principal's gateway also refuses with it an award that cites a standing accept that it did not lodge for that auction and lot, that has expired, or that has been used or released.</td>
+<td><code>$.bid_hash</code>, <code>$.standing_accept_id</code></td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>NEG_DEPOSIT_REQUIRED</code></td>
+<td>400</td>
+<td>A sealed auction or sealed RFQ has no bid deposit.</td>
+<td><code>$.bid_deposit</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_DEPOSIT_INVALID</code></td>
+<td>403</td>
+<td>The bid deposit reference does not verify or does not cover the bid.</td>
+<td><code>$.bid_deposit_ref</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_CLOCK_SKEW</code></td>
+<td>422</td>
+<td>A message's <code>dispatched_at</code> is more than 5 s from the receiver's clock at receipt. The bound is a freshness check, a BACP choice, and never decides order. The agent MUST NOT re-sign and retry.</td>
+<td><code>$.dispatched_at</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>NEG_ATTESTATION_REFUSED</code></td>
+<td>403</td>
+<td>The buyer's credential provider refused the <code>within_bounds</code> attestation.</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>bid_not_improving</code></td>
+<td>409</td>
+<td>The bid does not improve on the bidder's own previous bid (reverse auction) or the current highest (English auction) by the increment.</td>
+<td><code>$.amount</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>auction_not_open</code></td>
+<td>409</td>
+<td>The auction has not opened or has closed.</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>auction_closed_no_award</code></td>
+<td><code>terminate</code> reason / 200 msg</td>
+<td>The auction closed without awarding this bidder.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>rfq_not_awarded</code></td>
+<td><code>terminate</code> reason</td>
+<td>The RFQ was awarded to another seller.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>capabilities_incompatible</code></td>
+<td>200 msg / 403</td>
+<td>The buyer's and seller's negotiation capabilities do not intersect (for example no common mode), and the agent falls back to <code>fixed</code>. Also: an offer's or a draft's <code>acceptance_revocation</code> value is not permitted (<code>allowed_until_receipt</code> on every leg in this version; <code>waived</code> with <code>waiver_basis</code> in a consumer session off Beckn), or a session message declares a profile other than the one fixed when the session opened; the offer never becomes <code>LIVE</code>. Also: either party refuses the declared profile (<code>reason</code> <code>profile_not_supported</code> or <code>profile_misdescribed</code>, <code>$.context.bacp.profile</code>), or a firm message's <code>protocol_terms.hash</code> is not the receiver's.</td>
+<td><code>$.mode</code>, <code>$.acceptance_revocation</code>, <code>$.context.bacp.profile</code>, <code>$.protocol_terms</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>handlers_incompatible</code></td>
+<td>200 msg (intersect) / 403 (ACCEPT)</td>
+<td>No payment handler is eligible for the agreed payment option at this presence.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>untrusted_counterparty_text</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>Counterparty free text, returned only as data, with <code>origin: counterparty</code>. The agent framework MUST NOT execute it. A counterparty value inside a gateway message travels in its <code>args[]</code> instead (<a href="../checkout/#messages">slot rule</a>).</td>
+<td><code>$.untrusted_counterparty_text</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>withdraw_lost_crossing</code></td>
+<td>200 msg</td>
+<td>Our WITHDRAW crossed the counterparty's ACCEPT and lost; the offer stands accepted.</td>
+<td><code>$.offers</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>accept_revoke_honoured</code></td>
+<td>200 msg</td>
+<td>Sunset only; not returned in this version. Under <code>allowed_until_receipt</code>, the proposer received the ACCEPT_REVOKE before the acceptance it names, and the pair matched: the offer is <code>ACCEPT_REVOKED</code> and there is no agreement. Returned with the proposer's CounterSignature on the revoke.</td>
+<td><code>$.offers</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>accept_revoke_after_receipt</code></td>
+<td>200 msg</td>
+<td>Sunset only; not returned in this version. The proposer received the acceptance before the ACCEPT_REVOKE; the acceptance stands.</td>
+<td><code>$.offers</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>accept_revoke_not_allowed</code></td>
+<td>200 msg</td>
+<td>The offer sets <code>acceptance_revocation: waived</code>, as every live firm offer does in this version; the ACCEPT_REVOKE is countersigned, logged and refused, and the acceptance stands.</td>
+<td><code>$.offers</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>accept_void_withdrawn</code></td>
+<td>200 msg</td>
+<td>Our ACCEPT crossed the counterparty's WITHDRAW and lost; there is no agreement.</td>
+<td><code>$.offers</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>seller_accept_void</code></td>
+<td>200 msg</td>
+<td>The seller's ACCEPT lost a crossing with our withdrawal.</td>
+<td><code>$.offers</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>agreed_by_counterparty</code></td>
+<td>200 msg</td>
+<td>The counterparty accepted our live firm offer; the negotiation is AGREED.</td>
+<td><code>$.state</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>crossing_contested</code></td>
+<td>200 msg (<code>warning</code>)</td>
+<td>A withdraw and an accept crossed and the transcript positions do not decide the outcome, or a needed receipt is missing, late or unverifiable. BACP evidence does not settle formation; neither gateway proceeds; the protocol records no breach event. The session is <code>ESCALATED</code> on both sides and both principals are asked. The agent MUST stop and MUST NOT resend.</td>
+<td><code>$.state</code>, <code>$.offers</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>crossing_unconfirmed</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>A contested crossing closed <code>CANCELLED</code> because neither principal confirmed it before the earlier of the offer's <code>expires_at</code> and the end of the step-up link. No breach event and no protocol-computed charge; the exposure reservation is released once.</td>
+<td><code>$.state</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>formation_disputed</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>A contested crossing closed <code>CANCELLED</code> because one principal confirmed and the other declined or was silent. No breach event and no protocol-computed charge; the message carries the <code>grievance_contact</code> of both sides. Whether a contract formed is for ODR or the courts.</td>
+<td><code>$.state</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>principal_declined</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>The principal declined an <code>AGREED</code> or <code>BOUND</code> deal under the term sheet's <code>cancellation.terms</code> by the Trusted Surface event <code>negotiation.agreed.declined</code>. Performance of a term, not a breach, where the terms permit cancellation at that stage; with the flag <code>no_stage_term</code> when the terms are silent on the stage (no fee is computed); with a breach claim flag, never a finding, when the terms make the stage non-cancellable or the charge goes unpaid.</td>
+<td><code>$.state</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>agreed_by_agent</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>The agent accepted a firm offer on the principal's behalf without a step-up (<code>accept_confirmation: autonomous</code>). Built from gateway templates in the principal's language and delivered by the mandate's <code>notice_route</code>, never through the agent's own output.</td>
+<td><code>$.state</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>purchase_offered_by_agent</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>In a consumer session the agent's accept of a non-firm offer is a purchase offer. Same content and delivery as <code>agreed_by_agent</code>; the stop control shows only where a carrier exists to honour it.</td>
+<td><code>$.state</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>autonomous_unavailable_no_notice_route</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>The mandate says <code>autonomous</code> but <code>notice_route</code> is absent or not usable, so the gateway treated it as <code>ask</code> and raised a <code>confirm</code> step-up.</td>
+<td><code>$.mandate_ref</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>offer_expired_during_approval</code></td>
+<td>200 msg / <code>ts_render.language</code> template</td>
+<td>The offer ran out while the principal was approving, or the acceptor's gateway refused to dispatch within 5 s of <code>expires_at</code>. The Trusted Surface says "the offer ran out while you were approving", never "you declined".</td>
+<td><code>$.offer_hash</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>seller_counter_at_init</code></td>
+<td>200 msg</td>
+<td>The seller's <code>on_init</code> differs from our non-firm offer, which makes it a counter-offer.</td>
+<td><code>$.live_offer</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>negotiation_terminated</code></td>
+<td>200 msg</td>
+<td>The negotiation ended (rounds, deadline, revocation or TERMINATE).</td>
+<td><code>$.state</code></td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>cancelled_no_penalty</code></td>
+<td>200 msg</td>
+<td>After a firm-offer breach the principal cancelled without penalty.</td>
+<td><code>$.state</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>bid_not_revealed</code></td>
+<td>200 msg</td>
+<td>A committed sealed bid was never revealed; it is excluded and its deposit forfeited.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>NEG_CLOSED</code></td>
+<td>400</td>
+<td>A sealed-bid commit arrived after the commit phase closed.</td>
+<td>—</td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>NEG_REVEAL_MISMATCH</code></td>
+<td>400</td>
+<td>A revealed bid and salt do not hash to the bidder's commitment, or the bidder made no commitment.</td>
+<td>—</td>
+<td>unrecoverable for that action</td>
+</tr>
+<tr>
+<td><code>requires_escalation</code></td>
+<td>200 msg (<code>error</code>)</td>
+<td>The agent's firm counter or acceptance was not sent because it falls outside the negotiation mandate, or the seller accepted a non-firm offer that binds only after principal approval. The negotiation carries a <code>step_up</code>. Not to be confused with the session status of the same name.</td>
+<td><code>$.term_sheet</code>, <code>$.step_up</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>seller_purchase_offer</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>The seller accepted the agent's non-firm offer. That acceptance is a purchase offer to the buyer, which binds only after the principal approves it within the mandate.</td>
+<td><code>$.step_up</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>bpp_no_on_init</code></td>
+<td>200 msg (<code>warning</code>)</td>
+<td>After the agent's ACCEPT, the seller returned no <code>on_init</code> order (no callback, or a Beckn error).</td>
+<td><code>$.state</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>auction_awarded</code></td>
+<td>200 msg (<code>info</code>)</td>
+<td>The neutral auctioneer awarded the auction to this bidder.</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="registry-payments">Payment-handler and rail codes<a class="headerlink" href="#registry-payments" title="Permanent link">&para;</a></h3>
+<p>These are raised by the handler and rail layer. When a gateway surfaces one over HTTP it MUST use the status given
+here. "200 msg" codes come back on <code>POST /payment-handlers/intersect</code> as <code>excluded[].reason</code> or as messages. See
+<a href="../payments/">Payments</a> and <a href="../payments/handler-registry/">Handler Registry</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>HTTP when surfaced</th>
+<th>Meaning</th>
+<th>Typical <code>param</code></th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>presence_handler_mismatch</code></td>
+<td>403</td>
+<td>The handler needs a human-completed authentication but the request is human-not-present (or the handler needs an assisted session).</td>
+<td><code>$.presence</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>reservepay_block_wrong_payee</code></td>
+<td>403</td>
+<td>A Reserve Pay debit for a seller other than the block's payee.</td>
+<td><code>$.payment.handler</code></td>
+<td>requires_buyer_input (pay this seller with another eligible handler under the per-leg rule, usually one human-present payment; a new block for this seller is offered only beside a one-time human-present payment, never after a failed payment)</td>
+</tr>
+<tr>
+<td><code>payee_mismatch</code></td>
+<td>rail failure receipt</td>
+<td>Rail-level twin of the above: the rail refused a debit to a payee its authority does not cover.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>cod_not_allowed</code></td>
+<td>403</td>
+<td>Cash on delivery is not allowed by the governing mandate.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>cod_open_orders_cap</code></td>
+<td>403 / 200 msg (intersect)</td>
+<td>The mandate's cap on open COD orders is reached.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>credit_funding_not_allowed</code></td>
+<td>403 / 200 msg (intersect)</td>
+<td>A credit-funded handler without <code>credit_funding_allowed: true</code> on the governing mandate.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>card_not_enabled_for_cnp</code></td>
+<td>200 msg</td>
+<td>The issuer declined because card-not-present use is disabled. The agent MUST NOT silently try another card.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>split_tender_afa_on_total</code></td>
+<td>200 + <code>step_up</code></td>
+<td>The AFA threshold applies to the total across tenders; splitting does not avoid it.</td>
+<td><code>$.step_up</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>refund_to_ppi_forbidden</code></td>
+<td>403</td>
+<td>A refund of a card, UPI or net-banking payment into a wallet.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>refund_not_to_source</code></td>
+<td>403</td>
+<td>A refund to anything other than the original instrument without an explicit payer instruction.</td>
+<td>—</td>
+<td>requires_buyer_input (explicit payer instruction)</td>
+</tr>
+<tr>
+<td><code>refund_short_of_terms</code></td>
+<td>warning (200 msg)</td>
+<td>A refund below the amount paid does not match the lines in <code>charges_retained[]</code>, or a reversal is below the full debit. The refund is never blocked or held; the message names the IGM route.</td>
+<td><code>$.refund</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>credit_acceptance_requires_hp</code></td>
+<td>403</td>
+<td>An agent attempted to accept a loan offer; acceptance is human-present only.</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>repayment_payee_not_lender</code></td>
+<td>403</td>
+<td>A loan repayment or refund directed to anyone other than the lender.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>nach_mandate_above_cap</code></td>
+<td>403</td>
+<td>A NACH mandate above the cap for its authentication mode.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>mandate_cancelled</code></td>
+<td>rail failure receipt</td>
+<td>The rail-level standing instruction (for example a NACH UMRN) was cancelled.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>pre_debit_notice_too_late</code></td>
+<td>403</td>
+<td>The pre-debit notice does not precede the debit by at least 24 hours.</td>
+<td><code>$.payment.scheduled_debit_at</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>pending_approval</code></td>
+<td>200 (state)</td>
+<td>A maker-checker approval is pending.</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>plan_sum_mismatch</code></td>
+<td>400</td>
+<td>The tenders of a payment plan do not add up to the total.</td>
+<td><code>$.payment_plan</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>plan_order_invalid</code></td>
+<td>400</td>
+<td>The capture order of a payment plan is invalid, including a plan with more than one tender that has no hold primitive or with such a tender before the last.</td>
+<td><code>$.payment_plan</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>bacp_mandate_required</code></td>
+<td>400</td>
+<td>On the UCP checkout projection (<code>in.bacp.ucp_checkout</code>), a <code>complete_checkout</code> carries no instrument whose credential is a BACP closed payment mandate. No rail call is made. It is also the code of the <code>unrecoverable</code> UCP message that explains the refusal.</td>
+<td><code>$.payment.instruments</code></td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>plan_not_offered</code></td>
+<td>400</td>
+<td>On a gateway that lists <code>in.bacp.payment_plan</code>, the tenders of <code>payment_plan</code> hash to neither the <code>plan_hash</code> of an entry of <code>payment.plan_options[]</code> nor that of a plan the principal confirmed on the Trusted Surface. Nothing is debited.</td>
+<td><code>$.payment_plan</code></td>
+<td>recoverable (choose an offered plan)</td>
+</tr>
+<tr>
+<td><code>plan_conflict</code></td>
+<td>409</td>
+<td>A different plan is already live for this <code>checkout_hash</code> (P1). Nothing is debited and no mandate usage changes.</td>
+<td><code>$.payment_plan</code></td>
+<td>recoverable (GET the session, then act on the live plan)</td>
+</tr>
+<tr>
+<td><code>refund_exceeds_capture</code></td>
+<td>400</td>
+<td>A refund larger than the amount captured.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>refund_exceeds_debit</code></td>
+<td>400</td>
+<td>A refund larger than the rail debit.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>duplicate_debit</code></td>
+<td>rail refusal</td>
+<td>A second debit for the same closed payment mandate or <code>checkout_hash</code>.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>basket_not_allowed</code></td>
+<td>rail refusal</td>
+<td>Basket data was sent on the payment leg, which is basket-blind.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>credit_limit_exceeded</code></td>
+<td>403</td>
+<td>A credit-ledger sale above the ledger's credit limit.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>entry_disputed</code></td>
+<td>409</td>
+<td>The credit-ledger entry is disputed and cannot be settled or acknowledged.</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>schema_invalid</code></td>
+<td>400</td>
+<td>A credit-ledger posting fails its schema, for example a payment with only a screenshot as evidence.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>evidence_invalid</code></td>
+<td>400</td>
+<td>A credit-ledger payment cites a receipt whose signature or amount does not match.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="registry-rail-ledger">Rail and ledger refusals<a class="headerlink" href="#registry-rail-ledger" title="Permanent link">&para;</a></h3>
+<p>These codes are returned by a rail or by the <a href="../payments/credit-and-split-tender/#the-khata-credit-ledger">khata credit ledger</a>
+to the participant that called it. They follow the "rail refusal" rows of the table above: no money moves. A gateway
+that reports one to an agent MUST use the code unchanged and, over HTTP, the status given here.</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Raised by</th>
+<th>HTTP when surfaced</th>
+<th>Meaning</th>
+<th>Typical <code>param</code></th>
+<th>Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>afa_required</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>The debit needs an additional factor of authentication (for example a human-present wallet debit without 2FA). On a standing mandate the same condition is a <code>rail_auth</code> step-up instead (see <a href="#step-up-reasons">step-up reasons</a>).</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>insufficient_balance</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>A wallet, UPI Lite, store-credit or loyalty balance is too low for the debit.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>ppi_not_reloadable</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>A load into a gift PPI, which cannot be reloaded.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>pre_debit_notice_missing</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>No matured 24-hour pre-debit notice covers this card e-mandate or NACH debit.</td>
+<td><code>$.payment.scheduled_debit_at</code></td>
+<td>recoverable (send a notice and wait)</td>
+</tr>
+<tr>
+<td><code>consent_window_closed</code></td>
+<td>rail refusal</td>
+<td>409</td>
+<td>Cardholder consent for a refund was given after the refund left <code>pending_cardholder_consent</code> or after its 7-day window.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>voucher_expired</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>An e-RUPI voucher is past its validity; unredeemed value returns to the sponsor.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>voucher_purpose_mismatch</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>An e-RUPI voucher redeemed at a merchant outside its purpose.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>bill_already_paid</code></td>
+<td>rail refusal</td>
+<td>409</td>
+<td>A BBPS bill that is already paid.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>amount_mismatch</code></td>
+<td>rail refusal</td>
+<td>422</td>
+<td>A BBPS payment that differs from the fetched bill amount when partial payment is not allowed.</td>
+<td><code>$.amount</code></td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>payee_name_mismatch</code></td>
+<td>rail refusal</td>
+<td>422</td>
+<td>The bank's beneficiary name look-up does not match the expected payee name for an account-to-account transfer.</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>maker_checker_required</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>An account-to-account payment was approved by its maker, or without 2FA; a different human checker must approve.</td>
+<td>—</td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>invalid_state</code></td>
+<td>rail refusal</td>
+<td>409</td>
+<td>An account-to-account payment is not in the state the operation needs (approve when not <code>pending_approval</code>, credit when not <code>sent</code>).</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>illegal_cod_transition</code></td>
+<td>rail refusal</td>
+<td>409</td>
+<td>A cash-on-delivery order state change that the COD state machine does not allow.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>loan_offer_not_lender_signed</code></td>
+<td>rail refusal</td>
+<td>422</td>
+<td>The loan offer presented for acceptance does not match the lender-signed KFS offer.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>disbursal_not_to_end_beneficiary</code></td>
+<td>rail refusal</td>
+<td>403</td>
+<td>A loan disbursal to an account other than the end beneficiary's.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>cooling_off_over</code></td>
+<td>rail refusal</td>
+<td>409</td>
+<td>A penalty-free exit from a loan after its cooling-off period ended.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>refund_not_allowed</code></td>
+<td>rail refusal</td>
+<td>400</td>
+<td>A refund that cites no successful debit with that RRN.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>poster_not_party</code></td>
+<td>ledger refusal</td>
+<td>403</td>
+<td>The poster of a ledger entry is not the ledger's creditor or debtor, or its signature does not verify under that party's registry key.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>ack_signature_required</code></td>
+<td>ledger refusal</td>
+<td>400</td>
+<td>An acknowledgement without the counterparty's signature.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>ack_not_by_counterparty</code></td>
+<td>ledger refusal</td>
+<td>403</td>
+<td>An acknowledgement by anyone other than the counterparty of the poster.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>ack_signature_invalid</code></td>
+<td>ledger refusal</td>
+<td>400</td>
+<td>The acknowledgement signature does not verify under the counterparty's registry key.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>grn_attestation_required</code></td>
+<td>ledger refusal</td>
+<td>400</td>
+<td>An acceptance-dated credit sale without a buyer-signed GRN attestation.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>grn_attestation_invalid</code></td>
+<td>ledger refusal</td>
+<td>400</td>
+<td>The GRN attestation is not signed by the ledger's debtor, or the GRN was already used.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>grn_date_invalid</code></td>
+<td>ledger refusal</td>
+<td>400</td>
+<td>The GRN date precedes the invoice or delivery date, is in the future, or differs from the sale's reference date.</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+<tr>
+<td><code>receipt_required</code></td>
+<td>ledger refusal</td>
+<td>400</td>
+<td>A <code>payment</code> entry without a PSP-signed rail receipt.</td>
+<td>—</td>
+<td>requires_buyer_input</td>
+</tr>
+<tr>
+<td><code>receipt_reused</code></td>
+<td>ledger refusal</td>
+<td>409</td>
+<td>The rail receipt has already settled ledger entries, on this ledger or on any other ledger that the creditor's custodian holds (uniqueness is keyed on the rail and the RRN or UTR).</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>ledger_head_mismatch</code></td>
+<td>ledger refusal</td>
+<td>409</td>
+<td>A posting or acknowledgement whose <code>prev_hash</code> or <code>head_hash</code> is not the ledger's current chain head (compare-and-swap). Nothing is appended.</td>
+<td><code>$.prev_hash</code></td>
+<td>recoverable (GET the ledger, then act on the current head)</td>
+</tr>
+<tr>
+<td><code>settlement_payee_unmatched</code></td>
+<td>ledger message</td>
+<td>201 msg</td>
+<td>A <code>payment</code> entry cites a receipt whose payee matches none of the creditor's <code>settlement_accounts[]</code> (or the <code>new_payee</code> after TReDS discounting), or whose <code>issued_at</code> is before the settled sale. The entry is accepted as <code>pending_ack</code> for the creditor and settles nothing until the creditor acknowledges it.</td>
+<td><code>$.settlement_evidence</code></td>
+<td>requires_buyer_review</td>
+</tr>
+<tr>
+<td><code>nothing_to_settle</code></td>
+<td>ledger refusal</td>
+<td>409</td>
+<td>A <code>payment</code> entry when the ledger has no acknowledged open sale entries.</td>
+<td>—</td>
+<td>unrecoverable</td>
+</tr>
+<tr>
+<td><code>credit_note_exceeds_open</code></td>
+<td>ledger refusal</td>
+<td>400</td>
+<td>A credit note larger than the sale's open amount.</td>
+<td>—</td>
+<td>recoverable</td>
+</tr>
+</tbody>
+</table>
+<h3 id="internal-reasons">Internal and nested reasons<a class="headerlink" href="#internal-reasons" title="Permanent link">&para;</a></h3>
+<p>These values are not registry codes. A participant MUST NOT put them in <code>Error.code</code> or <code>messages[].code</code>. Some reach
+the agent only inside a registered code, as shown.</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Where it arises</th>
+<th>How it reaches the agent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>local:per_txn</code>, <code>local:block_remaining</code>, <code>local:per_month</code>, <code>local:first_24h</code>, <code>local:binding_expired</code></td>
+<td>The verifier's local rail-cap checks</td>
+<td>In <code>reasons[]</code> of <code>rail_limit_exceeded</code></td>
+</tr>
+<tr>
+<td><code>rail:&lt;reason&gt;</code>: <code>block_expired</code>, <code>delegation_inactive</code>, <code>pin_auth_used</code>, <code>pin_auth_expired</code>, <code>unknown_rail_ref</code>, <code>unsupported_rail</code>, <code>payee_mismatch</code>, <code>amount_mismatch</code>, <code>pre_debit_notice_missing</code>, <code>pre_debit_opt_out</code>, <code>rail_limit_exceeded</code></td>
+<td>The payer PSP's pre-check of the bound rail</td>
+<td>In <code>reasons[]</code> of <code>rail_limit_exceeded</code>. A pre-debit notice that has not matured is not a breach: the session gets the <code>pre_debit_notice</code> message instead, and <code>rail:pre_debit_opt_out</code> cancels the session with <code>pre_debit_opt_out</code>. The same reason is the <code>error</code> of a signed failure receipt, reported with <code>payment_failed</code>.</td>
+</tr>
+<tr>
+<td><code>unsupported_rail</code>, <code>block_exists</code>, <code>device_limit</code></td>
+<td>Rail set-up by the payer PSP on the Trusted Surface: attesting a rail type the PSP does not support, a second active Reserve Pay block for the same payee, too many Circle delegate devices</td>
+<td>Never to the agent; the mandate request is not activated</td>
+</tr>
+<tr>
+<td><code>handler_mismatch</code>, <code>unsupported_handler</code></td>
+<td>The gateway's payment-handler lookup</td>
+<td>The gateway first checks the handler against the mandate's rail binding (<code>mandate_scope_mismatch</code>, <code>$.payment.handler</code>); the handler intersection excludes an unknown handler with <code>not_in_registry</code>. A debit refused this way is reported as <code>payment_failed</code>.</td>
+</tr>
+<tr>
+<td><code>refund_not_allowed</code>, <code>refund_exceeds_debit</code> on a post-order refund</td>
+<td>The rail refund call</td>
+<td>As <code>status: FAILED:&lt;code&gt;</code> on the order's refund <code>adjustments[]</code> entry</td>
+</tr>
+<tr>
+<td><code>auction_exists</code>, <code>not_sealed</code>, <code>no_award</code></td>
+<td>The neutral auctioneer (create, commit, Dutch award without an accepted tick)</td>
+<td><code>invalid_request</code> (400); the auctioneer's text is in <code>message</code></td>
+</tr>
+<tr>
+<td><code>auctioneer_not_neutral</code>, <code>not_eligible</code></td>
+<td>The neutral auctioneer (seller-run auction, bidder outside the allowlist)</td>
+<td><code>mandate_scope_mismatch</code> (403)</td>
+</tr>
+<tr>
+<td><code>discovery_source_unverified</code>, <code>discovery_source_mismatch</code></td>
+<td>An agent's check of a discovery source (<a href="../discovery/#verifying-results">Verifying discovery results</a>): unverified when any step fails, mismatch when the signed body differs from the result</td>
+<td>Never on the wire. The agent records it in the InstructionLog at stage <code>discover</code> and renders the item without the claim, as the table there says</td>
+</tr>
+<tr>
+<td><code>discount_source_unknown</code></td>
+<td>An agent finds an <code>applied[]</code> entry with a <code>code</code> that it did not submit (<a href="../checkout/#discounts">Discounts</a>)</td>
+<td>Never on the wire. The agent records it in the InstructionLog and tells a present principal</td>
+</tr>
+<tr>
+<td><code>NEG_ATTESTATION_INVALID</code></td>
+<td>A seller's Beckn error on <code>on_init</code> when the buyer's <code>within_bounds</code> attestation does not verify</td>
+<td><code>bpp_no_on_init</code></td>
+</tr>
+<tr>
+<td><code>NEG_BREACH</code></td>
+<td><code>sub_category</code> of the IGM issue the gateway raises for a breach other than terms drift</td>
+<td>The IGM issue on the negotiation, not a code</td>
+</tr>
+<tr>
+<td><code>capture_failed</code></td>
+<td>A payment-plan tender capture that returned no success and no rail code</td>
+<td><code>error</code> of a failed payment-plan result, with <code>failed_tender</code></td>
+</tr>
+<tr>
+<td><code>handler_non_paying</code>, <code>mandate_exceeds_rail_limit</code></td>
+<td>The handler binding check (class N handler; a mandate limit above the rail's limit)</td>
+<td>Not surfaced; binding checks that reach the agent use <code>presence_handler_mismatch</code>, <code>cod_not_allowed</code>, <code>cod_open_orders_cap</code>, <code>credit_funding_not_allowed</code> or <code>reservepay_block_wrong_payee</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="step-up-reasons">Step-up reasons<a class="headerlink" href="#step-up-reasons" title="Permanent link">&para;</a></h3>
+<p><code>step_up.reason</code> (with <code>step_up.kind</code>) is one of:</p>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Kind</th>
+<th>When</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>above_step_up_threshold</code></td>
+<td>confirm</td>
+<td>The amount is above the mandate's <code>step_up.above_amount</code>.</td>
+</tr>
+<tr>
+<td><code>new_merchant</code></td>
+<td>confirm</td>
+<td>First order with this seller under the mandate.</td>
+</tr>
+<tr>
+<td><code>outside_categories</code></td>
+<td>confirm</td>
+<td>The category is outside the mandate's step-up-free categories.</td>
+</tr>
+<tr>
+<td><code>first_order</code></td>
+<td>confirm</td>
+<td>First order under the mandate.</td>
+</tr>
+<tr>
+<td><code>above_afa_limit</code></td>
+<td>rail_auth</td>
+<td>The debit is above the rail's AFA threshold (₹15,000; ₹1 lakh for listed categories).</td>
+</tr>
+<tr>
+<td><code>afa_threshold_card_emandate</code></td>
+<td>rail_auth</td>
+<td>A card e-mandate debit above the AFA threshold.</td>
+</tr>
+<tr>
+<td><code>afa_crossborder_cnp</code></td>
+<td>rail_auth</td>
+<td>A non-recurring, cross-border, card-not-present payment whose acquirer requests AFA.</td>
+</tr>
+<tr>
+<td><code>split_tender_afa_on_total</code></td>
+<td>rail_auth</td>
+<td>The total across tenders is above an AFA threshold.</td>
+</tr>
+<tr>
+<td><code>credit_acceptance</code></td>
+<td>confirm (HP)</td>
+<td>Acceptance of a loan offer.</td>
+</tr>
+<tr>
+<td><code>negotiation_out_of_mandate</code></td>
+<td>confirm</td>
+<td>A negotiated term is outside the negotiation mandate.</td>
+</tr>
+<tr>
+<td><code>negotiation_between_reservation_and_max</code></td>
+<td>confirm</td>
+<td>The price is between the reservation price and <code>total_max</code>.</td>
+</tr>
+<tr>
+<td><code>accept_confirmation</code></td>
+<td>confirm</td>
+<td>The guard returned <code>acceptable</code>, the mandate's <code>accept_confirmation</code> is <code>ask</code> or absent, and the agent called accept. The <code>ts_render</code> carries <code>offer_hash</code>. Nothing seller-visible is sent before <code>negotiation.step_up.approved</code>.</td>
+</tr>
+<tr>
+<td><code>rfq_prescribes_waiver</code></td>
+<td>confirm</td>
+<td>An agent-created RFQ sets <code>acceptance_revocation_required: waived</code>, which waives the principal's own ICA s.5 right.</td>
+</tr>
+<tr>
+<td><code>seller_confirmation</code></td>
+<td>confirm</td>
+<td>A BPP-signed <code>on_select</code> or <code>on_init</code> carries the <code>bacp</code> tag <code>seller_confirmation</code>: the seller asks for the buyer's own confirmation (a first cash-on-delivery order, an amount above the seller's threshold, a new credit line, a credit limit exceeded, or another reason). At most one per <code>checkout_hash</code>.</td>
+</tr>
+<tr>
+<td><code>refund_received</code></td>
+<td>confirm</td>
+<td>The gateway holds a refund receipt of the order's collector's PSP and not of the payer PSP, and asks the principal to confirm on the Trusted Surface that the credit arrived ("I have received ₹X"). Only that approval releases the spend of a <code>debited_not_confirmed</code> debit (<a href="../mandates/#usage-ledger">Usage ledger</a>).</td>
+</tr>
+<tr>
+<td><code>constraint_unresolved</code></td>
+<td>confirm</td>
+<td>Fallback when a constraint cannot be evaluated deterministically, and the reason for <code>discovery_price_changed</code> on an item shown with a <code>prior_price</code> and for <code>policy_text_mismatch</code>.</td>
+</tr>
+</tbody>
+</table>
+<h3 id="refund-states">Refund states<a class="headerlink" href="#refund-states" title="Permanent link">&para;</a></h3>
+<p><code>Receipt.refund_state</code> is one of <code>pending_cardholder_consent</code>, <code>reversed_to_bank_account</code>, <code>released_block</code>,
+<code>credit_note_issued</code>, <code>refunded_to_source</code> (the default for a completed refund to source) and
+<code>adjusted_against_dues</code>. A card refund before the bill is paid MUST be <code>adjusted_against_dues</code> and MUST NOT pass
+through <code>pending_cardholder_consent</code>. See <a href="../payments/rails/">Rail Bindings</a>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../trade-profiles/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Trade Profiles">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Trade Profiles
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../security-and-privacy/" class="md-footer__link md-footer__link--next" aria-label="Next: Security and Privacy">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Security and Privacy
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

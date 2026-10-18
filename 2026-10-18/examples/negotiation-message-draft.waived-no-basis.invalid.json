@@ -1,0 +1,6 @@
+{
+  "type": "offer",
+  "firm": true,
+  "expires_in": "PT8H",
+  "acceptance_revocation": "waived"
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/fx.json",
+  "title": "FX disclosure",
+  "type": "object",
+  "required": [
+    "currency",
+    "foreign_amount",
+    "rate",
+    "markup_bps",
+    "inr_total"
+  ],
+  "additionalProperties": false,
+  "description": "Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+  "properties": {
+    "currency": {
+      "type": "string",
+      "pattern": "^(?!INR)[A-Z]{3}$"
+    },
+    "foreign_amount": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "minor units of currency"
+    },
+    "rate": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "description": "INR per 1 unit of currency"
+    },
+    "markup_bps": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "inr_total": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+    },
+    "rate_source": {
+      "type": "string"
+    },
+    "quoted_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

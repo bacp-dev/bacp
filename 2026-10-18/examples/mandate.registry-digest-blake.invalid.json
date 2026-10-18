@@ -1,0 +1,148 @@
+{
+  "vct": "in.bacp.mandate.payment.open.1",
+  "ap2_vct": "mandate.payment.open.1",
+  "mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "parent_mandate_id": null,
+  "checkout_mandate_ref": "mdt_CHK7Q2W9X4K1M3",
+  "kind": "payment",
+  "form": "open",
+  "iss": "mm.psp.example.in",
+  "iat": 1791763200,
+  "valid_from": "2026-10-12T10:00:00+05:30",
+  "valid_until": "2026-11-11T10:00:00+05:30",
+  "principal": {
+    "ref": "pp_9f2c1e",
+    "assurance": "vpa_pin"
+  },
+  "agent": {
+    "id": "did:web:agents.vaani.example.in:sakhi",
+    "credential_hash": "sha-256:2QX3b9mX7r0Yk8cE5jT2uN1pV4wS6aZ0dF3gH5jK7lM"
+  },
+  "purpose": {
+    "code": "P-GRO-01",
+    "text": {
+      "hi-IN": "घर का किराना सामान",
+      "en-IN": "Household grocery replenishment"
+    }
+  },
+  "action_scope": [
+    "DISCOVER",
+    "QUOTE",
+    "ORDER",
+    "PAY",
+    "CANCEL",
+    "RETURN",
+    "RAISE_ISSUE",
+    "SHARE_DATA"
+  ],
+  "data_scopes": [
+    "NAME",
+    "PHONE",
+    "DELIVERY_ADDRESS"
+  ],
+  "presence_allowed": [
+    "HNP",
+    "HP"
+  ],
+  "constraints": {
+    "amount_per_txn": {
+      "value": 150000,
+      "currency": "INR"
+    },
+    "budgets": [
+      {
+        "period": "P1M",
+        "max": {
+          "value": 300000,
+          "currency": "INR"
+        }
+      }
+    ],
+    "categories_allow": [
+      "ONDC:RET10"
+    ],
+    "delivery_pincodes": [
+      "560034"
+    ],
+    "step_up": {
+      "above_amount": {
+        "value": 120000,
+        "currency": "INR"
+      },
+      "new_merchant": false,
+      "outside_categories": true
+    },
+    "reject_preticked_addons": true,
+    "cod_allowed": false
+  },
+  "payee": {
+    "vpa": "ganeshkirana@examplebank",
+    "bpp_id": "bpp.kirana.example.in"
+  },
+  "rail_binding": {
+    "type": "in.upi.reservepay",
+    "primitive": "sbmd_block",
+    "rail_ref": "SBMD-HDFX-000123456",
+    "psp_id": "psp.example.in",
+    "attestation": "eyJhbGciOiJFUzI1NiJ9.eyJyYWlsX3JlZiI6IlNCTUQifQ.c2lnbmF0dXJl",
+    "registry_version": "2026-10-18",
+    "rail_limits": {
+      "block_amount": {
+        "value": 300000,
+        "currency": "INR"
+      },
+      "expires_at": "2026-11-11T10:00:00+05:30"
+    },
+    "pre_debit_notice": "unknown",
+    "registry_digest": "blake2b-512:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+    "registry_serial": 1
+  },
+  "dpdp": {
+    "consent_receipts": [
+      "cr_A1B2C3D4E5F6G7"
+    ],
+    "data_retention": "P1Y"
+  },
+  "revocation": {
+    "status_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/status",
+    "notify_sla_seconds": 60
+  },
+  "audit_uri": "https://mm.psp.example.in/mandates/mdt_PAY7Q2W9X4K1M3/audit",
+  "cnf": {
+    "jwk": {
+      "kty": "EC",
+      "crv": "P-256",
+      "x": "f83OJ3D2xF1Bg8vub9tLe1gHMzV76e8Tus9uPHvRVEU",
+      "y": "x_FEzRu9m36HLN_tue659LNpXW6pCyStikYjKIWI5a0",
+      "kid": "sakhi-2026-10"
+    }
+  },
+  "signatures": [
+    {
+      "role": "principal",
+      "kid": "device:pp_9f2c1e#k1",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJtIjoxfQ.c2ln"
+    },
+    {
+      "role": "mandate_manager",
+      "kid": "mm.psp.example.in|ukid-2|es256",
+      "alg": "ES256",
+      "value": "eyJhbGciOiJFUzI1NiJ9.eyJtIjoyfQ.c2ln"
+    }
+  ],
+  "status": "ACTIVE",
+  "usage": {
+    "count": 0,
+    "spent": [
+      {
+        "period": "P1M",
+        "amount": {
+          "value": 0,
+          "currency": "INR"
+        },
+        "window_start": "2026-10-12T10:00:00+05:30"
+      }
+    ]
+  }
+}

@@ -1,0 +1,3508 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="BACP is an open protocol that lets AI agents discover, negotiate, buy, pay for, and resolve issues with Indian commerce on behalf of people and businesses, natively on India's digital public infrastructure: ONDC/Beckn, UPI, Account Aggregator consent, and the DPDP Act.">
+      
+      
+      
+        <link rel="canonical" href="https://spec.bacp.dev/2026-10-18/specification/payments/rails/">
+      
+      
+        <link rel="prev" href="../handler-registry/">
+      
+      
+        <link rel="next" href="../credit-and-split-tender/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/bacp-mark.svg">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>Rail Bindings - Bharat Agentic Commerce Protocol (BACP)</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Noto+Sans:300,300i,400,400i,700,700i%7CNoto+Sans+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Noto Sans";--md-code-font:"Noto Sans Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/custom.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rail-bindings" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-header__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Bharat Agentic Commerce Protocol (BACP)
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Rail Bindings
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="white" data-md-color-accent="deep-orange"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="black" data-md-color-accent="deep-orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="/" class="md-tabs__link">
+        
+  
+  
+    
+  
+  Overview
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../../overview/" class="md-tabs__link">
+          
+  
+  
+  Specification
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="/" title="Bharat Agentic Commerce Protocol (BACP)" class="md-nav__button md-logo" aria-label="Bharat Agentic Commerce Protocol (BACP)" data-md-component="logo">
+      
+  <img src="../../../assets/bacp-mark.svg" alt="logo">
+
+    </a>
+    Bharat Agentic Commerce Protocol (BACP)
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/bacp-dev/bacp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    bacp-dev/bacp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Specification
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Specification
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting-started/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../glossary/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Glossary
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../discovery/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Discovery and Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../identity-and-signing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Identity and Request Signing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../mandates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mandates and Consent
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../human-participants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Human Participants and the Trusted Surface
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_8" id="__nav_2_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Checkout
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Checkout
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Sessions and Checkout
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../checkout/post-order/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Orders and Post-order
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_9" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_9" id="__nav_2_9_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Negotiation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_9_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_9">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Negotiation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../negotiation/rfq-and-auctions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    RFQ and Auctions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Payments
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Payments
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../handler-registry/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Handler Registry
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rail Bindings
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#upi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UPI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#intent-qr-and-collect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intent, QR and collect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-charges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Charges on UPI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-circle-delegate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI Circle delegate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reserve-pay-single-block-multiple-debit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reserve Pay (single-block-multiple-debit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#autopay-upi-e-mandate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AutoPay (UPI e-mandate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-time-mandate-otm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-time mandate (OTM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-lite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI Lite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-123pay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI 123PAY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credit-on-upi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credit on UPI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-international" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI international
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#card-on-file-tokens-coft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card-on-file tokens (CoFT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#card-e-mandates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card e-mandates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rbi-authentication-directions-2025-for-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RBI Authentication Directions 2025 for cards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-agentic-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network agentic tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#card-emi-and-card-present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card EMI and card-present
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#card-refunds-and-disputes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card refunds and disputes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#net-banking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Net banking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ppi-wallets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PPI wallets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gift-cards-store-credit-and-loyalty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gift cards, store credit and loyalty
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cash-on-delivery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cash on delivery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nach-and-enach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NACH and eNACH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imps-neft-and-rtgs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IMPS, NEFT and RTGS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bbps-bharat-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BBPS (Bharat Connect)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-rupi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        e-RUPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-cbdc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        e₹ (CBDC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aeps-and-aadhaar-pay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AePS and Aadhaar Pay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fastag-ncmc-and-transit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FASTag, NCMC and transit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-b2b-and-cross-border-rails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other B2B and cross-border rails
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../credit-and-split-tender/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Credit and Split Tender
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../economics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Who Pays
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../evidence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Evidence and Instruction Log
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../trade-profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Trade Profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../security-and-privacy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Security and Privacy
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../regulatory-mapping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Regulatory Mapping
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../conformance/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Conformance
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_17" >
+        
+          
+          <label class="md-nav__link" for="__nav_2_17" id="__nav_2_17_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Transports
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_17_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_17">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Transports
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/rest/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    REST
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/beckn/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Beckn / ONDC Binding
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/mcp-a2a/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MCP and A2A
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../transports/ucp-checkout/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UCP checkout projection
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../open-questions/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Open Questions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#upi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="UPI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#intent-qr-and-collect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Intent, QR and collect
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-charges" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Charges on UPI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-circle-delegate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI Circle delegate
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reserve-pay-single-block-multiple-debit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reserve Pay (single-block-multiple-debit)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#autopay-upi-e-mandate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AutoPay (UPI e-mandate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#one-time-mandate-otm" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        One-time mandate (OTM)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-lite" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI Lite
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-123pay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI 123PAY
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#credit-on-upi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Credit on UPI
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#upi-international" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        UPI international
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cards
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Cards">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#card-on-file-tokens-coft" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card-on-file tokens (CoFT)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#card-e-mandates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card e-mandates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rbi-authentication-directions-2025-for-cards" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        RBI Authentication Directions 2025 for cards
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#network-agentic-tokens" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Network agentic tokens
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#card-emi-and-card-present" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card EMI and card-present
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#card-refunds-and-disputes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Card refunds and disputes
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#net-banking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Net banking
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ppi-wallets" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        PPI wallets
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#gift-cards-store-credit-and-loyalty" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Gift cards, store credit and loyalty
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cash-on-delivery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cash on delivery
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nach-and-enach" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        NACH and eNACH
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#imps-neft-and-rtgs" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        IMPS, NEFT and RTGS
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bbps-bharat-connect" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        BBPS (Bharat Connect)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-rupi" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        e-RUPI
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#e-cbdc" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        e₹ (CBDC)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aeps-and-aadhaar-pay" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        AePS and Aadhaar Pay
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fastag-ncmc-and-transit" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FASTag, NCMC and transit
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-b2b-and-cross-border-rails" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other B2B and cross-border rails
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="rail-bindings">Rail Bindings<a class="headerlink" href="#rail-bindings" title="Permanent link">&para;</a></h1>
+<div class="admonition info">
+<p class="admonition-title">Version 2026-10-18</p>
+<p>This page is part of BACP version <code>2026-10-18</code>. Rules marked <strong>Proposed</strong> depend on an open question and may change in a later dated release.</p>
+</div>
+<p>This page binds the <a href="../">payment model</a> to each Indian rail family. For every family it gives the handlers, the limits with the regulation or operator text they come from, the authentication model, how a mandate binds, and the refund and dispute path. The descriptors in the <a href="../handler-registry/">Handler Registry</a> carry the same values as data, together with a verification grade for each limit.</p>
+<p><strong>How to read the limits.</strong></p>
+<ul>
+<li>A limit taken from an RBI direction or an NPCI publication that was checked against the primary text is stated plainly.</li>
+<li>A limit known only from a vendor's documentation or from the press is marked <em>(vendor)</em> or <em>(press)</em>. One that sources disagree on is marked <em>(conflict)</em>.</li>
+<li>Amounts are shown in rupees here. On the wire every amount is integer paise (₹15,000 = <code>1500000</code>).</li>
+<li>Limits are configurable in the registry. Where sources conflict, the gateway enforces the stricter value unless a deployment documents otherwise.</li>
+</ul>
+<p><strong>The rule every rail is judged against.</strong> Under the RBI Authentication Directions 2025 (RBI/2025-26/79, issued 25-09-2025, compliance from 01-04-2026), every digital payment needs at least two distinct factors, at least one of them dynamic for every payment other than a card-present one (para 6), and the issuer compensates the customer in full for a loss from a non-compliant transaction. So an agent-initiated debit either runs under an exempted or AFA-registered standing authority, or needs a fresh 2FA performed by the user. The agent is never a factor.</p>
+<h2 id="upi">UPI<a class="headerlink" href="#upi" title="Permanent link">&para;</a></h2>
+<p>UPI is operated by NPCI under the Payment and Settlement Systems Act 2007 and RBI oversight. Its rules come through NPCI operating circulars, several of them member-only; the UPI Procedural Guidelines are not publicly available from NPCI as of 17-10-2026 (<a href="../../open-questions/#q-07">Q-07</a>). The UPI PIN never leaves the payer's UPI app. On every UPI handler the payment leg is basket-blind, receipts carry the RRN (and the UTR where the descriptor lists it), and disputes go to UDIR in the payer app, with MyUPI automated chargeback.</p>
+<p>Failed UPI merchant payments are auto-reversed within T+5, with ₹100 per day of compensation after that; a failed P2P transfer is reversed by T+1 (RBI/2019-20/67, Annex rows 4b and 4a).</p>
+<h3 id="intent-qr-and-collect">Intent, QR and collect<a class="headerlink" href="#intent-qr-and-collect" title="Permanent link">&para;</a></h3>
+<p>Handlers: <code>in.upi.intent</code>, <code>in.upi.qr</code>, <code>in.upi.collect</code>. Class C (human present for every payment).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Flows</td>
+<td><strong>Intent:</strong> a <code>upi://pay</code> deep link opens the payer's UPI app, where the payer enters the PIN. <strong>QR:</strong> static (fixed VPA, payer types the amount) or dynamic (amount and transaction reference embedded); Bharat QR is also read. <strong>Collect:</strong> the merchant's PSP pushes a request to the payer's VPA and the payer approves with the PIN.</td>
+<td>NPCI UPI product page</td>
+</tr>
+<tr>
+<td>P2M limit</td>
+<td>₹1 lakh per transaction (banks may set lower). ₹5 lakh per transaction for verified merchants in notified categories (capital markets, insurance, travel, credit-card bills, GeM and others) from 15-09-2025, with a 24-hour aggregate that differs by category (reported as ₹10 lakh for most and ₹6 lakh for credit-card bills).</td>
+<td>₹1 lakh: NPCI UPI Procedural Guidelines <em>(member-only; not verified as of 17-10-2026)</em>. Category caps: NPCI circular of 28-08-2025 <em>(press; NPCI text not verified as of 17-10-2026)</em></td>
+</tr>
+<tr>
+<td>Collect</td>
+<td>P2P collect ended on 01-10-2025; merchant (P2M) collect continues.</td>
+<td>NPCI circular of 29-07-2025 <em>(press)</em></td>
+</tr>
+<tr>
+<td>Payee name</td>
+<td>From 30-06-2025, UPI apps display only the bank-registered name of the ultimate beneficiary.</td>
+<td>NPCI <em>(press)</em></td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>Device binding (the bank-linked mobile number) plus UPI PIN, or device-native biometric where enabled (launched at the Global Fintech Fest (GFF) 2025).</td>
+<td>NPCI UPI product page; NPCI GFF 2026 press release</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>An HP one-off UPI payment authorised by PIN is identified as handler <code>in.upi.intent</code> with <code>auth_binding.type: upi.pin</code>.</li>
+<li>BACP MUST NOT emit a UPI collect request to a non-merchant VPA. <code>in.upi.collect</code> is P2M only.</li>
+<li>Agent-originated in-person or doorstep UPI payments MUST use a dynamic QR (or intent) carrying the exact amount and a transaction reference equal to, or mapped to, the BACP order id. A static QR MUST be rejected for an agent cart, because it breaks the binding between order and payment.</li>
+<li>The gateway MUST enforce the P2M per-transaction cap by merchant category (₹1 lakh by default, ₹5 lakh for notified categories) and refuse locally above it.</li>
+</ul>
+<h3 id="upi-charges">Charges on UPI<a class="headerlink" href="#upi-charges" title="Permanent link">&para;</a></h3>
+<p>These rows state what the sources say as of 18-10-2026. BACP does not carry the merchant discount rate (MDR) or the
+other costs the seller bears; it carries what the principal pays and to whom (<a href="../economics/">Who pays</a>).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source and status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>MDR on P2M</td>
+<td>0.4% on person-to-merchant (P2M) transactions above ₹2,000, capped at ₹300 per transaction for ₹75,000 and above. A flat ₹5 applies to listed categories (the FAQ names railways, telecom services, insurance and fuel, among others). AutoPay carries no prescribed MDR. Not yet in force: NPCI decided on 13-10-2026 that it starts "immediately post Diwali at a date to be notified separately", and no date was found as of 18-10-2026.</td>
+<td>NPCI FAQ updated 15-10-2026, Q3, Q5, Q22, Q33; NPCI press release 13-10-2026. An FAQ and a press release, not a circular. Whether the Q22 AutoPay rule reaches Reserve Pay and OTM is open with NPCI (<a href="../../open-questions/#q-81">Q-81</a>).</td>
+</tr>
+<tr>
+<td>P2PM (small merchant)</td>
+<td>Two texts that BACP quotes and does not reconcile. The FAQ says small merchants receiving "up to ₹1 lakh per month" get zero MDR, and that those above ₹1 lakh per month for three consecutive months move to P2M (Q24, Q29). The circular says "less than or equal to ₹1 lakh", with no period (para 7.2).</td>
+<td>NPCI FAQ 15-10-2026; NPCI/UPI/CC/01 (18-09-2026) para 7.2</td>
+</tr>
+<tr>
+<td>Convenience fee</td>
+<td>The Payee PSP ensures that no surcharge is levied on users for UPI transactions, that a convenience fee is disclosed upfront on the merchant payment page prior to the selection of the payment mode, and that it remains consistent across the available debit payment modes (net banking, debit card, UPI and credit card). The duty binds the Payee PSP, not the seller, the agent or the gateway.</td>
+<td>NPCI/UPI/CC/01 (18-09-2026) para 7.5</td>
+</tr>
+<tr>
+<td>No charge by banks and system providers</td>
+<td>"No bank or system provider shall impose ... any charge" on RuPay debit cards and UPI up to ₹2,000 (Payment and Settlement Systems Act, 2007, s.10A). It binds banks and system providers; its reach to merchants is interpretation.</td>
+<td>Gazette S.O. 5067(E), 14-09-2026</td>
+</tr>
+<tr>
+<td>UPI app fees</td>
+<td>The FAQ says UPI application providers shall not charge a platform fee or any other charge for a UPI payment.</td>
+<td>NPCI FAQ Q17 (an FAQ)</td>
+</tr>
+<tr>
+<td>Merchants and MDR</td>
+<td>The FAQ says on-boarded merchants cannot pass MDR on to customers on UPI.</td>
+<td>NPCI FAQ Q34 (an FAQ)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="upi-circle-delegate">UPI Circle delegate<a class="headerlink" href="#upi-circle-delegate" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.upi.circle</code> (alias <code>upi.circle.delegate</code>). Class O. Status <strong>pilot</strong>.</p>
+<p>UPI Circle lets a primary user delegate UPI payments to a secondary user, or to a device or software, including AI chatbots. For IoT and software secondaries, NPCI publishes these limits:</p>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Per transaction, per device</td>
+<td>₹5,000</td>
+<td>NPCI UPI Circle page</td>
+</tr>
+<tr>
+<td>Per month, per device</td>
+<td>₹15,000</td>
+<td>NPCI UPI Circle page</td>
+</tr>
+<tr>
+<td>First 24 hours after linking</td>
+<td>₹2,000</td>
+<td>NPCI UPI Circle page. <strong>Sources conflict:</strong> NPCI OC 201 (13-08-2024) item 9 (a daily transaction limit of ₹5,000 in the first 24 hours) and OC 201B (08-10-2025) item 8 (a cumulative transaction limit of ₹5,000 for the first 24 hours) state ₹5,000. The stricter value applies until NPCI confirms which figure the rail enforces (as of 18-10-2026).</td>
+</tr>
+<tr>
+<td>Devices or software per primary user</td>
+<td>5</td>
+<td>NPCI UPI Circle page</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Linking.</strong> OTP, then QR or intent, then consent and limit setting in the primary user's UPI app, then PIN or biometric. AFA happens at linking; payments within the limits need no per-transaction PIN.</li>
+<li><strong>Status.</strong> NPCI states that "AI/Software driven IoT Payments are under pilot with limited users as a part of Closed User Group". The handler is therefore <code>pilot</code>, and a gateway MAY use it only when its conformance attestation lists it (and, until <a href="../../open-questions/#q-77">Q-77</a> is settled, not for an open mandate).</li>
+<li><strong>Full delegation</strong> to a human secondary went live on BHIM on 25-11-2025: up to ₹15,000 a month, with expiry from 1 month to 5 years, usable "after a short cooling period" (NBSL press release). The length of the cooling period and any per-transaction cap for human secondaries are not stated in any public NPCI text found as of 17-10-2026 (<a href="../../open-questions/#q-08">Q-08</a>).</li>
+<li><strong>Explicit user action.</strong> NPCI OC 201B (NPCI/UPI/OC-201B/2025-26, 08-10-2025), which extends Circle to IoT devices and software, states: "debit transactions using IoT shall be only initiated by explicit user action." Whether a standing open mandate that an agent executes without the principal present is "explicit user action", and whether "IoT" there covers software profiles, is open (<a href="../../open-questions/#q-77">Q-77</a>).</li>
+<li><strong>No open mandate on Circle for now.</strong> <code>in.upi.circle</code> backs no open mandate, even when a listed conformance authority's scope includes it and a gateway's attestation lists it, until Q-77 is settled. A Mandate Manager refuses an open mandate request on <code>in.upi.circle</code> with <code>rail_binding_not_open_eligible</code>, and a gateway refuses every human-not-present <code>complete</code> under an open mandate on it; the registry marks the handler <code>open_eligible: false</code>. This does not change today's behaviour, because no Circle open mandate can exist while the <a href="../../conformance/#conformance-authority-list">conformance-authority list</a> is empty.</li>
+<li><strong>Payee scope.</strong> A Circle delegation is not tied to one merchant. Where it ever backs an open mandate, it ranks below the principal's own preference in a multi-seller basket (<a href="../../mandates/#per-leg-rule">per-leg rule</a>).</li>
+</ul>
+<p>Binding rules:</p>
+<ul>
+<li>An open payment mandate bound to Circle MUST have <code>amount_per_txn</code> at or below ₹5,000 and a monthly budget at or below ₹15,000.</li>
+<li>The first-24-hour cap and the device's remaining monthly limit are pre-checked before <code>complete</code>. A debit that would exceed them returns 403 <code>rail_limit_exceeded</code>, not a step-up.</li>
+<li>Because Circle's limits are loose relative to most mandates, the gateway's own atomic budget enforcement is what bounds spending.</li>
+</ul>
+<h3 id="reserve-pay-single-block-multiple-debit">Reserve Pay (single-block-multiple-debit)<a class="headerlink" href="#reserve-pay-single-block-multiple-debit" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.upi.reservepay</code> (alias <code>upi.reservepay.block</code>). Class O.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Basis</td>
+<td>RBI decided to allow single-block-multiple-debit (SBMD) in UPI on 07-12-2022.</td>
+<td>RBI Statement on Developmental and Regulatory Policies, 07-12-2022</td>
+</tr>
+<tr>
+<td>Launch</td>
+<td>NPCI launched UPI Reserve Pay on credit accounts on 08-10-2025: the payer blocks part of a credit card or pre-sanctioned credit-line limit for repeat purchases, with blocked and used amounts visible across apps.</td>
+<td>NPCI GFF 2025 press release</td>
+</tr>
+<tr>
+<td>Account types</td>
+<td>All UPI-permitted sources of funds, including savings, current and overdraft accounts, RuPay credit cards and pre-sanctioned credit lines. The extant pricing of RuPay credit cards and credit lines on UPI applies to executed debits.</td>
+<td><a href="https://www.npci.org.in/uploads/UPI_OC_No_228_FY_2025_26_Enhancement_in_UPI_Single_Block_Multiple_Debits_UPI_Reserve_Pay_a9095c181d.pdf">NPCI UPI OC 228</a> (08-10-2025); <a href="https://www.npci.org.in/uploads/UPI_Consolidated_Circular_0641e910f7.pdf">NPCI UPI Consolidated Circular v1.0</a> (18-09-2026), para 16.1</td>
+</tr>
+<tr>
+<td>Merchants</td>
+<td>To begin with, enabled only for "online verified merchants with low ticket and high frequency transactions".</td>
+<td>NPCI UPI OC 228, acquiring entities para 1</td>
+</tr>
+<tr>
+<td>Block</td>
+<td>At most ₹10,000 per block, reserved for at most 90 days; the merchant may debit several times up to the blocked amount. One mobile number may hold only <strong>one block at a time for a particular merchant</strong>; no NPCI text caps blocks per user across merchants. A block is not a guarantee of payment.</td>
+<td>NPCI UPI Reserve Pay product page; NPCI UPI OC 228, issuer banks paras 4 and 5; Consolidated Circular para 16.4</td>
+</tr>
+<tr>
+<td>Creation</td>
+<td>Payer-initiated, by QR, intent or SDK.</td>
+<td>NPCI UPI OC 200 (31-07-2024), para b</td>
+</tr>
+<tr>
+<td>Timeouts</td>
+<td>A timeout on a debit is treated as a decline, reversed in real time and not settled. For timeouts only, acquiring entities may retry at most 3 times in 24 hours; no retries for other declines.</td>
+<td>NPCI UPI OC 228, acquiring entities para 3</td>
+</tr>
+<tr>
+<td>Notice</td>
+<td>The payer is notified of block creation, modification, debit, revoke and expiry. No NPCI text found states whether a pre-debit notice applies.</td>
+<td>NPCI UPI OC 228, issuer banks para 2; Consolidated Circular para 16.11</td>
+</tr>
+<tr>
+<td>Revocation</td>
+<td>The payee PSP and the UPI app must give the payer a facility to revoke the block; the merchant gives a facility to modify its amount or validity. Unused money is released on expiry or cancellation.</td>
+<td>Consolidated Circular paras 16.9 and 16.10; NPCI UPI Reserve Pay product page</td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>UPI PIN at block creation.</td>
+<td>NPCI UPI Reserve Pay product page</td>
+</tr>
+</tbody>
+</table>
+<p>Which issuers support Reserve Pay is open (<a href="../../open-questions/#q-04">Q-04</a>). Whether an agent-initiated draw on a block counts as the customer action on the merchant's platform that NPCI describes is open (<a href="../../open-questions/#q-65">Q-65</a>).</p>
+<p><strong>One block per seller.</strong> An SBMD block's payee is one seller's collection VPA, or the seller's PA sub-merchant VPA. A buyer app cannot hold one block for many sellers.</p>
+<ul>
+<li>An open payment mandate bound to Reserve Pay MUST name the block's payee in <code>payee{vpa, bpp_id}</code>, and <code>payee.vpa</code> MUST equal the VPA in the seller's BPP-signed payment terms, which the gateway holds (or first obtains by a Beckn <code>init</code> it never confirms) for every block, including one set up outside a checkout (<a href="../../mandates/#sibling-payment-mandates">Sibling Payment Mandates</a>). A block whose payee is the buyer app does not back an HNP payment (<code>rail_binding_not_open_eligible</code>). A debit against a block whose payee is another seller MUST be refused with <code>reservepay_block_wrong_payee</code> (the rail-level twin is <code>payee_mismatch</code>).</li>
+<li>A block counts as reserved spend at its full amount in the mandate ledger until its revocation is confirmed or it expires (<a href="../../mandates/#usage-ledger">Usage ledger</a>).</li>
+<li>Multi-seller agent shopping follows the <a href="../../mandates/#per-leg-rule">per-leg rule</a>: per seller, the principal's preference, then the seller's existing block under the basket's root open checkout mandate, then a gift PPI the principal designated, then one planned human-present step before any debit.</li>
+<li>The handler intersection excludes <code>in.upi.reservepay</code> unless a block payable to this seller exists.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Multi-seller HNP today</p>
+<p>As of 17-10-2026, hands-free buying across several sellers works only for sellers for which the principal
+already holds a block (or another payee-bound mandate) set up in a UPI app, and only where the seller's acquirer
+has enabled Reserve Pay, which OC 228 limits at first to online verified merchants with low-ticket,
+high-frequency transactions. Every other leg is human-present: one payment and one UPI PIN per seller. Block
+creation is by QR, intent or SDK (NPCI UPI OC 200, para b, which adds that other modes of initiation are
+envisaged later); no NPCI text found as of 17-10-2026 describes block creation over UPI 123PAY or IVR.</p>
+</div>
+<p><strong>Notice on repeat debits.</strong> Whether the E-mandate Framework's 24-hour pre-debit notice applies to SBMD debits is open (<a href="../../open-questions/#q-03">Q-03</a>). Until it is answered, the second and every later unattended debit on a Reserve Pay block MUST follow the 24-hour notice-gated checkout described in the <a href="../#binding-mandates-to-handlers">overview</a>. The first debit is covered by the block authorisation.</p>
+<p><strong>Refunds</strong> go to the source with <code>original_rrn</code>. Whether a refund restores the block is not verified.</p>
+<h3 id="autopay-upi-e-mandate">AutoPay (UPI e-mandate)<a class="headerlink" href="#autopay-upi-e-mandate" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.upi.autopay</code> (alias <code>upi.autopay</code>). Class O.</p>
+<p>UPI AutoPay is governed by the RBI <strong>Digital Payments – E-mandate Framework, 2026</strong> (RBI/DPSS/2026-27/396, CO.DPSS.POLC.No.S56/02.14.003/2026-27, 21-04-2026, effective immediately). The two identifiers are the RBI reference number and the department circular number of the same document. It consolidates and repeals the earlier e-mandate circulars, and applies to e-mandates on cards, PPIs and UPI.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AFA</td>
+<td>At registration, modification and revocation of the mandate, and for the first debit</td>
+<td>E-mandate Framework 2026 paras 4(a), 4(e), 5(a)</td>
+</tr>
+<tr>
+<td>No-AFA debit cap</td>
+<td>₹15,000 per debit</td>
+<td>E-mandate Framework 2026 para 8</td>
+</tr>
+<tr>
+<td>Special categories</td>
+<td>₹1,00,000 per debit for insurance premiums, mutual-fund subscriptions and credit-card bills</td>
+<td>E-mandate Framework 2026 para 8</td>
+</tr>
+<tr>
+<td>Pre-debit notice</td>
+<td>At least 24 hours before each debit, with an opt-out of the debit or the mandate (itself validated by AFA)</td>
+<td>E-mandate Framework 2026 paras 6(a), 6(c)</td>
+</tr>
+<tr>
+<td>Cost</td>
+<td>Free to the customer</td>
+<td>E-mandate Framework 2026 para 10(a)</td>
+</tr>
+<tr>
+<td>Earlier caps (repealed)</td>
+<td>₹2,000 (cards, August 2019; UPI, January 2020), ₹5,000 (December 2020), ₹15,000 (June 2022), ₹1,00,000 for the three categories (12-12-2023)</td>
+<td>RBI circulars listed in para 11 of the 2026 Framework, now repealed</td>
+</tr>
+<tr>
+<td>Management</td>
+<td>The issuer must let the customer modify the validity or withdraw the mandate at any time. Mandates can be paused or revoked in the UPI app, and MyUPI shows mandates across apps.</td>
+<td>E-mandate Framework 2026 para 4(b); NPCI</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li><code>rail_binding.rail_ref</code> is the UMN. <code>pre_debit_notice</code> is <code>required_24h</code>.</li>
+<li>An open payment mandate bound to AutoPay MUST have <code>amount_per_txn</code> at or below ₹15,000 unless the purpose is one of the three special categories.</li>
+<li>A debit above the no-AFA cap returns <code>requires_escalation</code> with <code>step_up.kind = rail_auth</code> and reason <code>above_afa_limit</code>. The user completes AFA on the Trusted Surface.</li>
+<li>Every debit follows the notice-gated checkout: no money moves before the notice matures, a re-quoted amount above the notified amount needs a new notice, and an opt-out cancels the session with <code>pre_debit_opt_out</code>.</li>
+<li>AutoPay on a credit line or RuPay credit card is a payment-plan leg with <code>funding: credit</code>, and the governing mandate MUST have <code>credit_funding_allowed: true</code> (the user's prior consent).</li>
+</ul>
+<h3 id="one-time-mandate-otm">One-time mandate (OTM)<a class="headerlink" href="#one-time-mandate-otm" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.upi.otm</code>. Class O.</p>
+<p>An OTM blocks funds once, for one merchant, amount and validity. The merchant captures once, up to the blocked amount, and the rest is released; or the block is released if the order is cancelled. It suits "buy this when the final price is known, at most ₹X", such as capture after delivery or after a negotiation.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Basis</td>
+<td>RBI's SBMD/blocking decision of 07-12-2022. The NPCI OTM circular was not verified as of 17-10-2026.</td>
+<td>RBI; NPCI text not verified</td>
+</tr>
+<tr>
+<td>Block</td>
+<td>Up to ₹1,00,000 per mandate for general merchant categories</td>
+<td><em>(vendor: Pine Labs)</em></td>
+</tr>
+<tr>
+<td>Validity</td>
+<td>Up to 60 days from authorisation (Pine Labs, PayU) versus a 14-day execution window (Juspay); Razorpay documents other authorisation-expiry values by merchant category</td>
+<td><em>(conflict; vendors only)</em></td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>UPI PIN at block creation; no further AFA at capture. OTM's status under the 2026 framework is not verified.</td>
+<td><em>(vendor)</em></td>
+</tr>
+<tr>
+<td>Revocation</td>
+<td>The payer cannot revoke the block in the TPAP and must ask the merchant, per the vendor.</td>
+<td><em>(vendor)</em></td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>The mandate records merchant, maximum amount and expiry. A capture above the blocked amount MUST fail.</li>
+<li>The agent MUST release the block when the order is cancelled. Before capture a refund is a block release (<code>refund_state: released_block</code>); after capture it is a normal UPI refund.</li>
+<li>Validity is configurable and the shortest applicable window wins (<a href="../../open-questions/#q-31">Q-31</a>).</li>
+<li>Repeat-debit notice follows the same fail-safe as Reserve Pay (<a href="../../open-questions/#q-03">Q-03</a>).</li>
+</ul>
+<h3 id="upi-lite">UPI Lite<a class="headerlink" href="#upi-lite" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.upi.lite</code> (alias <code>upi.lite</code>). Class A, device-bound.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Limits</td>
+<td>₹1,000 per transaction and ₹5,000 in total at any point in time, with no PIN per transaction; the balance is loaded with a PIN</td>
+<td>RBI/2024-25/93, 04-12-2024, para 2 (announced 09-10-2024)</td>
+</tr>
+<tr>
+<td>Lite X</td>
+<td>Offline NFC payments without a PIN. RBI states the uplift for "UPI Lite"; whether NPCI applies ₹1,000 and ₹5,000 to Lite X is not verified (an older NPCI Lite X FAQ gave ₹500 and ₹2,000; that FAQ is not publicly available as of 17-10-2026).</td>
+<td>NPCI Lite X brand guidelines <em>(no limits stated)</em></td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>Exempt as a small-value offline payment</td>
+<td>RBI Authentication Directions 2025, Annexure-1 item 5</td>
+</tr>
+</tbody>
+</table>
+<p>A remote agent MUST NOT use UPI Lite. The handler is <code>device_bound: true</code>, so it can never be open-eligible, and a request from a remote agent gets <code>presence_handler_mismatch</code>. Only an assisted, on-device agent at a point of sale may use it. Lite receipts carry the RRN only.</p>
+<h3 id="upi-123pay">UPI 123PAY<a class="headerlink" href="#upi-123pay" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.upi.123pay</code> (alias <code>upi.123pay</code>). Class C.</p>
+<p>UPI 123PAY serves feature phones through IVR, missed call, app and sound-based payments, with the UPI PIN on every transaction.</p>
+<table>
+<thead>
+<tr>
+<th>Limit</th>
+<th>Value</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Per transaction</td>
+<td>₹10,000, raised from ₹5,000 ("Necessary instructions will be issued to NPCI shortly")</td>
+<td>RBI Statement on Developmental and Regulatory Policies, 09-10-2024</td>
+</tr>
+<tr>
+<td>Implementation</td>
+<td>NPCI circular dated 25-10-2024, compliance by 01-01-2025</td>
+<td><em>(press; NPCI text not verified as of 17-10-2026)</em></td>
+</tr>
+</tbody>
+</table>
+<p>The cap is configurable, with a default of ₹10,000, and the gateway MUST refuse an instruction above it, returning 403 <code>rail_limit_exceeded</code>. Confirming the cap from the NPCI circular is tracked as <a href="../../open-questions/#q-05">Q-05</a>.</p>
+<h3 id="credit-on-upi">Credit on UPI<a class="headerlink" href="#credit-on-upi" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Handler</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in.upi.credit_line</code></td>
+<td>A pre-sanctioned credit line from a scheduled commercial bank (small finance banks added in 2025) may be used on UPI with the individual's prior consent. The bank sets the limit, period and rate.</td>
+<td>RBI/2023-24/58, 04-09-2023, updated 12-02-2025; NPCI UPI-OC-171 and OC-171A <em>(press)</em></td>
+</tr>
+<tr>
+<td><code>in.upi.rupay_cc</code></td>
+<td>RuPay credit cards may be linked to UPI. The refund rule of the RBI Credit Card and Debit Card Directions 2022 ("Credit Card MD") para 10(h) applies.</td>
+<td>RBI policy statement of 08-06-2022 <em>(press)</em></td>
+</tr>
+</tbody>
+</table>
+<p>Both are class C. They run HNP only through a class O primitive on the credit account (AutoPay, Reserve Pay or OTM), with <code>funding: credit</code> on the payment-plan leg and the user's prior consent recorded as <code>credit_funding_allowed</code> on the mandate. The payer PSP's attestation carries the funding of the primitive (<code>deposit</code> or <code>credit</code>; an overdraft account is credit unless the PSP attests deposit, and a missing value is credit), and an attested credit without <code>credit_funding_allowed</code> is refused with <code>credit_funding_not_allowed</code> (<a href="../../mandates/#handler-binding">Handler binding</a>). Before using any credit-funded handler, the agent MUST tell the user that the payment is credit and MUST hold the user's prior consent (<code>credit_funding_allowed</code> on the mandate).</p>
+<h3 id="upi-international">UPI international<a class="headerlink" href="#upi-international" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.upi.intl</code> (alias <code>bacp.pay.xb.upi_global</code>). Class C. UPI payments abroad through NPCI International corridors, and inbound foreign remittances to UPI-linked accounts. Human present only: no cross-border UPI mandate primitive exists. The payer's UPI app must have international use enabled. Settlement is in INR at the displayed rate, and the rate and markup are disclosed with an <a href="../credit-and-split-tender/#fx-disclosure-for-cross-border-payments">FX view</a>. Refund and dispute rules follow the corridor and are not verified.</p>
+<h2 id="cards">Cards<a class="headerlink" href="#cards" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.card.token</code>, <code>in.card.mandate</code>, <code>in.card.agentic</code> (pilot), <code>in.card.emi</code>, <code>in.card.present</code>; <code>in.pos.tap</code> and <code>in.pos.dynamic_qr</code> at a point of sale. Card issuance and conduct are governed by the RBI Credit Card and Debit Card – Issuance and Conduct Directions 2022 (RBI/2022-23/92). The networks are RuPay (NPCI), Visa, Mastercard, American Express and Diners. Receipts carry <code>arn</code>, <code>auth_code</code> and the RRN.</p>
+<h3 id="card-on-file-tokens-coft">Card-on-file tokens (CoFT)<a class="headerlink" href="#card-on-file-tokens-coft" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.card.token</code> (alias <code>rupay.token</code>). Class C.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Storage</td>
+<td>Only issuers and card networks may store card-on-file data. Others keep only the last four digits and the issuer name.</td>
+<td>RBI CoFT circular RBI/2021-22/96, 07-09-2021</td>
+</tr>
+<tr>
+<td>Token scope</td>
+<td>A token is unique to the combination of card, token requestor and merchant. For an e-commerce marketplace, the "merchant" is the marketplace entity.</td>
+<td>CoFT Annex, condition 1 and footnote 4</td>
+</tr>
+<tr>
+<td>Provisioning</td>
+<td>Explicit customer consent with issuer AFA, which may be combined with the first payment's AFA.</td>
+<td>CoFT para 3 (consent and issuer AFA); Annex condition 2 (combined AFA)</td>
+</tr>
+<tr>
+<td>Reissue</td>
+<td>A renewed or replaced card needs fresh consent before it is linked to merchants again.</td>
+<td>CoFT condition 5</td>
+</tr>
+<tr>
+<td>Requestor duties</td>
+<td>A token requestor with a direct cardholder relationship lists the merchants tokenised through it and allows de-registration.</td>
+<td>CoFT condition 3</td>
+</tr>
+<tr>
+<td>Devices</td>
+<td>Phones, tablets, laptops, desktops, wearables and IoT devices may be tokenised. That tokenisation is free and optional for the cardholder comes from RBI's tokenisation FAQ (not verified as of 17-10-2026).</td>
+<td>RBI circular of 25-08-2021, cited in the CoFT circular para 1</td>
+</tr>
+<tr>
+<td>Default channels</td>
+<td>New and reissued cards are enabled only for domestic contact use. Card-not-present, international and contactless use must be enabled by the cardholder.</td>
+<td>RBI/2019-20/142, 15-01-2020</td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>Two factors, one dynamic, completed by the cardholder for every card-not-present payment, typically through 3-D Secure. The Directions mandate no specific factor.</td>
+<td>RBI Authentication Directions 2025 paras 5, 6</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>A token MUST NOT be presented at a merchant other than the one it is bound to. Because a CoFT token is merchant-bound, a merchant-agnostic agent cannot reuse one token across sellers. On a marketplace the token is bound to the marketplace entity.</li>
+<li>If the issuer declines because card-not-present use is disabled, the gateway returns message <code>card_not_enabled_for_cnp</code> (<code>requires_buyer_input</code>). The agent MUST NOT retry with another card without the user's approval.</li>
+<li>When the user holds the same issuer's cards on several networks, the agent MUST use the card and network the user designated (RBI network-choice circular of 06-03-2024).</li>
+<li>Whether a BACP operator is itself a CoFT token requestor, with the duties above, is open (<a href="../../open-questions/#q-54">Q-54</a>).</li>
+</ul>
+<h3 id="card-e-mandates">Card e-mandates<a class="headerlink" href="#card-e-mandates" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.card.mandate</code>. Class O. This is the only card primitive for unattended debits that is not a network pilot.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AFA</td>
+<td>At registration and on the first debit</td>
+<td>E-mandate Framework 2026 paras 4(a), 5(a)</td>
+</tr>
+<tr>
+<td>Up to ₹15,000 per debit</td>
+<td>Later debits need no AFA, so they MAY run HNP within the mandate</td>
+<td>E-mandate Framework 2026 para 8</td>
+</tr>
+<tr>
+<td>Above ₹15,000</td>
+<td>AFA for every debit</td>
+<td>E-mandate Framework 2026 para 8</td>
+</tr>
+<tr>
+<td>Special categories</td>
+<td>₹1,00,000 instead of ₹15,000 for insurance premiums, mutual-fund subscriptions and credit-card bills</td>
+<td>E-mandate Framework 2026 para 8</td>
+</tr>
+<tr>
+<td>Pre-debit notice</td>
+<td>At least 24 hours, with opt-out</td>
+<td>E-mandate Framework 2026 para 6</td>
+</tr>
+<tr>
+<td>Variable amounts</td>
+<td>Allowed within a maximum the customer specifies</td>
+<td>E-mandate Framework 2026 para 4(c)</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>An unattended card debit MUST run only under an AFA-registered e-mandate (<code>in.card.mandate</code>) or a network agentic token whose intent limits cover it. Otherwise the cardholder completes 3-D Secure, OTP or a passkey.</li>
+<li>A debit above the no-AFA cap returns <code>requires_escalation</code> with <code>step_up.kind = rail_auth</code> and reason <code>afa_threshold_card_emandate</code>.</li>
+<li>Sub-threshold debits on one mandate are aggregated per calendar month (IST), so that one charge split into several smaller debits does not escape AFA.</li>
+<li>A debit above the registered maximum gets <code>rail_limit_exceeded</code>. A debit on a cancelled standing instruction gets <code>mandate_cancelled</code>. A notice issued less than 24 hours before the debit gets <code>pre_debit_notice_too_late</code>.</li>
+</ul>
+<h3 id="rbi-authentication-directions-2025-for-cards">RBI Authentication Directions 2025 for cards<a class="headerlink" href="#rbi-authentication-directions-2025-for-cards" title="Permanent link">&para;</a></h3>
+<ul>
+<li>The Directions (RBI/2025-26/79, 25-09-2025) apply from 01-04-2026. Card-not-present payments need two factors, one dynamic. No specific factor is mandated: the Directions give password, SMS OTP, passphrase, PIN, card hardware, software token and biometrics (device-native or Aadhaar) as examples (para 5). Passkeys are not named, but a passkey can supply a dynamic factor.</li>
+<li><strong>Cross-border.</strong> The Directions apply only to domestic payments. By 01-10-2026, issuers must have a mechanism to validate a non-recurring, cross-border, card-not-present payment when the overseas merchant or acquirer asks for authentication, and a risk-based mechanism for all cross-border CNP payments (para 10). When the acquirer requests AFA on such a payment, the gateway MUST return <code>requires_escalation</code> with <code>step_up.kind = rail_auth</code> and reason <code>afa_crossborder_cnp</code>, and MUST NOT debit until AFA completes. Recurring cross-border payments are outside this trigger.</li>
+<li><strong>Exemptions</strong> (Annexure-1) include small-value contactless payments and recurring e-mandate debits after the first.</li>
+</ul>
+<h3 id="network-agentic-tokens">Network agentic tokens<a class="headerlink" href="#network-agentic-tokens" title="Permanent link">&para;</a></h3>
+<p>Handler: <code>in.card.agentic</code>. Class O. Status <strong>pilot</strong>.</p>
+<table>
+<thead>
+<tr>
+<th>Network</th>
+<th>Status</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mastercard Agent Pay</td>
+<td>First authenticated agentic transaction in India demonstrated on 17-02-2026 at the India AI Impact Summit (issuers Axis Bank and RBL Bank; several PAs and merchants). Agents are registered and verified before transacting; a purchase-intent object with limits and validity windows is kept as dispute evidence. A demonstration, not general availability, as of 17-10-2026.</td>
+<td>Mastercard announcement of 17-02-2026, as reported in the trade press</td>
+</tr>
+<tr>
+<td>Visa Intelligent Commerce</td>
+<td>"Live agentic commerce payment experiences" showcased at GFF 2026 (08-09-2026 to 11-09-2026) with Indian banks and PAs, built on tokenisation and Visa Payment Passkey. Whether agent-specific tokens are live in India is not verified as of 17-10-2026.</td>
+<td>Visa GFF 2026 press release</td>
+</tr>
+<tr>
+<td>RuPay, Amex, Diners</td>
+<td>No agentic card-token product found.</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p>RBI has issued no rule specific to agentic tokens. They must still satisfy CoFT (consent and AFA at provisioning) and the AFA Directions per transaction unless they run under an e-mandate. An <code>in.card.agentic</code> payment MUST carry the network intent object (basket hash, amount limit, validity window, agent identity) and keep it as dispute evidence. General availability is open (<a href="../../open-questions/#q-39">Q-39</a>).</p>
+<h3 id="card-emi-and-card-present">Card EMI and card-present<a class="headerlink" href="#card-emi-and-card-present" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong><code>in.card.emi</code></strong> (class C). Credit-card EMI is governed by Credit Card MD para 6(b)(iii): before conversion the issuer shows principal, interest and any upfront discount, separately on the bill. Debit-card EMI is a loan under the Digital Lending Directions 2025 (para 29(i); RBI has since withdrawn these Directions in its consolidation into entity-wise directions, see <a href="../credit-and-split-tender/">Credit and Split Tender</a>). An agent MUST show these three amounts before converting a purchase to EMI and MUST NOT describe an interest-bearing EMI as "no cost". See <a href="../credit-and-split-tender/">Credit and Split Tender</a>.</li>
+<li><strong><code>in.card.present</code></strong> and <strong><code>in.pos.tap</code></strong> (class A, assisted only). Contactless card payments up to ₹5,000 need no AFA (RBI DPSS.CO.PD No.752/02.14.003/2020-21, effective 01-01-2021). UPI Tap &amp; Pay on NFC point-of-sale terminals is PIN-less up to ₹5,000 (NPCI GFF 2026 press release; exemption in Annexure-1 item 7 of the Authentication Directions). The receipt MUST record whether the payment ran under a PIN-less exemption, and an assisted agent MUST NOT split a cart to stay under an exemption threshold.</li>
+<li><strong><code>in.pos.dynamic_qr</code></strong> (class A). A store or kiosk agent generates a dynamic UPI QR with the exact cart amount and order reference, and the human pays on their own phone.</li>
+</ul>
+<h3 id="card-refunds-and-disputes">Card refunds and disputes<a class="headerlink" href="#card-refunds-and-disputes" title="Permanent link">&para;</a></h3>
+<p>Refunds go to the original card (PA MD para 10(f)), with the Credit Card MD para 10(g)/10(h) rules described in <a href="../#refunds">Refunds</a>. When a cardholder protests a bill, the issuer must give an explanation and, where applicable, documentary evidence within 30 days of the complaint (Credit Card MD para 10(b)), and no charges may be levied on a transaction disputed as fraud until the dispute is resolved (para 10(d)). Network chargeback windows are not verified. A failed card payment, card-present (POS) or card-not-present (e-commerce), is auto-reversed within T+5, with ₹100 per day after that (RBI/2019-20/67, Annex rows 2b and 2c).</p>
+<h2 id="net-banking">Net banking<a class="headerlink" href="#net-banking" title="Permanent link">&para;</a></h2>
+<p>Handler: <code>in.netbanking</code>. Class C.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Regulation</td>
+<td>No net-banking-specific payment direction; the RBI Authentication Directions 2025 and the PA Master Direction 2025 apply.</td>
+<td>RBI</td>
+</tr>
+<tr>
+<td>Flow</td>
+<td>The merchant or PA redirects to the bank's login page; the customer logs in and authorises with OTP or another factor.</td>
+<td>—</td>
+</tr>
+<tr>
+<td>Limits</td>
+<td>Set by each bank</td>
+<td><em>(not verified)</em></td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>Bank login plus a dynamic factor for every payment</td>
+<td>RBI Authentication Directions 2025</td>
+</tr>
+<tr>
+<td>Refund</td>
+<td>To the source account</td>
+<td>PA MD para 10(f)</td>
+</tr>
+<tr>
+<td>TAT</td>
+<td>RBI/2019-20/67 has no net-banking row.</td>
+<td>RBI</td>
+</tr>
+<tr>
+<td>Dispute</td>
+<td>Bank grievance, then the RBI Integrated Ombudsman. No chargeback scheme.</td>
+<td>RBI</td>
+</tr>
+</tbody>
+</table>
+<p>Net banking is human-present only. It MUST be implemented as a redirect to the bank's page. Agents MUST NOT collect, store or relay bank login credentials or OTPs, and the handler exposes no credential fields. A request without a human authorisation event gets <code>presence_handler_mismatch</code>. Screen-scraping or credential-proxy net banking is incompatible with the AFA Directions and the DPDP Act.</p>
+<h2 id="ppi-wallets">PPI wallets<a class="headerlink" href="#ppi-wallets" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.ppi.wallet</code> (class O, only with a PPI e-mandate), <code>in.ppi.card</code> (class C). Governed by the RBI Master Direction on Prepaid Payment Instruments (RBI/DPSS/2021-22/82, 27-08-2021, updated to 30-09-2026). RBI's draft Master Direction on PPIs, 2026 (released 22-04-2026, comments closed 22-05-2026) would replace it; no final direction had been found as of 17-10-2026.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Small PPI</td>
+<td>Balance ≤ ₹10,000; loading ≤ ₹10,000 a month and ≤ ₹1,20,000 in a financial year; debits ≤ ₹10,000 a month; no cash-out or funds transfer; convert to full KYC within 24 months</td>
+<td>PPI MD para 9.1</td>
+</tr>
+<tr>
+<td>Full-KYC PPI</td>
+<td>Balance ≤ ₹2,00,000; transfers to pre-registered beneficiaries ≤ ₹2,00,000 a month per beneficiary, others ≤ ₹10,000 a month</td>
+<td>PPI MD para 9.2</td>
+</tr>
+<tr>
+<td>Credit loading</td>
+<td>Non-bank PPIs may not be loaded from credit lines</td>
+<td>RBI clarification of 20-06-2022 <em>(press; RBI letter not public)</em></td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>2FA for every wallet debit; PPI cards follow debit-card AFA</td>
+<td>PPI MD para 15.3(3)</td>
+</tr>
+<tr>
+<td>Recurring</td>
+<td>E-mandates on PPIs follow the E-mandate Framework 2026 (₹15,000 no-AFA cap, 24-hour notice)</td>
+<td>E-mandate Framework 2026 para 2; PPI MD para 15.3(7)</td>
+</tr>
+<tr>
+<td>Interoperability</td>
+<td>Only full-KYC PPIs may link to UPI</td>
+<td>PPI MD para 11.6.3</td>
+</tr>
+<tr>
+<td>Validity</td>
+<td>At least one year from the last load, with an expiry warning within 45 days</td>
+<td>PPI MD para 13</td>
+</tr>
+<tr>
+<td>Refund</td>
+<td>Refunds of PPI-funded payments go back to the same PPI immediately, even above its limits. Refunds of payments made with any other instrument must not be credited to a PPI.</td>
+<td>PPI MD para 14.3</td>
+</tr>
+<tr>
+<td>Failed TAT</td>
+<td>On-us T+1, ₹100 per day; off-us follows the underlying rail</td>
+<td>RBI/2019-20/67</td>
+</tr>
+<tr>
+<td>Complaints</td>
+<td>Resolved preferably within 48 hours, at most 30 days</td>
+<td>PPI MD para 16.2(5)</td>
+</tr>
+<tr>
+<td>Unauthorised debits</td>
+<td>Non-bank PPIs, third-party breach: zero liability if reported within 3 days; the lower of the transaction value or ₹10,000 per transaction for days 4 to 7; beyond 7 days per the issuer's policy. Zero liability whenever the issuer is at fault. Bank PPIs follow the bank customer-liability circular.</td>
+<td>PPI MD paras 17.1, 17.5</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>A wallet runs HNP only under an AFA-registered PPI e-mandate. Otherwise every debit needs 2FA, and an HNP request gets <code>presence_handler_mismatch</code>.</li>
+<li><code>in.ppi.wallet</code> lists only <code>ppi_emandate</code> in <code>binding.open_primitives</code>. An open payment mandate whose <code>rail_binding.primitive</code> is <code>balance_cap</code> (the wallet balance) is refused at issuance and at <code>complete</code> with <code>rail_binding_not_open_eligible</code> (<a href="../../mandates/#handler-binding">Handler binding</a>).</li>
+<li>The gateway MUST enforce the small-PPI and full-KYC caps and MUST NOT accept a credit line as a funding source for a PPI load.</li>
+<li>A pre-funded wallet balance is a natural hard cap on agent spending.</li>
+<li>PPI complaints raised through BACP are forwarded to the issuer and tracked against the 30-day limit. Unauthorised-debit reports are time-stamped, because liability depends on reporting within 3 or 7 days (PPI MD para 17.4: the issuer's alert system records the time and date of delivery and of the customer's response; liability bands in para 17.5).</li>
+</ul>
+<h2 id="gift-cards-store-credit-and-loyalty">Gift cards, store credit and loyalty<a class="headerlink" href="#gift-cards-store-credit-and-loyalty" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Handler</th>
+<th>Class</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in.ppi.gift</code></td>
+<td>O</td>
+<td>Gift PPI: ≤ ₹10,000 per instrument, not reloadable, no cash-out; validity at least one year. <strong>AFA-exempt</strong>, so an agent may spend it HNP up to the balance. Reload and cash-out MUST be refused.</td>
+<td>PPI MD para 10.1, 15.3(5)</td>
+</tr>
+<tr>
+<td><code>in.store_credit</code></td>
+<td>O</td>
+<td>A closed-system gift card or store credit usable only at the issuer is not an RBI payment system. Consumer-protection law and the E-Commerce Rules apply. The merchant alone enforces its limits, so in BACP <code>2026-10-18</code> it is not open-eligible and cannot back an open (HNP) payment mandate (<a href="../../open-questions/#q-59">Q-59</a>, settled as closed; the conditions for opening it later are Proposed text there).</td>
+<td>PPI MD para 2.1</td>
+</tr>
+<tr>
+<td><code>in.loyalty</code></td>
+<td>O</td>
+<td>Loyalty or reward points. No RBI regime was found. The agent MUST disclose the conversion value. The programme alone enforces its limits, so in BACP <code>2026-10-18</code> it is not open-eligible and cannot back an open (HNP) payment mandate (<a href="../../open-questions/#q-59">Q-59</a>, settled as closed; the conditions for opening it later are Proposed text there).</td>
+<td>Programme terms <em>(not verified)</em></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Gift and voucher codes are held in the Trusted Surface or the PSP-adapter vault and redeemed by the gateway's PSP adapter. The agent never sees them. Whether a PSP adapter may redeem gift-PPI codes on the user's behalf is open (<a href="../../open-questions/#q-30">Q-30</a>).</li>
+<li>In a <a href="../credit-and-split-tender/#split-tender-payment-plans">split tender</a>, stored-value tenders are captured first.</li>
+<li><strong>Cashback is not a handler.</strong> It is an offer adjustment in the TermSheet. The agent evaluates the net price after the cashback conditions and MUST NOT count conditional cashback as a discount (<a href="../../checkout/#discounts">Discounts</a>).</li>
+</ul>
+<h2 id="cash-on-delivery">Cash on delivery<a class="headerlink" href="#cash-on-delivery" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.cod</code> (banknotes; aliases <code>cod</code>, <code>bacp.pay.cod.record</code>) and <code>in.cod.upi</code> (UPI at the door). Class D.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Definition</td>
+<td>COD is a merchant transaction in which banknotes are tendered at delivery.</td>
+<td>RBI PA Master Direction 2025 para 4(a)</td>
+</tr>
+<tr>
+<td>No escrow</td>
+<td>"The escrow account shall not be operated for Cash-on-Delivery transactions."</td>
+<td>PA MD para 18(b)</td>
+</tr>
+<tr>
+<td>Cash limit</td>
+<td>Cash receipts of ₹2,00,000 or more per transaction, day or event are barred.</td>
+<td>Income-tax Act, 1961 s.269ST (Income-tax Act, 2025 equivalent: s.186 per secondary sources, not verified as of 17-10-2026)</td>
+</tr>
+<tr>
+<td>UPI at the door</td>
+<td>A dynamic UPI QR shown by the courier is a UPI P2M payment, not COD under the PA MD.</td>
+<td>PA MD; NPCI</td>
+</tr>
+<tr>
+<td>ONDC</td>
+<td>Item flag <code>@ondc/org/available_on_cod</code>; logistics <code>@ondc/org/collection_amount</code>.</td>
+<td>ONDC</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Placing the order.</strong> An agent MAY place a COD order HNP only if the open checkout mandate has <code>cod_allowed: true</code> and fewer than <code>cod_max_open_orders</code> COD orders are open. Otherwise the gateway returns <code>cod_not_allowed</code> or <code>cod_open_orders_cap</code>. The cap is read from the checkout mandate or the negotiation mandate, the stricter one winning. No payment mandate is created at order time. A COD order placed without a principal counts against the placing agent's id.</p>
+<p><strong>Fees.</strong> A COD fee, and any return-to-origin (RTO) fee, MUST appear in the TermSheet payment options from the first round and in the price breakup before commitment. Whether an RTO fee may be charged to a consumer is open (<a href="../../open-questions/#q-37">Q-37</a>).</p>
+<p><strong>Paying at the door.</strong></p>
+<ul>
+<li>Banknotes (<code>in.cod</code>) are recorded against the AWB with <strong>no escrow reference</strong>. Cash moves through no rail, so there is no payment receipt.</li>
+<li>A cash tender of ₹2,00,000 or more is refused (<code>NEG_CASH_LIMIT</code>).</li>
+<li>UPI at the door switches the tender to <code>in.cod.upi</code>, which needs a dynamic QR carrying the order reference and the payer's PIN. That tender gets a UPI receipt with the RRN and may be marked paid. Only <code>in.cod.upi</code> may be marked paid from a UPI reference.</li>
+</ul>
+<p><strong>Refused deliveries.</strong> COD has no escrow, so BACP does not hold the buyer's money. A COD order the user refuses at the door is logged against the agent as an RTO event, and repeated RTOs reduce the agent's allowed <code>cod_max_open_orders</code>. This bounds the abuse vector of an agent creating unwanted COD orders.</p>
+<p><strong>Refunds.</strong> Cash cannot be refunded to source. A refund goes to the UPI or bank account the user chooses, with a credit note, or to store credit only if the user elects it. A <code>in.cod.upi</code> refund goes to the source VPA (T+5 for failures).</p>
+<pre class="mermaid"><code>stateDiagram-v2
+    [*] --&gt; COD_PENDING: order confirmed HNP within the COD cap
+    COD_PENDING --&gt; OUT_FOR_DELIVERY: dispatched
+    COD_PENDING --&gt; CANCELLED: cancelled before dispatch
+    OUT_FOR_DELIVERY --&gt; PAID_CASH: cash collected, no escrow, cash limit checked
+    OUT_FOR_DELIVERY --&gt; PAID_UPI_ON_DELIVERY: dynamic QR paid, receipt with RRN
+    OUT_FOR_DELIVERY --&gt; DELIVERY_ATTEMPT_FAILED: customer unavailable
+    DELIVERY_ATTEMPT_FAILED --&gt; OUT_FOR_DELIVERY: reattempt
+    OUT_FOR_DELIVERY --&gt; REFUSED: customer refuses at the door
+    DELIVERY_ATTEMPT_FAILED --&gt; RTO_INITIATED: attempts exhausted
+    REFUSED --&gt; RTO_INITIATED: seller starts return to origin
+    RTO_INITIATED --&gt; RTO_DELIVERED: goods back at seller
+    RTO_DELIVERED --&gt; CLOSED_NO_PAYMENT: no money moved, RTO event logged against the agent
+    PAID_CASH --&gt; CLOSED_PAID
+    PAID_UPI_ON_DELIVERY --&gt; CLOSED_PAID
+    CANCELLED --&gt; [*]
+    CLOSED_PAID --&gt; [*]
+    CLOSED_NO_PAYMENT --&gt; [*]</code></pre>
+<p>The gateway maps ONDC fulfilment states onto these states. The ONDC RTO state codes are not verified.</p>
+<h2 id="nach-and-enach">NACH and eNACH<a class="headerlink" href="#nach-and-enach" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.nach.debit</code> (class O; aliases <code>in.enach</code>, <code>bacp.pay.nach.debit</code>, <code>bacp.mandate.enach.register</code>) and <code>in.nach.credit</code> (class C; bulk payouts with maker-checker). NACH is operated by NPCI under RBI oversight. The NACH procedural guidelines are member-only.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>e-mandate via net banking or debit card</td>
+<td>₹10,00,000 maximum, raised from ₹1,00,000 from 01-08-2020, "to be reviewed after 1 year"</td>
+<td>NPCI/2020-21/NACH/Circular No.010, 15-07-2020, para 2</td>
+</tr>
+<tr>
+<td>e-mandate via Aadhaar eSign</td>
+<td>₹1,00,000 maximum, "till further notice"</td>
+<td>NPCI NACH Circular No. 010, para 2</td>
+</tr>
+<tr>
+<td>Security mandate</td>
+<td>₹50,00,000, loan (LON) category only</td>
+<td>NPCI NACH Circular No. 010, para 2</td>
+</tr>
+<tr>
+<td>₹1 crore cap</td>
+<td>NPCI NACH Circular No. 003 of FY2023-24 ("E-Mandate simplification and harmonization of the limit of all variants of mandates") is reported by vendors to set ₹1 crore for all mandate variants from 01-08-2023 (₹3 crore for TReDS). The NPCI text was not verified as of 17-10-2026.</td>
+<td><em>(vendor; not verified)</em></td>
+</tr>
+<tr>
+<td>Physical mandates</td>
+<td>₹1 crore, from an older NPCI FAQ</td>
+<td><em>(not verified as current)</em></td>
+</tr>
+<tr>
+<td>AFA</td>
+<td>At registration only: net-banking login, debit card with PIN or OTP, or Aadhaar OTP eSign. Later debits are presented by the creditor's sponsor bank without customer authentication.</td>
+<td>NPCI</td>
+</tr>
+<tr>
+<td>Cancellation</td>
+<td>Customers can cancel a mandate directly with their bank.</td>
+<td>NPCI NACH OC 008 FY24-25 (title from the NPCI NACH page; text not verified as of 17-10-2026)</td>
+</tr>
+<tr>
+<td>Post-revocation debit</td>
+<td>The customer's bank is responsible and must resolve it within T+1, with ₹100 per day after that</td>
+<td>RBI/2019-20/67, Annex row 7b</td>
+</tr>
+<tr>
+<td>Forms</td>
+<td>Revised physical mandate form and XML; old formats valid until 30-09-2026</td>
+<td>NPCI/2026-27/NACH/001, 28-04-2026 <em>(press)</em></td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li><code>rail_binding.rail_ref</code> is the UMRN, bound one-to-one to the BACP mandate hash (maximum amount, frequency, purpose, creditor utility code, validity).</li>
+<li>A NACH mandate MUST be registered only by human AFA. On the payer side an agent only proposes mandates; registration is human-present.</li>
+<li>The gateway MUST refuse an eSign mandate above ₹1,00,000 and a net-banking or debit-card e-mandate above the configured cap (default ₹10,00,000), with <code>nach_mandate_above_cap</code>. Whether ₹1 crore is current is open (<a href="../../open-questions/#q-29">Q-29</a>).</li>
+<li><strong>Pre-debit notice.</strong> The E-mandate Framework 2026 applies to recurring transactions "using cards / PPI / UPI" (para 2), and no RBI pre-debit notice rule for NACH was found. BACP therefore applies its own notice (<code>bacp_policy_24h</code>): every agent-presented NACH debit MUST be preceded by a logged notice at least 24 hours earlier, and an opt-out cancels it.</li>
+<li>After a cancellation event, including a customer's direct cancellation with the bank, a NACH debit MUST NOT be presented (<code>mandate_cancelled</code>). A forced debit triggers a T+1 refund workflow.</li>
+<li>Refunds are a new NACH or NEFT credit from the creditor, not a NACH reversal.</li>
+</ul>
+<p>NACH is suited to high-value recurring debits from a single creditor (EMIs, SIPs, subscriptions, B2B supplies), not to ad-hoc multi-merchant shopping.</p>
+<h2 id="imps-neft-and-rtgs">IMPS, NEFT and RTGS<a class="headerlink" href="#imps-neft-and-rtgs" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.a2a.imps</code>, <code>in.a2a.neft</code>, <code>in.a2a.rtgs</code>. Class C.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>IMPS</th>
+<th>NEFT</th>
+<th>RTGS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operator</td>
+<td>NPCI</td>
+<td>RBI</td>
+<td>RBI</td>
+</tr>
+<tr>
+<td>Limit</td>
+<td>₹5,00,000 per transaction (all channels except SMS/IVR), raised from ₹2,00,000 by NPCI OC-103 of 11-10-2021 <em>(not verified as of 17-10-2026; the current NPCI IMPS page states no limit)</em>; daily cap set by the bank</td>
+<td>No RBI minimum or maximum; walk-in cash remittances ≤ ₹50,000</td>
+<td>Minimum ₹2,00,000, no maximum</td>
+</tr>
+<tr>
+<td>Availability</td>
+<td>24x7</td>
+<td>24x7x365 from 16-12-2019, in 48 half-hourly batches</td>
+<td>24x7x365 from 00:30 on 14-12-2020</td>
+</tr>
+<tr>
+<td>Failure</td>
+<td>Beneficiary not credited: auto-reversal by T+1, ₹100 per day</td>
+<td>Credit within 2 hours of batch settlement, or return within 2 hours of batch completion; otherwise penal interest at LAF repo + 2%, without a claim</td>
+<td>Credit within 30 minutes of receipt, or return within 1 hour (or by end of the RTGS day, if earlier); repo + 2% for delay</td>
+</tr>
+<tr>
+<td>Source</td>
+<td>NPCI IMPS page; RBI/2019-20/67</td>
+<td>RBI NEFT FAQ</td>
+<td>RBI RTGS FAQ; RBI press release 2020-2021/748</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Payee binding.</strong> Before any credit to a new payee, BACP MUST perform a beneficiary name look-up and store a <code>PayeeBinding</code> record: account, IFSC, returned name, timestamp and look-up reference. RTGS and NEFT members must offer Beneficiary Account Name Look-up, free of charge, from 01-04-2025 (RBI/2024-25/99, 30-12-2024). The user sees only the bank-returned name, never a merchant-supplied display name, and the agent cannot edit it. A payment to an account whose looked-up name does not match the invoiced seller is held for human confirmation.</p>
+<p><strong>Rail selection.</strong> The gateway MUST refuse RTGS below ₹2,00,000 and IMPS above ₹5,00,000 (configurable), and defaults to NEFT otherwise.</p>
+<p><strong>Authentication.</strong> Retail transfers need the remitter bank's 2FA every time, so they are human-present. For a business, the agent MAY act as <strong>maker</strong>, preparing a validated payment instruction, while a human <strong>checker</strong> approves it under the corporate's bank entitlement. The payment stays in state <code>pending_approval</code> until the checker event is logged, and the agent MUST NOT release it. Whether corporate host-to-host flows are exempt from the 2025 AFA rule is not verified.</p>
+<p><strong>Evidence and refunds.</strong> Every settled transfer records its UTR. There is no payer-initiated refund: the payee pushes a new credit. An unconfirmed IMPS credit enters reversal tracking (T+1, ₹100 per day). The refund-settlement signal for IMPS is open (<a href="../../open-questions/#q-49">Q-49</a>).</p>
+<h2 id="bbps-bharat-connect">BBPS (Bharat Connect)<a class="headerlink" href="#bbps-bharat-connect" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.bbps.bill</code> (alias <code>bbps</code>), <code>in.bbps.b2b_invoice</code>, <code>in.bbps.upms</code>. The Bharat Bill Payment System is governed by the RBI BBPS Directions 2024 (29-02-2024, effective 01-04-2024) and operated as Bharat Connect by NPCI Bharat BillPay Limited (NBBL).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Limits</td>
+<td>None at network level; the payment instrument's limits apply</td>
+<td>NBBL <em>(not verified as of 17-10-2026)</em></td>
+</tr>
+<tr>
+<td>Settlement</td>
+<td>8 cycles a day to billers</td>
+<td>NBBL <em>(not verified as of 17-10-2026)</em></td>
+</tr>
+<tr>
+<td>Complaints</td>
+<td>NBBL must run a centralised, end-to-end complaint management system; TATs per NBBL procedural guidelines <em>(not verified)</em></td>
+<td>RBI BBPS Directions 2024 (RBI/DPSS/2023-24/111) para 8(i)</td>
+</tr>
+<tr>
+<td>B2B</td>
+<td>Bharat Connect for Business: over 20 lakh invoice-based transactions in Q3 FY26</td>
+<td>NBBL press release, 26-02-2026</td>
+</tr>
+<tr>
+<td>Recurring</td>
+<td>UPMS presents bills and auto-pays them; its mandate types are not verified</td>
+<td>NBBL</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>A bill payment runs bill fetch, validation and payment through a customer operating unit, and MUST store the Biller ID, the bill reference and the Bharat Connect transaction reference (<code>bconnect_txn_id</code>). Bill fetch is a consented read that an agent may do on its own; a one-off payment is human-present.</li>
+<li><code>in.bbps.b2b_invoice</code> payments MUST carry the seller's GST IRN and the buyer's GSTIN, and MUST be refused if the amount differs from the fetched invoice. They run under a maker-checker approval policy.</li>
+<li><code>in.bbps.upms</code> (class O) binds a UPMS registration to an underlying instrument mandate (a UPI AutoPay UMN, a card standing instruction or a NACH UMRN) and inherits that instrument's limits and notice rule. For example, a ₹15,001 bill debit under UPI AutoPay needs AFA.</li>
+</ul>
+<h2 id="e-rupi">e-RUPI<a class="headerlink" href="#e-rupi" title="Permanent link">&para;</a></h2>
+<p>Handler: <code>in.erupi</code> (alias <code>erupi</code>). Class O, status <code>pilot</code> until <a href="../../open-questions/#q-38">Q-38</a> is answered.</p>
+<p>e-RUPI is a purpose-bound prepaid voucher on UPI rails, launched in August 2021 with a cap of ₹10,000 per voucher, redeemable once (RBI, 10-02-2022).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Government vouchers</td>
+<td>₹1,00,000 per voucher, redeemable several times until exhausted. RBI "proposed" this and said instructions to NPCI would follow; the NPCI instruction was not verified as of 17-10-2026.</td>
+<td>RBI Statement on Developmental and Regulatory Policies, 10-02-2022 (Press Release 2021-2022/1694), item 6</td>
+</tr>
+<tr>
+<td>Wider issuance</td>
+<td>RBI proposed issuance by non-bank PPI issuers and on behalf of individuals, and changes to reloading, authentication and issuance limits, with "separate instructions" to follow. Whether those instructions were issued is not verified.</td>
+<td>RBI press release 2023-2024/365, 08-06-2023, item 6</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>The beneficiary presents the voucher code (QR or SMS) and confirms with a verification code.</td>
+<td>NPCI</td>
+</tr>
+<tr>
+<td>Refund</td>
+<td>Unredeemed value returns to the issuer or sponsor on expiry. Merchant refunds after redemption are not verified.</td>
+<td>NPCI</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>The voucher is the mandate: purpose, eligible merchant or merchant category, remaining balance and expiry are mirrored into the BACP mandate. The handler MUST enforce them before redemption, and MUST support partial multi-use redemption for multi-use vouchers.</li>
+<li>Issuer-type caps (government, corporate, individual; bank or non-bank) are configuration, pending confirmation of the 2023 changes.</li>
+<li>Voucher codes are never shown to the agent.</li>
+<li>e-RUPI is open-eligible only where redemption without the beneficiary present is supported (<a href="../../open-questions/#q-38">Q-38</a>). Until Q-38 is answered the descriptor's status is <code>pilot</code>, so an open mandate may bind to it only at a gateway whose <a href="../../conformance/#conformance-attestation">conformance attestation</a> lists <code>in.erupi</code> in <code>pilots[]</code>.</li>
+</ul>
+<h2 id="e-cbdc">e₹ (CBDC)<a class="headerlink" href="#e-cbdc" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.cbdc.retail</code> (alias <code>erupee</code>; class C, pilot), <code>in.cbdc.programmed</code> (class O, pilot), <code>in.cbdc.wholesale</code> (class N, reserved).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Retail e₹</td>
+<td>Pilot since 01-12-2022: bank-distributed tokens, wallet-to-wallet P2P and P2M, UPI-QR interoperability. Still a pilot as of 17-10-2026 (reported, not verified as of 17-10-2026).</td>
+<td>RBI CBDC FAQ; press</td>
+</tr>
+<tr>
+<td>Programmability</td>
+<td>Rules on expiry, geography, merchant category and merchant VPA; used for DBT, subvention, lending and allowances</td>
+<td>RBI CBDC FAQ</td>
+</tr>
+<tr>
+<td>Offline e₹</td>
+<td>Unveiled at GFF in October 2025</td>
+<td><em>(press)</em></td>
+</tr>
+<tr>
+<td>Wholesale e₹</td>
+<td>Launched 01-11-2022 for G-sec settlement; deposit-tokenisation pilot from 08-10-2025</td>
+<td><em>(press)</em></td>
+</tr>
+<tr>
+<td>Limits</td>
+<td>Wallet holding and transaction caps are set per pilot bank</td>
+<td><em>(not verified)</em></td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>When settling in e₹, BACP MUST compile the mandate constraints (expiry, geography, merchant category, merchant VPA, amount) into a programmability rule set, and MUST refuse settlement where the token's rules conflict with the mandate.</li>
+<li>Offline e₹ payments MUST be marked <code>offline=true</code> with a deferred-sync state, and MUST NOT be initiated autonomously by an agent.</li>
+<li>Refunds are a push back from the merchant. Programmed tokens that expire revert to the sponsor (mechanics not verified).</li>
+<li><code>in.cbdc.wholesale</code> is reserved and institutional only. It never backs a payment.</li>
+</ul>
+<h2 id="aeps-and-aadhaar-pay">AePS and Aadhaar Pay<a class="headerlink" href="#aeps-and-aadhaar-pay" title="Permanent link">&para;</a></h2>
+<p>Handler: <code>in.aeps.assisted</code>. Class A, assisted only.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Operator duties</td>
+<td>Acquiring banks run customer due diligence on every AePS touchpoint operator (ATO) before onboarding and apply risk controls</td>
+<td>RBI AePS ATO Due Diligence Directions 2025 (RBI/2025-26/63, 27-06-2025, effective 01-01-2026) para 2.1</td>
+</tr>
+<tr>
+<td>Inactive operators</td>
+<td>An ATO that has performed no transaction for a customer for 3 continuous months must be re-KYCed by the acquiring bank before transacting again</td>
+<td>RBI/2025-26/63 para 2.2</td>
+</tr>
+<tr>
+<td>Cash withdrawal</td>
+<td>Up to ₹10,000 in a single transaction</td>
+<td>NPCI/2021-22/AEPS/002 (18-08-2021), citing AePS Circular 3 of 25-01-2016 (not verified as of 17-10-2026)</td>
+</tr>
+<tr>
+<td>Authentication</td>
+<td>Aadhaar number plus the account holder's biometric, in person at a business correspondent or micro-ATM</td>
+<td>NPCI; RBI Authentication Directions 2025</td>
+</tr>
+<tr>
+<td>TAT</td>
+<td>AePS or Aadhaar Pay debited without merchant confirmation: credit adjustment within T+5, ₹100 per day after that</td>
+<td>RBI/2019-20/67, Annex row 5a</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>AePS and Aadhaar Pay MUST be human-present at an assisted touchpoint. The binding is an <code>AssistedSession</code>: ATO id, terminal id, the RRN, and an order hash.</li>
+<li>The order summary and amount MUST be shown, and spoken in the user's language, before biometric capture. The AI agent MUST NOT trigger the capture and is never the authenticator.</li>
+<li>BACP MUST reject a session from an ATO flagged inactive for 3 months or more without re-KYC, where the acquirer exposes that flag.</li>
+<li>BACP never collects the Aadhaar number or the biometric.</li>
+</ul>
+<h2 id="fastag-ncmc-and-transit">FASTag, NCMC and transit<a class="headerlink" href="#fastag-ncmc-and-transit" title="Permanent link">&para;</a></h2>
+<p>Handlers: <code>in.ppi.netc_topup</code>, <code>in.ppi.ncmc_topup</code> (class O) and <code>in.ppi.transit</code> (class C).</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>FASTag</td>
+<td>NETC FASTags are bank-issued PPIs; KYC at issue. NETC transactions are exempt from AFA (Annexure-1 row 4). BACP reads a FASTag top-up made inside NETC as an NETC transaction, because neither Annexure-1 nor the RBI circular of 30-12-2019 names a top-up (as of 18-10-2026; <a href="../../open-questions/#q-103">Q-103</a>).</td>
+<td>NPCI NETC <em>(not verified as of 17-10-2026)</em>; RBI Authentication Directions 2025, Annexure-1 item 4; RBI/2019-20/126, 30-12-2019, para 4</td>
+</tr>
+<tr>
+<td>Auto top-up notice</td>
+<td>E-mandates that auto-replenish FASTag and NCMC balances need no pre-transaction notification. A post-transaction notification is still required. This notice rule is separate from authentication: no Annexure-1 row names an NCMC top-up, so an NCMC top-up claims no authentication exemption and is authenticated under para 6(a) of the Directions (<a href="../../open-questions/#q-103">Q-103</a>).</td>
+<td>E-mandate Framework 2026 paras 6(d), 7</td>
+</tr>
+<tr>
+<td>FASTag Annual Pass</td>
+<td>₹3,000 for one year or 200 trips at NH and NE fee plazas from 15-08-2025, bought only through the Rajmargyatra app or the NHAI site</td>
+<td><em>(press; NPCI and NHAI text not verified as of 17-10-2026)</em></td>
+</tr>
+<tr>
+<td>NCMC offline wallet</td>
+<td>₹500 per offline transaction and ₹2,000 in total per instrument at any time (the 2024 uplift to ₹1,000 and ₹5,000 is for UPI Lite only)</td>
+<td>RBI/2023-24/57, 24-08-2023, para 2; RBI/2024-25/93 para 1</td>
+</tr>
+<tr>
+<td>PPI-MTS (transit PPI)</td>
+<td>Outstanding balance ≤ ₹3,000, no KYC, no AFA, reloadable, perpetual validity; no cash-out, refund or transfer</td>
+<td>PPI MD para 10.2</td>
+</tr>
+</tbody>
+</table>
+<p>Binding rules:</p>
+<ul>
+<li>A FASTag, NCMC or transit top-up by an agent MUST run under an AFA-registered top-up mandate with threshold and amount fields. BACP MUST NOT require or send a pre-debit notice where the e-mandate framework exempts it, but MUST send a post-debit notice. An NCMC top-up carries no <code>rbi_annex1_item</code> and takes authentication under the descriptor's <code>per_txn_2fa</code> model.</li>
+<li>Transit and NCMC offline caps are configurable, defaulting to the values above. A ₹3,001 PPI-MTS load and a ₹501 NCMC offline debit are refused.</li>
+<li>The toll or transit spend itself is tag- or card-present and involves no agent. Buying the FASTag Annual Pass is a human-present payment on the official channels.</li>
+</ul>
+<h2 id="other-b2b-and-cross-border-rails">Other B2B and cross-border rails<a class="headerlink" href="#other-b2b-and-cross-border-rails" title="Permanent link">&para;</a></h2>
+<p>These handlers mostly track or verify rather than pay. They are listed here for completeness; the financing ones are in <a href="../credit-and-split-tender/">Credit and Split Tender</a>.</p>
+<table>
+<thead>
+<tr>
+<th>Handler</th>
+<th>Class</th>
+<th>Rule</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>in.xb.pacb</code></td>
+<td>C</td>
+<td>PA cross-border collection or payment, capped at ₹25,00,000 per transaction; carries the export invoice or EDF reference. Outbound card payments need cross-border AFA.</td>
+<td>RBI PA MD 2025 para 11(d)</td>
+</tr>
+<tr>
+<td><code>in.pa.settlement</code></td>
+<td>N</td>
+<td>Read-only PA settlement status. The settlement timeline comes from the PA–merchant agreement.</td>
+<td>RBI PA MD 2025 para 16(a)</td>
+</tr>
+<tr>
+<td><code>in.cheque.positive_pay</code></td>
+<td>C</td>
+<td>Record and track cheques. Banks must enable Positive Pay for cheques of ₹50,000 and above and may make it mandatory from ₹5,00,000. BACP requires a Positive Pay reference before marking a cheque payment of ₹5,00,000 or more as issued.</td>
+<td>RBI/2020-21/41, 25-09-2020</td>
+</tr>
+<tr>
+<td><code>in.gov.gem</code></td>
+<td>N</td>
+<td>GeM order and payment tracking: payment within 10 days of CRAC, 1% a month delay interest retained by GeM. See <a href="../credit-and-split-tender/#gem-receivables">trade credit</a>.</td>
+<td>DoE OM of 03-07-2020; GeM GTC clause 12</td>
+</tr>
+<tr>
+<td><code>in.fin.lc</code>, <code>in.fin.ebg</code></td>
+<td>N</td>
+<td>Verify and track letters of credit and e-bank guarantees (NeSL e-BG platform) before treating them as payment security.</td>
+<td>ICC UCP 600; NeSL</td>
+</tr>
+</tbody>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../handler-registry/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Handler Registry">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Handler Registry
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../credit-and-split-tender/" class="md-footer__link md-footer__link--next" aria-label="Next: Credit and Split Tender">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Credit and Split Tender
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+    <div class="md-copyright__highlight">
+      Copyright 2026 BACP Authors. Licensed under the <a href="https://github.com/bacp-dev/bacp/blob/main/LICENSE">Apache License, Version 2.0</a>.
+    </div>
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/bacp-dev" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+    <a href="mailto:security@bacp.dev" target="_blank" rel="noopener" title="Report a security issue (security@bacp.dev)" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M48 64C21.5 64 0 85.5 0 112c0 15.1 7.1 29.3 19.2 38.4l208 156a48 48 0 0 0 57.6 0l208-156c12.1-9.1 19.2-23.3 19.2-38.4 0-26.5-21.5-48-48-48zM0 196v188c0 35.3 28.7 64 64 64h384c35.3 0 64-28.7 64-64V196L313.6 344.8c-34.1 25.6-81.1 25.6-115.2 0z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["announce.dismiss", "content.code.annotate", "content.code.copy", "content.tabs.link", "content.tooltips", "navigation.footer", "navigation.top", "navigation.tracking", "navigation.tabs", "navigation.tabs.sticky", "search.highlight", "toc.follow"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+    
+  </body>
+</html>

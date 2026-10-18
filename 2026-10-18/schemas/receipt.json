@@ -1,0 +1,291 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/receipt.json",
+  "title": "Receipt (rail-anchored)",
+  "description": "Signed by the verifier that acted (AP2 Mandate/Checkout/Payment Receipt). A successful payment or refund receipt on a UPI-family handler (upi.*, in.upi.*, in.cod.upi, in.pos.tap, in.pos.dynamic_qr) MUST carry the 12-digit RRN, and carries the UTR only when the handler descriptor's settlement.evidence_refs lists utr. Any other successful payment or refund receipt MUST carry at least one of rrn, utr or rail.evidence.",
+  "type": "object",
+  "required": [
+    "receipt_id",
+    "receipt_type",
+    "iss",
+    "issued_at",
+    "result",
+    "reference",
+    "mandate_ref",
+    "transaction_id",
+    "signature"
+  ],
+  "properties": {
+    "receipt_id": {
+      "type": "string",
+      "pattern": "^rcpt_[A-Za-z0-9]{12,40}$"
+    },
+    "receipt_type": {
+      "enum": [
+        "mandate",
+        "checkout",
+        "payment",
+        "refund"
+      ]
+    },
+    "iss": {
+      "type": "string",
+      "description": "Verifier: Mandate Manager, BPP, payer PSP"
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "result": {
+      "enum": [
+        "success",
+        "failure",
+        "in_doubt"
+      ]
+    },
+    "error": {
+      "type": "string"
+    },
+    "reference": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+      "description": "Hash of the presented (closed) mandate, AP2 Receipt.reference"
+    },
+    "mandate_ref": {
+      "type": "string"
+    },
+    "open_mandate_ref": {
+      "type": "string"
+    },
+    "primitive": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/MandatePrimitiveType",
+      "description": "The mandate primitive that the payment or refund was made under. A payer-PSP-signed receipt SHOULD echo it together with rail.rail_ref, so that the gateway can reconcile the receipt against the mandate's rail_binding; a mismatch with the mandate's primitive is an unmatched rail debit."
+    },
+    "transaction_id": {
+      "type": "string",
+      "description": "Beckn context.transaction_id, end to end"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "checkout_hash": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+    },
+    "amount": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/PositiveAmount"
+    },
+    "payee": {
+      "type": "object",
+      "properties": {
+        "vpa": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      }
+    },
+    "rail": {
+      "type": "object",
+      "required": [
+        "type",
+        "rail_ref",
+        "status"
+      ],
+      "properties": {
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/RailType"
+            },
+            {
+              "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/HandlerRef"
+            }
+          ],
+          "description": "Legacy RailType, or any HandlerRef: a canonical in.* id or a legacy alias."
+        },
+        "rail_ref": {
+          "type": "string"
+        },
+        "rrn": {
+          "type": "string",
+          "pattern": "^[0-9]{12}$"
+        },
+        "utr": {
+          "type": "string"
+        },
+        "npci_txn_id": {
+          "type": "string"
+        },
+        "psp_confirmation_id": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "SUCCESS",
+            "FAILURE",
+            "PENDING",
+            "DEEMED",
+            "REVERSED"
+          ]
+        },
+        "original_rrn": {
+          "type": "string",
+          "description": "Refund receipts: RRN of the debit being refunded"
+        },
+        "evidence": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "description": "Settlement evidence for non-UPI handlers (handler-descriptor settlement.evidence_refs), e.g. arn, auth_code, utr, umrn, voucher_id, bconnect_txn_id, ledger_entry_id, awb."
+        }
+      },
+      "allOf": [
+        {
+          "description": "UPI-family handlers: RRN is always required. UTR is required only when the handler descriptor's settlement.evidence_refs lists utr; the RRN-only pattern below is generated from handlers/registry.json (upi.uap.pin resolves to in.upi.intent and needs a UTR). Other handlers: at least one of rrn, utr or evidence.",
+          "if": {
+            "properties": {
+              "type": {
+                "pattern": "^(upi\\.|in\\.upi\\.|in\\.cod\\.upi$|in\\.pos\\.(tap|dynamic_qr)$)"
+              }
+            },
+            "required": [
+              "type"
+            ]
+          },
+          "then": {
+            "required": [
+              "rrn"
+            ],
+            "if": {
+              "properties": {
+                "type": {
+                  "pattern": "^(in\\.upi\\.intl|in\\.upi\\.lite|in\\.upi\\.uap|in\\.upi\\.uap\\..+|upi\\.lite|upi\\.uap\\.(?!pin$).+)$"
+                }
+              },
+              "required": [
+                "type"
+              ]
+            },
+            "else": {
+              "required": [
+                "utr"
+              ]
+            }
+          },
+          "else": {
+            "anyOf": [
+              {
+                "required": [
+                  "rrn"
+                ]
+              },
+              {
+                "required": [
+                  "utr"
+                ]
+              },
+              {
+                "required": [
+                  "evidence"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "signature": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Signature"
+    },
+    "refund_state": {
+      "enum": [
+        "pending_cardholder_consent",
+        "reversed_to_bank_account",
+        "released_block",
+        "credit_note_issued",
+        "refunded_to_source",
+        "adjusted_against_dues"
+      ],
+      "description": "Refund lifecycle state, including credit-card refund consent and adjustment against B2B dues."
+    },
+    "fx": {
+      "type": "object",
+      "required": [
+        "currency",
+        "foreign_amount",
+        "rate",
+        "markup_bps",
+        "inr_total"
+      ],
+      "additionalProperties": false,
+      "description": "Foreign-currency view of a cross-border payment. Settlement stays INR: inr_total is an INR Amount = round(foreign_amount * rate * (1 + markup_bps/10000)).",
+      "properties": {
+        "currency": {
+          "type": "string",
+          "pattern": "^(?!INR)[A-Z]{3}$"
+        },
+        "foreign_amount": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "minor units of currency"
+        },
+        "rate": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "INR per 1 unit of currency"
+        },
+        "markup_bps": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "inr_total": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Amount"
+        },
+        "rate_source": {
+          "type": "string"
+        },
+        "quoted_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "receipt_type": {
+            "enum": [
+              "payment",
+              "refund"
+            ]
+          },
+          "result": {
+            "const": "success"
+          }
+        },
+        "required": [
+          "receipt_type",
+          "result"
+        ]
+      },
+      "then": {
+        "required": [
+          "rail",
+          "amount",
+          "checkout_hash"
+        ]
+      }
+    },
+    {
+      "description": "budget_after MUST NOT appear in a PSP-signed receipt; the gateway returns it unsigned in session.payment.budget_after.",
+      "not": {
+        "required": [
+          "budget_after"
+        ]
+      }
+    }
+  ]
+}

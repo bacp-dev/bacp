@@ -1,0 +1,16 @@
+{
+  "act": "LEDGER_ACK",
+  "presence": "HP",
+  "subject": {
+    "ledger_range": {
+      "ledger_id": "ldg_KIRANAKHATA01",
+      "through_seq": 41,
+      "head_hash": "sha-256:iq9WucgZVLwI0vlPZG934NQiD5abHJmTmVxV0O32tXc"
+    }
+  },
+  "actor": {
+    "kind": "agent",
+    "role": "agent",
+    "participant_ref": "did:web:agents.vaani.example.in:sakhi"
+  }
+}

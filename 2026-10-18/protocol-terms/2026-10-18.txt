@@ -1,0 +1,9 @@
+BACP protocol terms, version 2026-10-18
+
+These terms govern every firm message of a negotiation that names this version in protocol_terms. They are agreed by the parties in the sense of the Information Technology Act, 2000, s.13 ("save as otherwise agreed").
+
+1. Committed-order rule. When a withdrawal and an acceptance cross, the outcome is decided only on a signed admission by the party that loses by it, read inside that party's own hash chain, and never by comparing two parties' timestamps.
+2. Receipt window. A receiver returns its signed receipt (CounterSignature) in the synchronous response to the exchange that carried the message, within 5 seconds of the sender's dispatch measured on the sender's own monotonic clock. A receipt that is slower, missing or unverifiable does not prove order.
+3. Contested outcome. A crossing that neither party's own chain decides is contested. Neither gateway proceeds and no breach event is recorded: each side's principal is asked, and the deal proceeds only if both confirm. Whether a contract formed is not decided by the protocol.
+4. Expiry. expires_at is a receipt deadline at the offeror: an acceptance received after expires_at is refused as expired.
+5. Acknowledgement. Unless an acknowledgement has been received, an electronic record is deemed never to have been sent (Information Technology Act, 2000, s.12(2)).

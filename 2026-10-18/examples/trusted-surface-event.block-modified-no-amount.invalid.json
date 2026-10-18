@@ -1,0 +1,12 @@
+{
+  "event": "rail.block_modified",
+  "mandate_id": "mdt_PAY7Q2W9X4K1M3",
+  "block_expires_at": "2026-12-30T00:00:00+05:30",
+  "at": "2026-10-13T11:02:49+05:30",
+  "signature": {
+    "role": "psp",
+    "kid": "psp.example.in|ukid-7|es256",
+    "alg": "ES256",
+    "value": "eyJhbGciOiJFUzI1NiJ9.eyJldmVudCI6InJhaWwuYmxvY2tfbW9kaWZpZWQifQ.c2lnbmF0dXJl"
+  }
+}

@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://bacp.dev/2026-10-18/schemas/instruction-log-entry.json",
+  "title": "InstructionLogEntry",
+  "description": "Append-only, hash-chained evidence of prompt -> intent -> cart -> mandate -> payment. entry_hash = sha-256(JCS(entry minus entry_hash and signature)). Raw content is stored by the operator; only hashes leave it unless an evidence bundle is requested.",
+  "type": "object",
+  "required": [
+    "seq",
+    "session_id",
+    "transaction_id",
+    "stage",
+    "actor",
+    "at",
+    "content_hash",
+    "prev_hash",
+    "entry_hash",
+    "signature"
+  ],
+  "properties": {
+    "seq": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "session_id": {
+      "type": "string"
+    },
+    "transaction_id": {
+      "type": "string"
+    },
+    "stage": {
+      "enum": [
+        "ai_disclosure",
+        "prompt",
+        "intent",
+        "discover",
+        "cart",
+        "disclosure",
+        "mandate",
+        "step_up",
+        "payment",
+        "order",
+        "post_order",
+        "grievance",
+        "negotiation",
+        "guard",
+        "ledger",
+        "handoff"
+      ],
+      "description": "ai_disclosure is the agent presenting the AI disclosure and the human-handoff routes; it is the first entry whose actor is agent, before intent. handoff is a handoff to a human being requested, accepted or ended. disclosure is the seller's signed quote and disclosures arriving, not the AI disclosure."
+    },
+    "actor": {
+      "enum": [
+        "user",
+        "agent",
+        "gateway",
+        "trusted_surface",
+        "bpp",
+        "psp",
+        "assisted_operator",
+        "seller_operator",
+        "sub_agent"
+      ],
+      "description": "Who performed the step. assisted_operator, seller_operator and sub_agent name a session participant through actor_ref. Support staff are not log actors: a handoff is logged by the gateway with the accepting operator's key id in actor_ref."
+    },
+    "actor_ref": {
+      "type": "string",
+      "description": "participant_id of the acting participant in the session's participants[] (REQUIRED when actor is assisted_operator, seller_operator or sub_agent), or, on a handoff entry, the registry key id of the support operator who accepted it."
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "channel": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Channel"
+    },
+    "language": {
+      "type": "string"
+    },
+    "content_hash": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+    },
+    "content_ref": {
+      "type": "string",
+      "format": "uri",
+      "description": "Operator-held encrypted blob (transcript, audio, structured intent)"
+    },
+    "summary": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/LangText"
+    },
+    "model": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "version": {
+          "type": "string"
+        },
+        "translation_model": {
+          "type": "string"
+        }
+      }
+    },
+    "refs": {
+      "type": "object",
+      "properties": {
+        "mandate_ref": {
+          "type": "string"
+        },
+        "checkout_hash": {
+          "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+        },
+        "message_id": {
+          "type": "string"
+        },
+        "order_id": {
+          "type": "string"
+        },
+        "rrn": {
+          "type": "string"
+        },
+        "receipt_id": {
+          "type": "string"
+        },
+        "issue_id": {
+          "type": "string"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 22,
+          "maxLength": 64,
+          "description": "At stage discover, the Idempotency-Key of the POST /discover. The Beckn message_id of the search derives from it."
+        },
+        "source_digests": {
+          "type": "array",
+          "minItems": 1,
+          "description": "At stage discover, the source_digest of every discovery source the agent checked.",
+          "items": {
+            "type": "string",
+            "pattern": "^sha-256:[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "source_checks": {
+          "type": "array",
+          "minItems": 1,
+          "description": "At stage discover, the outcome of the agent's check of each discovery source.",
+          "items": {
+            "type": "object",
+            "required": [
+              "source_digest",
+              "outcome"
+            ],
+            "properties": {
+              "source_digest": {
+                "type": "string",
+                "pattern": "^sha-256:[A-Za-z0-9_-]{43}$"
+              },
+              "outcome": {
+                "enum": [
+                  "verified",
+                  "mismatch",
+                  "unverified"
+                ]
+              },
+              "reason": {
+                "enum": [
+                  "discovery_source_unverified",
+                  "discovery_source_mismatch"
+                ],
+                "description": "REQUIRED when outcome is not verified, and absent otherwise."
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "outcome": {
+                      "const": "verified"
+                    }
+                  },
+                  "required": [
+                    "outcome"
+                  ]
+                },
+                "then": {
+                  "not": {
+                    "required": [
+                      "reason"
+                    ]
+                  }
+                },
+                "else": {
+                  "required": [
+                    "reason"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "registry_lookup": {
+          "type": "string",
+          "description": "At stage discover, the host of the registry lookup the agent used to resolve the sellers' keys."
+        },
+        "discount_codes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "At stage cart, each discount code the agent submitted. The code itself is never recorded: code_mac is an HMAC-SHA-256 of the code under a per-session key that the operator holds, never a bare hash, because a bare hash of a short code can be guessed and a single-use code can be personal.",
+          "items": {
+            "type": "object",
+            "required": [
+              "code_mac",
+              "source"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "code_mac": {
+                "type": "string",
+                "pattern": "^hmac-sha-256:[A-Za-z0-9_-]{43}$"
+              },
+              "source": {
+                "enum": [
+                  "principal",
+                  "agent"
+                ],
+                "description": "Who supplied the code: the principal, or the agent itself (for example an affiliate code of its operator)."
+              }
+            }
+          }
+        }
+      }
+    },
+    "prev_hash": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash",
+      "description": "entry_hash of seq-1; genesis uses sha-256 of session_id"
+    },
+    "entry_hash": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Hash"
+    },
+    "signature": {
+      "$ref": "https://bacp.dev/2026-10-18/schemas/common.json#/$defs/Signature"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "actor": {
+            "enum": [
+              "assisted_operator",
+              "seller_operator",
+              "sub_agent"
+            ]
+          }
+        },
+        "required": [
+          "actor"
+        ]
+      },
+      "then": {
+        "required": [
+          "actor_ref"
+        ]
+      }
+    }
+  ]
+}

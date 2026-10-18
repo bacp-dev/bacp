@@ -1,0 +1,46 @@
+{
+  "eligible": [
+    {
+      "handler_id": "in.upi.circle",
+      "class": "A",
+      "all_in_total": {
+        "value": 216000,
+        "currency": "INR"
+      },
+      "afa_expected": false,
+      "rank_reason": "lowest_total"
+    }
+  ],
+  "excluded": [
+    {
+      "handler_id": "in.upi.reservepay",
+      "reason": "reservepay_block_wrong_payee",
+      "bpp_id": "bpp.dairy.example.in",
+      "resolution": "requires_buyer_input"
+    },
+    {
+      "handler_id": "in.cod",
+      "reason": "above_limit",
+      "bpp_id": "bpp.dairy.example.in",
+      "resolution": "recoverable"
+    }
+  ],
+  "messages": [],
+  "comparison": [
+    {
+      "handler_id": "in.upi.reservepay",
+      "chosen": true,
+      "reason": "cheaper"
+    },
+    {
+      "handler_id": "in.upi.circle",
+      "chosen": false,
+      "reason": "not_principal_preference"
+    },
+    {
+      "handler_id": "in.ppi.gift",
+      "chosen": false,
+      "reason": "rail_only_change"
+    }
+  ]
+}
