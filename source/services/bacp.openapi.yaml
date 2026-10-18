@@ -128,7 +128,24 @@ paths:
                   max_wait_ms: 4000
       responses:
         '200':
-          description: Aggregated on_search results within max_wait_ms, with ranking explanation
+          description: Aggregated on_search results within max_wait_ms, with ranking explanation. Signed by the gateway with RFC 9421, covering
+            @status and content-digest, under a key in the gateway profile's keys.
+          headers:
+            Content-Digest:
+              required: true
+              description: RFC 9530 digest of the response body, covered by the signature.
+              schema:
+                type: string
+            Signature-Input:
+              required: true
+              description: RFC 9421 signature parameters, covering @status and content-digest.
+              schema:
+                type: string
+            Signature:
+              required: true
+              description: RFC 9421 signature by a key in the gateway profile's keys.
+              schema:
+                type: string
           content:
             application/json:
               schema:
@@ -151,12 +168,19 @@ paths:
                         unit_price:
                           value: 11000
                           currency: INR
+                        mrp:
+                          value: 12000
+                          currency: INR
+                        tax_inclusive: true
+                        sponsorship:
+                          status: not_sponsored
                         hsn: '1101'
                         gst_rate_bps: 0
                         available_on_cod: true
                         returnable: true
                         return_window: P2D
                       within_mandate: true
+                      source_digest: sha-256:lWfwvAF9PMhwrWdb1rhZL_wgvkFtkBv5FIsbptP6r8w
                     ranking:
                       main_parameters:
                       - distance
@@ -179,6 +203,49 @@ paths:
           $ref: '#/components/responses/QuotaExceeded'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+  /discover/{transaction_id}/sources/{source_digest}:
+    parameters:
+    - name: transaction_id
+      in: path
+      required: true
+      schema:
+        type: string
+    - name: source_digest
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/SourceDigest'
+    get:
+      tags:
+      - discovery
+      operationId: getDiscoverSource
+      summary: Fetch the BPP-signed on_search callback behind a discovery result
+      description: 'Returns the on_search callback that a source_digest of a discover response names, exactly as the gateway received it, with its
+        Beckn Authorization header. The agent checks the sha-256 of body against source_digest, the binding of the callback to its search, and
+        the Beckn signature against a BPP key that it resolves from the registry itself, never from the gateway. Signed under tag `bacp-browse`;
+        no Idempotency-Key. The gateway serves it only to the agent whose POST /discover produced the transaction_id: every other caller, and an
+        unknown digest, gets 404 not_found. The gateway counts the rate limit per caller key before it looks up the transaction_id or the
+        source_digest, so that a 429 never depends on whether the source exists. The gateway serves a source for as long as it must keep it.
+
+        '
+      security:
+      - httpSignature: []
+      parameters:
+      - $ref: '#/components/parameters/SignatureInput'
+      - $ref: '#/components/parameters/Signature'
+      responses:
+        '200':
+          description: The callback as received
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BecknSignedMessage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/QuotaExceeded'
   /sessions:
     post:
       tags:
@@ -3943,6 +4010,77 @@ components:
               type: string
             issue_id:
               type: string
+            idempotency_key:
+              type: string
+              minLength: 22
+              maxLength: 64
+              description: At stage discover, the Idempotency-Key of the POST /discover. The Beckn message_id of the search derives from it.
+            source_digests:
+              type: array
+              minItems: 1
+              description: At stage discover, the source_digest of every discovery source the agent checked.
+              items:
+                $ref: '#/components/schemas/SourceDigest'
+            source_checks:
+              type: array
+              minItems: 1
+              description: At stage discover, the outcome of the agent's check of each discovery source.
+              items:
+                type: object
+                required:
+                - source_digest
+                - outcome
+                properties:
+                  source_digest:
+                    $ref: '#/components/schemas/SourceDigest'
+                  outcome:
+                    enum:
+                    - verified
+                    - mismatch
+                    - unverified
+                  reason:
+                    enum:
+                    - discovery_source_unverified
+                    - discovery_source_mismatch
+                    description: REQUIRED when outcome is not verified, and absent otherwise.
+                allOf:
+                - if:
+                    properties:
+                      outcome:
+                        const: verified
+                    required:
+                    - outcome
+                  then:
+                    not:
+                      required:
+                      - reason
+                  else:
+                    required:
+                    - reason
+            registry_lookup:
+              type: string
+              description: At stage discover, the host of the registry lookup the agent used to resolve the sellers' keys.
+            discount_codes:
+              type: array
+              minItems: 1
+              description: 'At stage cart, each discount code the agent submitted. The code itself is never recorded: code_mac is an HMAC-SHA-256 of
+                the code under a per-session key that the operator holds, never a bare hash, because a bare hash of a short code can be guessed and
+                a single-use code can be personal.'
+              items:
+                type: object
+                required:
+                - code_mac
+                - source
+                additionalProperties: false
+                properties:
+                  code_mac:
+                    type: string
+                    pattern: ^hmac-sha-256:[A-Za-z0-9_-]{43}$
+                  source:
+                    enum:
+                    - principal
+                    - agent
+                    description: 'Who supplied the code: the principal, or the agent itself (for example an affiliate code of its operator).'
         prev_hash:
           $ref: '#/components/schemas/Hash'
           description: entry_hash of seq-1; genesis uses sha-256 of session_id
@@ -4156,6 +4294,18 @@ components:
           - cod_open_orders_cap
           - ai_disclosure
           - untrusted_counterparty_text
+          - discovery_price_changed
+          - prior_price_contradicted
+          - prior_price_invalid
+          - sponsored_listing
+          - sponsorship_undeclared
+          - prior_price_claim
+          - discount_code_expired
+          - discount_code_invalid
+          - discount_code_already_applied
+          - discount_code_combination_disallowed
+          - discount_code_user_ineligible
+          - discount_code_unsupported
         origin:
           enum:
           - gateway
@@ -4285,6 +4435,8 @@ components:
           default: 4000
     DiscoverResponse:
       type: object
+      description: The aggregated results of one network search. Every item carries its own sponsorship status, and ranking.sponsored is true if
+        and only if some item is sponsored.
       required:
       - transaction_id
       - results
@@ -4296,6 +4448,8 @@ components:
           type: array
           items:
             type: object
+            required:
+            - source_digest
             properties:
               bpp_id:
                 type: string
@@ -4314,15 +4468,31 @@ components:
                   $ref: '#/components/schemas/CatalogItem'
               within_mandate:
                 type: boolean
+              source_digest:
+                $ref: '#/components/schemas/SourceDigest'
+              offers:
+                type: array
+                description: The seller's published offers, from the same signed callback as the items.
+                items:
+                  $ref: '#/components/schemas/CatalogOffer'
         ranking:
           type: object
+          description: How the results were ordered. The gateway states the parameters it used, in descending order of importance, and whether any
+            item is sponsored.
           properties:
             main_parameters:
               type: array
+              description: The parameters that decided the order of the results, in descending order of importance. The first entry matters most.
               items:
                 type: string
             sponsored:
               type: boolean
+              description: true if and only if at least one item in results has sponsorship.status sponsored. It is a summary of the per-item
+                statuses, never a substitute for them.
+            description_url:
+              type: string
+              format: uri
+              description: Optional. A public page that describes the ranking parameters and their relative importance.
         complete:
           type: boolean
           description: false if some BPPs had not answered within max_wait_ms
@@ -4330,12 +4500,339 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Message'
+      allOf:
+      - if:
+          required:
+          - ranking
+          properties:
+            ranking:
+              required:
+              - sponsored
+              properties:
+                sponsored:
+                  const: true
+        then:
+          required:
+          - results
+          properties:
+            results:
+              contains:
+                required:
+                - items
+                properties:
+                  items:
+                    contains:
+                      required:
+                      - sponsorship
+                      properties:
+                        sponsorship:
+                          required:
+                          - status
+                          properties:
+                            status:
+                              const: sponsored
+      - if:
+          required:
+          - results
+          properties:
+            results:
+              contains:
+                required:
+                - items
+                properties:
+                  items:
+                    contains:
+                      required:
+                      - sponsorship
+                      properties:
+                        sponsorship:
+                          required:
+                          - status
+                          properties:
+                            status:
+                              const: sponsored
+        then:
+          required:
+          - ranking
+          properties:
+            ranking:
+              required:
+              - sponsored
+              properties:
+                sponsored:
+                  const: true
+    DiscountCodes:
+      type: object
+      description: The discount codes or published offer ids the agent asks the seller to apply. The list replaces the earlier one, and an empty
+        array clears it. It is a request only, so it carries no applied discounts.
+      required:
+      - codes
+      additionalProperties: false
+      properties:
+        codes:
+          type: array
+          maxItems: 10
+          uniqueItems: true
+          description: Discount codes or published offer ids to apply. Replaces earlier codes; an empty array clears them. At most 10 codes of 1 to 64
+            printable ASCII characters each, as BACP design values against code enumeration, not regulatory limits.
+          items:
+            type: string
+            minLength: 1
+            maxLength: 64
+            pattern: '^[\x21-\x7E]+$'
+    Discounts:
+      type: object
+      description: The discounts of a session as the seller's signed quote applied them. The gateway derives applied[] only from offer lines in the
+        BPP-signed quote and never adds a discount the seller did not sign.
+      additionalProperties: false
+      properties:
+        codes:
+          $ref: '#/components/schemas/DiscountCodes/properties/codes'
+        applied:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppliedDiscount'
+    AppliedDiscount:
+      type: object
+      description: A discount in the seller-signed quote, as a positive amount. Provisional and eligibility-dependent discounts are not carried on a
+        plain session. title is seller text, shown only as labelled counterparty text, and no figure in it is voiced.
+      required:
+      - title
+      - amount
+      - automatic
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '^[\x21-\x7E]+$'
+          description: The code that was applied. Absent for an automatic discount. An agent never fills the code into a fixed sentence from this
+            field; it uses the code it submitted.
+        offer_id:
+          type: string
+          minLength: 1
+          maxLength: 64
+          pattern: '^[\x21-\x7E]+$'
+          description: The seller's offer id from the BPP-signed quote line.
+        title:
+          type: string
+          description: Seller text. Shown only as labelled counterparty text; no figure in it is voiced.
+        amount:
+          $ref: ../schemas/common.json#/$defs/PositiveAmount
+        automatic:
+          type: boolean
+          description: true for a discount that applies without a code. The agent cannot remove it.
+        method:
+          enum:
+          - each
+          - across
+        priority:
+          type: integer
+          minimum: 1
+        allocations:
+          type: array
+          minItems: 1
+          description: Where the discount landed. REQUIRED when method is across, and whenever the session has more than one line item. The sum of
+            the allocations equals amount.
+          items:
+            $ref: '#/components/schemas/DiscountAllocation'
+      allOf:
+      - if:
+          properties:
+            automatic:
+              const: true
+          required:
+          - automatic
+        then:
+          not:
+            required:
+            - code
+        else:
+          required:
+          - code
+      - if:
+          properties:
+            method:
+              const: across
+          required:
+          - method
+        then:
+          required:
+          - allocations
+      unevaluatedProperties: false
+    DiscountAllocation:
+      type: object
+      required:
+      - path
+      - amount
+      additionalProperties: false
+      properties:
+        path:
+          type: string
+          pattern: ^\$
+          description: RFC 9535 JSONPath into the session, for example $.line_items[0].
+        amount:
+          $ref: ../schemas/common.json#/$defs/PositiveAmount
+    CatalogOffer:
+      type: object
+      description: A seller's published offer in a discover result. Its figures are rendered only for kind discount or slab, after the source has
+        been verified, and only as cart-level terms. An unknown kind is rendered as a generic offer.
+      required:
+      - id
+      - kind
+      - auto
+      properties:
+        id:
+          type: string
+          minLength: 1
+        kind:
+          type: string
+          pattern: ^[a-z][A-Za-z0-9_]{0,31}$
+          examples:
+          - discount
+          - buyXgetY
+          - freebie
+          - slab
+          - combo
+          - delivery
+          - exchange
+          - financing
+        auto:
+          type: boolean
+        additive:
+          type: boolean
+        item_ids:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        valid_from:
+          type: string
+          format: date-time
+        valid_until:
+          type: string
+          format: date-time
+        min_order_value:
+          $ref: '#/components/schemas/Amount'
+        benefit:
+          $ref: '#/components/schemas/OfferBenefit'
+        title:
+          type: string
+          description: Seller text; never voiced for figures.
+      unevaluatedProperties: false
+    OfferBenefit:
+      type: object
+      required:
+      - value_type
+      additionalProperties: false
+      properties:
+        value_type:
+          enum:
+          - amount
+          - percent
+        amount:
+          $ref: ../schemas/common.json#/$defs/PositiveAmount
+        percent_bps:
+          type: integer
+          minimum: 1
+          maximum: 10000
+        cap:
+          $ref: ../schemas/common.json#/$defs/PositiveAmount
+      allOf:
+      - if:
+          properties:
+            value_type:
+              const: amount
+        then:
+          required:
+          - amount
+          not:
+            required:
+            - percent_bps
+      - if:
+          properties:
+            value_type:
+              const: percent
+        then:
+          required:
+          - percent_bps
+          not:
+            required:
+            - amount
+    SourceDigest:
+      type: string
+      pattern: ^sha-256:[A-Za-z0-9_-]{43}$
+      description: sha-256 of the raw BPP-signed on_search body that every item of the result entry came from, written sha-256:<base64url>. It is
+        computed over the exact bytes of the body as UTF-8 text. Only sha-256 is allowed here, so that an agent computes one algorithm.
+    Sponsorship:
+      type: object
+      description: 'Whether the position or selection of this item was affected by payment, and who sold the placement. "Sponsored" is BACP policy, not a
+        statutory definition: it covers a position or selection that payment affected, including through a ranking parameter that a party can buy.
+        not_sponsored is a claim by the party that ranked the item. undeclared means that nobody in the chain said, and it MUST NOT be rendered as
+        not_sponsored. A reader that gets an item with no sponsorship (from an older or non-conforming gateway) treats it as undeclared. A reader
+        renders an unknown by value as "sponsored, party unknown".'
+      required:
+      - status
+      properties:
+        status:
+          enum:
+          - sponsored
+          - not_sponsored
+          - undeclared
+        by:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          description: The parties that sold the placement and assert it. bpp is the seller app, gateway is the buyer app's gateway, agent is the
+            agent operator, for example when it is paid for an item's prominence or selection. Several values arise when the sponsorship of
+            several parties is combined.
+          items:
+            enum:
+            - bpp
+            - gateway
+            - agent
+      allOf:
+      - if:
+          properties:
+            status:
+              const: sponsored
+        then:
+          required:
+          - by
+        else:
+          not:
+            required:
+            - by
+      unevaluatedProperties: false
+    PriorPrice:
+      type: object
+      description: BPP-asserted. The lowest price of the item in the 30 days before announced_on, on the same tax basis as unit_price. Its presence is
+        the claim that the seller announced a price reduction on that date. The gateway never creates it.
+      required:
+      - amount
+      - basis
+      - announced_on
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+        basis:
+          enum:
+          - lowest_30d
+          description: The only value is lowest_30d, the lowest price in the thirty days before the announcement of the price reduction. A
+            maximum retail price is never a prior price.
+        announced_on:
+          type: string
+          format: date
+          description: The date on which the seller announced the price reduction, as an ISO date.
+      unevaluatedProperties: false
     CatalogItem:
       type: object
+      description: One item of a discovery result. The object stays open, so a reader ignores fields it does not know.
       required:
       - id
       - name
       - unit_price
+      - sponsorship
       properties:
         id:
           type: string
@@ -4343,6 +4840,7 @@ components:
           $ref: '#/components/schemas/LangText'
         unit_price:
           $ref: '#/components/schemas/Amount'
+          description: The price of one unit as the seller quoted it. Its tax basis is stated by tax_inclusive.
         hsn:
           type: string
         gst_rate_bps:
@@ -4355,6 +4853,22 @@ components:
           type: string
         category:
           type: string
+        sponsorship:
+          $ref: '#/components/schemas/Sponsorship'
+        mrp:
+          $ref: '#/components/schemas/Amount'
+          description: Legal Metrology retail sale price, inclusive of all taxes; maps from Beckn price.maximum_value. It is never shown as a "was" price.
+        tax_inclusive:
+          type: boolean
+          description: Whether unit_price and prior_price include all taxes. REQUIRED whenever mrp or prior_price is present. A comparison with mrp
+            runs only when it is true.
+        prior_price:
+          $ref: '#/components/schemas/PriorPrice'
+      dependentRequired:
+        mrp:
+        - tax_inclusive
+        prior_price:
+        - tax_inclusive
     ItemRef:
       type: object
       required:
@@ -4405,6 +4919,8 @@ components:
           format: uri
         basket_id:
           $ref: '#/components/schemas/BasketId'
+        discounts:
+          $ref: '#/components/schemas/DiscountCodes'
       allOf:
       - if:
           properties:
@@ -4451,6 +4967,8 @@ components:
               type: string
             name:
               type: string
+        discounts:
+          $ref: '#/components/schemas/DiscountCodes'
         data_share:
           type: object
           required:
@@ -4492,6 +5010,7 @@ components:
           $ref: '#/components/schemas/Amount'
         total:
           $ref: '#/components/schemas/Amount'
+          description: unit_price times quantity, before discounts. Discounts appear in discounts.applied[].allocations.
         hsn:
           type: string
         tax_lines:
@@ -4525,6 +5044,7 @@ components:
       - amount
       properties:
         type:
+          description: discount is the total of the discounts as a positive amount, subtracted from the subtotal.
           enum:
           - subtotal
           - delivery
@@ -4583,6 +5103,38 @@ components:
                 $ref: '#/components/schemas/Amount'
         fx:
           $ref: ../schemas/fx.json
+        catalogue:
+          type: array
+          description: One entry for each line item whose item the agent found through POST /discover, copied by the gateway from the discover
+            response and hashed with the rest of the disclosures. It records what the buyer was told at discovery.
+          items:
+            type: object
+            required:
+            - item_id
+            - sponsorship
+            - discovered_unit_price
+            - source_digest
+            properties:
+              item_id:
+                type: string
+              sponsorship:
+                $ref: '#/components/schemas/Sponsorship'
+              discovered_unit_price:
+                $ref: '#/components/schemas/Amount'
+                description: The unit price the discover response showed for this item.
+              source_digest:
+                $ref: '#/components/schemas/SourceDigest'
+              mrp:
+                $ref: '#/components/schemas/Amount'
+              tax_inclusive:
+                type: boolean
+              prior_price:
+                $ref: '#/components/schemas/PriorPrice'
+            dependentRequired:
+              mrp:
+              - tax_inclusive
+              prior_price:
+              - tax_inclusive
     BasketId:
       type: string
       pattern: ^bkt_[A-Za-z0-9]{8,40}$
@@ -4640,7 +5192,8 @@ components:
       description: A Beckn message as the gateway received it, kept so that a verifier can check the sender's network signature without a
         per-object JWS. body is the raw request body; authorization is its Beckn Authorization header (on Beckn 1.x and ONDC, Ed25519 over
         created, expires and a BLAKE2b-512 digest of the body), which verifies against the registry key of the participant that the body's
-        context names, as of the signature's created time.
+        context names, as of the signature's created time. Also used for an on_search callback behind a discovery result, which an agent
+        verifies against a registry key valid both at created and at the time of verification.
       required:
       - body
       - authorization
@@ -4690,6 +5243,53 @@ components:
           description: deposit when the principal's own money pays (a bank account or a prepaid balance); credit when a credit card or credit
             line pays. This is the two-way split the principal is shown and the payer PSP attests, not the handler descriptor's funding
             vocabulary (debit, prepaid and others), which describes a handler rather than one block or balance.
+    TsCatalogueDisclosure:
+      type: object
+      description: One item whose discovery disclosure the Trusted Surface repeats before the total. The gateway copies sponsorship, prior_price and
+        unit_price unaltered from the Disclosures.catalogue[] entry that index names. An entry for an item that is not_sponsored and has no prior_price
+        is invalid, so the Trusted Surface never reads out an empty claim.
+      required:
+      - index
+      - sponsorship
+      - name_ref
+      properties:
+        index:
+          type: integer
+          minimum: 0
+          description: The position of the entry in Disclosures.catalogue[] of the session that the entry is about.
+        cover:
+          type: integer
+          minimum: 0
+          description: On a summary step-up only, the position in covers[] of the leg whose session holds that Disclosures.catalogue[]. Absent otherwise.
+        sponsorship:
+          $ref: '#/components/schemas/Sponsorship'
+        prior_price:
+          $ref: '#/components/schemas/PriorPrice'
+        unit_price:
+          $ref: '#/components/schemas/Amount'
+          description: The discovered unit price that was shown with the prior price (discovered_unit_price). REQUIRED when prior_price is present.
+        name_ref:
+          type: integer
+          minimum: 0
+          description: The position of the item's name in counterparty_text[]. The name is seller text and appears only there.
+      dependentRequired:
+        prior_price:
+        - unit_price
+      allOf:
+      - if:
+          required:
+          - sponsorship
+          properties:
+            sponsorship:
+              required:
+              - status
+              properties:
+                status:
+                  const: not_sponsored
+        then:
+          required:
+          - prior_price
+      unevaluatedProperties: false
     TsRender:
       type: object
       description: The payload of a ts_render, the compact JWS that the gateway signs once per step-up over the JCS form of this object and
@@ -4786,6 +5386,14 @@ components:
             carries covers[] and posts its result.
           items:
             $ref: '#/components/schemas/CoverEntry'
+        catalogue_disclosure:
+          type: array
+          minItems: 1
+          description: One entry for each line item of the step-up's session or sessions whose Disclosures.catalogue[] entry is sponsored or undeclared,
+            or carries a prior_price, so that the Trusted Surface repeats what discovery showed before the total. Only on a session step-up of kind confirm
+            or rail_auth, never on a post_order step-up or a negotiation confirm. It is hashed into Presentation.content_hash with the rest of the render.
+          items:
+            $ref: '#/components/schemas/TsCatalogueDisclosure'
         offer_hash:
           $ref: '#/components/schemas/Hash'
           description: On a negotiation confirm step-up, the offer_hash of the offer the principal is asked to approve.
@@ -4806,6 +5414,35 @@ components:
         required:
         - checkout_hash
         - offer_hash
+      allOf:
+      - if:
+          required:
+          - catalogue_disclosure
+        then:
+          required:
+          - checkout_hash
+          properties:
+            kind:
+              enum:
+              - confirm
+              - rail_auth
+      - if:
+          required:
+          - catalogue_disclosure
+          - covers
+        then:
+          properties:
+            catalogue_disclosure:
+              items:
+                required:
+                - cover
+        else:
+          properties:
+            catalogue_disclosure:
+              items:
+                not:
+                  required:
+                  - cover
     StepUp:
       type: object
       required:
@@ -5049,6 +5686,8 @@ components:
           $ref: '#/components/schemas/Handoff'
         basket_id:
           $ref: '#/components/schemas/BasketId'
+        discounts:
+          $ref: '#/components/schemas/Discounts'
         messages:
           type: array
           items:
@@ -5700,12 +6339,22 @@ components:
               $ref: '#/components/schemas/Hash'
             disclosures_hash:
               $ref: '#/components/schemas/Hash'
+            disclosures:
+              $ref: '#/components/schemas/Disclosures'
+              description: The disclosures whose hash is disclosures_hash, including catalogue[] for a session whose items came from POST /discover.
             bpp_signed_payment_terms:
               $ref: '#/components/schemas/BecknSignedMessage'
               description: The seller's payment terms from on_init (Beckn payments[], including collected_by and the payee VPA in
                 params.virtual_payment_address), as the gateway received them (the raw on_init body and its Beckn Authorization header). REQUIRED for every Reserve Pay leg. Verification
                 step 6 checks the signature and compares the payee of the PSP payment receipt, and for Reserve Pay the open Payment Mandate's payee,
                 with it.
+        discovery_sources:
+          type: array
+          description: For a session whose items came from POST /discover, the BPP-signed on_search callback behind every source_digest in
+            checkout.disclosures.catalogue[], exactly as the gateway received it. A verifier checks that the sha-256 of each body equals the
+            source_digest and that the authorization verifies against the BPP's registry key.
+          items:
+            $ref: '#/components/schemas/BecknSignedMessage'
         receipts:
           type: array
           items:

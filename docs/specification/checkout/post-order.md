@@ -216,6 +216,7 @@ receipt) or `FAILED`. A rejected return sets `refund.status: FAILED`. Each chang
 
 ## Refunds to the original method {#refunds}
 
+- The refund for a line of an order that carried discounts comes from the seller-signed revised quote, never from a gateway computation, and never exceeds what was paid for that line: the line total minus the allocations on that line ([Discounts](index.md#discounts)).
 - A refund **MUST** go back to the instrument that paid (`refund_to: original_method`), through the
   same handler, as a credit referencing the original payment.
 - The refund Receipt is PSP-signed and **MUST** identify the original payment (`original_rrn`,

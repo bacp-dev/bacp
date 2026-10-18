@@ -98,6 +98,17 @@ are involved, the owner is the one that must give the answer.
 | [Q-63](#q-63) | PSP rendering of a third-party `ts_render`; IVR callbacks | NPCI | Open |
 | [Q-64](#q-64) | Registry enrolment and revocation of `support_operator` keys | BACP WG | Open |
 | [Q-65](#q-65) | Agent-initiated draw on a Reserve Pay block as a customer action | NPCI, Legal counsel | Open |
+| [Q-66](#q-66) | Whether agent operators and gateways are e-commerce entities for sponsored-listing and prior-price duties | Legal counsel | Open |
+| [Q-67](#q-67) | Ranking parameters that a party can buy | BACP WG, Legal counsel | Open |
+| [Q-68](#q-68) | Reviewed translations of fixed legal labels | MeitY/DPDP | Open |
+| [Q-69](#q-69) | ONDC catalogue tags for sponsored listings and prior price | ONDC | Open |
+| [Q-70](#q-70) | Registry access and cached catalogues for verifying discovery sources | ONDC | Open, fail-safe default |
+| [Q-71](#q-71) | Agent-side verification of the `on_init` quote | BACP WG | Open |
+| [Q-72](#q-72) | Signed discovery results: agent-side verification of seller-asserted catalogue values | BACP WG | Settled |
+| [Q-73](#q-73) | Trusted Surface repeat of catalogue disclosures: names at the payer PSP, aggregation and verification | BACP WG | Open |
+| [Q-74](#q-74) | Provisional and instrument-linked discounts on plain sessions | BACP WG | Open |
+| [Q-75](#q-75) | Zero-payable orders | BACP WG | Open |
+| [Q-76](#q-76) | Gateway-funded and buyer-app-funded discounts | BACP WG | Open |
 
 ## Questions {#questions}
 
@@ -320,6 +331,13 @@ erasure with an SLA, and a retention table for the InstructionLog, receipts and 
 **Working position.** Proposed messages `bacp.erasure_request`, `bacp.correction`, `bacp.breach_signal` and
 `principal.minor_status`. Needed before 13-05-2027. See
 [Security and Privacy](security-and-privacy.md#forward-compliance).
+
+Minor mode, once `principal.minor_status` exists, drops every discovery item whose `sponsorship.status` is `sponsored` or
+`undeclared`, and turns off personalised ranking. This is BACP policy. DPDP s.9(3) bars targeted advertising directed at
+children and applies from 13-05-2027; whether a sponsored slot that is not targeted is "targeted advertising" is a
+question for counsel ([Q-66](#q-66)). The list does not empty for want of a status, because the ranking party declares
+`sponsored` or `not_sponsored` for its own ranking and `undeclared` arises only for a relayed upstream signal
+([Catalogue disclosures](discovery.md#catalogue-disclosures)). Until `minor_status` exists, a minor gets no minor mode.
 
 ### Q-18 List of authorised payment aggregators {#q-18}
 
@@ -814,6 +832,142 @@ amount and binds it to one payee seller ([Usage ledger](mandates.md#usage-ledger
 [Per-leg rule](mandates.md#per-leg-rule)) whichever way it is answered. A gateway uses an existing block for an HNP
 leg only under these rules. See [Rail Bindings](payments/rails.md).
 
+### Q-66 E-commerce entity status for sponsored listings and prior prices {#q-66}
+
+**Question.** The Consumer Protection (E-Commerce) (Amendment) Rules 2026 (G.S.R. 789(E), 09-09-2026, in force from
+01-01-2027) require sponsored listings to be "distinctly identified" (r.4(12)) and define a prior price as "the lowest
+price of a good or service thirty days prior to the announcement of price reduction" (r.4(13)). Rule 4(12) binds "every
+e-commerce entity", and r.4(13) binds "an e-commerce entity or the seller" that announces a reduction. Open points for
+counsel:
+
+- Is an agent operator, or a BACP gateway, an "e-commerce entity" (2020 Rules r.3(1)(b): a person who "owns, operates or
+  manages digital or electronic facility or platform")?
+- Does r.4(12) attach in a human-not-present flow, where no human sees the list?
+- Is a price shown beside a maximum retail price, an MRP strike-through, or a coupon, bank offer or cart-level
+  minimum-value offer, an "announcement of price reduction"?
+- Whose lowest price counts under r.4(13): this platform's, all platforms' or offline prices too?
+- Do r.4(12) and r.4(13) bind for-resale (B2B) purchases (whether the Consumer Protection Act, 2019 reaches them is not
+  verified as of 18-10-2026)?
+- Does a gateway that alters or computes a prior price become the party that announces the reduction?
+- Is brand-funded placement of an item a "sponsored listing" when the seller did not pay?
+- Is a sponsored slot that is not targeted, shown to a minor, "targeted advertising" under DPDP s.9(3)?
+
+**Owner.** Legal counsel.
+
+**Working position.** BACP carries the data and applies the stricter reading wherever counsel's answer would otherwise
+matter. Every item carries a per-item `sponsorship`; a prior price is only ever the seller's `lowest_30d` figure with its
+announcement date; an MRP is never a "was" price; and no reduction, strike-through or percentage is shown for an item
+without a `prior_price`, whatever produced the reduction. B2B profiles are not exempt. BACP states that its fields carry
+the data an e-commerce entity needs, and does not state that they satisfy a duty. See
+[Catalogue disclosures](discovery.md#catalogue-disclosures).
+
+### Q-67 Ranking parameters that a party can buy {#q-67}
+
+**Question.** Should each entry of `ranking.main_parameters` become an object that carries its relative importance and a
+flag for whether a party can raise it by payment (a `purchasable` attribute), so that a buyer can see which ranking
+parameters are paid for?<br>
+**Owner.** BACP WG, with Legal counsel (r.5(3)(f) as substituted requires main parameters "in descending order" with an
+"easily and publicly available description").
+
+**Working position.** `main_parameters` stays a list of strings in descending order of importance, with an optional
+`description_url`. A parameter that a party can buy is covered by the definition of "sponsored": an item whose position
+was affected by it is `sponsored`. A self-declared `purchasable` flag would be set by the party it is meant to constrain,
+and changing the type breaks every producer and consumer, so it is not in this version.
+
+### Q-68 Reviewed translations of fixed legal labels {#q-68}
+
+**Question.** Is there a reviewed translation route for fixed legal labels (the [disclosure
+phrases](human-participants.md#disclosure-phrases)) in the Eighth Schedule languages other than Hindi?<br>
+**Owner.** MeitY/DPDP, through Bhashini.
+
+**Working position.** `en-IN` and `hi-IN` are defined, and are draft wording until the human-experience review seat and
+the owner sign them off. For any other language, an operator uses its own fixed, reviewed translation of the same
+sentence, never a translation made at run time.
+
+### Q-69 ONDC catalogue tags for sponsored listings and prior price {#q-69}
+
+**Question.** Will ONDC publish catalogue tags for a sponsored listing and for a prior price (and any vocabulary for its
+basis), so that BACP can map to them instead of its own `bacp.disclosure` tags?<br>
+**Owner.** ONDC.
+
+**Working position.** BACP maps its fields to its own `bacp.disclosure` TagGroup
+([Catalogue disclosure mapping](transports/beckn.md#disclosure-mapping)). When ONDC publishes tags, only that mapping
+changes; the BACP field names stay.
+
+### Q-70 Registry access and cached catalogues for verifying discovery sources {#q-70}
+
+**Question.** An agent that verifies a discovery source needs the seller's key from the network registry
+([Verifying discovery results](discovery.md#verifying-results)). Can an agent operator that is not itself an ONDC
+subscriber query the registry, or must it subscribe or use a lookup service? And what should a gateway do when it answers
+from a cached catalogue, which cannot meet the search binding, or from a Beckn 2.0 signed catalogue index, which this
+version does not cover?<br>
+**Owner.** ONDC.
+
+**Working position (fail-safe default).** An agent that cannot verify a source renders every item of it with no
+reduction claim and no MRP anchor, and renders its sponsorship as `undeclared` (or `sponsored`, if the result says so).
+A cached answer is unverified for the same reason. BACP adds no weaker freshness binding. A gateway that wants verified
+claims sends a targeted live `search` to the shortlisted sellers with the agent's `message_id`.
+
+### Q-71 Agent-side verification of the `on_init` quote {#q-71}
+
+**Question.** An agent can verify a discovery source with the seller's signature. It cannot yet verify, at run time, the
+`on_init` quote that the gateway relays, for example that a seller's automatic discount was not removed by the gateway
+when the buyer app collects the payment. Should the agent be able to fetch the seller-signed `on_init` body, using the
+same pattern as the discovery source?<br>
+**Owner.** BACP WG.
+
+**Working position.** The evidence bundle's `bpp_signed_quote` catches such a change on dispute, after the fact. The
+mandate bounds the amount in a human-not-present flow. No run-time check exists in this version.
+
+### Q-73 Trusted Surface repeat of catalogue disclosures {#q-73}
+
+**Question.** The Trusted Surface repeats sponsorship and prior-price sentences before the total
+([Catalogue disclosure on the Trusted Surface](human-participants.md#ts-catalogue-disclosure)). Three points are open:
+
+- Should the item names in the repeat reach a payer PSP on a `rail_auth` render, which then learns what was bought?
+- Should a long basket aggregate `sponsored` sentences the way it aggregates `undeclared` ones? Aggregation is
+  acceptable on audio only if the visual render keeps a line for each item, and a `prior_price` sentence is never
+  aggregated.
+- Should a Mandate Manager or payer PSP fetch and verify the seller-signed sources itself, instead of trusting the
+  gateway's signature on the render?
+
+**Owner.** BACP WG, with the human-experience review.
+
+**Working position.** Names are included. Only `undeclared` sentences aggregate, and only above three entries. The
+Trusted Surface trusts the gateway's signature on the render, and the agent checks the repeat at run time; a rogue
+gateway that shares an operator with the agent is caught only on dispute. A long basket puts many sentences before the
+PIN, which the human-experience review is asked to weigh.
+
+### Q-74 Provisional and instrument-linked discounts on plain sessions {#q-74}
+
+**Question.** The UCP Discount extension has provisional discounts (those that depend on eligibility, such as a bank or
+card offer, a loyalty tier or a buyer assertion) and an `eligibility` claim on each. Should a plain checkout session carry
+them, so that a UCP or ACP producer maps without loss?<br>
+**Owner.** BACP WG.
+
+**Working position.** No. A discount that depends on the payment instrument or on a buyer assertion stays in TermSheet
+`scheme` mode, which carries an eligibility proof. The schema rejects `provisional` and `eligibility` on a plain session,
+so a producer that sends them fails loudly instead of being half-mapped. See [Discounts](checkout/index.md#discounts).
+
+### Q-75 Zero-payable orders {#q-75}
+
+**Question.** A discount of 100% of the order makes the payable amount zero. Should BACP carry a zero-payable order, with
+no debit, through a mandate?<br>
+**Owner.** BACP WG.
+
+**Working position.** No. Mandate evaluation step 0 refuses a payable amount that is not greater than zero
+(`amount_not_positive`), so a fully discounted order is refused.
+
+### Q-76 Gateway-funded and buyer-app-funded discounts {#q-76}
+
+**Question.** Should a discount that the gateway or the buyer app funds, and that is not in the seller's signed quote, be
+carried?<br>
+**Owner.** BACP WG.
+
+**Working position.** No. Such a discount would break the rule that the closed mandates carry the amount of the
+seller-signed quote total, and it would make the payable depend on the gateway. The gateway never adds or keeps a discount
+the seller did not sign.
+
 ## Proposed design choices awaiting owner decision {#proposed-choices}
 
 No design choice is awaiting an owner decision. Design choices [(a)](#proposed-a), [(c)](#proposed-c) and
@@ -941,6 +1095,26 @@ The corrigendum G.S.R. 892(E) (10-12-2025) and the DPDP (Removal of Difficulties
 05-10-2026) change wording only and move no date. The reported consultation to shorten the eighteen-month period
 and the reported corrigendum G.S.R. 113(E) appear only in secondary sources; no amending notification had been found
 as of 17-10-2026. See [Security and Privacy](security-and-privacy.md#commencement).
+
+### Q-72 Signed discovery results {#q-72}
+
+!!! success "Settled"
+    Settled by owner decision of 18-10-2026, for the release dated 15-12-2026.
+
+**Question.** The gateway verifies each seller's `on_search` signature, but nothing carried that signature to the agent,
+so a gateway could change a seller-asserted `prior_price`, `mrp` or sponsorship value between the seller and the agent.
+Should an agent be able to verify seller-asserted discovery values itself?<br>
+**Owner.** BACP WG.
+
+**Answer.** Yes. Each `results[]` entry carries a `source_digest`, the sha-256 of the raw seller-signed `on_search` body
+that every item of the entry came from. The gateway serves that body, with its Beckn `Authorization` header, at
+`GET /discover/{transaction_id}/sources/{source_digest}`. An agent that presents or relies on a seller-asserted value
+checks the digest, the binding of the callback to its search, and the Beckn signature against a registry key that it
+resolves itself, never from the gateway, and derives the values by the normative mapping. An unverified value is
+rendered with no claim, and sponsorship is rendered as `undeclared` at least. The gateway signs the discover response.
+Values that only the gateway asserts become non-repudiable through that signature. The seller's honesty is still not
+proved: verification shows that the seller said it. See [Verifying discovery results](discovery.md#verifying-results);
+the open parts are [Q-70](#q-70) and [Q-71](#q-71).
 
 ### (a) Open mandates on class-O handlers {#proposed-a}
 

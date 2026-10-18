@@ -124,6 +124,109 @@
         },
         "issue_id": {
           "type": "string"
+        },
+        "idempotency_key": {
+          "type": "string",
+          "minLength": 22,
+          "maxLength": 64,
+          "description": "At stage discover, the Idempotency-Key of the POST /discover. The Beckn message_id of the search derives from it."
+        },
+        "source_digests": {
+          "type": "array",
+          "minItems": 1,
+          "description": "At stage discover, the source_digest of every discovery source the agent checked.",
+          "items": {
+            "type": "string",
+            "pattern": "^sha-256:[A-Za-z0-9_-]{43}$"
+          }
+        },
+        "source_checks": {
+          "type": "array",
+          "minItems": 1,
+          "description": "At stage discover, the outcome of the agent's check of each discovery source.",
+          "items": {
+            "type": "object",
+            "required": [
+              "source_digest",
+              "outcome"
+            ],
+            "properties": {
+              "source_digest": {
+                "type": "string",
+                "pattern": "^sha-256:[A-Za-z0-9_-]{43}$"
+              },
+              "outcome": {
+                "enum": [
+                  "verified",
+                  "mismatch",
+                  "unverified"
+                ]
+              },
+              "reason": {
+                "enum": [
+                  "discovery_source_unverified",
+                  "discovery_source_mismatch"
+                ],
+                "description": "REQUIRED when outcome is not verified, and absent otherwise."
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "outcome": {
+                      "const": "verified"
+                    }
+                  },
+                  "required": [
+                    "outcome"
+                  ]
+                },
+                "then": {
+                  "not": {
+                    "required": [
+                      "reason"
+                    ]
+                  }
+                },
+                "else": {
+                  "required": [
+                    "reason"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "registry_lookup": {
+          "type": "string",
+          "description": "At stage discover, the host of the registry lookup the agent used to resolve the sellers' keys."
+        },
+        "discount_codes": {
+          "type": "array",
+          "minItems": 1,
+          "description": "At stage cart, each discount code the agent submitted. The code itself is never recorded: code_mac is an HMAC-SHA-256 of the code under a per-session key that the operator holds, never a bare hash, because a bare hash of a short code can be guessed and a single-use code can be personal.",
+          "items": {
+            "type": "object",
+            "required": [
+              "code_mac",
+              "source"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "code_mac": {
+                "type": "string",
+                "pattern": "^hmac-sha-256:[A-Za-z0-9_-]{43}$"
+              },
+              "source": {
+                "enum": [
+                  "principal",
+                  "agent"
+                ],
+                "description": "Who supplied the code: the principal, or the agent itself (for example an affiliate code of its operator)."
+              }
+            }
+          }
         }
       }
     },

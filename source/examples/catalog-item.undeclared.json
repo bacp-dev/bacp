@@ -1,0 +1,14 @@
+{
+  "id": "I-MILK-1L",
+  "name": {
+    "en-IN": "Toned milk 1 L",
+    "hi-IN": "टोंड दूध 1 लीटर"
+  },
+  "unit_price": {
+    "value": 6800,
+    "currency": "INR"
+  },
+  "sponsorship": {
+    "status": "undeclared"
+  }
+}

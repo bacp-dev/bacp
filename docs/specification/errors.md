@@ -97,6 +97,15 @@ The first message of every checkout session is the `ai_disclosure` message (`typ
 agent's AI notice in the principal's language and points (`param: $.ai_disclosure`) at the session's typed routes to a
 human.
 
+For a message with `type: disclosure` and a code registered below with that type (`sponsored_listing`,
+`sponsorship_undeclared` and `prior_price_claim`), an agent that presents the session to a principal MUST present the
+fixed phrase for that code from [Disclosure phrases](human-participants.md#disclosure-phrases), in the principal's
+language, next to what `param` names, with each `args` value of `origin: counterparty` as labelled seller text. It fills
+the phrase's slots from the `Disclosures.catalogue[]` entry that `param` names. It MUST NOT summarise, hide or drop the
+message, and it hands off to a human rather than present it in a reduced form. It never reads the message's `content` in
+place of the fixed phrase. A `type: disclosure` message with an unregistered code is treated as `info`: the agent
+records it and does not read it verbatim. `ai_disclosure` keeps its own rule.
+
 ## Resolution {#resolution}
 
 Every `Error` code and every message has exactly one `resolution`. The one exception is
@@ -175,7 +184,7 @@ to `requires_escalation` with a `step_up` object. A dash in the *Typical param* 
 | `collector_not_authorised` | 403 | payment_error | The party in `collected_by` is not an RBI-authorised payment aggregator or a bank according to the registry. No money moves. | `$.payment.collected_by` | unrecoverable |
 | `receipt_invalid` | 400 | invalid_request | A receipt is malformed or is not signed by a registered PSP key. | `$.receipt` | unrecoverable |
 | `evidence_forbidden` | 403 | authorization_error | The caller is not a party of record for the evidence bundle. | — | unrecoverable |
-| `evidence_unverifiable` | 422 | invalid_request | The evidence bundle fails verification: signatures, the chain (including a negotiation receipt whose `received_at` is earlier than that of an entry before it in the chain; under the sunset text for `allowed_until_receipt`, also a receipt of an ACCEPT or ACCEPT_REVOKE without `log_entry_hash`, or a CounterSignature that names a transcript position holding another message), or step 6 (a step-up entry without its signed Trusted Surface event, an approval without a `Presentation` or with a `content_hash` that does not match its `ts_render`, a step-up event whose `ts_render` is missing from `ts_renders[]` or whose `total`, payee or `checkout_hash` differs from the BPP-signed quote or whose `price_breakup_hash` differs from the disclosures hash, a negotiation step-up whose `ts_render` carries an `offer_hash` or `acceptance_revocation` that differs from the signed offer, or a first agent entry that is not `ai_disclosure`). A verifier reports the same code. | — | unrecoverable |
+| `evidence_unverifiable` | 422 | invalid_request | The evidence bundle fails verification: signatures, the chain (including a negotiation receipt whose `received_at` is earlier than that of an entry before it in the chain; under the sunset text for `allowed_until_receipt`, also a receipt of an ACCEPT or ACCEPT_REVOKE without `log_entry_hash`, or a CounterSignature that names a transcript position holding another message), or step 6 (a step-up entry without its signed Trusted Surface event, an approval without a `Presentation` or with a `content_hash` that does not match its `ts_render`, a step-up event whose `ts_render` is missing from `ts_renders[]` or whose `total`, payee or `checkout_hash` differs from the BPP-signed quote or whose `price_breakup_hash` differs from the disclosures hash, a `ts_render` whose `catalogue_disclosure[]` differs from the bundle's `Disclosures.catalogue[]` or omits a qualifying entry, a `Disclosures.catalogue[]` entry whose `source_digest` the agent's `discover` log entry does not list or whose signed source does not match, a negotiation step-up whose `ts_render` carries an `offer_hash` or `acceptance_revocation` that differs from the signed offer, or a first agent entry that is not `ai_disclosure`). A verifier reports the same code. | — | unrecoverable |
 | `cancel_not_allowed` | 403 | authorization_error | The seller refuses the cancellation under its cancellation terms (`@ondc/org/cancellable`, `cancellation_terms`). A mandate or scope failure is `mandate_scope_mismatch`, and a presence failure is `presence_not_allowed`. | `$.order_id` | requires_buyer_review |
 | `return_not_allowed` | 403 | authorization_error | The return is outside the return window, the item is not returnable, or the quantity exceeds what was ordered and not yet returned. | `$.items[n]` | requires_buyer_review |
 
@@ -188,7 +197,8 @@ them the same way.
 
 ### Session and payment messages {#registry-session}
 
-These are always 200 or 201 messages.
+These are always 200 or 201 messages. `prior_price_contradicted` and `prior_price_invalid` arrive in `messages[]` of a
+discover response; the others arrive on a session.
 
 | Code | Message `type` | Meaning | Typical `param` | Resolution |
 |---|---|---|---|---|
@@ -201,6 +211,18 @@ These are always 200 or 201 messages.
 | `quote_mismatch` | warning | The seller's quote differs from what the agent requested (items or quantities). | `$.line_items` | recoverable or requires_buyer_review |
 | `preticked_addon_removed` | warning | The gateway removed an add-on the seller had pre-selected. | `$.line_items[n]` | recoverable |
 | `drip_pricing_detected` | warning | The total rose between quote and checkout, or a mandatory charge appeared late. | `$.totals` | requires_buyer_review |
+| `discovery_price_changed` | warning | A unit price at `on_select` is higher than the price shown at discovery. `requires_buyer_review` when the item was shown with a `prior_price`, and the session then has a `confirm` step-up. Otherwise `recoverable`, and the agent tells a present principal the new price. A lower price never raises it. | `$.line_items[n].unit_price` | recoverable, or requires_buyer_review when the item was shown with a `prior_price` |
+| `prior_price_contradicted` | warning | Advisory. The gateway has itself seen a lower price for the item in the 30 days before the `announced_on` of its `prior_price`. The value is relayed unaltered. The agent SHOULD NOT voice the reduction claim. | `$.results[n].items[m].prior_price` | recoverable |
+| `prior_price_invalid` | warning | The gateway dropped a `prior_price` that was not above the item's `unit_price`, or was above `mrp` while `tax_inclusive` was `true`, or whose seller-sent decimal could not be converted to integer paise. | `$.results[n].items[m].prior_price` | recoverable |
+| `sponsored_listing` | disclosure | The item at `$.disclosures.catalogue[n]` was shown as `sponsored`. The agent presents the `sponsored` phrase with the party from `by[]`. | `$.disclosures.catalogue[n]` | recoverable |
+| `sponsorship_undeclared` | disclosure | Nobody in the chain stated whether the item at `$.disclosures.catalogue[n]` was sponsored. The agent presents the `undeclared` phrase, never "not sponsored". | `$.disclosures.catalogue[n]` | recoverable |
+| `prior_price_claim` | disclosure | The item at `$.disclosures.catalogue[n]` was shown with a seller-asserted prior price. The agent presents the `prior_price` phrase and never a bare percentage. | `$.disclosures.catalogue[n]` | recoverable |
+| `discount_code_expired` | warning | A submitted discount code is past its validity. The code is absent from `discounts.applied[]`. | `$.discounts.codes[n]` | recoverable |
+| `discount_code_invalid` | warning | A submitted code is unknown to the seller, or the gateway reports every rejection with this code. | `$.discounts.codes[n]` | recoverable |
+| `discount_code_already_applied` | warning | A submitted code is already applied to the session. | `$.discounts.codes[n]` | recoverable |
+| `discount_code_combination_disallowed` | warning | A submitted code cannot be combined with a discount that is already applied. | `$.discounts.codes[n]` | recoverable |
+| `discount_code_user_ineligible` | warning | A submitted code is not available to this buyer. | `$.discounts.codes[n]` | recoverable |
+| `discount_code_unsupported` | warning | The seller or network takes no discount codes. | `$.discounts.codes[n]` | recoverable |
 | `disclosures_missing` | error | A mandatory pre-contract disclosure (seller name, total price, return terms, cancellation terms, country of origin, expected delivery or price breakup) is missing; the session cannot reach `ready_for_complete`. | `$.disclosures` | requires_buyer_review |
 | `split_order_suspected` | warning | Orders to the same seller within a short window look like a split to stay under a step-up threshold. | `$.totals` | requires_buyer_review |
 | `payment_in_doubt` | warning | The PSP did not confirm the debit; the gateway is reconciling. | `$.payment.status` | recoverable (do NOT re-key) |
@@ -224,7 +246,7 @@ See [Negotiation](negotiation/index.md) and [RFQ and Auctions](negotiation/rfq-a
 | `NEG_OFFER_EXPIRED` | 200 msg | The cited offer is past `expires_at`. | `$.offer_hash` | recoverable (fresh offer or REQUEST_EXTENSION) |
 | `NEG_ACCEPT_NONCONFORMING` | 422 (own) / 200 msg (counterparty text) | The acceptance does not use the prescribed manner (a signed `bacp.neg.accept`); chat, voice or an unsigned accept does not bind. | `$.untrusted_counterparty_text` | recoverable |
 | `NEG_TERMS_DRIFT` | 200 msg, state `BREACH_FLAGGED` | The seller's `on_init` or `confirm` terms differ from the accepted offer. | `$.bound_term_sheet_hash` | requires_buyer_review |
-| `NEG_MRP_EXCEEDED` | 200 msg (counterparty) / 403 (own) | A unit price including tax exceeds the MRP of a retail package. | `$.term_sheet.lines[n].unit_price` | recoverable |
+| `NEG_MRP_EXCEEDED` | 200 msg (counterparty) / 403 (own) | A unit price including tax exceeds the MRP of a retail package. Also in a discover response: an item with `tax_inclusive: true` whose `unit_price` is above its `mrp` (a 200 message on `POST /discover`). | `$.term_sheet.lines[n].unit_price`, `$.results[n].items[m].unit_price` | recoverable |
 | `NEG_MSMED_CREDIT_CAP` | 200 msg (incoming) / 403 (own firm) | Credit days to a micro or small enterprise exceed the statutory cap. | `$.term_sheet.payment.credit_days` | recoverable |
 | `NEG_DRIP_PRICING` | 200 msg | A charge appeared after the first round, or the all-in total rose beyond the mandate's tripwire. | `$.live_offer.all_in_total` | requires_buyer_review |
 | `NEG_FALSE_URGENCY` | 200 msg / 403 | The offer's validity window is shorter than the minimum (PT5M for B2C). | `$.expires_at` | requires_buyer_review (msg) / recoverable (403) |
@@ -360,6 +382,8 @@ the agent only inside a registered code, as shown.
 | `refund_not_allowed`, `refund_exceeds_debit` on a post-order refund | The rail refund call | As `status: FAILED:<code>` on the order's refund `adjustments[]` entry |
 | `auction_exists`, `not_sealed`, `no_award` | The neutral auctioneer (create, commit, Dutch award without an accepted tick) | `invalid_request` (400); the auctioneer's text is in `message` |
 | `auctioneer_not_neutral`, `not_eligible` | The neutral auctioneer (seller-run auction, bidder outside the allowlist) | `mandate_scope_mismatch` (403) |
+| `discovery_source_unverified`, `discovery_source_mismatch` | An agent's check of a discovery source ([Verifying discovery results](discovery.md#verifying-results)): unverified when any step fails, mismatch when the signed body differs from the result | Never on the wire. The agent records it in the InstructionLog at stage `discover` and renders the item without the claim, as the table there says |
+| `discount_source_unknown` | An agent finds an `applied[]` entry with a `code` that it did not submit ([Discounts](checkout/index.md#discounts)) | Never on the wire. The agent records it in the InstructionLog and tells a present principal |
 | `NEG_ATTESTATION_INVALID` | A seller's Beckn error on `on_init` when the buyer's `within_bounds` attestation does not verify | `bpp_no_on_init` |
 | `NEG_BREACH` | `sub_category` of the IGM issue the gateway raises for a breach other than terms drift | The IGM issue on the negotiation, not a code |
 | `capture_failed` | A payment-plan tender capture that returned no success and no rail code | `error` of a failed payment-plan result, with `failed_tender` |
@@ -382,7 +406,7 @@ the agent only inside a registered code, as shown.
 | `credit_acceptance` | confirm (HP) | Acceptance of a loan offer. |
 | `negotiation_out_of_mandate` | confirm | A negotiated term is outside the negotiation mandate. |
 | `negotiation_between_reservation_and_max` | confirm | The price is between the reservation price and `total_max`. |
-| `constraint_unresolved` | confirm | Fallback when a constraint cannot be evaluated deterministically. |
+| `constraint_unresolved` | confirm | Fallback when a constraint cannot be evaluated deterministically, and the reason for `discovery_price_changed` on an item shown with a `prior_price`. |
 
 ### Refund states {#refund-states}
 

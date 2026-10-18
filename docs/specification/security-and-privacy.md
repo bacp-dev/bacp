@@ -375,7 +375,7 @@ These DPDP duties start on 13-05-2027 and are not yet designed in. Proposed mess
 | Downstream erasure after withdrawal, with acknowledgement and an SLA | `bacp.erasure_request` |
 | Accuracy and correction propagation to recipients (s.8(3)) | `bacp.correction` |
 | Breach signalling (Rule 7) | `bacp.breach_signal` |
-| Children: verifiable parental consent; no tracking, behavioural monitoring or targeted advertising (s.9, Rules 10 and 12) | `principal.minor_status`, `parental_consent_ref`, and a minor mode that turns off personalised ranking and sponsored results |
+| Children: verifiable parental consent; no tracking, behavioural monitoring or targeted advertising (s.9, Rules 10 and 12) | `principal.minor_status`, `parental_consent_ref`, and a minor mode that turns off personalised ranking and drops items whose `sponsorship.status` is `sponsored` or `undeclared` (BACP policy; DPDP s.9(3) applies from 13-05-2027 to targeted advertising) |
 | Separate consent for model training and for health data | Separate purpose classes with a no-training default |
 
 Grievances: the operator's grievance officer is named in the AgentCredential, and DPDP grievances must be answered

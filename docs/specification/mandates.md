@@ -688,7 +688,7 @@ There are three kinds.
 
 | `kind` | Meaning | Triggers (`reason`) |
 |---|---|---|
-| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, fee-bearer, payee or collector ([Per-leg rule](#per-leg-rule)). |
+| `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, fee-bearer, payee or collector ([Per-leg rule](#per-leg-rule)). |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
 | `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 
@@ -835,6 +835,8 @@ the idempotency key ([Identity and Request Signing](identity-and-signing.md)).
 13. **Commit.** Consume the closed Payment Mandate (one use) and any `covers[]` entry used at step 8,
     create the budget reservation, move the session to `complete_in_progress`, increment
     `usage.count` and report the use to `audit_uri`.
+
+Every amount in steps 0, 4, 5, 7 and 8 is the BPP-signed quote total **after** discounts ([Discounts](checkout/index.md#discounts)).
 
 Steps 9 and 10 are checked when the session is updated and re-checked before `complete`. A gateway
 MAY run steps 9 to 12 before it enters the atomic section, since they do not depend on the ledger.

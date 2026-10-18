@@ -237,7 +237,8 @@ A request under `bacp-handoff` carries no `BACP-Agent` header, and its
 signature does not cover `bacp-agent`.
 
 The gateway signs its webhooks to the agent with a key published in its
-profile's `keys`, so that the agent can verify them.
+profile's `keys`, so that the agent can verify them. It signs the response of `POST /discover` with the same key, under
+RFC 9421, covering `@status` and `content-digest` ([Response signature](discovery.md#response-signature)).
 
 !!! warning "Proposed"
     A dedicated tag for gateway-signed webhooks, `bacp-webhook`, is proposed
@@ -283,6 +284,10 @@ Every `POST` and `PUT` MUST carry an `Idempotency-Key`. `GET` requests do not.
 
 - The key MUST be 22–64 printable ASCII characters and SHOULD carry at least
   128 bits of entropy (for example a UUIDv4 or a ULID).
+- For `POST /discover` the key MUST be generated afresh for each search from at least 122 random bits (for example a
+  UUIDv4), MUST NOT be predictable from earlier keys, and MUST NOT be reused, even after the gateway's idempotency
+  record has expired. The key binds the sellers' `on_search` callbacks to this search
+  ([Verifying discovery results](discovery.md#verifying-results)).
 - Keys are scoped to (agent, method, path). The same key on a different
   endpoint is a different key.
 - The gateway carries the key end to end: in `context.bacp.idempotency_key`

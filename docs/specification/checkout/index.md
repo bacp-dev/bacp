@@ -73,10 +73,12 @@ and the gateway treats that NACK as "already received".
 ## Discover {#discover}
 
 `POST /discover` sends a Beckn `search` and aggregates `on_search` results until `max_wait_ms`.
-Each result is flagged `within_mandate` when the request names a `mandate_ref`, and the response
-carries the ranking parameters (for example distance, price and seller rating) and whether any
-result is `sponsored`. Discovery moves no money and shares no personal data. See
-[Discovery and Profiles](../discovery.md).
+Each result is flagged `within_mandate` when the request names a `mandate_ref`. Every item carries its own
+`sponsorship` (`sponsored`, `not_sponsored` or `undeclared`) and, where the seller sent them, `mrp`,
+`tax_inclusive` and `prior_price`, and every result carries a `source_digest`. The response carries the ranking
+parameters in descending order of importance (for example distance, price and seller rating), and `ranking.sponsored`
+is true if and only if some item is `sponsored`. Discovery moves no money and shares no personal data. See
+[Discovery and Profiles](../discovery.md#catalogue-disclosures).
 
 ## Session create and update
 
@@ -168,17 +170,32 @@ gateway:
    treated as a NACK;
 5. compares prices against `on_select`. A changed unit price or a new fee line (packing,
    convenience, COD fee) gives `drip_pricing_detected` (`requires_buyer_review`);
-6. requires the mandatory disclosures: `seller_name`, `total_price`, `return_terms`,
+6. compares each line's `unit_price` in the `on_select` quote with the unit price that the discover response of the
+   session's `transaction_id` showed for the same item (`discovered_unit_price`). A higher price gives
+   `discovery_price_changed`. Where that item was shown with a `prior_price`, the message is `requires_buyer_review`
+   and the session moves to `requires_escalation` with a `confirm` step-up. Where it was not, the message is
+   `recoverable`, the session does not escalate on its account, and the agent **MUST** tell a present principal the new
+   price. A lower price gives no message. `drip_pricing_detected` keeps its meaning: it compares `on_select` with
+   `on_init`;
+7. requires the mandatory disclosures: `seller_name`, `total_price`, `return_terms`,
    `cancellation_terms`, `country_of_origin`, `expected_delivery` and `price_breakup`
-   (`seller_address` and `grievance_officer` **SHOULD** be present). It hashes them into
-   `disclosures.hash`. A missing one gives `disclosures_missing` (`requires_buyer_review`);
-7. runs split-order detection and the advisory mandate pre-check
+   (`seller_address` and `grievance_officer` **SHOULD** be present). For a session whose items came from `POST /discover`
+   it also fills `catalogue[]` with one entry per line item, copied unaltered from the discover response:
+   `item_id`, `sponsorship`, `discovered_unit_price` and `source_digest`, and `mrp`, `tax_inclusive` and `prior_price`
+   where the item had them. It hashes all of it into `disclosures.hash`. A missing mandatory disclosure gives
+   `disclosures_missing` (`requires_buyer_review`). It then adds one `type: disclosure` message for each
+   `catalogue[n]` whose `sponsorship.status` is `sponsored` (`sponsored_listing`) or `undeclared`
+   (`sponsorship_undeclared`), and one `prior_price_claim` message for each that has a `prior_price`, each at
+   `param: $.disclosures.catalogue[n]` with `resolution: recoverable`. The item name travels in `args[]` with
+   `origin: counterparty` ([Message object](../errors.md#message-object));
+8. runs split-order detection and the advisory mandate pre-check
    ([Deterministic evaluation](../mandates.md#evaluation)). The pre-check **MUST NOT** reserve
    budget.
 
 Outcomes: `ready_for_complete` when everything passes; `requires_escalation` with a `confirm`
-step-up when drip pricing, missing disclosures, a split order or a step-up threshold is found (the
-session **MUST NOT** reach `ready_for_complete` with missing disclosures); a 403 error when the
+step-up when drip pricing, a `discovery_price_changed` on an item shown with a `prior_price`, missing disclosures, a
+split order or a step-up threshold is found (the session **MUST NOT** reach `ready_for_complete` with missing
+disclosures); a 403 error when the
 mandate rejects; `incomplete` with `quote_mismatch` when the seller's quote does not match the
 requested quantities.
 
@@ -268,6 +285,70 @@ It is the anchor that binds every later artefact to one basket and one price:
 `checkout_hash` is the hash of the quote, **not** of an accepted negotiation offer. Nothing in
 BACP asserts that `checkout_hash` equals an `offer_hash`.
 
+## Discounts {#discounts}
+
+BACP carries discount codes in the shape of the UCP Discount extension: codes go in, and the discounts that the seller
+applied (by code or automatically) and the codes it rejected come out. The capability is `in.bacp.discounts`, which
+extends `in.bacp.checkout`. A gateway that supports it lists it in `capabilities` ([Capabilities](../discovery.md#capabilities)).
+An agent SHOULD NOT send `discounts` to a gateway that does not list it.
+
+1. **Codes in.** `POST /sessions` and `PUT /sessions/{session_id}` accept `discounts: {codes[]}`. The list replaces the
+   earlier one. Because `PUT` already replaces every agent-editable field, an omitted `discounts` clears the codes, as
+   does `codes: []`. The seller decides how codes match (for example, case).
+2. **The seller's quote is the source of truth.** The gateway forwards the codes on `select` and `init`
+   ([Beckn mapping](../transports/beckn.md#offers)). It derives `discounts.applied[]` only from offer lines in the
+   BPP-signed quote, and never computes, adds or keeps a discount the seller did not sign. `applied[].amount` equals the
+   line's magnitude, the `discount` total is the sum of `applied[]`, and the payable amount is the BPP-signed quote total.
+   The gateway MUST NOT submit a code, or select an offer, that the agent did not send in `discounts.codes[]`, except
+   offers the seller marks automatic. Every `applied[]` entry with a `code` MUST match a submitted code under the
+   seller's case rule; an agent that sees any other records `discount_source_unknown` and tells a present principal.
+3. **Rejected codes out.** Each submitted code that is not in `applied[]` gets exactly one `type: warning` message at
+   `param: $.discounts.codes[n]` with `resolution: recoverable` and one of `discount_code_expired`,
+   `discount_code_invalid`, `discount_code_already_applied`, `discount_code_combination_disallowed`,
+   `discount_code_user_ineligible` (UCP's names) or `discount_code_unsupported` (the seller or network takes no codes).
+   A gateway MAY report every rejection as `discount_code_invalid`, so that the answers do not reveal which codes exist.
+   The agent MUST tell a present principal.
+4. **Automatic discounts** have `automatic: true` and no `code`. The agent cannot remove them.
+5. **No provisional discounts on a plain session.** Discounts that depend on the payment instrument or on a buyer
+   assertion (bank, card-BIN and UPI-app offers, loyalty, segment) stay in TermSheet `scheme` mode
+   ([Negotiation](../negotiation/index.md#negotiation-modes)). A discount that carries `provisional` or `eligibility` is invalid, so
+   that a producer of another protocol that sends them fails loudly instead of being half-mapped
+   ([Q-74](../open-questions.md#q-74)).
+6. **Cashback is not a discount.** It is never in `applied[]`, and the agent never describes it as lowering the price
+   ([Rail bindings](../payments/rails.md)).
+7. **Display.** An applied discount is shown only as a discount line with the fixed `discount_applied` sentence
+   ([Disclosure phrases](../human-participants.md#disclosure-phrases)) and its amount. It is never shown as a new item
+   price, a strike-through, or a percentage of an item price, unless the item carries a verified `prior_price`. `title`
+   is seller text: it is shown only as labelled counterparty text, and no figure or percentage in it is voiced. A
+   discovery offer's figures are rendered only for kind `discount` or `slab`, only after the source is verified
+   ([Verifying discovery results](../discovery.md#verifying-results)), and only as cart-level terms ("₹50 off orders above
+   ₹499"; "10% off the order, up to ₹100"). Any other or unknown kind is rendered as "offer" with its `title` as labelled
+   seller text and no figure. An item-scoped offer (`item_ids` present) is rendered without figures unless the item has a
+   verified `prior_price`. Whether a coupon or a cart-level offer is an announced price reduction under r.4(13) is a
+   question for counsel ([Q-66](../open-questions.md#q-66)).
+8. **Mandate checks run on the payable.** Every amount check of [Deterministic evaluation](../mandates.md#evaluation)
+   (step 0, step 4, step 5, step 7 and step 8) runs on the BPP-signed quote total **after** discounts. No new mandate
+   constraint is added. A discount that makes the payable zero is refused by step 0 (`amount_not_positive`)
+   ([Q-75](../open-questions.md#q-75)). A line that an offer adds (`freebie`, `buyXgetY`) is a line item, and mandate
+   step 5 applies to it.
+9. **Changes after the quote.** A discount that is applied at `on_select` and gone at `on_init` raises the total. It gives
+   `drip_pricing_detected` (`requires_buyer_review`) together with the message of the code. Any change to `checkout_hash`
+   re-runs step 8, so an approval given for a discounted quote never covers an undiscounted one.
+10. **Refunds.** The refund for a cancelled or returned line comes from the seller-signed revised quote, never from a
+    gateway computation ([Refunds](post-order.md#refunds)). A refund never exceeds what was paid for that line, which is
+    the line total minus the allocations on that line. The discount itself is never paid out as money.
+11. **Codes the agent itself brings.** An agent whose operator earns when a code is used (an affiliate code) MUST NOT
+    submit it when no human is present. When a human is present it MUST first tell the principal, with the
+    `discount_affiliate` sentence. The agent records the source of every code (`principal` or `agent`) in the
+    InstructionLog at stage `cart`, with the code as an HMAC-SHA-256 under a per-session key that the operator holds and
+    never as a bare hash ([Instruction log](../evidence.md#instruction-log)).
+12. **Limits.** `codes` has at most 10 entries, each 1 to 64 printable ASCII characters. These are BACP design values
+    against code enumeration, not regulatory limits, and are open to review. The gateway MUST rate-limit rejected codes per
+    agent and per seller, and answers an excess with `429 quota_exceeded`.
+
+The gateway never funds a discount that is not in the seller's signed quote. A discount funded by the gateway or the buyer
+app is not supported, because it would break "`amount` equals the quote total" ([Q-76](../open-questions.md#q-76)).
+
 ## Session state machine {#state-machine}
 
 ```mermaid
@@ -303,7 +384,7 @@ stateDiagram-v2
 | (none) | `POST /sessions`, `on_select` received | `incomplete` | `ai_disclosure` |
 | `incomplete` | PUT with new items (`select`) | `incomplete` | `quote_mismatch` if the seller's quote differs from the request |
 | `incomplete` | PUT, `on_init` signed, disclosures complete, pre-check allows | `ready_for_complete` | `preticked_addon_removed`, `pre_debit_notice` where applicable |
-| `incomplete` | PUT finds drip pricing, missing disclosures, a split order, or a step-up threshold | `requires_escalation` | `drip_pricing_detected`, `disclosures_missing`, `split_order_suspected`, `step_up_required` |
+| `incomplete` | PUT finds drip pricing, a `discovery_price_changed` on an item shown with a `prior_price`, missing disclosures, a split order, or a step-up threshold | `requires_escalation` | `drip_pricing_detected`, `discovery_price_changed`, `disclosures_missing`, `split_order_suspected`, `step_up_required` |
 | `ready_for_complete` | `complete` over a step-up threshold, AFA threshold, or split order | `requires_escalation` | `step_up_required` |
 | `ready_for_complete` | `complete` after the quote's `expires_at` has passed | `incomplete` | `quote_expired` (re-select) |
 | `ready_for_complete` | `complete` before a pre-debit notice matures | `ready_for_complete` | `pre_debit_notice`; no money moves |

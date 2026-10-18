@@ -310,7 +310,7 @@ Binding rules:
 
 - Gift and voucher codes are held in the Trusted Surface or the PSP-adapter vault and redeemed by the gateway's PSP adapter. The agent never sees them. Whether a PSP adapter may redeem gift-PPI codes on the user's behalf is open ([Q-30](../open-questions.md#q-30)).
 - In a [split tender](credit-and-split-tender.md#split-tender-payment-plans), stored-value tenders are captured first.
-- **Cashback is not a handler.** It is an offer adjustment in the TermSheet. The agent evaluates the net price after the cashback conditions and MUST NOT count conditional cashback as a discount.
+- **Cashback is not a handler.** It is an offer adjustment in the TermSheet. The agent evaluates the net price after the cashback conditions and MUST NOT count conditional cashback as a discount ([Discounts](../checkout/index.md#discounts)).
 
 ## Cash on delivery
 

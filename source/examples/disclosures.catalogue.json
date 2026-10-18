@@ -1,0 +1,52 @@
+{
+  "seller_name": "Shree Ganesh Kirana",
+  "total_price": {
+    "value": 54900,
+    "currency": "INR"
+  },
+  "return_terms": "Not returnable",
+  "cancellation_terms": "Free before dispatch",
+  "country_of_origin": {
+    "default": "IN"
+  },
+  "expected_delivery": "PT2H",
+  "price_breakup": [
+    {
+      "type": "total",
+      "amount": {
+        "value": 54900,
+        "currency": "INR"
+      }
+    }
+  ],
+  "catalogue": [
+    {
+      "item_id": "I-GHEE-1L",
+      "sponsorship": {
+        "status": "sponsored",
+        "by": [
+          "gateway"
+        ]
+      },
+      "discovered_unit_price": {
+        "value": 54900,
+        "currency": "INR"
+      },
+      "source_digest": "sha-256:lWfwvAF9PMhwrWdb1rhZL_wgvkFtkBv5FIsbptP6r8w",
+      "mrp": {
+        "value": 65000,
+        "currency": "INR"
+      },
+      "tax_inclusive": true,
+      "prior_price": {
+        "amount": {
+          "value": 59900,
+          "currency": "INR"
+        },
+        "basis": "lowest_30d",
+        "announced_on": "2026-12-20"
+      }
+    }
+  ],
+  "hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4"
+}

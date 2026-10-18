@@ -45,6 +45,7 @@ response body in `structuredContent`.
 | MCP tool | REST operation | Signature tag |
 |---|---|---|
 | `bacp_discover` | `POST /discover` | `bacp-browse` |
+| `bacp_discover_source` (Proposed name) | `GET /discover/{transaction_id}/sources/{source_digest}` | `bacp-browse` |
 | `bacp_checkout_create` | `POST /sessions` | `bacp-browse` |
 | `bacp_checkout_get` (Proposed name) | `GET /sessions/{session_id}` | `bacp-browse` |
 | `bacp_checkout_update` | `PUT /sessions/{session_id}` | `bacp-browse` |

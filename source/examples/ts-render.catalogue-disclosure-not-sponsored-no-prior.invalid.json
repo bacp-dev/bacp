@@ -1,0 +1,59 @@
+{
+  "step_up_id": "stp_01HZXA",
+  "session_id": "ses_01HZXB",
+  "kind": "confirm",
+  "reason": "above_step_up_threshold",
+  "language": "hi-IN",
+  "checkout_hash": "sha-256:vRBpqmLq4AipYw1ZNnIL3trdLVrcHQAQ0g5RurJB4CQ",
+  "total": {
+    "value": 65400,
+    "currency": "INR"
+  },
+  "price_breakup_hash": "sha-256:vq4x2opsK4KIM-scKiTGRWd4Fzxs-GBx7lO8Glgm_U4",
+  "seller_name": "Shree Ganesh Kirana",
+  "summary": {
+    "hi-IN": "श्री गणेश किराना से ₹654 का ऑर्डर पक्का करें?",
+    "en-IN": "Confirm the ₹654 order from Shree Ganesh Kirana?"
+  },
+  "counterparty_text": [
+    {
+      "label": "Item name (seller's text)",
+      "text": "Chakki Atta 2 kg"
+    },
+    {
+      "label": "Item name (seller's text)",
+      "text": "Desi Ghee 1 L"
+    }
+  ],
+  "catalogue_disclosure": [
+    {
+      "index": 0,
+      "sponsorship": {
+        "status": "not_sponsored"
+      },
+      "name_ref": 0
+    },
+    {
+      "index": 1,
+      "sponsorship": {
+        "status": "not_sponsored"
+      },
+      "unit_price": {
+        "value": 54900,
+        "currency": "INR"
+      },
+      "prior_price": {
+        "amount": {
+          "value": 59900,
+          "currency": "INR"
+        },
+        "basis": "lowest_30d",
+        "announced_on": "2026-12-20"
+      },
+      "name_ref": 1
+    }
+  ],
+  "revoke_route": "https://psp.example.in/mandates/mdt_CHK7Q2W9X4K1M3/revoke",
+  "grievance_contact": "grievance@vaani.example.in",
+  "expires_at": "2026-10-22T18:45:00+05:30"
+}

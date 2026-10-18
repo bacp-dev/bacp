@@ -114,6 +114,7 @@ The payload is described as data by the OpenAPI component `TsRender`.
 | `counterparty_text[]` | Optional. Each entry is `{label, text}`: a seller-supplied string (an item name, a fee label), labelled by the gateway. |
 | `basket[]` | On a summary step-up over a [multi-seller basket](#multi-seller) only: one line per seller, `{bpp_id, payee_name, amount, handler, needs_pin, funds_locked, expires_at, funding}`. `payee_name` is the name the payer's bank returns for the payee VPA. `funds_locked` and `expires_at` are the amount a block reserves and when it is released. `funding` is `deposit` (the principal's own money) or `credit`. |
 | `covers[]` | On a summary step-up only: the legs the approval covers, each `{session_id, checkout_hash, payee, amount}` ([Step-up](mandates.md#step-up)). A summary's `session_id` and `checkout_hash` are those of the session whose `complete` raised it. |
+| `catalogue_disclosure[]` | Optional. On a session step-up (`confirm` or `rail_auth`, including a summary step-up) only: one entry for each line item whose `Disclosures.catalogue[]` entry is `sponsored` or `undeclared`, or carries a `prior_price`. Each entry is `{index, sponsorship, name_ref}` and, for a prior price, `prior_price` and `unit_price` (the discovered unit price shown with it). `index` is the position of the entry in that session's `Disclosures.catalogue[]`; on a summary step-up each entry also carries `cover`, the position in `covers[]` of the leg whose session it is. `name_ref` is the position of the item's name in `counterparty_text[]`. An entry for an item that is `not_sponsored` and has no `prior_price` is invalid. Never present on a `post_order` step-up or a negotiation `confirm`. It is hashed into `Presentation.content_hash` with the rest of the render ([Catalogue disclosure on the Trusted Surface](#ts-catalogue-disclosure)). |
 | `offer_hash` | On a negotiation `kind: confirm` step-up only: the `offer_hash` of the offer the principal is asked to approve ([Step-up to the Trusted Surface](negotiation/index.md#step-up-to-the-trusted-surface)). Never present with `checkout_hash`. |
 | `acceptance_revocation` | On a negotiation `kind: confirm` step-up about a firm offer only: the offer's [`acceptance_revocation`](negotiation/index.md#acceptance-revocation) value, copied unchanged; in this version only `waived` occurs, because receivers refuse `allowed_until_receipt`. Present only with `offer_hash`. It is hashed into `Presentation.content_hash` with the rest of the render. |
 | `revoke_route` | Where the principal revokes the mandate or cancels, as a URI. |
@@ -134,6 +135,8 @@ Content rules for `ts_render` and every Trusted Surface template:
    fixed consequence sentence below, in the principal's language, followed by the offer's cancellation terms, which
    the gateway states in `summary`. It never shows the token, and it never says or implies that the order cannot be
    cancelled: cancelling after the contract is formed follows the cancellation terms.
+6. On a step-up whose render carries `catalogue_disclosure[]`, the Trusted Surface repeats what discovery showed, before
+   the total, as [below](#ts-catalogue-disclosure).
 
 | Value | `en-IN` | `hi-IN` |
 |---|---|---|
@@ -148,6 +151,58 @@ translation of the same sentence from its own templates.
 ```json title="ts-render.negotiation-confirm.json (payload of a negotiation confirm step-up)"
 --8<-- "source/examples/ts-render.negotiation-confirm.json"
 ```
+
+### Catalogue disclosure on the Trusted Surface {#ts-catalogue-disclosure}
+
+An agent tells the principal about sponsored results and prior prices when it presents them
+([Disclosure phrases](#disclosure-phrases)). The Trusted Surface says it again before the principal confirms, in words
+the agent does not control. For each entry of `catalogue_disclosure[]`, in order, the Trusted Surface:
+
+1. shows or speaks the item's name as labelled seller text, taken from `counterparty_text[name_ref]` (TS-1);
+2. gives the sponsorship sentence for the entry: `ts_sponsored` for `sponsored`, `ts_undeclared` for `undeclared`, and no
+   sentence for `not_sponsored`;
+3. if `prior_price` is present, gives the `ts_prior_price` sentence.
+
+All of this comes **before the total**, and under TS-3 audio is read in full before the principal enters the factor.
+When more than three entries are `undeclared` and carry no `prior_price`, the Trusted Surface MAY give one
+`ts_undeclared_n` sentence for them instead of their per-item sentences. It never paraphrases. A Trusted Surface in
+another language uses a fixed translation of the same sentence from its own templates. The wording is a draft, under
+review with the [disclosure phrases](#disclosure-phrases), and its vocabulary is theirs, so that the principal hears the
+same words twice.
+
+| Key | `en-IN` | `hi-IN` |
+|---|---|---|
+| `ts_sponsored` | "Sponsored: {party} was paid to show this item." | "प्रायोजित: इस सामान को दिखाने के लिए {party} को पैसे मिले थे।" |
+| `ts_undeclared` | "It was not stated whether this item was sponsored." | "यह सामान प्रायोजित था या नहीं, यह नहीं बताया गया।" |
+| `ts_undeclared_n` | "For {n} items in this order, it was not stated whether they were sponsored." | "इस ऑर्डर के {n} सामानों के बारे में नहीं बताया गया कि वे प्रायोजित थे या नहीं।" |
+| `ts_prior_price` | "Now ₹{price}. The seller's lowest price in the 30 days before this offer: ₹{prior}." | "अब ₹{price}। इस छूट से पहले के 30 दिनों में विक्रेता की सबसे कम कीमत: ₹{prior}।" |
+
+`{party}` uses the party phrases of [Disclosure phrases](#disclosure-phrases), joined by the Trusted Surface's fixed
+"and" or "और". The `hi-IN` sentences say, in English: "Sponsored: {party} was paid to show this item"; "Whether this
+item was sponsored was not stated"; "For {n} items of this order it was not stated whether they were sponsored"; and the
+price pair as in the agent's phrase. Amounts use Indian digit grouping.
+
+Rules:
+
+- The gateway MUST include `catalogue_disclosure[]` on every session step-up of kind `confirm` or `rail_auth`, and on a
+  summary step-up (with entries for every leg), whenever any qualifying item exists. It MUST NOT include it on a
+  `post_order` step-up or on a negotiation `confirm`, which carries `offer_hash` and not `checkout_hash`.
+- The `ts_render` stays gateway-signed with the BAP registry key. The gateway MUST copy `sponsorship`, `prior_price` and
+  `unit_price` unaltered from the session's `Disclosures.catalogue[]` entry (`unit_price` is its `discovered_unit_price`).
+- The Trusted Surface takes `catalogue_disclosure[]` only from the render, never from the agent. It does not verify
+  seller signatures, so the repeat is only as trustworthy as the gateway's signature on it; a rogue gateway is caught on
+  dispute ([Evidence](evidence.md#ap2-verification), step 6), and the agent checks it at run time (rule below).
+- An agent that receives a session `step_up` carrying a `ts_render` SHOULD check, before it hands the principal the
+  `trusted_surface_url`, that `catalogue_disclosure[]` matches the session's `Disclosures.catalogue[]` by the evidence
+  step 6 rule. On a mismatch it MUST NOT hand the link over, and it records `discovery_source_mismatch`.
+- A Trusted Surface on an earlier version ignores a field it does not know and would ask for the factor without the
+  repeat. The gateway therefore MUST refuse a `step_up.approved` for a render that carries `catalogue_disclosure[]` when
+  `presentation.renders` does not contain `catalogue_disclosure` (`400 invalid_request`, nothing changes).
+- A step-up exists only when a threshold, a new seller or another trigger applies. A session that never needs one never
+  reaches a Trusted Surface, so the repeat is absent from it by construction, and the agent's own sentences and the
+  `type: disclosure` messages ([Message object](errors.md#message-object)) are then the only disclosure.
+- The item names and positions in `catalogue_disclosure[]` tell a payer PSP, on a `rail_auth` render, what was bought, beyond the
+  base render. Whether the names of items should reach the payer PSP at all is open ([Q-73](open-questions.md#q-73)).
 
 ### Presentation record {#presentation}
 
@@ -165,6 +220,7 @@ Trusted Surface showed, how, and what the principal did:
 | `user_action` | yes | `tap_confirm`, `upi_pin`, `biometric`, `passkey`, `voice_confirm_plus_device` or `decline`. `biometric` is the principal's own biometric enrolled for the principal on the Trusted Surface device, never an operator's. |
 | `shown_at`, `acted_at` | yes | When it was shown and when the principal acted. |
 | `template_id` | no | The Trusted Surface template and its version. |
+| `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` | The render fields beyond this version's base set that the Trusted Surface presented, for example `["catalogue_disclosure"]`. |
 | `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the order's. Never present with `offer_hash`. |
 | `offer_hash` | on `negotiation.step_up.approved` | The offer a negotiation `confirm` step-up showed. Never present with `checkout_hash`. |
 | `device_signature` | no | The principal's device signature over the JCS form of `{step_up_id, content_hash, acted_at}` (for a step-up) or `{content_hash, acted_at}`. |
@@ -194,6 +250,8 @@ state change:
 - on `negotiation.step_up.approved`, that `presentation.offer_hash` equals the `ts_render`'s `offer_hash` and the
   hash of the offer the step-up names, and, for a firm offer, that the `ts_render`'s `acceptance_revocation` equals
   that offer's value; otherwise it refuses the event with `403 ts_render_mismatch`, and nothing is sent;
+- on `step_up.approved` for a `ts_render` that carries `catalogue_disclosure[]`, that `presentation.renders` contains
+  `catalogue_disclosure`; otherwise it refuses the event with `400 invalid_request` and nothing changes;
 - that `presentation.acted_at` is not after the step-up's `expires_at`, or treat the step-up as expired
   (`step_up_expired`, no money moves);
 - on an assisted session, the [assisted channel](#assisted) rules.
@@ -250,6 +308,8 @@ evidence and cannot approve for the principal.
 - A `Presentation` that fails its schema (for example `channel: assisted` with `user_action: tap_confirm`) is refused
   with `400 invalid_request`, as for every schema failure, and nothing changes.
 - The operator may read the content aloud (`modality: audio` or `both`); the factor is the principal's.
+- An assisted operator who reads discovery results aloud uses the same fixed sentences as an agent
+  ([Disclosure phrases](#disclosure-phrases)).
 
 The Information Technology Act, 2000, s.11(c) attributes an electronic record to the originator when it is sent "by
 an information system programmed by or on behalf of the originator to operate automatically"
@@ -260,6 +320,59 @@ operators is open ([Q-62](open-questions.md#q-62)).
 
 `StepUp.delivery: assisted` gives the step-up at least 5 minutes before `expires_at` (and at most 15). The 5-minute
 floor is a BACP design value, not an external requirement.
+
+## Disclosure phrases {#disclosure-phrases}
+
+For a buyer on a feature phone, an IVR call or a screen reader, the agent is the display. The sentences below are how an
+agent tells the principal about sponsored results and prior prices ([Catalogue disclosures](discovery.md#catalogue-disclosures)).
+They are fixed: they bind agents and the scripts of assisted operators, and a paraphrase is non-conformant, because a
+paraphrase by a language model is itself a way to change what the principal understands. Counterparty text never appears
+inside them, except as a labelled value.
+
+!!! warning "Draft wording"
+    The wording in this table is a draft. It is under review by the human-experience review seat and the owner, and it
+    changes only through that review before a dated release.
+
+| Key | `en-IN` | `hi-IN` |
+|---|---|---|
+| `sponsored` | "Sponsored: {party} was paid to show this." | "प्रायोजित: इसे दिखाने के लिए {party} को पैसे मिले हैं।" |
+| `undeclared` | "Not stated whether this is sponsored." | "यह प्रायोजित है या नहीं, यह नहीं बताया गया है।" |
+| `prior_price` | "Now ₹{price}. The seller's lowest price in the 30 days before this offer: ₹{prior}." | "अब ₹{price}। इस छूट से पहले के 30 दिनों में विक्रेता की सबसे कम कीमत: ₹{prior}।" |
+| `mrp` | "MRP ₹{mrp}." | "एमआरपी (अधिकतम खुदरा मूल्य) ₹{mrp}।" |
+| `discount_applied` | "Discount{ with code {code}}: ₹{amount} off." | "छूट{ (कोड {code})}: ₹{amount} कम।" |
+| `discount_rejected` | "Code {code} was not accepted." | "कोड {code} स्वीकार नहीं हुआ।" |
+| `discount_affiliate` | "Your assistant's provider earns if this code is used." | "यह कोड इस्तेमाल होने पर आपके सहायक की कंपनी को कमाई होती है।" |
+| party `bpp` | "the seller's app" | "विक्रेता का ऐप" |
+| party `gateway` | "the shopping service" | "शॉपिंग सेवा" |
+| party `agent` | "your assistant's provider" | "आपके सहायक की कंपनी" |
+| party unknown | "a party in the chain" | "बीच का कोई पक्ष" |
+
+The `hi-IN` sentences say, in English: "Sponsored: {party} has been paid to show this"; "Whether this is sponsored has
+not been stated"; "Now ₹{price}. Seller's lowest price in the 30 days before this discount: ₹{prior}"; and "MRP
+(maximum retail price) ₹{mrp}". The party phrases say, in English: "the seller's app", "the shopping service", "your
+assistant's company" and "some party in the chain". The discount phrases say, in English: "Discount (code {code}): ₹{amount}
+less"; "Code {code} was not accepted"; and "If this code is used, your assistant's company earns". The part in braces and
+brackets of `discount_applied` is left out for an automatic discount, which has no code.
+
+Rules:
+
+1. The agent says the sentence for each item whose `sponsorship.status` is `sponsored` or `undeclared`, with `{party}`
+   taken from `by[]` (several parties are joined with a fixed "and" or "और"; an unknown value uses the unknown-party
+   phrase). There is no sentence for `not_sponsored`: the agent says nothing.
+2. On audio the sentence is spoken **before** the item it labels, in the principal's session language.
+3. Amounts are rendered with Indian digit grouping. The `prior_price` sentence is the only way to voice a prior price.
+   The `mrp` sentence is the only way to voice an MRP, and it is never voiced as a "was" price.
+4. A principal whose language is not `en-IN` or `hi-IN` hears the operator's own fixed and reviewed translation of the
+   same sentence, as for the [acceptance-revocation sentences](#ts-render): a Trusted Surface or an agent in another
+   language uses a fixed translation of the same sentence from its own templates, and never a free translation made at
+   run time. Whether a reviewed translation route exists for fixed legal labels in the Eighth Schedule languages is open
+   ([Q-68](open-questions.md#q-68)).
+5. `{party}`, `{price}`, `{prior}`, `{mrp}`, `{code}` and `{amount}` are the only slots. `{code}` is filled from the code the agent
+   itself submitted, never from `applied[].code`, which a seller could fill with text. The `title` of a discount is seller
+   text, shown only as labelled counterparty text. An item name, if it is spoken, is a separate, labelled seller value
+   and never part of a sentence.
+6. On a step-up, the Trusted Surface repeats the sentences in its own fixed wording
+   ([Catalogue disclosure on the Trusted Surface](#ts-catalogue-disclosure)).
 
 ## AI disclosure {#ai-disclosure}
 

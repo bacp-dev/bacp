@@ -217,7 +217,7 @@ keys in the registry, then sends a Beckn `search` through the Beckn gateway
 with `context.bacp` (`presence: HNP`, the agent, the idempotency key). It
 collects `on_search` callbacks, verifies each seller's network signature and
 returns results flagged `within_mandate`, with the ranking parameters it used
-(distance, price, rating; no sponsorship). See
+(distance, price, rating), and each item marked `not_sponsored`, `sponsored` or `undeclared`, with the seller's MRP where it sent one. See
 [Discovery and Profiles](discovery.md).
 
 ## Step 5: Create the checkout session

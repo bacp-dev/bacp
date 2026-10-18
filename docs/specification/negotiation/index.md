@@ -32,6 +32,8 @@ Every session declares its mode up front. The enum is `negotiation-session.json#
 | `dutch` | Perishables, end-of-day clearance | Published non-increasing price ticks | First conforming acceptance by auctioneer receipt time |
 | `scheme` | Bank offers, coupons, QPS "buy 10 get 1", slab and target schemes | No bargaining. The buyer asserts machine-readable schemes with eligibility proofs. The seller agrees or disagrees per scheme, and stacking rules apply. | Seller `Agree` per scheme, then a normal `accept` |
 
+A coupon code on a plain checkout session is not `scheme` mode: it is a code that the seller applies or rejects ([Discounts](../checkout/index.md#discounts)). Discounts that depend on the payment instrument or on a buyer assertion stay in `scheme` mode.
+
 A `sealed_first_price` auction is negotiated under mode `rfq_sealed`, and a mandate that allows sealed auctions MUST list `rfq_sealed` in `modes_allowed`.
 
 ## Capability advertisement

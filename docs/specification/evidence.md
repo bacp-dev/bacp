@@ -34,7 +34,7 @@ operator being able to rewrite history afterwards.
 | `content_ref` | Where the operator keeps the encrypted raw content. |
 | `summary` | A short multilingual summary. |
 | `model` | The model `id`, `version` and, for voice or translated turns, `translation_model`. |
-| `refs` | Cross-references: `mandate_ref`, `checkout_hash`, `message_id`, `order_id`, `rrn`, `receipt_id`, `issue_id`. |
+| `refs` | Cross-references: `mandate_ref`, `checkout_hash`, `message_id`, `order_id`, `rrn`, `receipt_id`, `issue_id`; at stage `discover`, also `idempotency_key`, `source_digests[]`, `source_checks[]` and `registry_lookup`; at stage `cart`, `discount_codes[]` (`{code_mac, source}`). |
 | `prev_hash`, `entry_hash` | The chain links ([Hash chain](#hash-chain)). |
 | `signature` | The operator's signature. |
 
@@ -49,7 +49,7 @@ operator, and is released only inside an evidence bundle to a party entitled to 
 | `ai_disclosure` | The agent presents the AI disclosure and the routes to a human. It is the first entry whose actor is `agent`, before `intent` ([Human participants](human-participants.md#ai-disclosure)) | `agent` |
 | `prompt` | The principal instructs the agent (text or voice; voice records channel, language and translation model) | `user` |
 | `intent` | The agent turns the instruction into a structured intent or mandate request | `agent` |
-| `discover` | A search is sent and results arrive | `agent`, `gateway` |
+| `discover` | A search is sent and results arrive. The agent records the `Idempotency-Key` of the search, the `source_digest` of every discovery source it checked, the outcome of each (`verified`, `mismatch` or `unverified`, with the reason `discovery_source_mismatch` or `discovery_source_unverified`) and the host of the registry lookup it used ([Verifying discovery results](discovery.md#verifying-results)). `content_hash` covers the discover response as returned | `agent`, `gateway` |
 | `cart` | Items are selected; the handler comparison is logged here | `agent`, `gateway` |
 | `disclosure` | The BPP's signed quote and disclosures arrive; records `checkout_hash` and the disclosures hash | `bpp` |
 | `mandate` | A mandate is activated, used or changes status, including each gateway pause reason (`binding_ineligible`, `reissue_required`) added or removed, with the `registry_version` ([Handler binding](mandates.md#handler-binding)); records mandate hashes | `gateway`, `trusted_surface` |
@@ -261,10 +261,11 @@ trusting the agent or its operator.
 | `transaction_id` | The Beckn transaction. |
 | `agent_credential_hash` | Hash of the AgentCredential the agent used. |
 | `mandates[]` | The open Checkout and Payment Mandates, each wrapped in a JWS by the operator (the payload keeps the principal and MM signatures), and the closed mandates exactly as presented (agent-signed or principal-signed attached JWS). |
-| `checkout` | The BPP-signed quote (`bpp_signed_quote`), `checkout_hash` and `disclosures_hash`, and `bpp_signed_payment_terms`: the seller's payment terms from `on_init` (Beckn `payments[]`, with `collected_by` and the payee VPA in `params.virtual_payment_address`) as the gateway received them, kept as `{body, authorization}`: the raw `on_init` body and its Beckn `Authorization` header, which verifies against the BPP's registry key ([Beckn signing](transports/beckn.md#signing)). REQUIRED for every Reserve Pay leg ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)). |
+| `checkout` | The BPP-signed quote (`bpp_signed_quote`), `checkout_hash`, `disclosures_hash` and the `disclosures` they hash (including `catalogue[]`), and `bpp_signed_payment_terms`: the seller's payment terms from `on_init` (Beckn `payments[]`, with `collected_by` and the payee VPA in `params.virtual_payment_address`) as the gateway received them, kept as `{body, authorization}`: the raw `on_init` body and its Beckn `Authorization` header, which verifies against the BPP's registry key ([Beckn signing](transports/beckn.md#signing)). REQUIRED for every Reserve Pay leg ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)). |
 | `receipts[]` | The full signed receipts: the BPP's checkout receipt, the PSP's payment receipt, and any refund receipts. |
 | `consent_receipts[]` | The ConsentReceipts under which data was shared. |
 | `instruction_log[]` | The session's full InstructionLog. |
+| `discovery_sources[]` | For a session whose items came from `POST /discover`: the BPP-signed `on_search` callback behind every `source_digest` in `checkout.disclosures.catalogue[]`, each as `{body, authorization}` exactly as the gateway received it ([Retention of the signed callbacks](discovery.md#catalogue-retention)). A verifier checks that the sha-256 of each `body` equals the `source_digest` and that the `authorization` verifies against the BPP's registry key, and compares the item values in the body with `checkout.disclosures.catalogue[]`. |
 | `trusted_surface_events[]` | Every signed Trusted Surface event of the transaction, verbatim as received at `/trusted-surface/events` (step-up results, mandate activation, credit acceptance, AFA completion), each with its [`Presentation`](human-participants.md#presentation). |
 | `ts_renders[]` | The gateway-signed [`ts_render`](human-participants.md#ts-render) (compact JWS) of every step-up that a `step_up.approved` or `step_up.declined` event in `trusted_surface_events[]` names, byte-identical to what the Trusted Surface fetched. In a bundle released to a seller or a payer PSP, a summary step-up's render is left out and `ts_render_digests[]` carries it instead. |
 | `ts_render_digests[]` | Only in a bundle released to a seller or a payer PSP: for each summary step-up over a [multi-seller basket](checkout/index.md#multi-seller-basket), `{step_up_id, render_hash, cover}`, where `render_hash` is the sha-256 of its `ts_render` and `cover` is the `covers[]` entry of this transaction's leg. The other sellers' lines stay out of the bundle. |
@@ -331,6 +332,20 @@ chain is valid, and the bundle signature verifies:
    payee VPA in those terms; for a Reserve Pay payment the terms **MUST** be present and the open
    Payment Mandate's `payee.vpa` and `payee.bpp_id` **MUST** equal the VPA and the `bpp_id` in them
    ([Sibling Payment Mandates](mandates.md#sibling-payment-mandates)).
+   For a session step-up of kind `confirm` or `rail_auth` the verifier also checks the catalogue disclosure:
+   every `Disclosures.catalogue[]` entry of `checkout.disclosures` that is `sponsored` or `undeclared`, or has a
+   `prior_price`, MUST have an entry in the `ts_render`'s `catalogue_disclosure[]`, so that an omission fails; each
+   entry's `sponsorship`, `prior_price` and `unit_price` MUST equal (JCS) those of the `Disclosures.catalogue[]` entry
+   that its `index` names (`unit_price` against `discovered_unit_price`; on a summary step-up, of the leg that
+   `covers[cover]` names, which only a verifier that holds that leg's bundle can check); and
+   `counterparty_text[name_ref].text` MUST equal a language value of the item's name in the BPP-signed quote for that
+   item. Every `Disclosures.catalogue[].source_digest` MUST appear in `refs.source_digests` of the session's
+   `discover` InstructionLog entry written by the agent; the signed source in `discovery_sources[]` whose sha-256 is that
+   digest MUST verify against the BPP's registry key as of the signature's `created` time; its `context.message_id` MUST
+   equal the derivation from the `idempotency_key` in that log entry; and its item values MUST match those of the
+   `Disclosures.catalogue[]` entry, derived by the [normative mapping](transports/beckn.md#disclosure-mapping). This
+   makes the verifier, not the gateway, the judge of whether the sponsorship and prior price shown at checkout are those
+   the seller sent.
    Any failure is `evidence_unverifiable`. Step 6 proves what the principal was shown and, through
    [`EvidenceBundle.checkout.bpp_signed_payment_terms`](#contents), whom the seller asked to be
    paid; neither the quote nor `ts_render` carries the payee's VPA or settlement account.
@@ -376,6 +391,7 @@ the principal), the grievance officer, the ODR body and a regulator; a seller or
 | Idempotency keys and stored responses | Gateway | At least 24 hours (48 hours recommended) |
 | Replay-cache nonces | Gateway | Until the signature's `expires` (at most 300 seconds) |
 | InstructionLog, receipts and evidence bundles | Agent operator (gateway) and PSP | Long enough to serve grievances, disputes and regulatory review; see below |
+| BPP-signed `on_search` callbacks behind a returned `source_digest` | Gateway | As long as the evidence bundle of any session that used an item from them, and in any case as long as the InstructionLog |
 | Negotiation transcripts | Agent operator | Proposed: 2 years for B2C, longer for B2B and public procurement ([Q-56](open-questions.md#q-56)) |
 
 Where these records contain payment data, RBI's directive on Storage of Payment System Data

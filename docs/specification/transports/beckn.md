@@ -31,6 +31,7 @@ reports it in `confirm` with `payment.status: PAID` and the rail reference.
 | BACP operation (REST) | Beckn / ONDC request → callback | Mandate `action_scope` | Signature tag |
 |---|---|---|---|
 | `POST /discover` | `search` → `on_search` via the BG and registry lookup (Beckn 2.0 also exposes `/discover` over signed catalogue indexes) | DISCOVER (optional) | `bacp-browse` |
+| `GET /discover/{transaction_id}/sources/{source_digest}` | none; serves the `on_search` callback the gateway kept ([Verifying discovery results](../discovery.md#verifying-results)) | — | `bacp-browse` |
 | `POST /sessions` | `select` → `on_select` (quote with TTL) | QUOTE | `bacp-browse` |
 | `PUT /sessions/{session_id}` | `select` (items changed) or `init` → `on_init` (billing, fulfilment, payment terms, seller-signed quote, disclosures) | ORDER, SHARE_DATA | `bacp-browse` |
 | `POST /sessions/{session_id}/complete` | Rail debit through the payer PSP, then `confirm` → `on_confirm` with `payment.status=PAID` and the rail reference | ORDER + PAY | `bacp-pay` |
@@ -157,6 +158,56 @@ GSTIN or name is personal data ([Human participants](../human-participants.md#ai
 ```
 
 Every `bacp.neg.*` object is likewise carried as a namespaced TagGroup.
+
+### Catalogue disclosure mapping {#disclosure-mapping}
+
+A seller app sends the disclosure fields of a [discover item](../discovery.md#catalogue-disclosures) in the signed
+`on_search`. The gateway and an agent that checks a result against its signed source MUST derive the same values from the same body, so
+the mapping below is normative.
+
+| BACP field | Beckn / ONDC source in the signed `on_search` | Rule |
+|---|---|---|
+| `unit_price` | item `price.value` | Decimal rupees string, converted to integer paise |
+| `mrp` | item `price.maximum_value` | As above |
+| `tax_inclusive` | item TagGroup `bacp.disclosure`, tag `tax_inclusive` (`"true"` or `"false"`) | An absent tag means an absent field |
+| `prior_price.amount`, `.basis`, `.announced_on` | `bacp.disclosure` tags `prior_price`, `prior_price_basis`, `prior_price_announced_on` | `basis` MUST be `lowest_30d`; the date is an ISO `YYYY-MM-DD` date |
+| `sponsorship`, party `bpp` | `bacp.disclosure` tags `sponsored` (`"true"`) and `sponsored_by` (`bpp`) | Combined with the gateway's own statements by the monotone OR rule |
+
+`price.listed_value` and `price.offered_value` never map to `prior_price`, and the gateway MUST NOT derive a `prior_price`
+from any Beckn `Price` field. Until ONDC publishes catalogue tags for sponsored listings and prior prices
+([Q-69](../open-questions.md#q-69)), the tag names above are BACP's. The field names in BACP stay when ONDC's tags
+arrive; only this mapping changes.
+
+An agent that checks a result against its signed source ([Verifying discovery results](../discovery.md#verifying-results))
+derives the values by this mapping, exactly as the gateway does.
+
+**Locating an item.** The provider list is `message.catalog["bpp/providers"]` (ONDC) or `message.catalog.providers`
+(Beckn core). If both are present, or the provider whose `id` equals the result's provider id occurs other than exactly
+once, nothing can be derived from the body. Within that provider, the item whose `id` equals the result's item `id` MUST
+occur exactly once; otherwise nothing can be derived for it. Ids compare as decoded code-point sequences, without Unicode
+normalisation.
+
+**Decimal rule.** A price field MUST be a JSON string that matches `^(0|[1-9][0-9]{0,11})(\.[0-9]{1,2})?$`. The value in paise
+is the integer part times 100 plus the fractional part right-padded to two digits, computed on the string and never in
+floating point. Any other form (a JSON number, a sign, an exponent, a leading zero, more than two decimals) makes the
+field absent, and the gateway reports `prior_price_invalid` when the field was `prior_price`.
+
+### Offers and discount codes {#offers}
+
+| BACP | ONDC retail 1.2.5 |
+|---|---|
+| `discounts.codes[n]` | `select` and `init`: `message.order.offers[]` with `id` = the code and the tag `selection` / `apply` = `"yes"` |
+| `applied[]` (by code) | `on_select` and `on_init` `quote.breakup[]` line with `@ondc/org/title_type: "offer"`; `offer_id` = `@ondc/org/item_id`; `amount` = the absolute value of `price.value`, in integer paise |
+| `applied[].automatic` | the breakup item tag `offer` / `auto` = `"yes"` |
+| `results[].offers[]` | provider `offers[]`: `id`; `descriptor.code` as `kind`; `item_ids`; `time.range` as `valid_from` and `valid_until`; `qualifier.min_value` as `min_order_value`; `benefit.value_type`, `value` and `value_cap` as `benefit`; `meta.additive` and `meta.auto` |
+| a rejected code | no matching breakup line gives `discount_code_invalid`, unless the seller's error says expired or not combinable (the ONDC error codes for these are not verified as of 18-10-2026) |
+
+Codes travel in `message.order`, not in `context.bacp`. The decimal rule of the [catalogue disclosure
+mapping](#disclosure-mapping) applies to every price and benefit figure. For a percentage (`benefit.value_type` `percent`),
+the value is a string of the same form with at most two decimals, and `percent_bps` is the value times 100 by the same
+rule; a value of 0, or above 100, makes the benefit of the offer absent. A negative `benefit.value` is read as its magnitude
+only where ONDC defines the sign, and otherwise the benefit is absent. The gateway validates every offer against
+`CatalogOffer` itself, and does not rely on the network's validation of offers.
 
 ## Signing {#signing}
 

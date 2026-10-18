@@ -619,6 +619,17 @@
           "type": "string",
           "description": "Identifier and version of the Trusted Surface template used to render the content."
         },
+        "renders": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "catalogue_disclosure"
+            ]
+          },
+          "description": "The render fields beyond the base set of this version that the Trusted Surface presented, for example catalogue_disclosure. REQUIRED on a step_up.approved event whose ts_render carries catalogue_disclosure (the gateway refuses the event with 400 invalid_request otherwise); it tells the gateway that this Trusted Surface understands and presented the field, because a Trusted Surface on an earlier version ignores an unknown field."
+        },
         "checkout_hash": {
           "$ref": "#/$defs/Hash",
           "description": "checkout_hash of the quote the content showed: the session's quote, or for a post_order step-up the order's. REQUIRED on a step_up.approved event (the gateway refuses one without it with 400 invalid_request); never present with offer_hash. The gateway applies an approval only while the session's checkout_hash equals it."

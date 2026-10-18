@@ -158,6 +158,7 @@ endpoint requires. This table is generated from `source/services/bacp.openapi.ya
 |---|---|---|---|---|---|
 | GET | `/.well-known/bacp` | profile | `none (public)` | — | Gateway profile (UCP /.well-known pattern) |
 | POST | `/discover` | discovery | `bacp-browse` | required | Network discovery (Beckn search / 2.0 discover via gateway and registry) |
+| GET | `/discover/{transaction_id}/sources/{source_digest}` | discovery | `bacp-browse` | — | Fetch the BPP-signed on_search callback behind a discovery result, as {body, authorization}. Served only to the agent whose search produced the transaction. |
 | POST | `/sessions` | session | `bacp-browse` | required | Create checkout session (UCP create_checkout, Beckn select) |
 | GET | `/sessions/{session_id}` | session | `bacp-browse` | — | Get session (UCP get_checkout). Use for lost-response recovery before any retry. |
 | PUT | `/sessions/{session_id}` | session | `bacp-browse` | required | Update session, full replace (UCP update_checkout). Items trigger select, fulfilment/billing triggers init. |

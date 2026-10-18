@@ -1,0 +1,33 @@
+{
+  "id": "I-GHEE-1L",
+  "name": {
+    "en-IN": "Desi Ghee 1 L",
+    "hi-IN": "देसी घी 1 लीटर"
+  },
+  "unit_price": {
+    "value": 54900,
+    "currency": "INR"
+  },
+  "mrp": {
+    "value": 65000,
+    "currency": "INR"
+  },
+  "tax_inclusive": true,
+  "prior_price": {
+    "amount": {
+      "value": 59900,
+      "currency": "INR"
+    },
+    "basis": "lowest_30d"
+  },
+  "sponsorship": {
+    "status": "sponsored",
+    "by": [
+      "gateway"
+    ]
+  },
+  "hsn": "0405",
+  "gst_rate_bps": 1200,
+  "available_on_cod": true,
+  "returnable": false
+}

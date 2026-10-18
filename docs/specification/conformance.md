@@ -191,6 +191,26 @@ An agent (and its operator) MUST:
   ([Per-leg rule](mandates.md#per-leg-rule)).
 - Keep its operator signing key separate from the agent's `cnf` key, and
   sign instruction-log entries asymmetrically.
+- When it presents discovery results, say the fixed sponsorship sentence for
+  every `sponsored` or `undeclared` item and never render `undeclared` as
+  "not sponsored"; voice a prior price only as the amount pair; show no
+  reduction, strike-through, percentage, "was" or "off" claim without a
+  `prior_price`, and none taken from free text; and verify the seller-signed
+  source of every item it presents or relies on, rendering an unverified item
+  with no claim and with sponsorship as `undeclared` at least. It generates a
+  fresh `Idempotency-Key` for each search, and checks `Disclosures.catalogue[]`
+  against what it verified
+  ([Verifying discovery results](discovery.md#verifying-results),
+  [Disclosure phrases](human-participants.md#disclosure-phrases); cases CD-07,
+  CD-13, CD-14, CD-26 to CD-34, CD-47 to CD-51).
+- Present a registered `type: disclosure` message as its fixed phrase, never
+  as the message's `content`, and not hand over a step-up whose
+  `catalogue_disclosure[]` does not match `Disclosures.catalogue[]`
+  ([Message object](errors.md#message-object); cases CD-41, CD-R09,
+  CD-R10).
+- Submit no affiliate code of its operator when no human is present, and tell
+  a present principal before it submits one
+  ([Discounts](checkout/index.md#discounts); case CD-50).
 
 ### Gateway
 
@@ -358,6 +378,26 @@ A BACP gateway MUST:
   `ts_render`'s and the offer's (`403 ts_render_mismatch`)
   ([Acceptance revocation](negotiation/index.md#acceptance-revocation);
   cases T3-01 to T3-30 outside the Proposed (sunset) block).
+- Return `sponsorship` on every discovery item with the monotone OR rule, relay
+  the seller's `prior_price`, `mrp`, `tax_inclusive` and sponsorship unaltered,
+  never create a `prior_price`, drop an invalid one with `prior_price_invalid`,
+  state `ranking.sponsored` as the OR of the items, give every `results[]` entry
+  the `source_digest` of one signed callback, keep and serve those callbacks,
+  and sign the `POST /discover` response
+  ([Catalogue disclosures](discovery.md#catalogue-disclosures); cases CD-02 to
+  CD-06, CD-09 to CD-12, CD-15, CD-20 to CD-22, CD-32).
+- Report `discovery_price_changed` (escalating only for an item shown with a
+  `prior_price`), fill `Disclosures.catalogue[]`, emit the registered
+  `type: disclosure` messages, carry `catalogue_disclosure[]` on session
+  step-ups, and refuse a `step_up.approved` whose `presentation.renders` lacks
+  it ([Sessions and Checkout](checkout/index.md#update),
+  [Catalogue disclosure on the Trusted Surface](human-participants.md#ts-catalogue-disclosure);
+  cases CD-16 to CD-19, CD-35, CD-40, CD-R11).
+- Apply discounts only from the seller-signed quote, never submit a code the
+  agent did not send, report each rejected code, rate-limit rejected codes,
+  and refund from the seller-signed revised quote
+  ([Discounts](checkout/index.md#discounts); cases CD-42 to CD-46, CD-52,
+  CD-R13 to CD-R18).
 
 ### Seller (BPP)
 
@@ -368,6 +408,10 @@ A seller app that does not implement BACP needs no change: it ignores
 - Refuse (NACK) an `init`, `confirm`, `update`, `cancel` or IGM `issue` that
   lacks `context.bacp.mandate_ref`, and verify the `kb_jwt` when one is present.
 - Return a signed quote in `on_init`, with the required disclosures.
+- Send `bacp.disclosure` tags only with values that are true: a `prior_price`
+  only for a reduction it announced, as the lowest price in the 30 days before
+  `announced_on`, and `sponsored` only as the fact of a paid placement
+  ([Catalogue disclosure mapping](transports/beckn.md#disclosure-mapping)).
 - In negotiation, sign every message with its registry key, give every
   firm offer an absolute expiry, verify only the buyer's `within_bounds`
   attestation, and never request the buyer's bounds.
@@ -385,6 +429,11 @@ A Mandate Manager MUST:
   every `mandate.activated`, `step_up.approved`, `loan.accepted` and
   `payment.afa_completed` event
   ([Human participants](human-participants.md#ts-requirements)).
+- State each `catalogue_disclosure[]` entry of a step-up render before the
+  total, in the fixed sentences and with the item name as labelled seller text,
+  and report it in `Presentation.renders`
+  ([Catalogue disclosure on the Trusted Surface](human-participants.md#ts-catalogue-disclosure);
+  cases CD-37, CD-39).
 - Reject, before anything reaches the Trusted Surface, a mandate request
   outside its purpose's bounds, and reject any mandate whose constraints
   exceed the limits of its rail binding.
@@ -473,7 +522,12 @@ PSP or a seller) MUST:
   matching signed Trusted Surface event, an approval without a `Presentation`,
   a step-up event whose `ts_render` is missing from `ts_renders[]` or differs
   from the BPP-signed quote in `total`, payee or `checkout_hash`, or from the
-  disclosures hash in `price_breakup_hash`, and a log
+  disclosures hash in `price_breakup_hash`, a step-up render whose
+  `catalogue_disclosure[]` differs from the bundle's `Disclosures.catalogue[]`,
+  omits a qualifying entry or names an item other than the quote's, a
+  `Disclosures.catalogue[]` entry whose `source_digest` the agent's `discover`
+  log entry does not list or whose signed source fails (cases CD-36, CD-38,
+  CD-R03, CD-R10), and a log
   whose first agent entry is not `ai_disclosure`
   ([Evidence bundle](evidence.md#ap2-verification)), a negotiation
   step-up whose `ts_render` or `presentation` carries an `offer_hash` or an
@@ -3366,4 +3420,925 @@ T3-06 and T3-18 run on a Beckn leg, and T3-29 on a Beckn leg too. T3-30 drives a
       - {path: accept, status: 200, state: ESCALATED, resolution: requires_buyer_review, count: 1}
     state: {offer: LIVE, negotiation: ESCALATED}
     beckn: []
+```
+
+## Catalogue disclosure cases {#catalogue-disclosure-cases}
+
+The cases below cover the [catalogue disclosures](discovery.md#catalogue-disclosures) of a discover response: the
+per-item `sponsorship`, the seller-asserted `prior_price`, `mrp` and `tax_inclusive`, the monotone OR rule, the rendering
+rules for an agent, the drift message `discovery_price_changed`, `Disclosures.catalogue[]`, the seller-signed sources and
+their [verification by the agent](discovery.md#verifying-results), the repeat on the Trusted Surface and as
+`type: disclosure` messages, and [discounts and published offers](checkout/index.md#discounts). They use the manifest
+form above. The case ids run in three blocks: CD-01 to CD-25 test the disclosure fields and rules, CD-26 to CD-53 test
+source verification, the Trusted Surface repeat and discounts, and CD-R01 to CD-R20 close the traces of the red-team
+review of that design. Cases marked *harness* need a mock seller whose signed callbacks the test controls. CD-23 is
+blocked until `principal.minor_status` exists ([Q-17](open-questions.md#q-17)); CD-25 is informative. These cases also
+use:
+
+- `system_under_test` (case): `gateway` unless stated; `agent`, `trusted_surface`, `verifier` and `schema` as in the
+  cases above;
+- `bpp_on_search` (fixture): what the mock seller sends in its signed `on_search`: items, prices as decimal strings
+  and `bacp.disclosure` tags; `signed: true` unless stated;
+- `ranking_policy` (fixture): the gateway's own order (`main_parameters`) and any `placement_sold` (to which provider,
+  by which party) or `upstream_signal` (an upstream ordering or promotion signal and whether its paid status is known);
+- `discover_response` (fixture): a discover response as the gateway returned it, with the `sources` it serves; an
+  `agent_render` step has the agent under test present it to a principal, and `output` expectations (`contains`,
+  `contains_none_of`, `before`) apply to the transcript or the screen text;
+- `session` (fixture): a session created from a discover response, with the `quote` the seller signed at `on_select`
+  and `on_init`;
+- `source_get` (step): the agent calls `GET /discover/{transaction_id}/sources/{source_digest}`;
+- `log` (state): the InstructionLog entries the agent wrote.
+
+Amounts are integer paise.
+
+```yaml
+- case_id: CD-01
+  title: A discover item without sponsorship is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: catalog-item.no-sponsorship.invalid.json
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/CatalogItem}
+  expect:
+    verdict: {code: schema_invalid, path: "$.sponsorship"}
+
+- case_id: CD-02
+  title: A seller's sponsored tag makes the item sponsored by the seller app, and ranking.sponsored true
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "110.00"}, tags: {bacp.disclosure: {sponsored: "true", sponsored_by: bpp}}}]}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[0].items[0].sponsorship.status": sponsored, "body.results[0].items[0].sponsorship.by_includes": [bpp], body.ranking.sponsored: true, count: 1}
+
+- case_id: CD-03
+  title: With no sponsorship tag, no placement sold and no upstream signal, the item is not_sponsored
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "110.00"}}]}
+    ranking_policy: {main_parameters: [distance, price], placement_sold: none, upstream_signal: none}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[0].items[0].sponsorship.status": not_sponsored, body.ranking.sponsored: false, count: 1}
+
+- case_id: CD-04
+  title: An upstream promotion signal of unknown paid status, relayed by the gateway's order, gives undeclared
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "110.00"}}]}
+    ranking_policy: {main_parameters: [distance, price], upstream_signal: {kind: promotion, paid_status: unknown}}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[0].items[0].sponsorship.status": undeclared, count: 1}
+
+- case_id: CD-05
+  title: A gateway cannot lower an upstream sponsored value (monotone OR)
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "110.00"}, tags: {bacp.disclosure: {sponsored: "true", sponsored_by: bpp}}}]}
+    ranking_policy: {gateway_returns: not_sponsored}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    verdict: {code: conformance_fail, reason: sponsorship_lowered}
+
+- case_id: CD-06
+  title: A placement sold for a provider makes every item of that provider sponsored by the party that sold it
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, provider: P, price: {value: "110.00"}}, {id: I2, provider: P, price: {value: "68.00"}}]}
+    ranking_policy: {placement_sold: {provider: P, by: gateway}}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[0].items[*].sponsorship.status": sponsored, "body.results[0].items[*].sponsorship.by_includes": [gateway], count: 1}
+
+- case_id: CD-07
+  title: An agent never renders an undeclared item as not sponsored, and says the fixed undeclared sentence
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {items: [{id: I1, sponsorship: {status: undeclared}}], sources: verified}
+    language: en-IN
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains: ["Not stated whether this is sponsored."]
+      contains_none_of: ["not sponsored", "Not sponsored", "no ads"]
+
+- case_id: CD-08
+  title: A sponsored result on a voice call is labelled before the item, in the operator's fixed sentence and session language, and a paraphrase fails
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    channel: voice
+    language: ta-IN
+    discover_response: {items: [{id: I1, sponsorship: {status: sponsored, by: [gateway]}}], sources: verified}
+    operator_translations: {sponsored: fixed_reviewed}
+  steps:
+    - agent_render: {to: principal, as: transcript}
+  expect:
+    output:
+      before: {sponsored_sentence: item_name}
+      contains_none_of: ["recommended", "promoted pick", "top choice"]
+
+- case_id: CD-09
+  title: A prior_price with basis mrp, with no announced_on, or with a non-ISO date is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vectors: [catalog-item.prior-price-basis-mrp.invalid.json, catalog-item.prior-price-no-date.invalid.json, catalog-item.prior-price-bad-date.invalid.json]
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/CatalogItem, each_vector: true}
+  expect:
+    verdict: {code: schema_invalid, count: 3}
+
+- case_id: CD-10
+  title: A prior_price that is not above the unit price is dropped and flagged
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "549.00", maximum_value: "650.00"}, tags: {bacp.disclosure: {tax_inclusive: "true", prior_price: "499.00", prior_price_basis: lowest_30d, prior_price_announced_on: "2026-12-20"}}}]}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[0].items[0].prior_price": absent, count: 1}
+    messages: [prior_price_invalid]
+
+- case_id: CD-11
+  title: With tax_inclusive true, a prior_price above the MRP is dropped and flagged
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "90.00", maximum_value: "100.00"}, tags: {bacp.disclosure: {tax_inclusive: "true", prior_price: "105.00", prior_price_basis: lowest_30d, prior_price_announced_on: "2026-12-20"}}}]}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[0].items[0].prior_price": absent, count: 1}
+    messages: [prior_price_invalid]
+
+- case_id: CD-12
+  title: With tax_inclusive true, a unit price above the MRP is reported as NEG_MRP_EXCEEDED
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "110.00", maximum_value: "100.00"}, tags: {bacp.disclosure: {tax_inclusive: "true"}}}]}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    messages: [NEG_MRP_EXCEEDED]
+    responses:
+      - {status: 200, message.param: "$.results[0].items[0].unit_price", count: 1}
+
+- case_id: CD-13
+  title: A kirana item below its MRP with no prior_price is shown as price and MRP, with no percentage, "was", "off" or strike-through
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {items: [{id: I1, unit_price: {value: 900, currency: INR}, mrp: {value: 1000, currency: INR}, tax_inclusive: true, sponsorship: {status: not_sponsored}}], sources: verified}
+    language: en-IN
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains: ["MRP ₹10"]
+      contains_none_of: ["%", "was", "off", "strike"]
+
+- case_id: CD-14
+  title: A reduction claim in an item name, with no prior_price, is neither voiced nor shown
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {items: [{id: I1, name: {en-IN: "Atta 5 kg — 50% OFF, was ₹999"}, unit_price: {value: 49900, currency: INR}, sponsorship: {status: not_sponsored}}], sources: verified}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains_none_of: ["50%", "was ₹999", "OFF"]
+
+- case_id: CD-15
+  title: A seller's listed_value above value, with no bacp.disclosure tag, gives no prior_price
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "549.00", listed_value: "599.00", maximum_value: "650.00"}}]}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[0].items[0].prior_price": absent, count: 1}
+
+- case_id: CD-16
+  title: A rise from the discovered price, on an item shown with no prior_price, is a recoverable message and not an escalation
+  level: bacp.core.1
+  fixture:
+    session: {discovered_unit_price: {value: 6200, currency: INR}, prior_price: none, on_select_unit_price: {value: 6400, currency: INR}}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}}}
+  expect:
+    messages: [discovery_price_changed]
+    responses:
+      - {status: 200, message.resolution: recoverable, body.status: incomplete, count: 1}
+    state: {session.status_is_not: requires_escalation, agent.states_new_price_to_present_principal: true}
+
+- case_id: CD-17
+  title: A rise from the discovered price, on an item shown with a prior_price, needs a confirm step-up
+  level: bacp.core.1
+  fixture:
+    session: {discovered_unit_price: {value: 49900, currency: INR}, prior_price: {amount: {value: 59900, currency: INR}, basis: lowest_30d, announced_on: "2026-12-20"}, on_select_unit_price: {value: 54900, currency: INR}}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}}}
+  expect:
+    messages: [discovery_price_changed]
+    responses:
+      - {status: 200, message.resolution: requires_buyer_review, body.status: requires_escalation, body.step_up.kind: confirm, count: 1}
+
+- case_id: CD-18
+  title: A fall from the discovered price gives no discovery_price_changed
+  level: bacp.core.1
+  fixture:
+    session: {discovered_unit_price: {value: 6400, currency: INR}, on_select_unit_price: {value: 6200, currency: INR}}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}}}
+  expect:
+    messages_absent: [discovery_price_changed]
+
+- case_id: CD-19
+  title: Disclosures.catalogue[] holds the discovered values of each line item, covered by disclosures.hash
+  level: bacp.core.1
+  fixture:
+    session: {from_discover: true, items: [I1]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}}}
+  expect:
+    responses:
+      - {status: 200, "body.disclosures.catalogue[0].item_id": I1, "body.disclosures.catalogue[0]_has": [sponsorship, discovered_unit_price, source_digest], count: 1}
+    state: {disclosures.hash_covers: catalogue}
+
+- case_id: CD-20
+  title: A gateway that returns a higher prior_price than the seller signed is detected on dispute from the retained callback
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: I1, price: {value: "549.00"}, tags: {bacp.disclosure: {tax_inclusive: "true", prior_price: "599.00", prior_price_basis: lowest_30d, prior_price_announced_on: "2026-12-20"}}}]}
+    gateway_behaviour: {rewrite_prior_price_to: "999.00"}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+    - source_get: {digest_of: "results[0]"}
+  expect:
+    verdict: {code: conformance_fail, reason: bpp_value_altered}
+    state: {retained_callback.sha-256_equals_source_digest: true, retained_callback.prior_price: "599.00"}
+
+- case_id: CD-21
+  title: ranking.sponsored true with no sponsored item, or false with one, is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vectors: [discover-response.ranking-true-no-item.invalid.json, discover-response.item-sponsored-ranking-false.invalid.json]
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/DiscoverResponse, each_vector: true}
+  expect:
+    verdict: {code: schema_invalid, count: 2}
+
+- case_id: CD-22
+  title: The default ranking does not use discount size
+  level: bacp.core.1
+  fixture:
+    ranking_policy: {main_parameters: [distance, discount], principal_requested_sort: none}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    verdict: {code: conformance_fail, reason: discount_in_default_ranking}
+
+- case_id: CD-23
+  title: Minor mode drops sponsored and undeclared items (blocked until principal.minor_status exists)
+  level: bacp.core.1
+  fixture:
+    status: blocked_on_q17
+    principal: {minor_status: minor}
+    bpp_on_search: {items: [{id: I1, sponsorship_source: bpp_tag}, {id: I2, sponsorship_source: unknown_upstream}, {id: I3, sponsorship_source: none}]}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, "body.results[*].items[*].id": [I3], count: 1}
+
+- case_id: CD-24
+  title: A B2B quote with a PTR-plus-scheme price and no prior_price is not blocked and carries no reduction claim
+  level: bacp.b2b.1
+  system_under_test: agent
+  fixture:
+    profile: fmcg.distribution
+    quote: {price_basis: ptr_plus_scheme, prior_price: none}
+  steps:
+    - agent_evaluates: {quote: fixture}
+  expect:
+    state: {quote: not_blocked}
+    output:
+      contains_none_of: ["was", "off", "%"]
+
+- case_id: CD-25
+  title: Informative (SHOULD) - an item with prior_price_contradicted is shown with no reduction claim
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {items: [{id: I1, prior_price: {amount: {value: 59900, currency: INR}, basis: lowest_30d, announced_on: "2026-12-20"}, sponsorship: {status: not_sponsored}}], messages: [prior_price_contradicted], sources: verified}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains_none_of: ["seller's lowest price in the 30 days"]
+
+- case_id: CD-26
+  title: (harness) The gateway returns a prior_price the seller did not sign, and the agent voices no claim, or only the signed figure
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    seller_signed_prior_price: {value: 59900, currency: INR}
+    discover_response: {items: [{id: I1, prior_price: {amount: {value: 99900, currency: INR}, basis: lowest_30d, announced_on: "2026-12-20"}}], sources: served}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    log: {"discover.source_checks[0].outcome": mismatch, "discover.source_checks[0].reason": discovery_source_mismatch}
+    output:
+      contains_none_of: ["999"]
+
+- case_id: CD-27
+  title: (harness) The seller tags an item sponsored and the gateway returns not_sponsored, and the agent says the sponsored sentence
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    seller_tags: {sponsored: "true", sponsored_by: bpp}
+    discover_response: {items: [{id: I1, sponsorship: {status: not_sponsored}}], sources: served}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains: ["Sponsored: the seller's app was paid to show this."]
+
+- case_id: CD-28
+  title: A source that answers 404 leaves the item with no prior_price and no MRP, and with sponsorship rendered as undeclared
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {items: [{id: I1, mrp: {value: 12000, currency: INR}, prior_price: {amount: {value: 59900, currency: INR}, basis: lowest_30d, announced_on: "2026-12-20"}, sponsorship: {status: not_sponsored}}], sources: {status: 404}}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains: ["Not stated whether this is sponsored."]
+      contains_none_of: ["MRP", "lowest price in the 30 days"]
+    log: {"discover.source_checks[0].outcome": unverified, "discover.source_checks[0].reason": discovery_source_unverified}
+
+- case_id: CD-29
+  title: (harness) A genuine signed callback from an earlier search, with another message_id, is unverified
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    served_source: {genuinely_signed: true, context.message_id: other_search}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    log: {"discover.source_checks[0].outcome": unverified}
+
+- case_id: CD-30
+  title: (harness) A registry record supplied by the gateway is not used; the agent uses its own lookup
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    gateway_supplies: {bpp_key_record: forged}
+    agent_registry_lookup: {host: lookup.agent-operator.example.in}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    state: {agent.used_gateway_supplied_key: false}
+    log: {discover.registry_lookup: lookup.agent-operator.example.in}
+
+- case_id: CD-31
+  title: A source_digest that does not match the served body is unverified
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    served_source: {body_sha256_equals_digest: false}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    log: {"discover.source_checks[0].outcome": unverified}
+
+- case_id: CD-32
+  title: Another agent's credential, and an unknown digest, get 404 from the source endpoint
+  level: bacp.core.1
+  fixture:
+    discover: {transaction_id: T1, agent: agent_A}
+  steps:
+    - request: {method: GET, path: "/discover/T1/sources/{source_digest}", tag: bacp-browse, as_agent: agent_B}
+    - request: {method: GET, path: "/discover/T1/sources/sha-256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", tag: bacp-browse, as_agent: agent_A}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 2}
+
+- case_id: CD-33
+  title: A body with duplicate price keys is unverified
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    served_source: {body_has_duplicate_member: price}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    log: {"discover.source_checks[0].outcome": unverified}
+
+- case_id: CD-34
+  title: An agent that presents nothing and buys by unit price alone needs no source fetch
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    presence: HNP
+    selection: {by: unit_price, presents: none, relies_on: [unit_price]}
+  steps:
+    - agent_discovers_and_creates_session: {}
+  expect:
+    state: {source_get_calls: 0}
+
+- case_id: CD-35
+  title: A session with a sponsored line gets a confirm step-up whose ts_render carries one matching catalogue_disclosure entry
+  level: bacp.core.1
+  fixture:
+    session: {lines: [{item: I1, catalogue: {sponsorship: {status: sponsored, by: [gateway]}}}], step_up: confirm}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}}}
+  expect:
+    state: {ts_render.catalogue_disclosure: [{index: 0, sponsorship: {status: sponsored, by: [gateway]}, name_ref: 0}]}
+
+- case_id: CD-36
+  title: A bundle whose ts_render omits a qualifying catalogue_disclosure entry does not verify
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    bundle: {disclosures.catalogue: [{sponsorship: {status: sponsored, by: [gateway]}}], ts_render.catalogue_disclosure: omit}
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: CD-37
+  title: An audio Trusted Surface in hi-IN states the item name as labelled seller text, then the fixed sentences, before the total and the PIN prompt
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    channel: ivr
+    language: hi-IN
+    ts_render: {catalogue_disclosure: [{index: 0, sponsorship: {status: sponsored, by: [gateway]}, name_ref: 0}, {index: 1, sponsorship: {status: not_sponsored}, prior_price: present, unit_price: present, name_ref: 1}]}
+  steps:
+    - render: {modality: audio}
+  expect:
+    output:
+      before: {ts_sponsored: total, ts_prior_price: total, total: pin_prompt}
+      contains_none_of: ["paraphrase"]
+
+- case_id: CD-38
+  title: An entry that says not_sponsored where Disclosures.catalogue[] says sponsored does not verify
+  level: bacp.core.1
+  system_under_test: verifier
+  fixture:
+    bundle: {"disclosures.catalogue[0].sponsorship.status": sponsored, "ts_render.catalogue_disclosure[0].sponsorship.status": not_sponsored}
+  steps:
+    - verify_bundle: {}
+  expect:
+    verdict: {code: evidence_unverifiable}
+
+- case_id: CD-39
+  title: Five undeclared entries are read as five ts_undeclared sentences or as one ts_undeclared_n with n 5
+  level: bacp.core.1
+  system_under_test: trusted_surface
+  fixture:
+    channel: ivr
+    ts_render: {catalogue_disclosure: [{sponsorship: {status: undeclared}}, {sponsorship: {status: undeclared}}, {sponsorship: {status: undeclared}}, {sponsorship: {status: undeclared}}, {sponsorship: {status: undeclared}}]}
+  steps:
+    - render: {modality: audio}
+  expect:
+    exactly_one_of:
+      - output: {count_of: {ts_undeclared: 5}}
+      - output: {count_of: {ts_undeclared_n: 1}, args: {n: 5}}
+
+- case_id: CD-40
+  title: An on_init with a prior_price line returns a type disclosure prior_price_claim message at the catalogue entry
+  level: bacp.core.1
+  fixture:
+    session: {lines: [{item: I1, catalogue: {prior_price: present}}]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}}}
+  expect:
+    messages: [prior_price_claim]
+    responses:
+      - {status: 200, message.type: disclosure, message.param: "$.disclosures.catalogue[0]", message.resolution: recoverable, count: 1}
+
+- case_id: CD-41
+  title: An agent presents a prior_price_claim message next to the item and does not summarise it
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    presence: HP
+    session_messages: [{type: disclosure, code: prior_price_claim, param: "$.disclosures.catalogue[0]"}]
+  steps:
+    - agent_render: {to: principal, what: quote}
+  expect:
+    output:
+      contains: ["The seller's lowest price in the 30 days before this offer"]
+      next_to: item_0
+
+- case_id: CD-42
+  title: Of two submitted codes, the one the seller applied is in applied[] and the other gets one warning at its position
+  level: bacp.core.1
+  fixture:
+    seller: {applies: [SAVE50], rejects: {EXPIRED20: expired}}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], discounts: {codes: [SAVE50, EXPIRED20]}}}
+  expect:
+    responses:
+      - {status: 200, "body.discounts.applied[0].code": SAVE50, message.code: discount_code_expired, message.param: "$.discounts.codes[1]", count: 1}
+
+- case_id: CD-43
+  title: A PUT without discounts after codes were sent clears the codes and sends no offer on select
+  level: bacp.core.1
+  fixture:
+    session: {discounts.codes: [SAVE50]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I2, quantity: 1}]}}
+  expect:
+    responses:
+      - {status: 200, body.discounts.codes: [], count: 1}
+    beckn: [{action: select, message.order.offers: absent}]
+
+- case_id: CD-44
+  title: (harness) A discount that the gateway adds and the seller did not sign is a conformance failure
+  level: bacp.core.1
+  fixture:
+    gateway_behaviour: {adds_discount_not_in_bpp_quote: true}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}}}
+  expect:
+    verdict: {code: conformance_fail, reason: unsigned_discount}
+
+- case_id: CD-45
+  title: A discount applied at on_select and gone at on_init is drip pricing with the code's message, and escalates
+  level: bacp.core.1
+  fixture:
+    seller: {on_select_applies: [SAVE50], on_init_applies: []}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], fulfilment: {type: Delivery, pincode: "560034"}, discounts: {codes: [SAVE50]}}}
+  expect:
+    messages: [drip_pricing_detected, discount_code_invalid]
+    responses:
+      - {status: 200, body.status: requires_escalation, count: 1}
+
+- case_id: CD-46
+  title: The mandate's amount check runs on the post-discount quote total
+  level: bacp.core.1
+  fixture:
+    quote: {total_before_discount: {value: 105000, currency: INR}, total: {value: 100000, currency: INR}}
+    mandate: {amount_per_txn: {value: 100000, currency: INR}}
+    session: {state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 200, body.status: complete_in_progress, count: 1}
+
+- case_id: CD-47
+  title: An applied item discount, on an item with no prior_price, is shown as a discount line only
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    session: {discounts.applied: [{title: "₹20 off", amount: {value: 2000, currency: INR}, automatic: true, allocations: [{path: "$.line_items[0]", amount: {value: 2000, currency: INR}}]}], line_items: [{id: I1, prior_price: none}]}
+  steps:
+    - agent_render: {to: principal, what: quote}
+  expect:
+    output:
+      contains: ["₹20 off"]
+      contains_none_of: ["was", "%", "strike"]
+
+- case_id: CD-48
+  title: A discount title with a percentage is shown as seller text and the percentage is not voiced; the amount comes from amount
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    session: {discounts.applied: [{code: SAVE60, title: "FLAT 60% OFF", amount: {value: 5000, currency: INR}, automatic: false}]}
+  steps:
+    - agent_render: {to: principal, what: quote}
+  expect:
+    output:
+      contains: ["₹50"]
+      contains_none_of: ["60%"]
+
+- case_id: CD-49
+  title: A discovery offer scoped to an item that has no prior_price is shown with no figure for that item
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {offers: [{id: O1, kind: discount, auto: false, item_ids: [I1], benefit: {value_type: amount, amount: {value: 5000, currency: INR}}}], items: [{id: I1, prior_price: none}], sources: verified}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains_none_of: ["₹50"]
+
+- case_id: CD-50
+  title: An affiliate code of the agent's operator is not submitted when no human is present
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    presence: HNP
+    operator: {affiliate_code: AFF10}
+  steps:
+    - agent_creates_session: {}
+  expect:
+    state: {submitted_codes_include: [AFF10]}
+    verdict: {code: conformance_fail}
+
+- case_id: CD-51
+  title: A conditional cashback in the quote terms is not called a discount, and the payable is unchanged
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    quote: {terms: [{type: cashback, condition: card_payment}], total: {value: 100000, currency: INR}}
+  steps:
+    - agent_render: {to: principal, what: quote}
+  expect:
+    output:
+      contains_none_of: ["discount"]
+    state: {payable: {value: 100000, currency: INR}}
+
+- case_id: CD-52
+  title: The refund for a return of one line of an across-discounted order equals the seller-signed revised quote and is not more than was paid
+  level: bacp.core.1
+  fixture:
+    order: {lines: 2, discount: {method: across, amount: {value: 5000, currency: INR}}, line_paid: {value: 8000, currency: INR}}
+    bpp_revised_quote: {refund: {value: 8000, currency: INR}}
+  steps:
+    - request: {method: POST, path: "/orders/{order_id}/returns", tag: bacp-post-order, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}]}}
+  expect:
+    state: {refund.amount_equals_revised_quote: true, refund.amount_at_most_line_paid: true}
+
+- case_id: CD-53
+  title: A discount that carries provisional true is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: session.discount-provisional.invalid.json
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Session}
+  expect:
+    verdict: {code: schema_invalid}
+
+- case_id: CD-R01
+  title: (harness) An agent reuses an Idempotency-Key for a second search, and a callback signed more than 300 seconds before the second send is unverified
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    searches: [{key: K, at: "+0s"}, {key: K, at: "+3d"}]
+    served_source: {created: "+0s", for_search: 2}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    state: {agent.reuses_discover_key: false}
+    log: {"discover.source_checks[0].outcome": unverified}
+
+- case_id: CD-R02
+  title: (harness) A callback signed with a seller key whose validity ended before verification is unverified at run time, and verifies in an evidence bundle for a past order
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    served_source: {key: k1, key_valid_until: before_now, created: inside_old_validity}
+  steps:
+    - agent_render: {to: principal}
+    - verify_bundle: {bundle: past_order_with_same_callback}
+  expect:
+    log: {"discover.source_checks[0].outcome": unverified}
+    verdict: {code: ok}
+
+- case_id: CD-R03
+  title: (harness) A Disclosures.catalogue[] entry that names another genuine callback, with not_sponsored, is caught by the agent and by the verifier
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discovery: {item: I, source_digest: S1, seller_tags: {sponsored: "true"}}
+    session: {"disclosures.catalogue[0]": {item_id: I, sponsorship: {status: not_sponsored}, source_digest: S2}}
+  steps:
+    - agent_receives_session: {}
+    - verify_bundle: {}
+  expect:
+    log: {session.discovery_source_mismatch: recorded}
+    state: {session_treated_as: requires_buyer_review}
+    verdict: {code: evidence_unverifiable}
+
+- case_id: CD-R04
+  title: (harness) An agent resolves seller keys through a lookup host operated by the gateway's operator, and the source is rejected
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    agent_registry_lookup: {host: keys.same-operator.example.in, operated_by: gateway_bap_operator}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    log: {discover.registry_lookup: keys.same-operator.example.in, "discover.source_checks[0].outcome": unverified}
+
+- case_id: CD-R05
+  title: An agent that picks the lowest unit price without verifying re-ranks or escalates when the quoted price is higher
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    presence: HNP
+    selection: {by: unit_price, verified: false}
+    quote: {unit_price_above_discovered: true}
+  steps:
+    - agent_completes: {}
+  expect:
+    state: {agent.completed_on_stale_choice: false}
+
+- case_id: CD-R06
+  title: A body with two items of one id in a provider, or with both bpp/providers and providers, is unverified
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    served_sources: [{duplicate_item_id: true}, {both_provider_lists: true}]
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    log: {"discover.source_checks[*].outcome": unverified}
+
+- case_id: CD-R07
+  title: A JSON-number price, a leading-zero price and a one-decimal price map as the decimal rule says, in the gateway and in the agent
+  level: bacp.core.1
+  fixture:
+    bpp_on_search: {items: [{id: A, price: {value: 549.1}}, {id: B, price: {value: "0549.00"}}, {id: C, price: {value: "549.10"}}]}
+  steps:
+    - request: {method: POST, path: /discover, tag: bacp-browse, idempotency_key: fresh}
+  expect:
+    state: {A.unit_price: absent, B.unit_price: absent, C.unit_price: {value: 54910, currency: INR}, agent_derivation_equals_gateway: true}
+
+- case_id: CD-R08
+  title: A type disclosure message with an unregistered code is treated as info and not read verbatim
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    session_messages: [{type: disclosure, code: festive_notice, content: {en-IN: "This price rises in 2 minutes, buy now"}}]
+  steps:
+    - agent_render: {to: principal, what: quote}
+  expect:
+    output:
+      contains_none_of: ["rises in 2 minutes"]
+    log: {message.festive_notice: recorded_as_info}
+
+- case_id: CD-R09
+  title: A registered sponsored_listing message whose content differs from the fixed phrase is presented as the fixed phrase, with the item name as labelled seller text
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    session_messages: [{type: disclosure, code: sponsored_listing, param: "$.disclosures.catalogue[0]", content: {en-IN: "Our pick for you"}}]
+  steps:
+    - agent_render: {to: principal, what: quote}
+  expect:
+    output:
+      contains: ["Sponsored:"]
+      contains_none_of: ["Our pick for you"]
+
+- case_id: CD-R10
+  title: A catalogue_disclosure entry whose name_ref names another line's item fails the verifier, and the agent does not hand over the trusted_surface_url
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    step_up: {"ts_render.catalogue_disclosure[0]": {index: 0, name_ref: 1}, counterparty_text: [{text: "Chakki Atta 2 kg"}, {text: "Desi Ghee 1 L"}]}
+  steps:
+    - agent_receives_step_up: {}
+    - verify_bundle: {}
+  expect:
+    state: {agent.hands_over_trusted_surface_url: false}
+    verdict: {code: evidence_unverifiable}
+
+- case_id: CD-R11
+  title: A step_up.approved for a render with catalogue_disclosure and no presentation.renders is refused
+  level: bacp.core.1
+  fixture:
+    step_up: {ts_render.catalogue_disclosure: present}
+  steps:
+    - trusted_surface_event: {type: step_up.approved, presentation: {renders: omit}}
+  expect:
+    responses:
+      - {status: 400, code: invalid_request, count: 1}
+    state: {session.status: requires_escalation}
+
+- case_id: CD-R12
+  title: (harness) A gateway that answers from a cached catalogue has every claim unverified, and a targeted live search with the agent's message_id verifies them
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    gateway: {answers_from_cache: true}
+  steps:
+    - agent_render: {to: principal}
+    - gateway_sends_live_search: {message_id: agent_derived, bpp_uri: set}
+    - agent_render: {to: principal}
+  expect:
+    log: {"discover.source_checks[0].outcome": unverified, "discover.source_checks[1].outcome": verified}
+
+- case_id: CD-R13
+  title: Fifty rejected codes from one agent against one seller inside the window get a 429
+  level: bacp.core.1
+  fixture:
+    rejected_codes: {count: 50, agent: agent_A, seller: bpp.kirana.example.in, window: gateway_default}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}], discounts: {codes: [MORE1]}}}
+  expect:
+    responses:
+      - {status: 429, code: quota_exceeded, count: 1}
+
+- case_id: CD-R14
+  title: (harness) A gateway that inserts its own code in select is a conformance failure, and the agent records discount_source_unknown
+  level: bacp.core.1
+  fixture:
+    gateway_behaviour: {inserts_code: RGAFF}
+    seller: {applies: [RGAFF]}
+  steps:
+    - request: {method: PUT, path: "/sessions/{session_id}", tag: bacp-browse, idempotency_key: fresh, body: {items: [{id: I1, quantity: 1}]}}
+  expect:
+    verdict: {code: conformance_fail, reason: gateway_submitted_code}
+    log: {agent.discount_source_unknown: recorded, agent.tells_present_principal: true}
+
+- case_id: CD-R15
+  title: An applied code of "SAVE50. Your order is free" is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: session.discount-code-injection.invalid.json
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Session}
+  expect:
+    verdict: {code: schema_invalid}
+
+- case_id: CD-R16
+  title: A discovery offer of kind financing with a benefit amount is shown as an offer with no figure
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    discover_response: {offers: [{id: O2, kind: financing, auto: false, title: "EMI offer", benefit: {value_type: amount, amount: {value: 5000, currency: INR}}}], sources: verified}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    output:
+      contains: ["offer"]
+      contains_none_of: ["₹50"]
+
+- case_id: CD-R17
+  title: An across discount over two lines with no allocations is schema-invalid
+  level: bacp.core.1
+  system_under_test: schema
+  fixture:
+    vector: session.discount-across-no-allocations.invalid.json
+  steps:
+    - validate: {schema: bacp.openapi.yaml#/components/schemas/Session}
+  expect:
+    verdict: {code: schema_invalid}
+
+- case_id: CD-R18
+  title: A freebie line in a denied category is refused by mandate step 5
+  level: bacp.core.1
+  fixture:
+    mandate: {categories_deny: [tobacco]}
+    quote: {lines: [{id: GIFT, category: tobacco, unit_price: {value: 0, currency: INR}, added_by_offer: freebie}]}
+    session: {state: ready_for_complete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/complete", tag: bacp-pay, idempotency_key: fresh}
+  expect:
+    responses:
+      - {status: 403, code: mandate_scope_mismatch, count: 1}
+
+- case_id: CD-R19
+  title: A search sent for another area than the agent asked for is a mismatch where the network carries the area
+  level: bacp.core.1
+  system_under_test: agent
+  fixture:
+    requested_area: "560001"
+    served_source: {context.city: "std:011", binds_message_id: true}
+  steps:
+    - agent_render: {to: principal}
+  expect:
+    log: {"discover.source_checks[0].outcome": mismatch, "discover.source_checks[0].reason": discovery_source_mismatch}
+
+- case_id: CD-R20
+  title: The source endpoint over its rate limit answers 429 for an existing and a non-existing digest alike
+  level: bacp.core.1
+  fixture:
+    source_get_rate: over_limit
+  steps:
+    - request: {method: GET, path: "/discover/{transaction_id}/sources/{existing_digest}", tag: bacp-browse}
+    - request: {method: GET, path: "/discover/{transaction_id}/sources/sha-256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA", tag: bacp-browse}
+  expect:
+    responses:
+      - {status: 429, code: quota_exceeded, count: 2}
 ```
