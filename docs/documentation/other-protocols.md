@@ -5,7 +5,7 @@ BACP does not start from scratch. Several open protocols for agentic commerce an
 The descriptions are based on each protocol's public specification or announcements as of 17-10-2026. These protocols change quickly, so check their own documentation for the current state.
 
 !!! note "Complementary, not competing"
-    BACP is an India-specific agent layer. It is designed to be wire-compatible with the global protocols where possible, so that an agent built for them can work in India with little extra effort, and so that BACP can track their evolution.
+    BACP is an India-specific agent layer. It reuses the ideas and, where they fit, the wire formats of the global protocols, so that an agent built for them can work in India with less extra effort, and so that BACP can track their evolution. Where BACP's wire format differs, this page says so.
 
 ## At a glance
 
@@ -25,7 +25,39 @@ The descriptions are based on each protocol's public specification or announceme
 
 The [Universal Commerce Protocol](https://ucp.dev) is an open standard for interoperable commerce between platforms (such as AI agents), businesses and payment providers. Businesses publish a profile at a well-known URL. Platforms negotiate capabilities such as checkout, cart, catalogue and orders, and the same operations are bound to REST, MCP and A2A. UCP versions its specification by date.
 
-**How BACP relates.** BACP is designed to be wire-compatible with UCP's checkout verbs and statuses, so that an agent that speaks UCP checkout can drive a BACP session with small changes. BACP adds what UCP leaves out for India: discovery across a network rather than per business, write paths after an order (cancel, return, grievance), Indian payment rails, DPDP consent and GST.
+**How BACP relates.** BACP follows UCP's checkout verbs and status vocabulary where it can, but it is not wire-compatible with UCP today: the paths, the spelling of some statuses, the form of totals and the request envelope differ. Whether and how to close that gap is an open topic under panel review, and this page will state the outcome when it is decided. BACP adds what UCP leaves out for India: discovery across a network rather than per business, write paths after an order (cancel, return, grievance), Indian payment rails, DPDP consent and GST.
+
+**How the two are organised.** UCP is organised as services (verticals such as shopping), capabilities inside each
+service, a common layer shared by all, and extensions that add to a capability. BACP has the same four ideas under
+different names, and they do not line up one to one. BACP's counterpart of a UCP vertical is a
+[trade profile](../specification/trade-profiles.md): a set of rules for one kind of buying (for example B2B trade or
+public procurement) over the same capabilities. What UCP calls "Common" is spread over BACP's shared artefacts, which
+every capability uses.
+
+| UCP | BACP counterpart | Where |
+|---|---|---|
+| Services and verticals | Trade profiles over the same five capabilities | [Trade Profiles](../specification/trade-profiles.md) |
+| "Common": shared types | `common.json` (for example `Amount`, integer paise) | [`common.json`](https://bacp.dev/latest/schemas/common.json) |
+| "Common": errors | The flat error object and the error registry | [Errors](../specification/errors.md) |
+| "Common": identity of the caller | `AgentCredential` and RFC 9421 signature tags | [Identity and Request Signing](../specification/identity-and-signing.md) |
+| "Common": payment authority | Open and closed mandates | [Mandates and Consent](../specification/mandates.md) |
+| "Common": audit trail | Instruction log and evidence bundle | [Evidence and Instruction Log](../specification/evidence.md) |
+| Capabilities (checkout, order, catalogue) | `in.bacp.discover`, `in.bacp.checkout`, `in.bacp.mandate`, `in.bacp.order`, `in.bacp.issue` | [Discovery](../specification/discovery.md) |
+| Extensions | The extensibility rules: ignore unknown fields, fail closed on unknown mandate constraints, namespaced `extensions`, registered error codes and handlers | [Extensibility](../specification/overview/index.md#extensibility) |
+
+Two UCP parts have no BACP counterpart in this version: the cart capability, and linking a buyer's account at a seller.
+Both are parked, not rejected. BACP has no mechanism yet by which a third party defines a new capability or vertical;
+how a new vertical is added stays an open topic, and the extensibility rules above are today's only extension path.
+
+**What BACP does not take from UCP.** BACP does not adopt UCP's Embedded Protocol, in which a business's own checkout
+page runs inside the platform's surface and can collect payment and address details. This is a non-goal, not a gap.
+In BACP the principal's authorisation happens on the [Trusted Surface](../specification/human-participants.md), the
+non-agentic surface of the Mandate Manager or the payer's PSP, which renders only gateway-signed content in the
+principal's language and takes the PIN or biometric itself. A seller's page does not take part: it is not
+non-agentic by requirement, it cannot be checked against a signed render, and putting a PIN or a consent on a
+seller's page would put the factor within reach of the party that benefits from the answer. A merchant-supplied view
+for a human to review a basket before approving stays parked; if it is added, the approval would still be given on
+the Trusted Surface.
 
 **What BACP reuses from UCP.**
 
@@ -96,7 +128,7 @@ x402 is an HTTP 402 flow for paying per request: the server answers with a payme
 
 | From | BACP reuses |
 |---|---|
-| UCP | Checkout verbs and statuses, three-way transport binding, RFC 9421 and RFC 9530 signing, idempotency keys, date-based versions, capability intersection |
+| UCP | Checkout verbs and the status vocabulary (not wire-compatible today), three-way transport binding, RFC 9421 and RFC 9530 signing, idempotency keys, date-based versions, capability intersection |
 | AP2 | Open and closed mandates as SD-JWT with key binding, the non-agentic Trusted Surface, fail-closed constraints, signed receipts |
 | ACP | Full-state responses, flat errors with resolution hints, strict idempotency responses |
 | A2A | Agent card, `TASK_STATE_AUTH_REQUIRED` step-up, data parts |

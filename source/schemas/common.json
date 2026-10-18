@@ -720,7 +720,7 @@
     },
     "HpProof": {
       "type": "object",
-      "description": "Proof that the principal confirmed one write on the Trusted Surface: a post-order write with presence HP (cancel, return, raise issue, issue action) or an agent's trade act (GRN, CRAC, MSMED written objection, ledger acknowledgement). It names a step-up of kind post_order, whose gateway-signed ts_render names the action, the order and, for an issue action, the issue and the subject_hash of the resolution shown, and the signed step_up.approved event for it. It is valid only for the write its ts_render names, for an issue action only while the issue's resolution still hashes to that subject_hash, and is used once; otherwise the write is refused with 403 presence_not_proven.",
+      "description": "Proof that the principal confirmed one write on the Trusted Surface: a post-order write with presence HP (cancel, return, raise issue, issue action) or an agent's trade act (GRN, CRAC, MSMED written objection, ledger acknowledgement). It names a step-up of kind post_order, whose gateway-signed ts_render names the action, the order and, for an issue action, the issue and, for RESOLUTION_ACCEPTED or RESOLUTION_REJECTED, the subject_hash of the resolution shown, and the signed step_up.approved event for it. It is valid only for the write its ts_render names, for RESOLUTION_ACCEPTED or RESOLUTION_REJECTED only while the issue's resolution still hashes to that subject_hash, and is used once; otherwise the write is refused with 403 presence_not_proven.",
       "required": [
         "ts_event_hash",
         "step_up_id"

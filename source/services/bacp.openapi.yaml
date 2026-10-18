@@ -6291,7 +6291,7 @@ components:
                 format: date-time
         resolution:
           type: object
-          description: The remedy the respondent currently proposes. A presence-proof step-up for an issue action binds it by subject_hash (sha-256
+          description: The remedy the respondent currently proposes. A presence-proof step-up for RESOLUTION_ACCEPTED or RESOLUTION_REJECTED binds it by subject_hash (sha-256
             over its JCS form as shown to the principal); if it changes before the action is submitted, the proof is refused with 403
             presence_not_proven.
           properties:

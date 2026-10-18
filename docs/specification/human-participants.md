@@ -52,13 +52,16 @@ and of its **payer PSP** (for a summary step-up, the Mandate Manager's only). Th
 
 | Step-up | Mandate Manager | Payer PSP |
 |---|---|---|
-| A session step-up (`confirm`, `rail_auth`) | The issuer of the session's mandate (the open Checkout Mandate) | The PSP named in `rail_binding.psp_id` of the leg's planned open Payment Mandate: the one under the session's root that the gateway planned to pay this session with ([Per-leg rule](mandates.md#per-leg-rule)) |
+| A session step-up (`confirm`, `rail_auth`) | The issuer of the session's mandate (the open Checkout Mandate) | The PSP named in `rail_binding.psp_id` of any of the leg's planned open Payment Mandates: those under the session's root that the gateway planned to pay this session with, more than one under split tender ([Per-leg rule](mandates.md#per-leg-rule)). Each names the Checkout Mandate in its `checkout_mandate_ref` |
 | A summary step-up over a [multi-seller basket](#multi-seller) (`covers[]` present) | The issuer of the shared root open Checkout Mandate | None: no payer PSP fetches or answers a summary, so that no PSP learns the rest of the basket |
 | A `post_order` step-up | The issuer of the mandate the order was placed under | The PSP named in `auth_binding.psp_id` of the order's closed Payment Mandate; under split tender, of any of the order's closed Payment Mandates |
 
 A Checkout Mandate carries no PSP binding, and a closed Payment Mandate exists only from `complete`, so the payer
-PSP of a session step-up is never taken from an `auth_binding`. Any other registry key gets `404 not_found`, never
-`403`, and nothing changes.
+PSP of a session step-up is never taken from an `auth_binding`. On a human-present session there is no open Payment
+Mandate, so a session step-up has no payer PSP: only its Mandate Manager fetches the render and posts the result. The
+`payment.afa_completed` event, which is not a step-up result, is signed by the PSP named in `auth_binding.psp_id` of
+the session's closed Payment Mandate (under split tender, of any of the session's closed Payment Mandates) under tag
+`bacp-ts`. Any other registry key gets `404 not_found`, never `403`, and nothing changes.
 
 ### Requirements TS-1 to TS-5 {#ts-requirements}
 
@@ -103,9 +106,9 @@ The payload is described as data by the OpenAPI component `TsRender`.
 | `step_up_id`, `session_id` | The step-up and its session. `session_id` is absent for `kind: post_order`, which has no session. |
 | `kind`, `reason` | As in the `step_up` object ([Step-up](mandates.md#step-up)). |
 | `action`, `order_id`, `issue_id` | For `kind: post_order` only: the write the principal confirms, the order, and for an issue action the issue ([Presence proof](#hp-proof)). `action` is exactly one of: `CANCEL`, `RETURN`, `RAISE_ISSUE`; for an issue action, the issue action's own `action` value from `POST /issues/{issue_id}/actions` (`INFO_PROVIDED`, `RESOLUTION_ACCEPTED`, `RESOLUTION_REJECTED`, `ESCALATED` or `CLOSED`); or a trade act `GRN`, `CRAC`, `MSMED_OBJECTION` or `LEDGER_ACK`. No other value is valid. |
-| `subject_hash` | For an issue action only: the sha-256 over the JCS form of the issue's `resolution` as the gateway showed it in `summary`. Absent when the issue has no `resolution`. |
+| `subject_hash` | For the issue actions `RESOLUTION_ACCEPTED` and `RESOLUTION_REJECTED` only: the sha-256 over the JCS form of the issue's `resolution` as the gateway showed it in `summary`. Absent for every other action, including `ESCALATED`, `INFO_PROVIDED` and `CLOSED`, and when the issue has no `resolution`. |
 | `language` | The principal's language, as a BCP 47 tag (`LanguageTag`). |
-| `checkout_hash` | The `checkout_hash` of the quote the step-up is about (for `post_order`, the order's quote). |
+| `checkout_hash` | The `checkout_hash` of the quote the step-up is about. For `post_order` it is the `checkout_hash` of the order's closed Checkout Mandate (the hash of the BPP-signed quote the order was placed under, also on the order's `Receipt`); an `Order` carries no `checkout_hash` of its own. |
 | `total` | The total price as a single figure (`Amount`, integer paise). On a summary step-up, the sum of `basket[].amount`. |
 | `price_breakup_hash` | The hash of the BPP-signed price breakup and disclosures (`disclosures.hash`). |
 | `seller_name` | The payee seller, from the BPP-signed quote. Absent on a summary step-up, whose sellers are in `basket[]`. |
@@ -221,7 +224,7 @@ Trusted Surface showed, how, and what the principal did:
 | `shown_at`, `acted_at` | yes | When it was shown and when the principal acted. |
 | `template_id` | no | The Trusted Surface template and its version. |
 | `renders` | on `step_up.approved` when the render carries `catalogue_disclosure[]` | The render fields beyond this version's base set that the Trusted Surface presented, for example `["catalogue_disclosure"]`. |
-| `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the order's. Never present with `offer_hash`. |
+| `checkout_hash` | on `step_up.approved` | The quote the content showed: the session's quote, or for a `post_order` step-up the `checkout_hash` of the order's closed Checkout Mandate. Never present with `offer_hash`. |
 | `offer_hash` | on `negotiation.step_up.approved` | The offer a negotiation `confirm` step-up showed. Never present with `checkout_hash`. |
 | `device_signature` | no | The principal's device signature over the JCS form of `{step_up_id, content_hash, acted_at}` (for a step-up) or `{content_hash, acted_at}`. |
 | `voice_evidence` | no | Audio and transcript hashes and the translation model, for a voice confirmation. |
@@ -245,7 +248,7 @@ state change:
 - that `presentation.content_hash` is the sha-256 of that step-up's `ts_render`, or refuse the event with
   `403 ts_render_mismatch`;
 - on `step_up.approved`, that `presentation.checkout_hash` equals the session's current `checkout_hash` (for a
-  `post_order` step-up, the order's `checkout_hash`); an approval for an earlier quote approves nothing
+  `post_order` step-up, the `checkout_hash` of the order's closed Checkout Mandate); an approval for an earlier quote approves nothing
   ([Deterministic evaluation](mandates.md#evaluation), step 8);
 - on `negotiation.step_up.approved`, that `presentation.offer_hash` equals the `ts_render`'s `offer_hash` and the
   hash of the offer the step-up names, and, for a firm offer, that the `ts_render`'s `acceptance_revocation` equals
@@ -421,13 +424,17 @@ A principal can ask for a human at any time, including after the mandate is revo
 5. `accept` and `release` are each one **compare-and-set** on `handoff.accepted_by` and `handoff.ended_at`, so that
    they are linearisable on any instances. An `accept` sets `accepted_by` only while both are absent. An agent's
    `release` sets `ended_at` only while `accepted_by` is still absent; if an `accept` won, the release changes nothing.
-   An `accept` after `ended_at` is set gets `409 session_state_conflict` at `$.status` and changes nothing. A session
-   therefore never ends `incomplete` with `accepted_by` set.
+   An `accept` after `ended_at` is set gets `409 session_state_conflict` at `$.status` and changes nothing. A `request`
+   that arrives while `ended_at` is set starts a new handoff: the gateway clears `accepted_by`, `accepted_at` and
+   `ended_at`, sets `requested_at` and `route` from the request, returns `201`, and the earlier handoff stays in the
+   InstructionLog at stage `handoff`. An `accept` is therefore refused only for the handoff that has ended, never for
+   one requested afterwards. A session therefore never ends `incomplete` with `accepted_by` set.
 6. The gateway writes every act to the InstructionLog at stage **`handoff`**, an acceptance or a release by a support
    operator with `actor: gateway` and the operator's key id in `actor_ref`.
 
 `Session.handoff` is `{route, requested_at, accepted_by, accepted_at, ended_at}`. A handoff is *requested* while
-`accepted_by` is absent, *connected* once it is set, and *ended* once `ended_at` is set. A session in `human_handoff`
+`accepted_by` is absent, *connected* once it is set, and *ended* once `ended_at` is set. A new `request` after a handoff has ended starts the next handoff of the session
+([Human handoff](#handoff), step 5). A session in `human_handoff`
 leaves it by a release (to `incomplete`) or by cancel, TTL or a stopped mandate (to `cancelled`). On the network a
 handoff maps to Beckn `support` → `on_support`, and the MCP tool is `bacp_human_handoff`
 ([MCP and A2A](transports/mcp-a2a.md#mcp-tools)).
@@ -440,21 +447,27 @@ principal proves it on the Trusted Surface, through a step-up of kind `post_orde
 
 1. A post-order write with `presence: HP` and no `hp_proof` gets `403 presence_not_proven`. The error carries
    `step_up`, a `StepUp` with `kind: post_order` and `reason: presence_proof`, whose `ts_render` names the write:
-   `action`, `order_id` and, for an issue action, `issue_id` and `subject_hash`. Nothing is sent to the network. The
+   `action`, `order_id` and, for an issue action, `issue_id` and, for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED`,
+   `subject_hash`. Nothing is sent to the network. The
    gateway keeps at most one pending `post_order` step-up per `(order_id, action, issue_id)`: a step-up is pending
    until it expires, is declined, or its proof is consumed. A repeat of the refused write returns the same
-   `step_up_id` and `ts_render`, except that for an issue action whose `resolution` no longer hashes to the pending
-   step-up's `subject_hash` the gateway voids that step-up and creates a new one. The gateway rate-limits the creation
-   of `post_order` step-ups per agent and answers an excess with `429`.
+   `step_up_id` and `ts_render`, except that for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED` on an issue whose
+   `resolution` no longer hashes to the pending step-up's `subject_hash` the gateway voids that step-up and creates a
+   new one. A voided step-up is no longer pending: the gateway refuses every event for it with `404 not_found` and
+   nothing changes, and serves its `ts_render` to no one. The gateway rate-limits the creation of `post_order`
+   step-ups per agent and answers an excess with `429`; a step-up created to replace one voided because the
+   counterparty revised the `resolution` is not counted against the agent.
 2. The principal confirms on the Trusted Surface, which posts the usual `step_up.approved` event with its
    `Presentation`. The gateway checks it as for any step-up approval.
 3. The agent retries the write with `hp_proof{ts_event_hash, step_up_id}`: the `post_order` step-up's id and the
    sha-256 over the JCS form of its signed `step_up.approved` event. Both fields are REQUIRED.
 4. The gateway accepts the proof only for the `action`, `order_id` and `issue_id` named in that step-up's `ts_render`.
-   A proof issued for another order, action or issue gets `403 presence_not_proven`. For an issue action the gateway
-   also hashes the issue's current `resolution` when the write arrives and refuses the proof with
-   `403 presence_not_proven` if that hash is not the `ts_render`'s `subject_hash` (or if a `resolution` exists where
-   none was shown): a remedy the seller revised after the principal confirmed needs a new confirmation.
+   A proof issued for another order, action or issue gets `403 presence_not_proven`. For `RESOLUTION_ACCEPTED` and
+   `RESOLUTION_REJECTED` the gateway also hashes the issue's current `resolution` when the write arrives and refuses
+   the proof with `403 presence_not_proven` if that hash is not the `ts_render`'s `subject_hash` (or if a `resolution`
+   exists where none was shown): a remedy the seller revised after the principal confirmed needs a new confirmation.
+   Any other issue action, in particular `ESCALATED`, is not bound to the `resolution` and is accepted on a valid
+   proof for its own `action`.
 5. An `hp_proof` is single-use. The gateway consumes it inside the atomic section keyed on the order's root Checkout
    Mandate ([Usage ledger](mandates.md#usage-ledger)), so that of two writes citing one proof, on any instances, exactly
    one succeeds and the other gets `403 presence_not_proven`.

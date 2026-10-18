@@ -620,6 +620,8 @@ expect:
   rail:
     settled_debits: 1
     settled_amount: {value: 100000, currency: INR}
+  state:
+    session: completed
 ```
 
 The `expect` vocabulary is closed: status, code, resolution, `reasons`,
@@ -645,6 +647,13 @@ else fails the case. In detail:
   response: a verifier's or validator's code (`evidence_unverifiable`,
   `schema_invalid`, `pass`), a Trusted Surface check (`ts_conformance_fail`
   with the rule, for example `TS-1`), or properties of a rendered output.
+- `state` records the state of each state machine the case touches, keyed by machine. A case that changes the state of a
+  machine MUST record the state it starts in as `fixture.<machine>.state` and the state it ends in as
+  `expect.state.<machine>`, so that a checker can match the case to one transition. A case that is a refusal records the
+  same state in both and shows that nothing changed. `<machine>` is the name of the machine in the specification:
+  `session`, `mandate`, `mandate_request`, `negotiation` and the other machines that appear in `state` keys of the cases
+  on this page. A case that touches no state machine records no `state`. The rule applies to every case added from the
+  release that introduces it; earlier cases are not rewritten.
 
 Fixture and step keys used by the cases on this page:
 
@@ -705,6 +714,8 @@ Fixture and step keys used by the cases on this page:
 - `parallel` sends the requests of a step at the same time: `parallel: n`
   sends `n` copies of the step's `request`, and `parallel: [ … ]` sends each
   listed request once.
+- `step_up_limit` sets the per-agent creation limit for `post_order` step-ups for the case; the value in a case is
+  only a test setting, and the spec does not fix the gateway's own limit.
 - `on_issue` is a step in which the mock seller sends an unsolicited IGM
   `on_issue` with the given respondent action and `resolution`.
 - `signer` on a request or a `trusted_surface_event` step names the key that
@@ -1199,7 +1210,7 @@ The cases below cover the [Trusted Surface and human participants](human-partici
 render binding and `Presentation`, who may fetch a render and post an approval, presence proof through a
 `post_order` step-up, the assisted channel, the human handoff and its release, the slot rule for counterparty text
 and its text rendering, the `ts_render` in the evidence bundle, the evidence summary and the six fail-safe defaults.
-T1-04b, T1-04c and T1-05b each pair the refused signer with a positive control, so that a gateway that refuses
+T1-04b, T1-04c, T1-04e, T1-04f and T1-05b each pair the refused signer with a positive control, so that a gateway that refuses
 every signer fails them. They use the manifest form above. A
 `trusted_surface_event` step sends the named signed event from the mock Mandate Manager or PSP; `presentation:
 omit` leaves the `Presentation` out, `presentation: {…}` overrides its fields, and a field set to `omit` (for example
@@ -1321,6 +1332,36 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
     state: {session: requires_escalation}
     rail: {settled_debits: 0}
 
+- case_id: T1-04e
+  title: On a human-present session only the PSP of the closed Payment Mandate posts payment.afa_completed
+  level: bacp.core.1
+  fixture:
+    payment_mandates:
+      - {kind: payment, form: closed, of: session, auth_binding: {type: upi.pin, psp_id: psp-a.example.in}}
+    sessions: {count: 1, state: complete_in_progress, presence: HP}
+  steps:
+    - trusted_surface_event: {event: payment.afa_completed, signer: psp-b.example.in, presentation: {content_hash: hash_of_ts_render}}
+    - trusted_surface_event: {event: payment.afa_completed, signer: psp-a.example.in, presentation: {content_hash: hash_of_ts_render}}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 1}
+      - {status: 202, count: 1}
+
+- case_id: T1-04f
+  title: A human-present session step-up has no payer PSP; no PSP fetches its render
+  level: bacp.core.1
+  fixture:
+    mandate: {kind: checkout, form: open, iss: mm-a.example.in, preinstalled: true}
+    payment_mandates: []
+    sessions: {count: 1, state: requires_escalation, presence: HP, step_up: {step_up_id: stp_X, kind: confirm}}
+  steps:
+    - request: {method: GET, path: "/trusted-surface/step-ups/stp_X", tag: bacp-ts, signer: psp-a.example.in}
+    - request: {method: GET, path: "/trusted-surface/step-ups/stp_X", tag: bacp-ts, signer: mm-a.example.in}
+  expect:
+    responses:
+      - {status: 404, code: not_found, count: 1}
+      - {status: 200, count: 1}
+
 - case_id: T1-05
   title: An approval whose content hash is not the hash of the ts_render is refused
   level: bacp.core.1
@@ -1417,6 +1458,47 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
   expect:
     responses:
       - {status: 403, code: presence_not_proven, count: 2}
+    beckn: []
+
+- case_id: T1-09c
+  title: A seller who keeps revising a resolution cannot block ESCALATED, and replacement step-ups do not count against the agent's creation limit
+  level: bacp.core.1
+  fixture:
+    issue: {status: PROCESSING, resolution: {action_triggered: REFUND, refund_amount: {value: 680000, currency: INR}}}
+    step_up_limit: {per_agent: 2}
+  steps:
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - on_issue: {action: RESOLUTION_PROPOSED, resolution: {action_triggered: REFUND, refund_amount: {value: 675000, currency: INR}}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - on_issue: {action: RESOLUTION_PROPOSED, resolution: {action_triggered: REFUND, refund_amount: {value: 670000, currency: INR}}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - on_issue: {action: RESOLUTION_PROPOSED, resolution: {action_triggered: REFUND, refund_amount: {value: 665000, currency: INR}}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: ESCALATED, presence: HP}}
+    - trusted_surface_event: {event: step_up.approved, step_up_id: "{step_up_id}"}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: ESCALATED, presence: HP, hp_proof: {ts_event_hash: "{event_hash}", step_up_id: "{step_up_id}"}}}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, body.step_up.kind: post_order, count: 5}
+      - {status: 202, count: 1}
+
+- case_id: T1-09d
+  title: A step-up voided by a revised resolution is refused as not found
+  level: bacp.core.1
+  fixture:
+    issue: {status: PROCESSING, resolution: {action_triggered: REFUND, refund_amount: {value: 680000, currency: INR}}}
+  steps:
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+      expect:
+        responses:
+          - {status: 403, code: presence_not_proven, body.step_up.kind: post_order, count: 1}
+    - on_issue: {action: RESOLUTION_PROPOSED, resolution: {action_triggered: REFUND, refund_amount: {value: 5000, currency: INR}}}
+    - request: {method: POST, path: "/issues/{issue_id}/actions", tag: bacp-post-order, body: {action: RESOLUTION_ACCEPTED, presence: HP}}
+    - trusted_surface_event: {event: step_up.approved, step_up_id: "{first_step_up_id}"}
+  expect:
+    responses:
+      - {status: 403, code: presence_not_proven, body.step_up.kind: post_order, count: 2}
+      - {status: 404, code: not_found, count: 1}
     beckn: []
 
 - case_id: T1-10
@@ -1677,6 +1759,23 @@ relies on the atomic section keyed on the root open Checkout Mandate ([Usage led
     responses:
       - {status: 200, count: 1}
     state: {session: ready_for_complete, handoff.ended_at: present}
+    rail: {settled_debits: 0}
+
+- case_id: T1-16c
+  title: A human can be reached after an agent has requested and withdrawn a handoff
+  level: bacp.core.1
+  fixture:
+    sessions: {count: 1, state: incomplete}
+  steps:
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-browse, body: {action: request, route: credential_route_0}}
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-browse, body: {action: release}}
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-browse, body: {action: request, route: credential_route_0}}
+    - request: {method: POST, path: "/sessions/{session_id}/handoff", tag: bacp-handoff, signer: support_operator_key_1, body: {action: accept}}
+  expect:
+    responses:
+      - {status: 201, count: 2}
+      - {status: 200, count: 2}
+    state: {session: human_handoff, handoff.accepted_by: support_operator_key_1, handoff.ended_at: absent}
     rail: {settled_debits: 0}
 
 - case_id: T1-17

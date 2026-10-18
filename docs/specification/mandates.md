@@ -462,8 +462,8 @@ and every post-order write, and travels on the network in `context.bacp.presence
 - **HP is proven, not declared.** Every post-order write with `presence: HP` (cancel, return,
   raise issue, issue action) **MUST** carry `hp_proof{ts_event_hash, step_up_id}`, both REQUIRED:
   the id of a step-up of kind `post_order` whose gateway-signed `ts_render` names this write
-  (`action`, `order_id` and, for an issue action, `issue_id` and the `subject_hash` of the
-  resolution shown), and the sha-256 over the JCS form of the signed `step_up.approved` event
+  (`action`, `order_id` and, for an issue action, `issue_id` and, for `RESOLUTION_ACCEPTED` or
+  `RESOLUTION_REJECTED`, the `subject_hash` of the resolution shown), and the sha-256 over the JCS form of the signed `step_up.approved` event
   that the gateway received for it at `/trusted-surface/events`.
   A write without `hp_proof` gets `403 presence_not_proven` (`requires_buyer_review`) carrying
   `step_up` (kind `post_order`, reason `presence_proof`) for the principal to confirm, the same
@@ -690,7 +690,7 @@ There are three kinds.
 |---|---|---|
 | `confirm` | The principal confirms this checkout on the Trusted Surface. | `above_step_up_threshold`: amount strictly above `step_up.above_amount`, or a suspected split order. `new_merchant`: `step_up.new_merchant` is set and the seller has not been used under this mandate. `outside_categories`: `step_up.outside_categories` is set and a category is outside `categories_allow`. `first_order`: `step_up.first_order` is set and this is the first order under the mandate. `constraint_unresolved`: missing disclosures, drip pricing, a price that rose above the discovered price of an item shown with a `prior_price` (`discovery_price_changed`), or any check the gateway cannot resolve. `rail_fallback`: a leg of a multi-seller basket has no HNP handler, or its replacement payment changes funding, fee-bearer, payee or collector ([Per-leg rule](#per-leg-rule)). |
 | `rail_auth` | The rail requires a fresh per-transaction factor. | `above_afa_limit`: amount strictly above ₹15,000 (₹1 lakh for the categories the rail lists). `afa_threshold_card_emandate`, `afa_crossborder_cnp`, `split_tender_afa_on_total`. |
-| `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
+| `post_order` | The principal confirms one post-order write or trade act, to obtain `hp_proof`. It is carried in `Error.step_up` of `403 presence_not_proven`, not in a session. At most one is pending per `(order_id, action, issue_id)`, and a repeat of the refused write returns it; creation is rate-limited per agent (`429`); a replacement for a step-up voided after a counterparty revised the issue's `resolution` is not counted ([Presence proof](human-participants.md#hp-proof)). | `presence_proof`: a write with `presence: HP` and no valid `hp_proof` ([Presence](#presence)). |
 
 Any other rail cap (per-transaction, per-period, remaining block, first 24 hours, channel caps)
 does **not** escalate. It returns `403 rail_limit_exceeded` with
@@ -722,7 +722,7 @@ local and rail reason.
    step-up's gets `404 not_found`. `step_up.approved` **MUST** carry a
    [`Presentation`](human-participants.md#presentation) whose `content_hash` is the sha-256 of the
    `ts_render` and whose `checkout_hash` is REQUIRED and is the quote's (for a `post_order`
-   step-up, the order's); its `user_action` is never `decline`; its `device_signature`, where
+   step-up, the `checkout_hash` of the order's closed Checkout Mandate); its `user_action` is never `decline`; its `device_signature`, where
    present, is the principal's device signature over the JCS form of
    `{step_up_id, content_hash, acted_at}`.
    The gateway refuses an approval without `presentation`, without `presentation.checkout_hash` or

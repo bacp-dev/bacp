@@ -106,12 +106,12 @@ any Beckn message is sent:
    (`403 presence_not_allowed`), plus the per-action presence rules below.
 6. **Presence proof.** A write with `presence: HP` **MUST** carry `hp_proof{ts_event_hash, step_up_id}`:
    a step-up of kind `post_order` whose `ts_render` names this write (`action`, `order_id` and, for
-   an issue action, `issue_id` and the `subject_hash` of the issue's `resolution` as shown), and
+   an issue action, `issue_id` and, for `RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED`, the `subject_hash` of the issue's `resolution` as shown), and
    the hash of its signed `step_up.approved` event, not used for another write. Without `hp_proof`
    the gateway returns `403 presence_not_proven` (`requires_buyer_review`) carrying `step_up` (kind
    `post_order`, reason `presence_proof`) for the principal to confirm, and the same pending
    step-up on a repeat; with a proof for another action, order or issue, one already used, or one
-   for an issue whose current `resolution` does not hash to its `subject_hash`, the same code. The gateway consumes the proof inside the atomic section keyed on the order's root
+   for an issue (`RESOLUTION_ACCEPTED` or `RESOLUTION_REJECTED`) whose current `resolution` does not hash to its `subject_hash`, the same code. The gateway consumes the proof inside the atomic section keyed on the order's root
    Checkout Mandate. No Beckn or IGM message is sent until the proof passes
    ([Presence proof](../human-participants.md#hp-proof)).
 

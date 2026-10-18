@@ -90,6 +90,69 @@ BACP does not fork ONDC/Beckn, UPI or any other rail.
 7. **Bharat-first.** Multilingual text, voice and IVR channels, voice-consent
    evidence, GST lines and cash on delivery are first-class.
 
+### BACP at a glance {#at-a-glance}
+
+```mermaid
+flowchart LR
+    subgraph L["Principal and agent operator"]
+        PR["Principal"]
+        AG["Agent<br/>(untrusted)"]
+        OP["Agent operator<br/>AgentCredential"]
+    end
+    subgraph G["BACP gateway stack (at a BAP)"]
+        TR["Transports<br/>REST, MCP, A2A"]
+        CAP["Capabilities<br/>in.bacp.discover, checkout,<br/>mandate, order, issue"]
+        NEG["Negotiation<br/>(profile field)"]
+        VER["Verifier and<br/>negotiation guard"]
+        LOG["Instruction log<br/>and evidence"]
+    end
+    subgraph R["Sellers and BPPs on ONDC"]
+        BKN["Beckn transport<br/>context.bacp"]
+        BPP["Seller App (BPP)<br/>gateway profile"]
+        IGM["IGM grievance"]
+        REGS["ONDC registry"]
+    end
+    PR --> AG
+    OP --- AG
+    AG --> TR --> CAP
+    CAP --> VER
+    NEG --> VER
+    VER --> LOG
+    CAP --> BKN --> BPP
+    BPP --> IGM
+    IGM -.-> Q11["AI_AGENT actor<br/>Q-11"]
+    BKN -.-> Q09["context.bacp on ONDC<br/>Q-09"]
+    subgraph S["Shared base"]
+        RAILS["Payment rails<br/>through the handler registry"]
+        CONS["Consent<br/>Mandate Manager,<br/>Trusted Surface"]
+        IDN["Identity<br/>registry, status lists"]
+    end
+    VER --> RAILS
+    PR --> CONS
+    CONS -.->|"mandates"| VER
+    IDN -.-> OP
+    IDN -.-> REGS
+    IDN -.-> Q02["Agent identity anchor<br/>Q-02"]
+    CONS -.-> Q36["Exposure ledger across gateways<br/>Q-36"]
+    RAILS -.-> UAP["in.upi.uap<br/>reserved"]
+    RAILS -.-> AGT["in.card.agentic<br/>pilot, Q-39"]
+    RAILS -.-> CIR["in.upi.circle<br/>pilot"]
+    subgraph B["Capability discovery and payment handlers"]
+        PROF["/.well-known/bacp profile:<br/>capabilities, negotiation,<br/>payment_handlers, reserved_handlers"]
+    end
+    CAP -.-> PROF
+    RAILS -.-> PROF
+    classDef proposed stroke-dasharray: 5 4,stroke-width:1.5px
+    class Q11,Q09,Q02,Q36,UAP,AGT,CIR proposed
+```
+
+Figure: BACP in one page. The principal and the agent operator (left) call the BACP gateway stack (centre), which
+reaches sellers and their Seller Apps on ONDC through Beckn (right). Payment rails, consent and identity (bottom) are
+the base every call depends on. The bottom band is the gateway's published profile, where a counterparty reads
+capabilities and payment handlers. Dashed boxes are Proposed or not yet usable, each tied to an
+[open question](../open-questions.md) or a [handler status](../payments/handler-registry.md): a `reserved` handler
+backs no payment, and a `pilot` handler backs a mandate only when the gateway's conformance attestation lists it.
+
 ## Layering
 
 BACP is an agent layer **over** Beckn/ONDC, not a replacement for it. Each
@@ -154,8 +217,9 @@ BACP makes four choices about how it sits on existing infrastructure:
    asynchronous grammar, registry PKI, post-order writes (cancel, return),
    grievance handling (IGM), reconciliation and settlement (RSF), and a
    production network. BACP carries agent semantics in `context.bacp` and
-   stays wire-compatible with UCP checkout verbs so that global agents can
-   reuse their integration. BACP is neither a UCP profile only (UCP has no
+   follows UCP's checkout verbs and status vocabulary where it can, so that global agents can
+   reuse much of their integration; BACP's paths, status spellings, totals and envelope differ from UCP's, and how far
+   to align them is an open topic under review. BACP is neither a UCP profile only (UCP has no
    network discovery, post-order writes, Indian rails or DPDP) nor an ONDC
    domain specification only (that would lose global-agent interoperability
    and the AP2 mandate format).
